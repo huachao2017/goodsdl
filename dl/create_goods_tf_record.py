@@ -205,11 +205,13 @@ def create_label_map_file(output_filename,
             output.write("}\n")
 
 def update_config_file(output_filename,
-                       label_map_dict):
+                       output_dir,
+                       num_classes):
     with open(output_filename, 'r') as file:
         data = file.read()
         #     p = re.compile(r'num_classes: \d+')
-        output = re.sub('num_classes: \d+', 'num_classes: '+str(len(label_map_dict)), data)
+        output = re.sub('num_classes: \d+', 'num_classes: '+str(num_classes), data)
+        output = re.sub('PATH_TO_BE_CONFIGURED', output_dir, output)
     with open(output_filename, 'w') as file:
         file.write(output)
 
@@ -258,6 +260,6 @@ def prepare_train(data_dir, output_dir):
     create_tf_record(val_output_path, label_map_dict, val_examples)
 
     create_label_map_file(label_map_file_path, label_map_dict)
-    update_config_file(config_file_path, label_map_dict)
+    update_config_file(config_file_path, output_dir, len(label_map_dict))
     return label_map_dict
 
