@@ -7,11 +7,14 @@ from rest_framework import status
 from dl.imagedetection import ImageDetectorFactory, ImageDetector
 import logging
 import os
+import datetime
 from .models import Image, Goods
 import xml.etree.ElementTree as ET
 from PIL import Image as im
 from dl import create_goods_tf_record
+from dl import export_inference_graph
 from django.conf import settings
+import subprocess
 
 logger = logging.getLogger("django")
 
@@ -105,18 +108,56 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
         logger.info('create action:{}'.format(serializer.instance.action))
 
         if serializer.instance.action == 'BT':
+            # 杀死原来的train
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+
             # 训练准备
             data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             output_dir = settings.TRAIN_ROOT
             label_map_dict = create_goods_tf_record.prepare_train(data_dir, output_dir)
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
-            #TODO 训练
+
+            # 备份上一个train
+            train_logs_dir = os.path.join(settings.TRAIN_ROOT, 'train_logs')
+            if os.path.isdir(train_logs_dir):
+                now = datetime.datetime.now()
+                postfix = now.strftime('%Y%m%d%H%M%S')
+                os.rename(train_logs_dir, train_logs_dir + postfix)
+            # 训练
+            subprocess.Popen('nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={} &'.format(
+                settings.TRAIN_ROOT,
+                settings.TRAIN_ROOT,
+                train_logs_dir,
+            ))
         elif serializer.instance.action == 'ET':
-            pass
-            #TODO 结束训练
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'EG':
-            pass
-            #TODO 输出pb
+
+            trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, 'train_logs')
+            prefix = 0
+            for i in os.listdir(trained_checkpoint_dir):
+                a, b = os.path.splitext(i)
+                if b == '.meta':
+                    t_prefix = int(a.split('-')[1])
+                    if t_prefix > prefix:
+                        prefix = t_prefix
+
+            if prefix > 0:
+                trained_checkpoint_prefix = os.path.join(trained_checkpoint_dir, 'model.ckpt-{}'.format(prefix))
+                # 备份上一个pb
+                model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model')
+                export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
+                if os.path.isfile(export_file_path):
+                    now = datetime.datetime.now()
+                    postfix = now.strftime('%Y%m%d%H%M%S')
+                    os.rename(export_file_path, export_file_path+'.'+postfix)
+                    serializer.instance.param = str({'postfix':postfix})
+                    serializer.instance.save()
+                # 输出pb
+                export_inference_graph.export(os.path.join(settings.TRAIN_ROOT, 'faster_rcnn_nas_goods.config'),
+                                              trained_checkpoint_prefix,
+                                              model_dir,
+                                              )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
