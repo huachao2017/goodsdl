@@ -1,0 +1,40 @@
+训练图片接口：http://ai.fastxbox.cn/api/trainimage
+入参：
+source  file
+filename string
+upc   string
+xmin  int
+ymin  int
+xmax  int
+ymax  int
+返回201
+
+检测图片接口：http://ai.fastxbox.cn/api/image
+入参：
+source  file
+filename string
+返回201：
+[
+    {
+        "class": 1,                           -- 类型（可不用）
+        "upc": "123123123",                   -- 产品UPC
+        "score": 0.5095015168190002,          -- 可能性评分（可不用）
+        "box": {                              -- 矩形框坐标，左上角为原点
+            "xmin": 37,                       -- 左上角横坐标
+            "ymin": 116,                      -- 左上角纵坐标
+            "xmax": 855,                      -- 右上角横坐标
+            "ymax": 940                       -- 右上角纵坐标
+        }
+    },
+    {
+        "class": 1,                           -- 类型（可不用）
+        "upc": "123123123",                   -- 产品UPC
+        "score": 0.103050097823143,
+        "box": {
+            "xmin": 143,
+            "ymin": 0,
+            "xmax": 701,
+            "ymax": 319
+        }
+    }
+]
