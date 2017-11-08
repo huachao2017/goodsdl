@@ -125,11 +125,13 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 postfix = now.strftime('%Y%m%d%H%M%S')
                 os.rename(train_logs_dir, train_logs_dir + postfix)
             # 训练
-            subprocess.call('nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={} &'.format(
+            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={} &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 settings.TRAIN_ROOT,
                 train_logs_dir,
-            ), shell=True)
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
         elif serializer.instance.action == 'ET':
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'EG':
