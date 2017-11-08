@@ -129,7 +129,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 os.path.join(settings.BASE_DIR, 'dl'),
                 settings.TRAIN_ROOT,
                 train_logs_dir,
-            ))
+            ), shell=True)
         elif serializer.instance.action == 'ET':
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'EG':
