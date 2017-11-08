@@ -126,7 +126,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 os.rename(train_logs_dir, train_logs_dir + postfix)
             # 训练
             subprocess.Popen('nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={} &'.format(
-                settings.TRAIN_ROOT,
+                os.path.join(settings.BASE_DIR, 'dl'),
                 settings.TRAIN_ROOT,
                 train_logs_dir,
             ))
