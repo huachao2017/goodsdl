@@ -192,7 +192,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
         if serializer.instance.action == 'BT':
             # 杀死原来的train
-            subprocess.call('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9', shell=True)
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             # 训练准备
             data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
@@ -211,7 +211,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
         elif serializer.instance.action == 'ET':
-            subprocess.call('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9', shell=True)
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'EG':
 
             lastBT = ActionLog.objects.filter(action='BT').order_by('-id')[0]
@@ -259,7 +259,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
         if serializer.instance.action == 'BT':
             # 杀死原来的train
-            subprocess.call('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9', shell=True)
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
             # 继续训练
