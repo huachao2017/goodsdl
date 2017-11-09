@@ -2,6 +2,7 @@ import tensorflow as tf
 import os
 from PIL import Image
 import numpy as np
+from object_detection.utils import label_map_util
 
 class ImageDetectorFactory:
     _detector = None
@@ -19,6 +20,7 @@ class ImageDetector:
         self.session = None
         self.model_path, _ = os.path.split(os.path.realpath(__file__))
         self.model_path = os.path.join(self.model_path, 'model/frozen_inference_graph.pb')
+        self.label_path = os.path.join(self.model_path, 'model/goods_label_map.pbtxt')
 
     def load(self):
         #print('loading ImageDetector')
@@ -56,6 +58,11 @@ class ImageDetector:
         self.detection_classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
 
         # num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
+
+        label_map = label_map_util.load_labelmap(self.label_path)
+        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=10000,
+                                                                    use_display_name=True)
+        self.category_index = label_map_util.create_category_index(categories)
 
     def detect(self,image_path,min_score_thresh=.5):
         if self.detection_graph is None:
@@ -95,7 +102,7 @@ class ImageDetector:
                 #print(self.class_to_name_dic)
                 ret.append({'class':classes[i],
                             'score':scores[i],
-                            'upc':'',#FIXME 从训练参数文件中获得
+                            'upc':self.category_index[classes[i]]['name'],
                             'box':{'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax}})
                 # have_classes[classes[i]] = True
         return ret

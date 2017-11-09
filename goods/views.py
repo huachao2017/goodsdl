@@ -7,14 +7,15 @@ from rest_framework import status
 from dl import imagedetection, imagedetection_old
 import logging
 import os
+import shutil
 import datetime
+import subprocess
 from .models import Image, Goods
 import xml.etree.ElementTree as ET
 from PIL import Image as im
 from dl import create_goods_tf_record
 from dl import export_inference_graph
 from django.conf import settings
-import subprocess
 
 logger = logging.getLogger("django")
 
@@ -181,17 +182,21 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 # 备份上一个pb
                 model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model')
                 export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
+                label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
                 if os.path.isfile(export_file_path):
                     now = datetime.datetime.now()
                     postfix = now.strftime('%Y%m%d%H%M%S')
                     os.rename(export_file_path, export_file_path+'.'+postfix)
-                    serializer.instance.param = str({'postfix':postfix})
+                    os.rename(label_file_path, label_file_path+'.'+postfix)
+                    serializer.instance.param = 'trainid:{},prefix:{}'.format(lastBT.pk, prefix)
                     serializer.instance.save()
                 # 输出pb
                 export_inference_graph.export(os.path.join(settings.TRAIN_ROOT, 'faster_rcnn_nas_goods.config'),
                                               trained_checkpoint_prefix,
                                               model_dir,
                                               )
+                # copy label
+                shutil.copy(os.path.join(settings.TRAIN_ROOT, lastBT.pk, 'goods_label_map.pbtxt'), label_file_path)
 
                 # reboot django
                 os.utime(os.path.join(settings.BASE_DIR, 'main', 'setting.py'), None)
