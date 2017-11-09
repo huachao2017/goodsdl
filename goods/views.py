@@ -179,7 +179,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = ActionLog.objects.order_by('-id')
     serializer_class = ActionLogSerializer
 
@@ -196,17 +196,16 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
             # 训练准备
             data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
-            output_dir = settings.TRAIN_ROOT
-            label_map_dict = create_goods_tf_record.prepare_train(data_dir, output_dir, str(serializer.instance.pk))
+            label_map_dict = create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
 
-            train_logs_dir = os.path.join(output_dir, str(serializer.instance.pk))
+            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             # 训练
             command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
-                settings.TRAIN_ROOT,
+                train_logs_dir,
                 train_logs_dir,
             )
             logger.info(command)
@@ -250,3 +249,32 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 os.utime(os.path.join(settings.BASE_DIR, 'main', 'setting.py'), None)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if serializer.instance.action == 'BT':
+            # 杀死原来的train
+            subprocess.call('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9', shell=True)
+
+            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
+            # 继续训练
+            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
