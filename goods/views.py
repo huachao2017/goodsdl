@@ -191,7 +191,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                     serializer.instance.param = 'trainid:{},prefix:{}'.format(lastBT.pk, prefix)
                     serializer.instance.save()
                 # 输出pb
-                export_inference_graph.export(os.path.join(settings.TRAIN_ROOT, 'faster_rcnn_nas_goods.config'),
+                export_inference_graph.export(os.path.join(settings.TRAIN_ROOT, lastBT.pk, 'faster_rcnn_nas_goods.config'),
                                               trained_checkpoint_prefix,
                                               model_dir,
                                               )
