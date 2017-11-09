@@ -103,6 +103,7 @@ class ImageDetector:
                 ret.append({'class':classes[i],
                             'score':scores[i],
                             'upc':self.category_index[classes[i]]['name'],
-                            'box':{'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax}})
+                            'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
+                            })
                 # have_classes[classes[i]] = True
         return ret

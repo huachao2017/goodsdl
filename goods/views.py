@@ -82,16 +82,44 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
             logger.info('end detect:{}'.format(str(len(ret))))
+            ret_reborn = []
+            index = 0
+            class_index_dict = {}
             for goods in ret:
                 Goods.objects.create(image_id=serializer.instance.pk,
                                      class_type=goods['class'],
                                      score=goods['score'],
                                      upc=goods['upc'],
-                                     xmin=goods['box']['xmin'],
-                                     ymin=goods['box']['ymin'],
-                                     xmax=goods['box']['xmax'],
-                                     ymax=goods['box']['ymax'],
+                                     xmin=goods['xmin'],
+                                     ymin=goods['ymin'],
+                                     xmax=goods['xmax'],
+                                     ymax=goods['ymax'],
                                      )
+            if goods['class'] in class_index_dict:
+                ret_reborn[class_index_dict[goods['class']]]['box'].append({
+                    'score': goods['score'],
+                    'xmin': goods['xmin'],
+                    'ymin': goods['ymin'],
+                    'xmax': goods['xmax'],
+                    'ymax': goods['ymax'],
+                })
+            else:
+                box = []
+                box.append({
+                    'score': goods['score'],
+                    'xmin': goods['xmin'],
+                    'ymin': goods['ymin'],
+                    'xmax': goods['xmax'],
+                    'ymax': goods['ymax'],
+                })
+                ret_reborn.append({
+                    'class':goods['class'],
+                    'upc':goods['upc'],
+                    'box':box
+                })
+                class_index_dict[goods['class']] = index
+                index = index + 1
+            ret = ret_reborn
         logger.info('end create')
         #return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
