@@ -173,7 +173,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
             havefile = True
             break
         if not havefile:
-            os.remove(dir)
+            shutil.rmtree(dir)
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
