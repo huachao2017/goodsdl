@@ -18,9 +18,9 @@ class ImageDetector:
     def __init__(self):
         self.detection_graph = None
         self.session = None
-        self.model_path, _ = os.path.split(os.path.realpath(__file__))
-        self.model_path = os.path.join(self.model_path, 'model/frozen_inference_graph.pb')
-        self.label_path = os.path.join(self.model_path, 'model/goods_label_map.pbtxt')
+        self.file_path, _ = os.path.split(os.path.realpath(__file__))
+        self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph.pb')
+        self.label_path = os.path.join(self.file_path, 'model/goods_label_map.pbtxt')
 
     def load(self):
         #print('loading ImageDetector')
