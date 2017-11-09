@@ -204,15 +204,17 @@ def create_label_map_file(output_filename,
             output.write("  name: '{}'\n".format(key))
             output.write("}\n")
 
-def update_config_file(output_dir,
+def update_config_file(model_dir,
+                       train_name,
                        num_classes):
-    config_template_file_path = os.path.join(output_dir, 'faster_rcnn_nas_goods.config.template')
-    output_filename = os.path.join(output_dir, 'faster_rcnn_nas_goods.config')
+    config_template_file_path = os.path.join(model_dir, 'faster_rcnn_nas_goods.config.template')
+    output_filename = os.path.join(model_dir, train_name, 'faster_rcnn_nas_goods.config')
     with open(config_template_file_path, 'r') as file:
         data = file.read()
         #     p = re.compile(r'num_classes: \d+')
         output = re.sub('num_classes: \d+', 'num_classes: '+str(num_classes), data)
-        output = re.sub('PATH_TO_BE_CONFIGURED', output_dir, output)
+        output = re.sub('PATH_TO_BE_CONFIGURED_MODEL', model_dir, output)
+        output = re.sub('PATH_TO_BE_CONFIGURED_TRAIN', os.path.join(model_dir, train_name), output)
     with open(output_filename, 'w') as file:
         file.write(output)
 
@@ -237,7 +239,7 @@ def read_examples_list_and_label_map(path):
                     examples.append(example)
     return examples, label_map_dict
 
-def prepare_train(data_dir, output_dir):
+def prepare_train(data_dir, model_dir, train_name):
     logging.info('Reading from good dataset.')
     examples_list, label_map_dict = read_examples_list_and_label_map(data_dir)
     logging.info(label_map_dict)
@@ -253,6 +255,9 @@ def prepare_train(data_dir, output_dir):
     logging.info('%d training and %d validation examples.',
                  len(train_examples), len(val_examples))
 
+    output_dir = os.path.join(model_dir, train_name)
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
     train_output_path = os.path.join(output_dir, 'goods_train.record')
     val_output_path = os.path.join(output_dir, 'goods_val.record')
     label_map_file_path = os.path.join(output_dir, 'goods_label_map.pbtxt')
@@ -260,6 +265,6 @@ def prepare_train(data_dir, output_dir):
     create_tf_record(val_output_path, label_map_dict, val_examples)
 
     create_label_map_file(label_map_file_path, label_map_dict)
-    update_config_file(output_dir, len(label_map_dict))
+    update_config_file(model_dir, train_name, len(label_map_dict))
     return label_map_dict
 

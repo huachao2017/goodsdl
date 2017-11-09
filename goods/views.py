@@ -109,21 +109,17 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
         if serializer.instance.action == 'BT':
             # 杀死原来的train
-            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+            subprocess.call('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9', shell=True)
 
             # 训练准备
             data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             output_dir = settings.TRAIN_ROOT
-            label_map_dict = create_goods_tf_record.prepare_train(data_dir, output_dir)
+            label_map_dict = create_goods_tf_record.prepare_train(data_dir, output_dir, str(serializer.instance.pk))
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
 
-            # 备份上一个train
-            train_logs_dir = os.path.join(settings.TRAIN_ROOT, 'train_logs')
-            if os.path.isdir(train_logs_dir):
-                now = datetime.datetime.now()
-                postfix = now.strftime('%Y%m%d%H%M%S')
-                os.rename(train_logs_dir, train_logs_dir + postfix)
+            train_logs_dir = os.path.join(output_dir, str(serializer.instance.pk))
+
             # 训练
             command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={} &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
@@ -133,7 +129,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
         elif serializer.instance.action == 'ET':
-            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+            subprocess.call('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9', shell=True)
         elif serializer.instance.action == 'EG':
 
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, 'train_logs')
