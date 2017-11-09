@@ -128,7 +128,7 @@ class GoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericViewSet)
     queryset = Goods.objects.order_by('id')
     serializer_class = GoodsSerializer
 
-class TrainImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImage.objects.order_by('-id')
     serializer_class = TrainImageSerializer
 
@@ -158,6 +158,26 @@ class TrainImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         tree.write(a + ".xml")
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        a, b = os.path.splitext(instance.source.path)
+        dir = os.path.dirname(instance.source.path)
+        if os.path.isfile(instance.source.path):
+            os.remove(instance.source.path)
+        if os.path.isfile(a + ".xml"):
+            os.remove(a + ".xml")
+
+        havefile = False
+        for i in os.listdir(dir):
+            havefile = True
+            break
+        if not havefile:
+            os.remove(dir)
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = ActionLog.objects.order_by('-id')
