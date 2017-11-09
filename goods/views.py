@@ -166,7 +166,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             subprocess.call('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9', shell=True)
         elif serializer.instance.action == 'EG':
 
-            trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, 'train_logs')
+            lastBT = ActionLog.objects.filter(action='BT').order_by('-id')[0]
+            trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastBT.pk))
             prefix = 0
             for i in os.listdir(trained_checkpoint_dir):
                 a, b = os.path.splitext(i)
@@ -191,5 +192,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                                               trained_checkpoint_prefix,
                                               model_dir,
                                               )
+
+                # reboot django
+                os.utime(os.path.join(settings.BASE_DIR, 'main', 'setting.py'), None)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
