@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import *
 from rest_framework import status
-from dl.imagedetection import ImageDetectorFactory, ImageDetector
+from dl import imagedetection, imagedetection_old
 import logging
 import os
 import datetime
@@ -27,7 +27,7 @@ class DefaultMixin:
     paginate_by_param = 'page_size'
     max_paginate_by = 100
 
-class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ImageOldViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
     serializer_class = ImageSerializer
 
@@ -37,7 +37,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        detector = ImageDetectorFactory.get_static_detector()
+        detector = imagedetection_old.ImageDetectorFactory.get_static_detector()
         logger.info('begin detect:{}'.format(serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh = .8)
         if len(ret) <= 0:
@@ -52,6 +52,40 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                      class_type=goods['class'],
                                      score=goods['score'],
                                      name=goods['name'],
+                                     xmin=goods['box']['xmin'],
+                                     ymin=goods['box']['ymin'],
+                                     xmax=goods['box']['xmax'],
+                                     ymax=goods['box']['ymax'],
+                                     )
+        logger.info('end create')
+        #return Response({'Test':True})
+        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
+class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = Image.objects.order_by('-id')
+    serializer_class = ImageSerializer
+
+    def create(self, request, *args, **kwargs):
+        logger.info('begin create:')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        detector = imagedetection.ImageDetectorFactory.get_static_detector()
+        logger.info('begin detect:{}'.format(serializer.instance.source.path))
+        ret = detector.detect(serializer.instance.source.path, min_score_thresh = .9)
+        if len(ret) <= 0:
+            logger.info('end detect:0')
+            # 删除无用图片
+            os.remove(serializer.instance.source.path)
+            Image.objects.get(pk=serializer.instance.pk).delete()
+        else:
+            logger.info('end detect:{}'.format(str(len(ret))))
+            for goods in ret:
+                Goods.objects.create(image_id=serializer.instance.pk,
+                                     class_type=goods['class'],
+                                     score=goods['score'],
+                                     name=goods['upc'],
                                      xmin=goods['box']['xmin'],
                                      ymin=goods['box']['ymin'],
                                      xmax=goods['box']['xmax'],
