@@ -34,16 +34,16 @@ class ImageDetector:
         #                           9:'雪碧（瓶装）',
         #                           10:'可口可乐（听装）',
         #                           }
-        self.category_index = {1: {'id':1, 'name':'香海鱼豆腐','price':6.8},
-                               2: {'id':2, 'name': '亲嘴豆皮', 'price': 5.8},
-                               3: {'id':3, 'name': '多力多玉米片', 'price': 6.6},
-                               4: {'id':4, 'name': '焙朗早餐饼', 'price': 14.6},
-                               5: {'id':5, 'name': '康师傅妙芙（巧克力味）', 'price': 16.8},
-                               6: {'id':6, 'name': '法丽兹曲奇（抹茶慕斯）', 'price': 10.6},
-                               7: {'id':7, 'name': '百奇（巧克力味）', 'price': 12.8},
-                               8: {'id':8, 'name': '三元纯牛奶', 'price': 1.8},
-                               9: {'id':9, 'name': '雪碧（瓶装）', 'price': 3.0},
-                               10: {'id':10, 'name': '可口可乐（听装）', 'price': 2.5},
+        self.category_index = {1: {'id':1, 'name':1, 're_name':'香海鱼豆腐','price':6.8},
+                               2: {'id':2, 'name':2, 're_name': '亲嘴豆皮', 'price': 5.8},
+                               3: {'id':3, 'name':3, 're_name': '多力多玉米片', 'price': 6.6},
+                               4: {'id':4, 'name':4, 're_name': '焙朗早餐饼', 'price': 14.6},
+                               5: {'id':5, 'name':5, 're_name': '康师傅妙芙（巧克力味）', 'price': 16.8},
+                               6: {'id':6, 'name':6, 're_name': '法丽兹曲奇（抹茶慕斯）', 'price': 10.6},
+                               7: {'id':7, 'name':7, 're_name': '百奇（巧克力味）', 'price': 12.8},
+                               8: {'id':8, 'name':8, 're_name': '三元纯牛奶', 'price': 1.8},
+                               9: {'id':9, 'name':9, 're_name': '雪碧（瓶装）', 'price': 3.0},
+                               10: {'id':10, 'name':10, 're_name': '可口可乐（听装）', 'price': 2.5},
                                }
         self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
@@ -103,7 +103,7 @@ class ImageDetector:
             use_normalized_coordinates=True,
             line_thickness=4)
         output_image = Image.fromarray(image_np)
-        output_image.thumbnail((int(im_width*0.3), int(im_height*0.3)), Image.ANTIALIAS)
+        output_image.thumbnail((int(im_width*0.5), int(im_height*0.5)), Image.ANTIALIAS)
         output_image.save(output_image_path)
 
         ret = []
@@ -122,7 +122,7 @@ class ImageDetector:
                 #print(self.class_to_name_dic)
                 ret.append({'class':classes[i],
                             'score':scores[i],
-                            'name':self.category_index[classes[i]]['name'],
+                            'name':self.category_index[classes[i]]['re_name'],
                             'price':self.category_index[classes[i]]['price'],
                             'box':{'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax}})
                 # have_classes[classes[i]] = True
