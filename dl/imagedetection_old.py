@@ -102,6 +102,7 @@ class ImageDetector:
                 np.squeeze(scores),
                 self.category_index,
                 use_normalized_coordinates=True,
+                min_score_thresh=.1,
                 line_thickness=4)
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width*0.5), int(im_height*0.5)), Image.ANTIALIAS)
