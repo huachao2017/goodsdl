@@ -40,7 +40,7 @@ class ImageOldViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         headers = self.get_success_headers(serializer.data)
         detector = imagedetection_old.ImageDetectorFactory.get_static_detector()
         logger.info('begin detect:{}'.format(serializer.instance.source.path))
-        ret = detector.detect(serializer.instance.source.path, min_score_thresh = .9)
+        ret = detector.detect(serializer.instance.source.path, min_score_thresh = .5)
         if len(ret) <= 0:
             logger.info('end detect:0')
             # 删除无用图片
@@ -74,7 +74,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         headers = self.get_success_headers(serializer.data)
         detector = imagedetection.ImageDetectorFactory.get_static_detector()
         logger.info('begin detect:{}'.format(serializer.instance.source.path))
-        ret = detector.detect(serializer.instance.source.path, min_score_thresh = .9)
+        ret = detector.detect(serializer.instance.source.path, min_score_thresh = .5)
         if len(ret) <= 0:
             logger.info('end detect:0')
             # 删除无用图片
