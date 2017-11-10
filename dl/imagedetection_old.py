@@ -2,6 +2,7 @@ import tensorflow as tf
 import os
 from PIL import Image
 import numpy as np
+from object_detection.utils import visualization_utils as vis_util
 
 class ImageDetectorFactory:
     _detector = None
@@ -22,28 +23,28 @@ class ImageDetector:
 
     def load(self):
         #print('loading ImageDetector')
-        self.class_to_name_dic = {1:'香海鱼豆腐',
-                                  2:'亲嘴豆皮',
-                                  3:'多力多玉米片',
-                                  4:'焙朗早餐饼',
-                                  5:'康师傅妙芙（巧克力味）',
-                                  6:'法丽兹曲奇（抹茶慕斯）',
-                                  7:'百奇（巧克力味）',
-                                  8:'三元纯牛奶',
-                                  9:'雪碧（瓶装）',
-                                  10:'可口可乐（听装）',
-                                  }
-        self.class_to_price_dic = {1:6.8,
-                                  2:5.6,
-                                  3:6.6,
-                                  4:14.6,
-                                  5:16.8,
-                                  6:10.6,
-                                  7:12.8,
-                                  8:1.8,
-                                  9:3.0,
-                                  10:2.5,
-                                  }
+        # self.class_to_name_dic = {1:'香海鱼豆腐',
+        #                           2:'亲嘴豆皮',
+        #                           3:'多力多玉米片',
+        #                           4:'焙朗早餐饼',
+        #                           5:'康师傅妙芙（巧克力味）',
+        #                           6:'法丽兹曲奇（抹茶慕斯）',
+        #                           7:'百奇（巧克力味）',
+        #                           8:'三元纯牛奶',
+        #                           9:'雪碧（瓶装）',
+        #                           10:'可口可乐（听装）',
+        #                           }
+        self.category_index = {1: {'id':1, 'name':'香海鱼豆腐','price':6.8},
+                               2: {'id':2, 'name': '亲嘴豆皮', 'price': 5.8},
+                               3: {'id':3, 'name': '多力多玉米片', 'price': 6.6},
+                               4: {'id':4, 'name': '焙朗早餐饼', 'price': 14.6},
+                               5: {'id':5, 'name': '康师傅妙芙（巧克力味）', 'price': 16.8},
+                               6: {'id':6, 'name': '法丽兹曲奇（抹茶慕斯）', 'price': 10.6},
+                               7: {'id':7, 'name': '百奇（巧克力味）', 'price': 12.8},
+                               8: {'id':8, 'name': '三元纯牛奶', 'price': 1.8},
+                               9: {'id':9, 'name': '雪碧（瓶装）', 'price': 3.0},
+                               10: {'id':10, 'name': '可口可乐（听装）', 'price': 2.5},
+                               }
         self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
             od_graph_def = tf.GraphDef()
@@ -91,13 +92,27 @@ class ImageDetector:
         classes = np.squeeze(classes).astype(np.int32)
         scores = np.squeeze(scores)
 
+        image_dir = os.path.dirname(image_path)
+        output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+        vis_util.visualize_boxes_and_labels_on_image_array(
+            image_np,
+            np.squeeze(boxes),
+            np.squeeze(classes).astype(np.int32),
+            np.squeeze(scores),
+            self.category_index,
+            use_normalized_coordinates=True,
+            line_thickness=4)
+        output_image = Image.fromarray(image_np)
+        output_image.thumbnail((int(im_width*0.3), int(im_height*0.3)), Image.ANTIALIAS)
+        output_image.save(output_image_path)
+
         ret = []
-        have_classes = {}
+        # have_classes = {}
         for i in range(boxes.shape[0]):
             if scores is None or scores[i] > min_score_thresh:
                 # FIXME 不允许有同类型的物品出现
-                if classes[i] in have_classes:
-                    continue
+                # if classes[i] in have_classes:
+                #     continue
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin*im_height)
                 xmin = int(xmin*im_width)
@@ -107,8 +122,8 @@ class ImageDetector:
                 #print(self.class_to_name_dic)
                 ret.append({'class':classes[i],
                             'score':scores[i],
-                            'name':self.class_to_name_dic[classes[i]],
-                            'price':self.class_to_price_dic[classes[i]],
+                            'name':self.category_index[classes[i]]['name'],
+                            'price':self.category_index[classes[i]]['price'],
                             'box':{'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax}})
-                have_classes[classes[i]] = True
+                # have_classes[classes[i]] = True
         return ret
