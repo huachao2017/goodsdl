@@ -16,6 +16,9 @@ from PIL import Image as im
 from dl import create_goods_tf_record
 from dl import export_inference_graph
 from django.conf import settings
+from PIL import Image
+import numpy as np
+from object_detection.utils import visualization_utils as vis_util
 
 logger = logging.getLogger("django")
 
@@ -139,7 +142,8 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         logger.info('create image xml:{}'.format(serializer.instance.source.path))
 
-        image = im.open(serializer.instance.source.path)
+        image_path = serializer.instance.source.path
+        image = im.open(image_path)
         xml_path, _ = os.path.split(os.path.realpath(__file__))
         xml_path = os.path.join(xml_path, 'template.xml')
         tree = ET.parse(xml_path)
@@ -156,6 +160,29 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         # 写入新的xml
         a, b = os.path.splitext(serializer.instance.source.path)
         tree.write(a + ".xml")
+
+        # 画带box的图片
+        image_dir = os.path.dirname(image_path)
+        output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+        image = Image.open(image_path)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        # the array based representation of the image will be used later in order to prepare the
+        # result image with boxes and labels on it.
+        (im_width, im_height) = image.size
+        image_np = np.array(image.getdata()).reshape(
+            (im_height, im_width, 3)).astype(np.uint8)
+        image_pil = Image.fromarray(np.uint8(image_np)).convert('RGB')
+
+        vis_util.draw_bounding_box_on_image(image_pil,
+                                            serializer.instance.ymin, serializer.instance.xmin, serializer.instance.ymax, serializer.instance.xmax,
+                                            color='DarkOrange',
+                                            display_str_list=(serializer.instance.upc,), use_normalized_coordinates=False)
+
+        np.copyto(image_np, np.array(image_pil))
+        output_image = Image.fromarray(image_np)
+        output_image.thumbnail((int(im_width * 0.5), int(im_height * 0.5)), Image.ANTIALIAS)
+        output_image.save(output_image_path)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

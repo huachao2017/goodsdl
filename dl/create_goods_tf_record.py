@@ -235,7 +235,7 @@ def read_examples_list_and_label_map(path):
             for j in range(0, len(filelist)):
                 image_path = os.path.join(class_dir, filelist[j])
                 example, ext = os.path.splitext(image_path)
-                if ext == ".jpg":
+                if ext == ".jpg" and os.path.isfile(example + '.xml'):
                     examples.append(example)
     return examples, label_map_dict
 
