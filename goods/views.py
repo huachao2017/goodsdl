@@ -16,7 +16,6 @@ from PIL import Image as im
 from dl import create_goods_tf_record
 from dl import export_inference_graph
 from django.conf import settings
-from PIL import Image
 import numpy as np
 from object_detection.utils import visualization_utils as vis_util
 
@@ -164,7 +163,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         # 画带box的图片
         image_dir = os.path.dirname(image_path)
         output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
-        image = Image.open(image_path)
+        image = im.open(image_path)
         if image.mode != 'RGB':
             image = image.convert('RGB')
         # the array based representation of the image will be used later in order to prepare the
@@ -172,7 +171,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         (im_width, im_height) = image.size
         image_np = np.array(image.getdata()).reshape(
             (im_height, im_width, 3)).astype(np.uint8)
-        image_pil = Image.fromarray(np.uint8(image_np)).convert('RGB')
+        image_pil = im.fromarray(np.uint8(image_np)).convert('RGB')
 
         vis_util.draw_bounding_box_on_image(image_pil,
                                             serializer.instance.ymin, serializer.instance.xmin, serializer.instance.ymax, serializer.instance.xmax,
@@ -180,8 +179,8 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
                                             display_str_list=(serializer.instance.upc,), use_normalized_coordinates=False)
 
         np.copyto(image_np, np.array(image_pil))
-        output_image = Image.fromarray(image_np)
-        output_image.thumbnail((int(im_width * 0.5), int(im_height * 0.5)), Image.ANTIALIAS)
+        output_image = im.fromarray(image_np)
+        output_image.thumbnail((int(im_width * 0.5), int(im_height * 0.5)), im.ANTIALIAS)
         output_image.save(output_image_path)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
