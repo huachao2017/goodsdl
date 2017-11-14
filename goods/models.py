@@ -27,7 +27,7 @@ def train_image_upload_source(instance,filename):
 class TrainImage(models.Model):
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     upc = models.CharField(max_length=20)
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20, default='')
     xmin = models.PositiveIntegerField(default=0)
     ymin = models.PositiveIntegerField(default=0)
     xmax = models.PositiveIntegerField(default=0)
