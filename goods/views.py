@@ -179,7 +179,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         vis_util.draw_bounding_box_on_image(image_pil,
                                             serializer.instance.ymin, serializer.instance.xmin, serializer.instance.ymax, serializer.instance.xmax,
                                             color='DarkOrange',
-                                            display_str_list=(serializer.instance.upc, serializer.instance.name), use_normalized_coordinates=False)
+                                            display_str_list=(serializer.instance.name), use_normalized_coordinates=False)
 
         np.copyto(image_np, np.array(image_pil))
         output_image = im.fromarray(image_np)
