@@ -136,7 +136,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         # 兼容没有那么字段的请求
-        if request.data['name'] is None:
+        if 'name' not in request.data :
             request.data['name'] = request.data['upc']
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
