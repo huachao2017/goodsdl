@@ -135,6 +135,9 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     serializer_class = TrainImageSerializer
 
     def create(self, request, *args, **kwargs):
+        # 兼容没有那么字段的请求
+        if request.data['name'] is None:
+            request.data['name'] = request.data['upc']
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -176,7 +179,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         vis_util.draw_bounding_box_on_image(image_pil,
                                             serializer.instance.ymin, serializer.instance.xmin, serializer.instance.ymax, serializer.instance.xmax,
                                             color='DarkOrange',
-                                            display_str_list=(serializer.instance.upc,), use_normalized_coordinates=False)
+                                            display_str_list=(serializer.instance.upc, serializer.instance.name), use_normalized_coordinates=False)
 
         np.copyto(image_np, np.array(image_pil))
         output_image = im.fromarray(image_np)

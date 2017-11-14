@@ -3,6 +3,7 @@
 source  file
 filename string
 upc   string
+name  string
 xmin  int
 ymin  int
 xmax  int
