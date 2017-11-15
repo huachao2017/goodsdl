@@ -295,7 +295,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastBT.pk), 'goods_label_map.pbtxt'), label_file_path)
 
                 # reboot django
-                os.utime(os.path.join(settings.BASE_DIR, 'main', 'setting.py'), None)
+                os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
