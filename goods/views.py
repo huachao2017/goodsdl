@@ -36,6 +36,9 @@ class ImageOldViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
 
     def create(self, request, *args, **kwargs):
         logger.info('begin create:')
+        # 兼容没有那么字段的请求
+        if 'deviceid' not in request.data :
+            request.data['deviceid'] = get_client_ip(request)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -70,6 +73,9 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
     def create(self, request, *args, **kwargs):
         logger.info('begin create:')
+        # 兼容没有那么字段的请求
+        if 'deviceid' not in request.data :
+            request.data['deviceid'] = get_client_ip(request)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
