@@ -25,6 +25,7 @@ def train_image_upload_source(instance,filename):
     return 'data/{}/{}_{}'.format(instance.upc, str(now.time()), filename)
 
 class TrainImage(models.Model):
+    deviceid = models.CharField(max_length=20, default='')
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     upc = models.CharField(max_length=20)
     name = models.CharField(max_length=20, default='')

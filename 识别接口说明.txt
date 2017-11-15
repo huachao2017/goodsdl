@@ -8,12 +8,14 @@ xmin  int
 ymin  int
 xmax  int
 ymax  int
+deviceid  string
 返回201
 
 检测图片接口：http://ai.fastxbox.cn/api/imagenew
 入参：
 source  file
 filename string
+deviceid  string
 返回201：
 [
     {
