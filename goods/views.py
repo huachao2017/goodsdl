@@ -284,7 +284,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                     postfix = now.strftime('%Y%m%d%H%M%S')
                     os.rename(export_file_path, export_file_path+'.'+postfix)
                     os.rename(label_file_path, label_file_path+'.'+postfix)
-                    serializer.instance.param = 'trainid:{},prefix:{}'.format(lastBT.pk, prefix)
+                    shutil.rmtree(os.path.join(model_dir, 'saved_model'))
+                    serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastBT.pk, prefix, postfix)
                     serializer.instance.save()
                 # 输出pb
                 export_inference_graph.export(os.path.join(settings.TRAIN_ROOT, str(lastBT.pk), 'faster_rcnn_nas_goods.config'),
