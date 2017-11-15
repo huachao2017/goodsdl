@@ -3,6 +3,7 @@ import os
 from PIL import Image
 import numpy as np
 from object_detection.utils import label_map_util
+from object_detection.utils import visualization_utils as vis_util
 
 class ImageDetectorFactory:
     _detector = None
@@ -86,6 +87,22 @@ class ImageDetector:
         boxes = np.squeeze(boxes)
         classes = np.squeeze(classes).astype(np.int32)
         scores = np.squeeze(scores)
+
+        if boxes.shape[0] > 0:
+            image_dir = os.path.dirname(image_path)
+            output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+            vis_util.visualize_boxes_and_labels_on_image_array(
+                image_np,
+                np.squeeze(boxes),
+                np.squeeze(classes).astype(np.int32),
+                np.squeeze(scores),
+                self.category_index,
+                use_normalized_coordinates=True,
+                min_score_thresh=min_score_thresh,
+                line_thickness=4)
+            output_image = Image.fromarray(image_np)
+            output_image.thumbnail((int(im_width*0.5), int(im_height*0.5)), Image.ANTIALIAS)
+            output_image.save(output_image_path)
 
         ret = []
         # have_classes = {}
