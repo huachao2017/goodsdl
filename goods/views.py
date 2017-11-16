@@ -35,7 +35,7 @@ class ImageOldViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
     serializer_class = ImageSerializer
 
     def create(self, request, *args, **kwargs):
-        logger.info('begin create:')
+        logger.debug('begin create:')
         # 兼容没有那么字段的请求
         if 'deviceid' not in request.data :
             request.data['deviceid'] = get_client_ip(request)
@@ -44,15 +44,15 @@ class ImageOldViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         detector = imagedetection_old.ImageDetectorFactory.get_static_detector()
-        logger.info('begin detect:{}'.format(serializer.instance.source.path))
+        logger.debug('begin detect:{}'.format(serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh=.8)
         if len(ret) <= 0:
-            logger.info('end detect:0')
+            logger.debug('end detect:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
-            logger.info('end detect:{}'.format(str(len(ret))))
+            logger.debug('end detect:{}'.format(str(len(ret))))
             for goods in ret:
                 Goods.objects.create(image_id=serializer.instance.pk,
                                      class_type=goods['class'],
@@ -63,7 +63,7 @@ class ImageOldViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                                      xmax=goods['box']['xmax'],
                                      ymax=goods['box']['ymax'],
                                      )
-        logger.info('end create')
+        logger.debug('end create')
         #return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
