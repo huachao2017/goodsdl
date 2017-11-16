@@ -103,28 +103,28 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                      xmax=goods['xmax'],
                                      ymax=goods['ymax'],
                                      )
-            if goods['class'] in class_index_dict:
-                ret_reborn[class_index_dict[goods['class']]]['box'].append({
-                    'score': goods['score'],
-                    'xmin': goods['xmin'],
-                    'ymin': goods['ymin'],
-                    'xmax': goods['xmax'],
-                    'ymax': goods['ymax'],
-                })
-            else:
-                box = []
-                box.append({
-                    'score': goods['score'],
-                    'xmin': goods['xmin'],
-                    'ymin': goods['ymin'],
-                    'xmax': goods['xmax'],
-                    'ymax': goods['ymax'],
-                })
-                ret_reborn.append({
-                    'class':goods['class'],
-                    'upc':goods['upc'],
-                    'box':box
-                })
+                if goods['class'] in class_index_dict:
+                    ret_reborn[class_index_dict[goods['class']]]['box'].append({
+                        'score': goods['score'],
+                        'xmin': goods['xmin'],
+                        'ymin': goods['ymin'],
+                        'xmax': goods['xmax'],
+                        'ymax': goods['ymax'],
+                    })
+                else:
+                    box = []
+                    box.append({
+                        'score': goods['score'],
+                        'xmin': goods['xmin'],
+                        'ymin': goods['ymin'],
+                        'xmax': goods['xmax'],
+                        'ymax': goods['ymax'],
+                    })
+                    ret_reborn.append({
+                        'class':goods['class'],
+                        'upc':goods['upc'],
+                        'box':box
+                    })
                 class_index_dict[goods['class']] = index
                 index = index + 1
             ret = ret_reborn
