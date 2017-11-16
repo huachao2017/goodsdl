@@ -45,8 +45,8 @@ class ImageDetector:
                 tf.import_graph_def(od_graph_def, name='')
 
         config = tf.ConfigProto()
-        # config.gpu_options.allow_growth = True
-        config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU20%的显存
+        config.gpu_options.allow_growth = True
+        config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU50%的显存
         self.session = tf.Session(graph=self.detection_graph, config=config)
 
         # Definite input and output Tensors for detection_graph
