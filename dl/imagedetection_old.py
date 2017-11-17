@@ -53,11 +53,6 @@ class ImageDetector:
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
 
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        # config.gpu_options.per_process_gpu_memory_fraction = 0.1  # 占用GPU20%的显存
-        self.session = tf.Session(graph=self.detection_graph, config=config)
-
         # Definite input and output Tensors for detection_graph
         self.image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
         # Each box represents a part of the image where a particular object was detected.
@@ -69,8 +64,13 @@ class ImageDetector:
 
         # num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
 
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        # config.gpu_options.per_process_gpu_memory_fraction = 0.1  # 占用GPU20%的显存
+        self.session = tf.Session(graph=self.detection_graph, config=config)
+
     def detect(self,image_path,min_score_thresh=.5):
-        if self.detection_graph is None:
+        if self.session is None:
             self.load()
         image = Image.open(image_path)
         if image.mode != 'RGB':
