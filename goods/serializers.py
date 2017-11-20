@@ -10,12 +10,12 @@ class ImageSerializer(serializers.ModelSerializer):
     image_goods = GoodsSerializer(many=True, read_only=True)
     class Meta:
         model = Image
-        fields = ('pk', 'deviceid', 'traintype', 'source', 'image_goods')
+        fields = ('pk', 'deviceid', 'source', 'image_goods')
 
 class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainImage
-        fields = ('pk', 'deviceid', 'source', 'upc', 'name', 'xmin', 'ymin', 'xmax', 'ymax', 'create_time')
+        fields = ('pk', 'deviceid', 'traintype', 'source', 'upc', 'name', 'xmin', 'ymin', 'xmax', 'ymax', 'create_time')
         read_only_fields = ('create_time',)
 
 class ActionLogSerializer(serializers.ModelSerializer):
