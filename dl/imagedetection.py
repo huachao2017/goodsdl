@@ -101,7 +101,7 @@ class ImageDetector:
                 min_score_thresh=min_score_thresh,
                 line_thickness=4)
             output_image = Image.fromarray(image_np)
-            output_image.thumbnail((int(im_width*0.5), int(im_height*0.5)), Image.ANTIALIAS)
+            output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
             output_image.save(output_image_path)
 
         ret = []
