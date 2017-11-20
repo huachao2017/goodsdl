@@ -30,7 +30,7 @@ class ImageDetector:
     def load(self):
 
         semaphore = threading.Semaphore(1)
-        if semaphore.acquire(blocking=False, timeout=3):
+        if semaphore.acquire(blocking=False):
             if self.category_index is None:
                 logger.info('begin loading model')
                 self.detection_graph = tf.Graph()
