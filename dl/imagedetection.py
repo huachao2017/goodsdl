@@ -26,11 +26,11 @@ class ImageDetector:
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
         self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph.pb')
         self.label_path = os.path.join(self.file_path, 'model/goods_label_map.pbtxt')
+        self.counter = 0
 
     def load(self):
-
-        semaphore = threading.Semaphore(1)
-        if semaphore.acquire(blocking=False):
+        if self.counter <= 0:
+            self.counter = self.counter + 1
             if self.category_index is None:
                 logger.info('begin loading model')
                 self.detection_graph = tf.Graph()
