@@ -5,6 +5,8 @@ import numpy as np
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 import threading
+import logging
+logger = logging.getLogger("django")
 
 class ImageDetectorFactory:
     _detector = None
@@ -30,6 +32,7 @@ class ImageDetector:
         semaphore = threading.Semaphore(1)
         semaphore.acquire()
         try:
+            logger.info('begin loading model')
             if self.category_index is None:
                 self.detection_graph = tf.Graph()
                 with self.detection_graph.as_default():
@@ -59,12 +62,16 @@ class ImageDetector:
                 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
                                                                             use_display_name=True)
                 self.category_index = label_map_util.create_category_index(categories)
+                logger.info('end loading model')
         finally:
             semaphore.release()
 
     def detect(self,image_path,min_score_thresh=.5):
         if self.category_index is None:
             self.load()
+            if self.category_index is None:
+                logger.warning('loading model failed')
+                return None
         image = Image.open(image_path)
         if image.mode != 'RGB':
             image = image.convert('RGB')
