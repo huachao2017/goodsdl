@@ -32,8 +32,8 @@ class ImageDetector:
         semaphore = threading.Semaphore(1)
         semaphore.acquire()
         try:
-            logger.info('begin loading model')
             if self.category_index is None:
+                logger.info('begin loading model')
                 self.detection_graph = tf.Graph()
                 with self.detection_graph.as_default():
                     od_graph_def = tf.GraphDef()
