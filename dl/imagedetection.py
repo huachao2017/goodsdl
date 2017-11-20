@@ -64,7 +64,8 @@ class ImageDetector:
                 self.category_index = label_map_util.create_category_index(categories)
                 logger.info('end loading model')
         finally:
-            semaphore.release()
+            pass
+            # semaphore.release()
 
     def detect(self,image_path,min_score_thresh=.5):
         if self.category_index is None:
