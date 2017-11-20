@@ -20,6 +20,7 @@ class ImageDetector:
     def __init__(self):
         self.detection_graph = None
         self.session = None
+        self.category_index = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
         self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph.pb')
         self.label_path = os.path.join(self.file_path, 'model/goods_label_map.pbtxt')
@@ -29,7 +30,7 @@ class ImageDetector:
         lock = threading.Lock()
         lock.acquire()
         try:
-            if self.session is not None:
+            if self.category_index is not None:
                 return
 
             self.detection_graph = tf.Graph()
@@ -64,7 +65,7 @@ class ImageDetector:
             lock.release()
 
     def detect(self,image_path,min_score_thresh=.5):
-        if self.session is None:
+        if self.category_index is None:
             self.load()
         image = Image.open(image_path)
         if image.mode != 'RGB':
