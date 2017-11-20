@@ -23,10 +23,15 @@ class Goods(models.Model):
 
 def train_image_upload_source(instance,filename):
     now = datetime.datetime.now()
-    return 'data/{}/{}_{}'.format(instance.upc, str(now.time()), filename)
+    if instance.traintype == 0:
+        ret = 'data/{}/{}_{}'.format(instance.upc, str(now.time()), filename)
+    else:
+        ret = '{}/{}/{}_{}'.format(instance.traintype, instance.upc, str(now.time()), filename)
+    return ret
 
 class TrainImage(models.Model):
     deviceid = models.CharField(max_length=20, default='')
+    traintype = models.PositiveIntegerField(default=0)
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     upc = models.CharField(max_length=20)
     name = models.CharField(max_length=20, default='')

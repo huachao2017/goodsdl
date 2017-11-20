@@ -157,6 +157,8 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         #     request.data['name'] = request.data['upc']
         if 'deviceid' not in request.data :
             request.data['deviceid'] = get_client_ip(request)
+        if 'traintype' not in request.data :
+            request.data['traintype'] = 0
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

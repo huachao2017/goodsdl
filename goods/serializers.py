@@ -10,7 +10,7 @@ class ImageSerializer(serializers.ModelSerializer):
     image_goods = GoodsSerializer(many=True, read_only=True)
     class Meta:
         model = Image
-        fields = ('pk', 'deviceid', 'source', 'image_goods')
+        fields = ('pk', 'deviceid', 'traintype', 'source', 'image_goods')
 
 class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:
