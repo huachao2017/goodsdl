@@ -48,6 +48,7 @@ class ActionLog(models.Model):
         (u'EG', u'Export Graph'),
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
+    traintype = models.PositiveIntegerField(default=0)
     desc = models.CharField(max_length=500)
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)

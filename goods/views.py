@@ -81,7 +81,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         detector = imagedetection.ImageDetectorFactory.get_static_detector()
-        logger.info('begin detect:{}'.format(serializer.instance.source.path))
+        logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh = .4)
         if len(ret) <= 0:
             logger.info('end detect:0')
@@ -246,7 +246,10 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             # 训练准备
-            data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            if serializer.instance.traintype == 0:
+                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            else:
+                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
             label_map_dict = create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
@@ -279,8 +282,13 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 trained_checkpoint_prefix = os.path.join(trained_checkpoint_dir, 'model.ckpt-{}'.format(prefix))
                 # 备份上一个pb
                 model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model')
-                export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
-                label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
+                if lastBT.traintype == 0:
+                    export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
+                    label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
+                else:
+                    export_file_path = os.path.join(model_dir, str(lastBT.traintype) + '_frozen_inference_graph.pb')
+                    label_file_path = os.path.join(model_dir, str(lastBT.traintype) + '_goods_label_map.pbtxt')
+
                 if os.path.isfile(export_file_path):
                     now = datetime.datetime.now()
                     postfix = now.strftime('%Y%m%d%H%M%S')

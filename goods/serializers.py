@@ -21,6 +21,6 @@ class TrainImageSerializer(serializers.ModelSerializer):
 class ActionLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActionLog
-        fields = ('pk', 'action', 'desc', 'param', 'create_time')
+        fields = ('pk', 'action', 'traintype', 'desc', 'param', 'create_time')
         read_only_fields = ( 'param', 'create_time',)
 
