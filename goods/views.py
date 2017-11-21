@@ -257,7 +257,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             # 训练
-            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
+            command = 'nohup python3 {}/train.py --num_clones=2 --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -323,7 +323,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
             # 继续训练
-            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
+            command = 'nohup python3 {}/train.py --num_clones=2 --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
