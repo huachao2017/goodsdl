@@ -9,11 +9,11 @@ import logging
 logger = logging.getLogger("django")
 
 class ImageDetectorFactory:
-    _detector = []
+    _detector = {}
 
     @staticmethod
     def get_static_detector(type):
-        if ImageDetectorFactory._detector[type] is None:
+        if type in ImageDetectorFactory._detector:
             ImageDetectorFactory._detector[type] = ImageDetector(type)
         return ImageDetectorFactory._detector[type]
 
