@@ -13,7 +13,7 @@ class ImageDetectorFactory:
 
     @staticmethod
     def get_static_detector(type):
-        if type in ImageDetectorFactory._detector:
+        if type not in ImageDetectorFactory._detector:
             ImageDetectorFactory._detector[type] = ImageDetector(type)
         return ImageDetectorFactory._detector[type]
 
