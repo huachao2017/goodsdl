@@ -25,14 +25,8 @@ class ImageDetector:
         self.category_index = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
-        # TODO add type
-        if type == '10':
-            self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph_old.pb')
-            self.label_path = os.path.join(self.file_path, 'model/goods_label_map_old.pbtxt')
-        else:
-            self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph.pb')
-            self.label_path = os.path.join(self.file_path, 'model/goods_label_map.pbtxt')
-
+        self.model_path = os.path.join(self.file_path, 'model', str(type), 'frozen_inference_graph.pb')
+        self.label_path = os.path.join(self.file_path, 'model', str(type), 'goods_label_map.pbtxt')
         self.counter = 0
 
     def load(self):
