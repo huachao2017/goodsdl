@@ -9,23 +9,30 @@ import logging
 logger = logging.getLogger("django")
 
 class ImageDetectorFactory:
-    _detector = None
+    _detector = []
 
     @staticmethod
-    def get_static_detector():
-        if ImageDetectorFactory._detector is None:
-            ImageDetectorFactory._detector = ImageDetector()
-        return ImageDetectorFactory._detector
+    def get_static_detector(type):
+        if ImageDetectorFactory._detector[type] is None:
+            ImageDetectorFactory._detector[type] = ImageDetector(type)
+        return ImageDetectorFactory._detector[type]
 
 
 class ImageDetector:
-    def __init__(self):
+    def __init__(self, type):
         self.detection_graph = None
         self.session = None
         self.category_index = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
-        self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph.pb')
-        self.label_path = os.path.join(self.file_path, 'model/goods_label_map.pbtxt')
+
+        # TODO add type
+        if type == '10':
+            self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph_old.pb')
+            self.label_path = os.path.join(self.file_path, 'model/goods_label_map_old.pbtxt')
+        else:
+            self.model_path = os.path.join(self.file_path, 'model/frozen_inference_graph.pb')
+            self.label_path = os.path.join(self.file_path, 'model/goods_label_map.pbtxt')
+
         self.counter = 0
 
     def load(self):
