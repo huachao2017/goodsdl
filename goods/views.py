@@ -268,7 +268,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'EG':
 
-            lastBT = ActionLog.objects.filter(action='BT').order_by('-id')[0]
+            lastBT = ActionLog.objects.filter(action='BT').filter(traintype=serializer.instance.traintype).order_by('-id')[0]
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastBT.pk))
             prefix = 0
             for i in os.listdir(trained_checkpoint_dir):
