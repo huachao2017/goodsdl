@@ -39,7 +39,7 @@ class ImageDetector:
         if self.counter <= 0:
             self.counter = self.counter + 1
             if self.category_index is None:
-                logger.info('begin loading model')
+                logger.info('begin loading model: {}'.format(self.model_path))
                 self.detection_graph = tf.Graph()
                 with self.detection_graph.as_default():
                     od_graph_def = tf.GraphDef()
