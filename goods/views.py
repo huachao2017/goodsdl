@@ -88,7 +88,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             min_score_thresh = .5
         elif serializer.instance.deviceid == '0':
             # for web debug
-            detector = imagedetection.ImageDetectorFactory.get_static_detector('1')
+            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .2
         else:
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
