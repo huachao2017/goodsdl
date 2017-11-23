@@ -45,6 +45,7 @@ class ActionLog(models.Model):
         (u'BT', u'Begin Train'),
         (u'ST', u'Stop Train'),
         (u'EG', u'Export Graph'),
+        (u'TT', u'Test Train'),
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
     traintype = models.PositiveIntegerField(default=0)

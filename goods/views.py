@@ -13,7 +13,7 @@ import subprocess
 from .models import Image, Goods
 import xml.etree.ElementTree as ET
 from PIL import Image as im
-from dl import create_goods_tf_record
+from dl import create_goods_tf_record, create_onegoods_tf_record
 from dl import export_inference_graph
 from django.conf import settings
 import numpy as np
@@ -278,7 +278,27 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             )
             logger.info(command)
             subprocess.call(command, shell=True)
-        elif serializer.instance.action == 'ET':
+        elif serializer.instance.action == 'TT':
+            # 杀死原来的train
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+
+            # 训练准备
+            data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
+            serializer.instance.param = str(label_map_dict)
+            serializer.instance.save()
+
+            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
+
+            # 训练
+            command = 'nohup python3 {}/train.py --num_clones=2 --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+        elif serializer.instance.action == 'ST':
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'EG':
 
