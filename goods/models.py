@@ -3,8 +3,8 @@ import datetime
 
 def image_upload_source(instance,filename):
     now = datetime.datetime.now()
-    subdir = now.strftime('%Y%m/%d%H/%M%S')
-    return '{}_{}_{}'.format(subdir, str(now.time()), filename)
+    datedir = now.strftime('%Y%m/%d%H/%M%S')
+    return '{}/{}_{}_{}'.format(instance.deviceid, datedir, str(now.time()), filename)
 
 class Image(models.Model):
     deviceid = models.CharField(max_length=20, default='')
