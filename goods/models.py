@@ -6,7 +6,7 @@ def image_upload_source(instance,filename):
     return '{}/{}/{}_{}_{}'.format(now.strftime('%Y%m/%d%H'), instance.deviceid, now.strftime('%M%S'), str(now.time()), filename)
 
 class Image(models.Model):
-    deviceid = models.CharField(max_length=20, default='')
+    deviceid = models.CharField(max_length=20, default='0')
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 

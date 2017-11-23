@@ -83,16 +83,17 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         headers = self.get_success_headers(serializer.data)
 
         # 暂时性分解Detect，需要一个处理type编码
-        if serializer.instance.deviceid == '111':
-            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-            min_score_thresh = .8
-        else:
+        if serializer.instance.deviceid == '108':
             detector = imagedetection.ImageDetectorFactory.get_static_detector('1')
             min_score_thresh = .5
-
-        # for web debug
-        if serializer.instance.deviceid == '':
+        elif serializer.instance.deviceid == '0':
+            # for web debug
+            detector = imagedetection.ImageDetectorFactory.get_static_detector('1')
             min_score_thresh = .2
+        else:
+            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+            min_score_thresh = .8
+
 
         logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
