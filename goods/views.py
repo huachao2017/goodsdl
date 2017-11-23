@@ -96,7 +96,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
-        if len(ret) <= 0:
+        if ret is None or len(ret) <= 0:
             logger.info('end detect:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
