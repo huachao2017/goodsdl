@@ -89,6 +89,11 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         else:
             detector = imagedetection.ImageDetectorFactory.get_static_detector('1')
             min_score_thresh = .5
+
+        # for web debug
+        if serializer.instance.deviceid == '':
+            min_score_thresh = .2
+
         logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
         if len(ret) <= 0:
