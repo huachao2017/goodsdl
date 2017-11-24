@@ -272,7 +272,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             # 训练
-            command = 'nohup python3 {}/train.py --num_clones=2 --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > train.out 2>&1 &'.format(
+            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -284,7 +284,10 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             # 训练准备
-            data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            if serializer.instance.traintype == 0:
+                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            else:
+                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
@@ -292,7 +295,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             # 训练
-            command = 'nohup python3 {}/train.py --num_clones=2 --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
+            # --num_clones=2 同步修改config中的batch_size=2
+            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,

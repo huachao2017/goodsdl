@@ -86,7 +86,7 @@ model {
 }
 
 train_config: {
-  batch_size: 2
+  batch_size: 1
   optimizer {
     momentum_optimizer: {
       learning_rate: {
