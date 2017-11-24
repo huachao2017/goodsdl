@@ -16,6 +16,7 @@ from PIL import Image as im
 from dl import create_goods_tf_record, create_onegoods_tf_record
 from dl import export_inference_graph
 from django.conf import settings
+from django.db.models import Q
 import numpy as np
 from object_detection.utils import visualization_utils as vis_util
 
@@ -302,7 +303,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'EG':
 
-            lastBT = ActionLog.objects.filter(action='BT').filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            lastBT = ActionLog.objects.filter(Q(action="BT") | Q(action="TT")).filter(traintype=serializer.instance.traintype).order_by('-id')[0]
             logger.info('Export Grapy from train:{}'.format(lastBT.pk))
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastBT.pk))
             prefix = 0
