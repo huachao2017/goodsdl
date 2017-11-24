@@ -315,10 +315,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             if prefix > 0:
                 trained_checkpoint_prefix = os.path.join(trained_checkpoint_dir, 'model.ckpt-{}'.format(prefix))
                 # 备份上一个pb
-                if lastBT.traintype == 0:
-                    model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model')
-                else:
-                    model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(lastBT.traintype))
+                model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(lastBT.traintype))
                 export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
                 label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
 
