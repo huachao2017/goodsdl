@@ -303,6 +303,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
         elif serializer.instance.action == 'EG':
 
             lastBT = ActionLog.objects.filter(action='BT').filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            logger.info('Export Grapy from train:'.format(lastBT.pk))
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastBT.pk))
             prefix = 0
             for i in os.listdir(trained_checkpoint_dir):
