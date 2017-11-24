@@ -105,6 +105,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
             logger.info('end detect:{}'.format(str(len(ret))))
+            print(ret)
             ret_reborn = []
             index = 0
             class_index_dict = {}
@@ -126,6 +127,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                         'xmax': goods['xmax'],
                         'ymax': goods['ymax'],
                     })
+                    class_index_dict[goods['class']] = index
+                    index = index + 1
                 else:
                     box = []
                     box.append({
@@ -140,8 +143,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                         'upc':goods['upc'],
                         'box':box
                     })
-                class_index_dict[goods['class']] = index
-                index = index + 1
             ret = ret_reborn
         logger.info('end create')
         #return Response({'Test':True})
