@@ -24,7 +24,7 @@ SECRET_KEY = '*nqbimelq553&@0q7&ydkwe*2fbmb6#1%*xibu@-@%u0u@+dw@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['train.fastxbox.cn', 'ai.fastxbox.cn','127.0.0.1', '192.168.1.*', '192.168.61.*']
+ALLOWED_HOSTS = ['train.fastxbox.cn', 'ai.fastxbox.cn', '127.0.0.1', '192.168.1.', '192.168.61.']
 
 # Application definition
 
