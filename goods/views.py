@@ -347,7 +347,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        if serializer.instance.action == 'BT':
+        if serializer.instance.action == 'BT' or serializer.instance.action == 'TT':
             # 杀死原来的train
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
