@@ -378,13 +378,23 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
         if serializer.instance.action == 'BT' or serializer.instance.action == 'TT':
             # 杀死原来的train
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+            os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
-            # 继续训练
-            command = 'nohup python3 {}/train.py --num_clones=2 --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
+            # 继续训练 --num_clones=2
+            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+            # 评估
+            command = 'nohup python3 {}/eval.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+                os.path.join(train_logs_dir, 'eval_log'),
             )
             logger.info(command)
             subprocess.call(command, shell=True)
