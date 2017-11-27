@@ -1,3 +1,9 @@
+# 训练
+<img src="images/train_1.jpg">
+
+# 检测
+<img src="images/test_1.jpg">
+
 # 启动方式
 python manage.py runserver 0.0.0.0:8000
 
