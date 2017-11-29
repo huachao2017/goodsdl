@@ -282,7 +282,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
             # 评估
-            command = 'nohup python3 {}/eval.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
+            command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -308,7 +308,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
             # 训练
             # --num_clones=2 同步修改config中的batch_size=2
-            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
+            command = 'nohup python3 {}/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -316,7 +316,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
             # 评估
-            command = 'nohup python3 {}/eval.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
+            command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -382,7 +382,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
             # 继续训练 --num_clones=2
-            command = 'nohup python3 {}/train.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
+            command = 'nohup python3 {}/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -390,7 +390,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
             # 评估
-            command = 'nohup python3 {}/eval.py --logtostderr --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
+            command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
