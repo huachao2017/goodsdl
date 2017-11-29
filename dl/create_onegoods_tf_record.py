@@ -207,7 +207,7 @@ def create_label_map_file(output_filename,
 def update_config_file(model_dir,
                        train_name,
                        num_classes):
-    config_template_file_path = os.path.join(model_dir, 'faster_rcnn_nas_goods.config.template')
+    config_template_file_path = os.path.join(model_dir, 'faster_rcnn_nas_goods.config.template_tt')
     output_filename = os.path.join(model_dir, train_name, 'faster_rcnn_nas_goods.config')
     with open(config_template_file_path, 'r') as file:
         data = file.read()

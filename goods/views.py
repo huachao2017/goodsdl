@@ -299,7 +299,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             if serializer.instance.traintype == 0:
                 data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
             label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
