@@ -24,7 +24,7 @@ from deployment import model_deploy
 from nets import nets_factory
 from preprocessing import preprocessing_factory
 import os
-from . import dataset as ds
+from .dataset import *
 
 slim = tf.contrib.slim
 
@@ -404,7 +404,7 @@ def main(_):
         ######################
         # Get the dataset #
         ######################
-        dataset = ds._get_split(FLAGS.dataset_split_name, FLAGS.dataset_dir, FLAGS.example_num)
+        dataset = get_split(FLAGS.dataset_split_name, FLAGS.dataset_dir, FLAGS.example_num)
 
         ######################
         # Select the network #

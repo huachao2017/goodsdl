@@ -9,7 +9,7 @@ _ITEMS_TO_DESCRIPTIONS = {
     'label': 'A single integer',
 }
 
-def _get_split(split_name, dataset_dir, example_num=2000, file_pattern=None, reader=None):
+def get_split(split_name, dataset_dir, example_num=2000, file_pattern=None, reader=None):
     """Gets a dataset tuple with instructions for reading cifar10.
 
     Args:

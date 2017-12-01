@@ -61,7 +61,7 @@ import tensorflow as tf
 from tensorflow.python.platform import gfile
 from datasets import dataset_factory
 from nets import nets_factory
-from . import dataset as ds
+from .dataset import *
 
 slim = tf.contrib.slim
 
@@ -104,7 +104,7 @@ def main(_):
         raise ValueError('You must supply the path to save to with --output_file')
     tf.logging.set_verbosity(tf.logging.INFO)
     with tf.Graph().as_default() as graph:
-        dataset = ds._get_split('train', FLAGS.dataset_dir)
+        dataset = get_split('train', FLAGS.dataset_dir)
 
         network_fn = nets_factory.get_network_fn(
             FLAGS.model_name,
