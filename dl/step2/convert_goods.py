@@ -26,7 +26,7 @@ import tensorflow as tf
 from datasets import dataset_utils
 
 # The number of images in the validation set.
-_NUM_VALIDATION = 350
+_NUM_VALIDATION = 30
 
 # Seed for repeatability.
 _RANDOM_SEED = 0
@@ -145,6 +145,8 @@ def _tfrecord_exists(output_dir):
 
 def create_step2_goods(data_dir, dataset_dir):
     """返回所有图片文件路径"""
+    logger.info(dataset_dir)
+    return
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(dirlist)):
         class_dir = os.path.join(data_dir, dirlist[i])
@@ -197,6 +199,8 @@ def prepare_train(data_dir, train_dir, train_name):
     dataset_dir = os.path.join(output_dir, 'step2')
     _clean_up_temporary_files(dataset_dir)
     create_step2_goods(data_dir, dataset_dir)
+
+    return
 
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
     class_names_to_ids = dict(zip(class_names, range(len(class_names))))
