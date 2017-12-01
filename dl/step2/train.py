@@ -24,7 +24,6 @@ from deployment import model_deploy
 from nets import nets_factory
 from preprocessing import preprocessing_factory
 import os
-from .dataset import *
 
 slim = tf.contrib.slim
 
