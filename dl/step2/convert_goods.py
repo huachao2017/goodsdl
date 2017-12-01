@@ -145,8 +145,6 @@ def _tfrecord_exists(output_dir):
 
 def create_step2_goods(data_dir, dataset_dir):
     """返回所有图片文件路径"""
-    logger.info(dataset_dir)
-    return
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(dirlist)):
         class_dir = os.path.join(data_dir, dirlist[i])
@@ -178,7 +176,7 @@ def create_step2_goods(data_dir, dataset_dir):
                         newimage = image.crop((xmin, ymin, xmax, ymax))
                         # 生成新的图片
                         output_image_path = os.path.join(output_class_dir, "{}_{}.jpg".format(example, index))
-                        newimage.save(output_image_path, 'JPEG')
+#                        newimage.save(output_image_path, 'JPEG')
                         logger.info('save image:{}'.format(output_image_path))
 
 def prepare_train(data_dir, train_dir, train_name):
