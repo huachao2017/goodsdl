@@ -48,11 +48,11 @@ tf.app.flags.DEFINE_integer(
     'are handled locally by the worker.')
 
 tf.app.flags.DEFINE_integer(
-    'num_readers', 4,
+    'num_readers', 1,
     'The number of parallel readers that read data from the dataset.')
 
 tf.app.flags.DEFINE_integer(
-    'num_preprocessing_threads', 4,
+    'num_preprocessing_threads', 1,
     'The number of threads used to create the batches.')
 
 tf.app.flags.DEFINE_integer(
