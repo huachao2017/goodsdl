@@ -148,7 +148,7 @@ def _get_split(split_name, dataset_dir, example_num, file_pattern=None, reader=N
         data_sources=file_pattern,
         reader=reader,
         decoder=decoder,
-        num_samples=example_num,
+        num_samples=int(example_num),
         items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
         num_classes=len(labels_to_names),
         labels_to_names=labels_to_names)
