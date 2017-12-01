@@ -19,6 +19,7 @@ import random
 import sys
 import xml.etree.ElementTree as ET
 from PIL import Image as im
+import logging
 
 import tensorflow as tf
 
@@ -30,6 +31,7 @@ _NUM_VALIDATION = 350
 # Seed for repeatability.
 _RANDOM_SEED = 0
 
+logger = logging.getLogger("django")
 
 
 class ImageReader(object):
@@ -157,6 +159,7 @@ def create_step2_goods(data_dir, dataset_dir):
     for i in range(0, len(dirlist)):
         class_dir = os.path.join(data_dir, dirlist[i])
         if os.path.isdir(class_dir):
+            logger.info('solve class:{}'.format(dirlist[i]))
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
@@ -167,6 +170,7 @@ def create_step2_goods(data_dir, dataset_dir):
                 example, ext = os.path.splitext(image_path)
                 xml_path = os.path.join(example, '.xml')
                 if ext == ".jpg" and os.path.isfile(xml_path):
+                    logger.info('solve image:{}'.format(image_path))
                     image = im.open(image_path)
                     tree = ET.parse(xml_path)
                     root = tree.getroot()
@@ -181,8 +185,9 @@ def create_step2_goods(data_dir, dataset_dir):
                         ymax = int(box.find('ymax').text)
                         newimage = image.crop(xmin, ymin, xmax-xmin, ymax-ymin)
                         # 生成新的图片
-                        output_image_dir = os.path.join(output_class_dir, "{}_{}.jpg".format(example, index))
-                        newimage.save(output_image_dir, 'JPEG')
+                        output_image_path = os.path.join(output_class_dir, "{}_{}.jpg".format(example, index))
+                        newimage.save(output_image_path, 'JPEG')
+                        logger.info('save image:{}'.format(output_image_path))
 
 def prepare_train(data_dir, train_dir, train_name):
     """Runs the download and conversion operation.
@@ -196,10 +201,10 @@ def prepare_train(data_dir, train_dir, train_name):
         tf.gfile.MakeDirs(output_dir)
 
     if _tfrecord_exists(output_dir):
-        print('Dataset files already exist. Exiting without re-creating them.')
+        logger.warning('Dataset files already exist. Exiting without re-creating them.')
         return
 
-    dataset_dir = os.path.join(data_dir, 'step2')
+    dataset_dir = os.path.join(output_dir, 'step2')
     _clean_up_temporary_files(dataset_dir)
     create_step2_goods(data_dir, dataset_dir)
 
@@ -222,4 +227,4 @@ def prepare_train(data_dir, train_dir, train_name):
     labels_to_class_names = dict(zip(range(len(class_names)), class_names))
     dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
-    print('\nFinished converting the Flowers dataset!')
+    logger.info('\nFinished converting the goods dataset!')
