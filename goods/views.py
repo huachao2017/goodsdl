@@ -1,24 +1,26 @@
-from rest_framework import viewsets
-from rest_framework import mixins
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from .serializers import *
-from rest_framework import status
-from dl import imagedetection, imagedetection_old
+import datetime
 import logging
 import os
 import shutil
-import datetime
 import subprocess
-from .models import Image, Goods
 import xml.etree.ElementTree as ET
+
+import numpy as np
 from PIL import Image as im
-from dl import create_goods_tf_record, create_onegoods_tf_record
-from dl import export_inference_graph
 from django.conf import settings
 from django.db.models import Q
-import numpy as np
 from object_detection.utils import visualization_utils as vis_util
+from rest_framework import mixins
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from dl import imagedetection
+from dl.step1 import create_onegoods_tf_record, export_inference_graph
+from dl.step2 import convert_goods
+from .models import Image, Goods
+from .serializers import *
 
 logger = logging.getLogger("django")
 
@@ -257,40 +259,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
         headers = self.get_success_headers(serializer.data)
         logger.info('create action:{}'.format(serializer.instance.action))
 
-        if serializer.instance.action == 'BT':
-            # 杀死原来的train
-            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-            os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-
-            # 训练准备
-            if serializer.instance.traintype == 0:
-                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
-            else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-            label_map_dict = create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
-            serializer.instance.param = str(label_map_dict)
-            serializer.instance.save()
-
-            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
-
-            # 训练
-            command = 'nohup python3 {}/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
-            # 评估
-            command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-                os.path.join(train_logs_dir, 'eval_log'),
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
-        elif serializer.instance.action == 'TT':
+        if serializer.instance.action == 'T1':
             # 杀死原来的train
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
             os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
@@ -308,7 +277,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
             # 训练
             # --num_clones=2 同步修改config中的batch_size=2
-            command = 'nohup python3 {}/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
+            command = 'nohup python3 {}/step1/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train1.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -316,7 +285,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
             # 评估
-            command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
+            command = 'nohup python3 {}/step1/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval1.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -324,12 +293,45 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             )
             logger.info(command)
             subprocess.call(command, shell=True)
+        elif serializer.instance.action == 'T2':
+            # 杀死原来的train
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+            os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+
+            # 训练准备
+            if serializer.instance.traintype == 0:
+                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            else:
+                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
+            label_map_dict = convert_goods.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
+            serializer.instance.param = str(label_map_dict)
+            serializer.instance.save()
+
+            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
+
+            # 训练 TODO
+            # command = 'nohup python3 {}/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
+            #     os.path.join(settings.BASE_DIR, 'dl'),
+            #     train_logs_dir,
+            #     train_logs_dir,
+            # )
+            # logger.info(command)
+            # subprocess.call(command, shell=True)
+            # 评估 TODO
+            # command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
+            #     os.path.join(settings.BASE_DIR, 'dl'),
+            #     train_logs_dir,
+            #     train_logs_dir,
+            #     os.path.join(train_logs_dir, 'eval_log'),
+            # )
+            # logger.info(command)
+            # subprocess.call(command, shell=True)
         elif serializer.instance.action == 'ST':
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
             os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-        elif serializer.instance.action == 'EG':
+        elif serializer.instance.action == 'E1':
 
-            lastBT = ActionLog.objects.filter(Q(action="BT") | Q(action="TT")).filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            lastBT = ActionLog.objects.filter(action="T1").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
             logger.info('Export Grapy from train:{}'.format(lastBT.pk))
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastBT.pk))
             prefix = 0
@@ -366,6 +368,10 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 # reboot django
                 os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
+        elif serializer.instance.action == 'E2':
+            # TODO
+            pass
+
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
@@ -375,14 +381,14 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        if serializer.instance.action == 'BT' or serializer.instance.action == 'TT':
+        if serializer.instance.action == 'T1':
             # 杀死原来的train
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
             os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
             # 继续训练 --num_clones=2
-            command = 'nohup python3 {}/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
+            command = 'nohup python3 {}/step1/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train1.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -390,7 +396,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
             # 评估
-            command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
+            command = 'nohup python3 {}/step1/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval1.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
@@ -399,6 +405,9 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
 
+        if serializer.instance.action == 'T2':
+            # TODO
+            pass
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.

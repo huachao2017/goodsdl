@@ -42,10 +42,11 @@ class TrainImage(models.Model):
 
 class ActionLog(models.Model):
     ACTION_CHOICES = (
-        (u'BT', u'Begin Train'),
+        (u'T1', u'Train Step 1'),
+        (u'T2', u'Train Step 2'),
         (u'ST', u'Stop Train'),
-        (u'EG', u'Export Graph'),
-        (u'TT', u'Test Train'),
+        (u'E1', u'Export Step 1 Graph'),
+        (u'E2', u'Export Step 2 Graph'),
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
     traintype = models.PositiveIntegerField(default=0)
