@@ -20,6 +20,7 @@ import sys
 import xml.etree.ElementTree as ET
 from PIL import Image as im
 import logging
+import io
 
 import tensorflow as tf
 
@@ -102,32 +103,30 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
 
     num_per_shard = int(math.ceil(len(filenames) / float(len(class_names_to_ids))))
 
-    with tf.Graph().as_default():
-        image_reader = ImageReader()
+    output_filename = _get_tfrecord_filename(
+        output_dir, split_name)
+    writer = tf.python_io.TFRecordWriter(output_filename)
+    for shard_id in range(len(class_names_to_ids)):
+        start_ndx = shard_id * num_per_shard
+        end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
+        for i in range(start_ndx, end_ndx):
+            logger.info('\r>> Converting image %d/%d shard %d' % (
+                i + 1, len(filenames), shard_id))
 
-        with tf.Session('') as sess:
+            # Read the filename:
+            with tf.gfile.GFile(filenames[i], 'rb') as fid:
+                encoded_jpg = fid.read()
+            encoded_jpg_io = io.BytesIO(encoded_jpg)
+            image = im.open(encoded_jpg_io)
+            width, height = image.size
 
-            for shard_id in range(len(class_names_to_ids)):
-                output_filename = _get_tfrecord_filename(
-                    output_dir, split_name)
+            class_name = os.path.basename(os.path.dirname(filenames[i]))
+            class_id = class_names_to_ids[class_name]
 
-                with tf.python_io.TFRecordWriter(output_filename) as tfrecord_writer:
-                    start_ndx = shard_id * num_per_shard
-                    end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
-                    for i in range(start_ndx, end_ndx):
-                        logger.info('\r>> Converting image %d/%d shard %d' % (
-                            i + 1, len(filenames), shard_id))
-
-                        # Read the filename:
-                        image_data = tf.gfile.FastGFile(filenames[i], 'rb').read()
-                        height, width = image_reader.read_image_dims(sess, image_data)
-
-                        class_name = os.path.basename(os.path.dirname(filenames[i]))
-                        class_id = class_names_to_ids[class_name]
-
-                        example = dataset_utils.image_to_tfexample(
-                            image_data, b'jpg', height, width, class_id)
-                        tfrecord_writer.write(example.SerializeToString())
+            example = dataset_utils.image_to_tfexample(
+                encoded_jpg, b'jpg', height, width, class_id)
+            writer.write(example.SerializeToString())
+    writer.close()
     logger.info('generate tfrecord:{}'.format(output_filename))
 
 def _clean_up_temporary_files(dataset_dir):
