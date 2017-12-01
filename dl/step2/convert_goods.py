@@ -115,9 +115,8 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
                     start_ndx = shard_id * num_per_shard
                     end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
                     for i in range(start_ndx, end_ndx):
-                        sys.stdout.write('\r>> Converting image %d/%d shard %d' % (
+                        logger.info('\r>> Converting image %d/%d shard %d' % (
                             i + 1, len(filenames), shard_id))
-                        sys.stdout.flush()
 
                         # Read the filename:
                         image_data = tf.gfile.FastGFile(filenames[i], 'rb').read()
@@ -129,18 +128,9 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
                         example = dataset_utils.image_to_tfexample(
                             image_data, b'jpg', height, width, class_id)
                         tfrecord_writer.write(example.SerializeToString())
-
-    sys.stdout.write('\n')
-    sys.stdout.flush()
-
+    logger.info('generate tfrecord:{}'.format(output_filename))
 
 def _clean_up_temporary_files(dataset_dir):
-    """Removes temporary files used to create the dataset.
-
-    Args:
-      dataset_dir: The directory where the temporary files are stored.
-    """
-
     if tf.gfile.Exists(dataset_dir):
         tf.gfile.DeleteRecursively(dataset_dir)
 
@@ -168,7 +158,7 @@ def create_step2_goods(data_dir, dataset_dir):
             for j in range(0, len(filelist)):
                 image_path = os.path.join(class_dir, filelist[j])
                 example, ext = os.path.splitext(image_path)
-                xml_path = os.path.join(example, '.xml')
+                xml_path = example + '.xml'
                 if ext == ".jpg" and os.path.isfile(xml_path):
                     logger.info('solve image:{}'.format(image_path))
                     image = im.open(image_path)
@@ -214,7 +204,7 @@ def prepare_train(data_dir, train_dir, train_name):
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
     random.shuffle(photo_filenames)
-    training_filenames = photo_filenames
+    training_filenames = photo_filenames[_NUM_VALIDATION:]
     validation_filenames = photo_filenames[:_NUM_VALIDATION]
 
     # First, convert the training and validation sets.
@@ -227,4 +217,4 @@ def prepare_train(data_dir, train_dir, train_name):
     labels_to_class_names = dict(zip(range(len(class_names)), class_names))
     dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
-    logger.info('\nFinished converting the goods dataset!')
+    logger.info('Finished converting the goods dataset!')
