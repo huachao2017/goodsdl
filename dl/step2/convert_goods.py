@@ -173,7 +173,7 @@ def create_step2_goods(data_dir, dataset_dir):
                         ymin = int(box.find('ymin').text)
                         xmax = int(box.find('xmax').text)
                         ymax = int(box.find('ymax').text)
-                        newimage = image.crop((xmin, ymin, xmax-xmin, ymax-ymin))
+                        newimage = image.crop((xmin, ymin, xmax, ymax))
                         # 生成新的图片
                         output_image_path = os.path.join(output_class_dir, "{}_{}.jpg".format(example, index))
                         newimage.save(output_image_path, 'JPEG')
