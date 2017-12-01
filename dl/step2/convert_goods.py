@@ -139,9 +139,8 @@ def _clean_up_temporary_files(dataset_dir):
       dataset_dir: The directory where the temporary files are stored.
     """
 
-    tmp_dir = os.path.join(dataset_dir)
-    tf.gfile.DeleteRecursively(tmp_dir)
-
+    if tf.gfile.Exists(dataset_dir):
+        tf.gfile.DeleteRecursively(dataset_dir)
 
 def _tfrecord_exists(output_dir):
     for split_name in ['train', 'validation']:
