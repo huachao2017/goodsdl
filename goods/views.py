@@ -303,29 +303,31 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-            label_map_dict = convert_goods.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
-            serializer.instance.param = str(label_map_dict)
-            serializer.instance.save()
+            class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
-            # 训练 TODO
-            # command = 'nohup python3 {}/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train.out 2>&1 &'.format(
-            #     os.path.join(settings.BASE_DIR, 'dl'),
-            #     train_logs_dir,
-            #     train_logs_dir,
-            # )
-            # logger.info(command)
-            # subprocess.call(command, shell=True)
-            # 评估 TODO
-            # command = 'nohup python3 {}/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval.out 2>&1 &'.format(
-            #     os.path.join(settings.BASE_DIR, 'dl'),
-            #     train_logs_dir,
-            #     train_logs_dir,
-            #     os.path.join(train_logs_dir, 'eval_log'),
-            # )
-            # logger.info(command)
-            # subprocess.call(command, shell=True)
+            # 训练
+            command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={}  > /root/train2.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+                len(training_filenames),
+                'nasnet_large'
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+            # 评估
+            command = 'nohup python3 {}/step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_dir={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+                os.path.join(train_logs_dir, 'eval_log'),
+                len(validation_filenames),
+                'nasnet_large'
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
         elif serializer.instance.action == 'ST':
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
             os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')

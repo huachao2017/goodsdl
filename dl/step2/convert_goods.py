@@ -27,7 +27,7 @@ import tensorflow as tf
 from datasets import dataset_utils
 
 # The number of images in the validation set.
-_NUM_VALIDATION = 30
+_NUM_VALIDATION = 300
 
 # Seed for repeatability.
 _RANDOM_SEED = 0
@@ -217,3 +217,4 @@ def prepare_train(data_dir, train_dir, train_name):
     dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
     logger.info('Finished converting the goods dataset!')
+    return class_names_to_ids, training_filenames, validation_filenames
