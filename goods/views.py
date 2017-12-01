@@ -308,12 +308,13 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             # 训练
-            command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={}  > /root/train2.out 2>&1 &'.format(
+            command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={}  > /root/train2.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
                 len(training_filenames),
-                'inception_resnet_v2'
+                'nasnet_large',
+                1
             )
             logger.info(command)
             subprocess.call(command, shell=True)
@@ -324,7 +325,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 os.path.join(train_logs_dir, 'eval_log'),
                 len(validation_filenames),
-                'inception_resnet_v2'
+                'nasnet_large'
             )
             logger.info(command)
             subprocess.call(command, shell=True)

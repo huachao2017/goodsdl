@@ -244,7 +244,7 @@ def main(_):
             # This ensures that we make a single pass over all of the data.
             num_batches = math.ceil(dataset.num_samples / float(FLAGS.batch_size))
 
-        eval_interval_secs = 100
+        eval_interval_secs = 300
         while True:
             start = time.time()
             tf.logging.info('Starting evaluation at ' + time.strftime(
