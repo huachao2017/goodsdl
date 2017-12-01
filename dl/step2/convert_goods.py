@@ -149,10 +149,12 @@ def create_step2_goods(data_dir, dataset_dir):
     for i in range(0, len(dirlist)):
         class_dir = os.path.join(data_dir, dirlist[i])
         if os.path.isdir(class_dir):
-            logger.info('solve class:{}'.format(dirlist[i]))
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
+
+            logger.info('solve class:{}'.format(dirlist[i]))
+            logger.info('to class:{}'.format(output_class_dir))
 
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
