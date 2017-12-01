@@ -17,8 +17,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from dl import imagedetection
-from dl.step1 import create_onegoods_tf_record, export_inference_graph
-from dl.step2 import convert_goods
+from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
+from dl.step2 import convert_goods, export_inference_graph as e2
 from .models import Image, Goods
 from .serializers import *
 
@@ -313,8 +313,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 train_logs_dir,
                 len(training_filenames),
-                'nasnet_large',
-                1
+                'inception_resnet_v2',
+                32
             )
             logger.info(command)
             subprocess.call(command, shell=True)
@@ -325,7 +325,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 os.path.join(train_logs_dir, 'eval_log'),
                 len(validation_filenames),
-                'nasnet_large'
+                'inception_resnet_v2'
             )
             logger.info(command)
             subprocess.call(command, shell=True)
@@ -361,7 +361,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                     serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastBT.pk, prefix, postfix)
                     serializer.instance.save()
                 # 输出pb
-                export_inference_graph.export(os.path.join(settings.TRAIN_ROOT, str(lastBT.pk), 'faster_rcnn_nas_goods.config'),
+                e1.export(os.path.join(settings.TRAIN_ROOT, str(lastBT.pk), 'faster_rcnn_nas_goods.config'),
                                               trained_checkpoint_prefix,
                                               model_dir,
                                               )
