@@ -149,12 +149,10 @@ def create_step2_goods(data_dir, dataset_dir):
     for i in range(0, len(dirlist)):
         class_dir = os.path.join(data_dir, dirlist[i])
         if os.path.isdir(class_dir):
+            logger.info('solve class:{}'.format(dirlist[i]))
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
-
-            logger.info('solve class:{}'.format(dirlist[i]))
-            logger.info('to class:{}'.format(output_class_dir))
 
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
@@ -177,8 +175,8 @@ def create_step2_goods(data_dir, dataset_dir):
                         ymax = int(box.find('ymax').text)
                         newimage = image.crop((xmin, ymin, xmax, ymax))
                         # 生成新的图片
-                        output_image_path = os.path.join(output_class_dir, "{}_{}.jpg".format(example, index))
-#                        newimage.save(output_image_path, 'JPEG')
+                        output_image_path = os.path.join(output_class_dir, "{}_{}.jpg".format(os.path.split(example)[1], index))
+                        newimage.save(output_image_path, 'JPEG')
                         logger.info('save image:{}'.format(output_image_path))
 
 def prepare_train(data_dir, train_dir, train_name):
@@ -199,8 +197,6 @@ def prepare_train(data_dir, train_dir, train_name):
     dataset_dir = os.path.join(output_dir, 'step2')
     _clean_up_temporary_files(dataset_dir)
     create_step2_goods(data_dir, dataset_dir)
-
-    return
 
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
     class_names_to_ids = dict(zip(class_names, range(len(class_names))))
