@@ -24,7 +24,7 @@ import tensorflow as tf
 from datasets import dataset_factory
 from nets import nets_factory
 from preprocessing import preprocessing_factory
-import os
+import os, time
 
 slim = tf.contrib.slim
 
@@ -244,20 +244,29 @@ def main(_):
             # This ensures that we make a single pass over all of the data.
             num_batches = math.ceil(dataset.num_samples / float(FLAGS.batch_size))
 
-        if tf.gfile.IsDirectory(FLAGS.checkpoint_path):
-            checkpoint_path = tf.train.latest_checkpoint(FLAGS.checkpoint_path)
-        else:
-            checkpoint_path = FLAGS.checkpoint_path
+        eval_interval_secs = 100
+        while True:
+            start = time.time()
+            tf.logging.info('Starting evaluation at ' + time.strftime(
+                '%Y-%m-%d-%H:%M:%S', time.gmtime()))
+            if tf.gfile.IsDirectory(FLAGS.checkpoint_path):
+                checkpoint_path = tf.train.latest_checkpoint(FLAGS.checkpoint_path)
+            else:
+                checkpoint_path = FLAGS.checkpoint_path
 
-        tf.logging.info('Evaluating %s' % checkpoint_path)
+            tf.logging.info('Evaluating %s' % checkpoint_path)
 
-        slim.evaluation.evaluate_once(
-            master=FLAGS.master,
-            checkpoint_path=checkpoint_path,
-            logdir=FLAGS.eval_dir,
-            num_evals=num_batches,
-            eval_op=list(names_to_updates.values()),
-            variables_to_restore=variables_to_restore)
+            slim.evaluation.evaluate_once(
+                master=FLAGS.master,
+                checkpoint_path=checkpoint_path,
+                logdir=FLAGS.eval_dir,
+                num_evals=num_batches,
+                eval_op=list(names_to_updates.values()),
+                variables_to_restore=variables_to_restore)
+
+            time_to_next_eval = start + eval_interval_secs - time.time()
+            if time_to_next_eval > 0:
+              time.sleep(time_to_next_eval)
 
 
 if __name__ == '__main__':

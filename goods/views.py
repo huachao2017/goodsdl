@@ -313,7 +313,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 train_logs_dir,
                 len(training_filenames),
-                'nasnet_large'
+                'inception_resnet_v2'
             )
             logger.info(command)
             subprocess.call(command, shell=True)
@@ -324,7 +324,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 os.path.join(train_logs_dir, 'eval_log'),
                 len(validation_filenames),
-                'nasnet_large'
+                'inception_resnet_v2'
             )
             logger.info(command)
             subprocess.call(command, shell=True)
