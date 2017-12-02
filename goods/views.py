@@ -248,6 +248,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+step2_model_name = 'inception_resnet_v2'
 class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = ActionLog.objects.order_by('-id')
     serializer_class = ActionLogSerializer
@@ -313,7 +314,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 train_logs_dir,
                 len(training_filenames),
-                'inception_resnet_v2',
+                step2_model_name,
                 32
             )
             logger.info(command)
@@ -325,7 +326,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 os.path.join(train_logs_dir, 'eval_log'),
                 len(validation_filenames),
-                'inception_resnet_v2'
+                step2_model_name
             )
             logger.info(command)
             subprocess.call(command, shell=True)
@@ -334,9 +335,9 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'E1':
 
-            lastBT = ActionLog.objects.filter(action="T1").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
-            logger.info('Export Grapy from train:{}'.format(lastBT.pk))
-            trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastBT.pk))
+            lastT1 = ActionLog.objects.filter(action="T1").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            logger.info('Export Grapy from train1:{}'.format(lastT1.pk))
+            trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastT1.pk))
             prefix = 0
             for i in os.listdir(trained_checkpoint_dir):
                 a, b = os.path.splitext(i)
@@ -348,7 +349,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             if prefix > 0:
                 trained_checkpoint_prefix = os.path.join(trained_checkpoint_dir, 'model.ckpt-{}'.format(prefix))
                 # 备份上一个pb
-                model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(lastBT.traintype))
+                model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(lastT1.traintype))
                 export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
                 label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
 
@@ -358,22 +359,43 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                     os.rename(export_file_path, export_file_path+'.'+postfix)
                     os.rename(label_file_path, label_file_path+'.'+postfix)
                     shutil.rmtree(os.path.join(model_dir, 'saved_model'))
-                    serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastBT.pk, prefix, postfix)
+                    serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastT1.pk, prefix, postfix)
                     serializer.instance.save()
                 # 输出pb
-                e1.export(os.path.join(settings.TRAIN_ROOT, str(lastBT.pk), 'faster_rcnn_nas_goods.config'),
+                e1.export(os.path.join(trained_checkpoint_dir, 'faster_rcnn_nas_goods.config'),
                                               trained_checkpoint_prefix,
                                               model_dir,
                                               )
                 # copy label
-                shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastBT.pk), 'goods_label_map.pbtxt'), label_file_path)
+                shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastT1.pk), 'goods_label_map.pbtxt'), label_file_path)
 
                 # reboot django
                 os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
         elif serializer.instance.action == 'E2':
-            # TODO
-            pass
+            lastT2 = ActionLog.objects.filter(action="T2").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            logger.info('Export Grapy from train2:{}'.format(lastT2.pk))
+            trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastT2.pk))
+            # 备份上一个pb
+            model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(lastT2.traintype))
+            export_file_path = os.path.join(model_dir, 'frozen_inference_graph_step2.pb')
+            label_file_path = os.path.join(model_dir, 'labels.txt')
+
+            if os.path.isfile(export_file_path):
+                now = datetime.datetime.now()
+                postfix = now.strftime('%Y%m%d%H%M%S')
+                os.rename(export_file_path, export_file_path+'.'+postfix)
+                os.rename(label_file_path, label_file_path+'.'+postfix)
+                shutil.rmtree(os.path.join(model_dir, 'saved_model'))
+                serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastT2.pk, postfix)
+                serializer.instance.save()
+            # 输出pb
+            e2.export(step2_model_name, trained_checkpoint_dir, export_file_path)
+            # copy label
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastT2.pk), 'labels.txt'), label_file_path)
+
+            # reboot django
+            os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
