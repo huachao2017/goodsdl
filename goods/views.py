@@ -18,9 +18,10 @@ from rest_framework.views import APIView
 
 from dl import imagedetection
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
-from dl.step2 import convert_goods, export_inference_graph as e2
+from dl.step2 import convert_goods
 from .models import Image, Goods
 from .serializers import *
+import tensorflow as tf
 
 logger = logging.getLogger("django")
 
@@ -376,23 +377,28 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             lastT2 = ActionLog.objects.filter(action="T2").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
             logger.info('Export Grapy from train2:{}'.format(lastT2.pk))
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastT2.pk))
-            # 备份上一个pb
+            checkpoint_model_path = tf.train.latest_checkpoint(trained_checkpoint_dir)
             model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(lastT2.traintype))
-            export_file_path = os.path.join(model_dir, 'frozen_inference_graph_step2.pb')
-            label_file_path = os.path.join(model_dir, 'labels.txt')
+            checkpoint_file_path = os.path.join(model_dir, 'checkpoint')
 
-            if os.path.isfile(export_file_path):
+            if os.path.isfile(checkpoint_file_path):
+                # 备份上一个checkpoint
                 now = datetime.datetime.now()
                 postfix = now.strftime('%Y%m%d%H%M%S')
-                os.rename(export_file_path, export_file_path+'.'+postfix)
+                os.rename(checkpoint_file_path, checkpoint_file_path+'.'+postfix)
+                label_file_path = os.path.join(model_dir, 'labels.txt')
                 os.rename(label_file_path, label_file_path+'.'+postfix)
-                shutil.rmtree(os.path.join(model_dir, 'saved_model'))
-                serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastT2.pk, postfix)
+                serializer.instance.param = 'trainid:{},postfix:{}'.format(lastT2.pk, postfix)
                 serializer.instance.save()
             # 输出pb
-            e2.export(step2_model_name, trained_checkpoint_dir, export_file_path)
+            # e2.export(step2_model_name, trained_checkpoint_dir, export_file_path)
+            shutil.copy(os.path.join(trained_checkpoint_dir, 'checkpoint'), model_dir)
+            shutil.copy(checkpoint_model_path + '.data-00000-of-00001', model_dir)
+            shutil.copy(checkpoint_model_path + '.index', model_dir)
+            shutil.copy(checkpoint_model_path + '.meta', model_dir)
+
             # copy label
-            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastT2.pk), 'labels.txt'), label_file_path)
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastT2.pk), 'labels.txt'), model_dir)
 
             # reboot django
             os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
