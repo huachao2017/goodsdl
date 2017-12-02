@@ -16,7 +16,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetection
+from dl import imagedetection, imagedetectionV2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from .models import Image, Goods
@@ -88,7 +88,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == '109':
-            detector = imagedetection.ImageDetectorFactory.get_static_detector('11')
+            detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
             min_score_thresh = .5
         elif serializer.instance.deviceid == '0':
             # for web debug
@@ -396,6 +396,9 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             shutil.copy(checkpoint_model_path + '.data-00000-of-00001', model_dir)
             shutil.copy(checkpoint_model_path + '.index', model_dir)
             shutil.copy(checkpoint_model_path + '.meta', model_dir)
+
+            # copy dataset
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastT2.pk), 'goods_recogonize_train.tfrecord'), model_dir)
 
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastT2.pk), 'labels.txt'), model_dir)

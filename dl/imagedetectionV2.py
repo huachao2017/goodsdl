@@ -1,0 +1,167 @@
+import tensorflow as tf
+from tensorflow.contrib import slim
+from nets import inception
+from preprocessing import inception_preprocessing
+import os
+from PIL import Image
+import numpy as np
+from object_detection.utils import label_map_util
+from .step2 import dataset
+from object_detection.utils import visualization_utils as vis_util
+import logging
+logger = logging.getLogger("django")
+
+class ImageDetectorFactory:
+    _detector = {}
+
+    @staticmethod
+    def get_static_detector(type):
+        if type not in ImageDetectorFactory._detector:
+            ImageDetectorFactory._detector[type] = ImageDetector(type)
+        return ImageDetectorFactory._detector[type]
+
+
+class ImageDetector:
+    def __init__(self, type):
+        self.graph_step1 = None
+        self.session_step1 = None
+        self.graph_step2 = None
+        self.session_step2 = None
+        self.category_index = None
+        self.file_path, _ = os.path.split(os.path.realpath(__file__))
+
+        self.checkpoints_dir = os.path.join(self.file_path, 'model', str(type))
+        self.step1_model_path = os.path.join(self.checkpoints_dir, 'frozen_inference_graph.pb')
+        self.step1_label_path = os.path.join(self.checkpoints_dir, 'goods_label_map.pbtxt')
+
+    def load(self):
+        if self.category_index is None:
+            logger.info('begin loading model: {}'.format(self.step1_model_path))
+            self.graph_step1 = tf.Graph()
+            with self.graph_step1.as_default():
+                od_graph_def = tf.GraphDef()
+                with tf.gfile.GFile(self.step1_model_path, 'rb') as fid:
+                    serialized_graph = fid.read()
+                    od_graph_def.ParseFromString(serialized_graph)
+                    tf.import_graph_def(od_graph_def, name='')
+
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            # config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU50%的显存
+            self.session_step1 = tf.Session(graph=self.graph_step1, config=config)
+
+            # Definite input and output Tensors for detection_graph
+            self.image_tensor_step1 = self.graph_step1.get_tensor_by_name('image_tensor:0')
+            # Each box represents a part of the image where a particular object was detected.
+            self.detection_boxes = self.graph_step1.get_tensor_by_name('detection_boxes:0')
+            # Each score represent how level of confidence for each of the objects.
+            # Score is shown on the result image, together with the class label.
+            self.detection_scores = self.graph_step1.get_tensor_by_name('detection_scores:0')
+            # self.detection_classes = self.graph_step1.get_tensor_by_name('detection_classes:0')
+
+            image_size = inception.inception_resnet_v2.default_image_size
+            self.graph_step2 = tf.Graph()
+            with self.graph_step2.as_default():
+                image_path = tf.placeholder(dtype=tf.string, name='input_tensor')
+                image_string = tf.read_file(image_path)
+                image = tf.image.decode_jpeg(image_string, channels=3, name='image_tensor')
+                processed_image = inception_preprocessing.preprocess_image(image, image_size, image_size,
+                                                                           is_training=False)
+                processed_images = tf.expand_dims(processed_image, 0)
+
+                # Create the model, use the default arg scope to configure the batch norm parameters.
+                with slim.arg_scope(inception.inception_resnet_v2_arg_scope()):
+                    logits, _ = inception.inception_resnet_v2(processed_images, num_classes=157, is_training=False)
+                probabilities = tf.nn.softmax(logits, name='detection_classes')
+
+                init_fn = slim.assign_from_checkpoint_fn(
+                    tf.train.latest_checkpoint(self.checkpoints_dir),
+                    slim.get_model_variables('InceptionResnetV2'))
+
+                self.session_step2 = tf.Session()
+                init_fn(self.session_step2)
+
+            self.image_tensor_step2 = self.graph_step2.get_tensor_by_name('input_tensor:0')
+            self.np_image_step2 = self.graph_step2.get_tensor_by_name('image_tensor:0')
+            self.detection_classes = self.graph_step2.get_tensor_by_name('detection_classes:0')
+
+            # label_map = label_map_util.load_labelmap(self.step1_label_path)
+            # categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
+            #                                                             use_display_name=True)
+            self.category_index = dataset.get_split('train',self.checkpoints_dir,).labels_to_names
+            logger.info('end loading model')
+         # semaphore.release()
+
+    def detect(self,image_path,min_score_thresh=.5):
+        if self.category_index is None:
+            self.load()
+            if self.category_index is None:
+                logger.warning('loading model failed')
+                return None
+        image = Image.open(image_path)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        # the array based representation of the image will be used later in order to prepare the
+        # result image with boxes and labels on it.
+        (im_width, im_height) = image.size
+        image_np = np.array(image.getdata()).reshape(
+            (im_height, im_width, 3)).astype(np.uint8)
+        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+        image_np_expanded = np.expand_dims(image_np, axis=0)
+        # Actual detection.
+        (boxes, scores) = self.session_step1.run(
+            [self.detection_boxes, self.detection_scores],
+            feed_dict={self.image_tensor_step1: image_np_expanded})
+
+        # data solving
+        boxes = np.squeeze(boxes)
+        # classes = np.squeeze(classes).astype(np.int32)
+        scores = np.squeeze(scores)
+
+        # if boxes.shape[0] > 0:
+        #     image_dir = os.path.dirname(image_path)
+        #     output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+        #     vis_util.visualize_boxes_and_labels_on_image_array(
+        #         image_np,
+        #         np.squeeze(boxes),
+        #         np.squeeze(classes).astype(np.int32),
+        #         np.squeeze(scores),
+        #         self.category_index,
+        #         use_normalized_coordinates=True,
+        #         min_score_thresh=min_score_thresh,
+        #         line_thickness=4)
+        #     output_image = Image.fromarray(image_np)
+        #     output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
+        #     output_image.save(output_image_path)
+
+        ret = []
+        for i in range(boxes.shape[0]):
+            if scores is None or scores[i] > min_score_thresh:
+                ymin, xmin, ymax, xmax = boxes[i]
+                ymin = int(ymin*im_height)
+                xmin = int(xmin*im_width)
+                ymax = int(ymax*im_height)
+                xmax = int(xmax*im_width)
+
+                newimage = image.crop((xmin, ymin, xmax, ymax))
+                # 生成新的图片
+                newimage_split = os.path.split(image_path)
+                new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
+                newimage.save(new_image_path, 'JPEG')
+
+                np_image, probabilities = self.session_step2.run(
+                    [self.np_image_step2, self.detection_classes], feed_dict={self.image_tensor_step2: new_image_path})
+                probabilities = probabilities[0]
+                sorted_inds = [i[0] for i in sorted(enumerate(-probabilities), key=lambda x: x[1])]
+
+                #print(classes[i])
+                #print(self.class_to_name_dic)
+                ret.append({'class':sorted_inds[0],
+                            'score':scores[i],
+                            'upc':self.category_index[sorted_inds[0]],
+                            'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
+                            })
+
+        # TODO need visualization
+
+        return ret
