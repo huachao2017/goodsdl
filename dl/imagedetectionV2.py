@@ -269,7 +269,7 @@ class ImageDetector:
                 # print(classes[i])
                 # print(self.class_to_name_dic)
                 ret.append({'class': sorted_inds[0],
-                            'score1': scores_step1[i],
+                            'score': scores_step1[i],
                             'score2': probabilities[sorted_inds[0]],
                             'upc': self.labels_to_names[sorted_inds[0]],
                             'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
