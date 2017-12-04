@@ -268,17 +268,32 @@ class ImageDetector:
 
                 # print(classes[i])
                 # print(self.class_to_name_dic)
-                ret.append({'class': sorted_inds[0],
-                            'score': scores_step1[i],
-                            'score2': probabilities[sorted_inds[0]],
-                            'upc': self.labels_to_names[sorted_inds[0]],
-                            'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
-                            })
                 classes[i] = sorted_inds[0]
                 scores_step2[i] = probabilities[sorted_inds[0]]
-                for j in range(5):
-                    index = sorted_inds[j]
-                    logger.info('[%s] Probability %0.2f%% => [%s]' % (self.labels_to_names[index], probabilities[index] * 100, index))
+                # for j in range(5):
+                #     index = sorted_inds[j]
+                #     logger.info('[%s] Probability %0.2f%% => [%s]' % (self.labels_to_names[index], probabilities[index] * 100, index))
+
+                class_type = sorted_inds[0]
+                upc = self.labels_to_names[sorted_inds[0]]
+                if probabilities[sorted_inds[0]] < min_score_thresh:
+                    # 识别度不够
+                    # TODO add to database
+                    class_type = -1
+                    upc = ''
+                else:
+                    # 两个类型有混淆
+                    # TODO add to database
+                    if probabilities[sorted_inds[0]]-probabilities[sorted_inds[1]] < 0.1:
+                        class_type = -1
+                        upc = ''
+
+                ret.append({'class': class_type,
+                            'score': scores_step1[i],
+                            'score2': scores_step2[i],
+                            'upc': upc,
+                            'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
+                            })
         # visualization
         if boxes.shape[0] > 0:
             image_dir = os.path.dirname(image_path)
