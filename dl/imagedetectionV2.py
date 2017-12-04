@@ -276,7 +276,6 @@ class ImageDetector:
                             })
                 classes[i] = sorted_inds[0]
                 scores_step2[i] = probabilities[sorted_inds[0]]
-                logger.info(probabilities)
                 for j in range(5):
                     index = sorted_inds[j]
                     logger.info('[%s] Probability %0.2f%% => [%s]' % (self.labels_to_names[index], probabilities[index] * 100, index))
