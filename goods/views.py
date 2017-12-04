@@ -89,7 +89,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == '109' or serializer.instance.deviceid == '0':
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
-            min_score_thresh = .8
+            min_score_thresh = .7
         else:
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
