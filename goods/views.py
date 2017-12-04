@@ -104,7 +104,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
             logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
-            print(ret)
             ret_reborn = []
             index = 0
             class_index_dict = {}
