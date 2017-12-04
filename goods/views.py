@@ -111,7 +111,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             for goods in ret:
                 Goods.objects.create(image_id=serializer.instance.pk,
                                      class_type=goods['class'],
-                                     score=goods['score'],
+                                     score=goods['score1'],
                                      upc=goods['upc'],
                                      xmin=goods['xmin'],
                                      ymin=goods['ymin'],
@@ -120,7 +120,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                      )
                 if goods['class'] in class_index_dict:
                     ret_reborn[class_index_dict[goods['class']]]['box'].append({
-                        'score': goods['score'],
+                        'score1': goods['score1'],
+                        'score2': goods['score2'],
                         'xmin': goods['xmin'],
                         'ymin': goods['ymin'],
                         'xmax': goods['xmax'],
@@ -129,7 +130,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 else:
                     box = []
                     box.append({
-                        'score': goods['score'],
+                        'score1': goods['score1'],
+                        'score2': goods['score2'],
                         'xmin': goods['xmin'],
                         'ymin': goods['ymin'],
                         'xmax': goods['xmax'],

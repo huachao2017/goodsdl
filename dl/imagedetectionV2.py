@@ -26,7 +26,8 @@ class ImageDetectorFactory:
 def visualize_boxes_and_labels_on_image_array(image,
                                               boxes,
                                               classes,
-                                              scores,
+                                              scores_step1,
+                                              scores_step2,
                                               labels_to_names,
                                               instance_masks=None,
                                               keypoints=None,
@@ -47,7 +48,7 @@ def visualize_boxes_and_labels_on_image_array(image,
       boxes: a numpy array of shape [N, 4]
       classes: a numpy array of shape [N]. Note that class indices are 1-based,
         and match the keys in the label map.
-      scores: a numpy array of shape [N] or None.  If scores=None, then
+      scores_step1: a numpy array of shape [N] or None.  If scores=None, then
         this function assumes that the boxes to be plotted are groundtruth
         boxes and plot all boxes as black with no classes or scores.
       labels_to_names: a dict containing category dictionaries (each holding
@@ -78,13 +79,13 @@ def visualize_boxes_and_labels_on_image_array(image,
     if not max_boxes_to_draw:
         max_boxes_to_draw = boxes.shape[0]
     for i in range(min(max_boxes_to_draw, boxes.shape[0])):
-        if scores is None or scores[i] > min_score_thresh:
+        if scores_step1 is None or scores_step1[i] > min_score_thresh:
             box = tuple(boxes[i].tolist())
             if instance_masks is not None:
                 box_to_instance_masks_map[box] = instance_masks[i]
             if keypoints is not None:
                 box_to_keypoints_map[box].extend(keypoints[i])
-            if scores is None:
+            if scores_step1 is None:
                 box_to_color_map[box] = 'black'
             else:
                 if not agnostic_mode:
@@ -92,11 +93,14 @@ def visualize_boxes_and_labels_on_image_array(image,
                         class_name = labels_to_names[classes[i]]
                     else:
                         class_name = 'N/A'
-                    display_str = '{}: {}%'.format(
+                    display_str = '{}: {}%, {}%'.format(
                         class_name,
-                        int(100 * scores[i]))
+                        int(100 * scores_step1[i]),
+                        int(100 * scores_step2[i]),
+                    )
                 else:
-                    display_str = 'score: {}%'.format(int(100 * scores[i]))
+                    display_str = 'score: {}%, {}%'.format(int(100 * scores_step1[i]),
+                        int(100 * scores_step2[i]))
                 box_to_display_str_map[box].append(display_str)
                 if agnostic_mode:
                     box_to_color_map[box] = 'DarkOrange'
@@ -236,13 +240,15 @@ class ImageDetector:
         # data solving
         boxes = np.squeeze(boxes)
         # classes = np.squeeze(classes).astype(np.int32)
-        scores = np.squeeze(scores)
+        scores_step1 = np.squeeze(scores)
 
         ret = []
         classes = []
+        scores_step2 = []
         for i in range(boxes.shape[0]):
             classes.append(-1)
-            if scores[i] > min_score_thresh:
+            scores_step2.append(-1)
+            if scores_step1[i] > min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
                 xmin = int(xmin * im_width)
@@ -263,11 +269,13 @@ class ImageDetector:
                 # print(classes[i])
                 # print(self.class_to_name_dic)
                 ret.append({'class': sorted_inds[0],
-                            'score': scores[i],
+                            'score1': scores_step1[i],
+                            'score2': probabilities[sorted_inds[0]],
                             'upc': self.labels_to_names[sorted_inds[0]],
                             'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
                             })
                 classes[i] = sorted_inds[0]
+                scores_step2[i] = probabilities[sorted_inds[0]]
 
         # visualization
         if boxes.shape[0] > 0:
@@ -277,7 +285,8 @@ class ImageDetector:
                 image_np,
                 boxes,
                 classes,
-                scores,
+                scores_step1,
+                scores_step2,
                 self.labels_to_names,
                 use_normalized_coordinates=True,
                 min_score_thresh=min_score_thresh,
