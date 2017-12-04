@@ -10,15 +10,16 @@ class Image(models.Model):
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
-# class Goods(models.Model):
-#     image = models.ForeignKey(Image,related_name="image_goods",on_delete=models.CASCADE)
-#     class_type = models.IntegerField(default=0)
-#     score = models.FloatField(default=0.0)
-#     upc = models.CharField(max_length=20)
-#     xmin = models.PositiveIntegerField(default=0)
-#     ymin = models.PositiveIntegerField(default=0)
-#     xmax = models.PositiveIntegerField(default=0)
-#     ymax = models.PositiveIntegerField(default=0)
+class Goods(models.Model):
+    image = models.ForeignKey(Image,related_name="image_goods",on_delete=models.CASCADE)
+    class_type = models.IntegerField(default=0)
+    score1 = models.FloatField(default=0.0)
+    score2 = models.FloatField(default=0.0)
+    upc = models.CharField(max_length=20)
+    xmin = models.PositiveIntegerField(default=0)
+    ymin = models.PositiveIntegerField(default=0)
+    xmax = models.PositiveIntegerField(default=0)
+    ymax = models.PositiveIntegerField(default=0)
 
 class ProblemGoods(models.Model):
     image = models.ForeignKey(Image, related_name="image_problem_goods",on_delete=models.CASCADE)

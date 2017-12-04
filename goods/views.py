@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from dl import imagedetection, imagedetectionV2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
-from .models import Image,ProblemGoods
+from .models import Image, Goods
 from .serializers import *
 import tensorflow as tf
 
@@ -114,15 +114,16 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 # 兼容上一个版本
                 if 'score2' not in goods:
                     goods['score2'] = .0
-                # Goods.objects.create(image_id=serializer.instance.pk,
-                #                      class_type=goods['class'],
-                #                      score=goods['score'],
-                #                      upc=goods['upc'],
-                #                      xmin=goods['xmin'],
-                #                      ymin=goods['ymin'],
-                #                      xmax=goods['xmax'],
-                #                      ymax=goods['ymax'],
-                #                      )
+                Goods.objects.create(image_id=serializer.instance.pk,
+                                     class_type=goods['class'],
+                                     score1=goods['score1'],
+                                     score2=goods['score2'],
+                                     upc=goods['upc'],
+                                     xmin=goods['xmin'],
+                                     ymin=goods['ymin'],
+                                     xmax=goods['xmax'],
+                                     ymax=goods['ymax'],
+                                     )
                 if goods['class'] in class_index_dict:
                     ret_reborn[class_index_dict[goods['class']]]['box'].append({
                         'score': goods['score'],
