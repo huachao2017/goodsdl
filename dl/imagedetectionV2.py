@@ -36,7 +36,7 @@ class ImageDetector:
 
     def load(self):
         if self.category_index is None:
-            logger.info('begin loading model: {}'.format(self.step1_model_path))
+            logger.info('begin loading step1 model: {}'.format(self.step1_model_path))
             self.graph_step1 = tf.Graph()
             with self.graph_step1.as_default():
                 od_graph_def = tf.GraphDef()
@@ -59,6 +59,9 @@ class ImageDetector:
             self.detection_scores = self.graph_step1.get_tensor_by_name('detection_scores:0')
             # self.detection_classes = self.graph_step1.get_tensor_by_name('detection_classes:0')
 
+            step2_checkpoint = tf.train.latest_checkpoint(self.checkpoints_dir)
+            logger.info('begin loading step2 model: {}'.format(step2_checkpoint))
+            dataset_step2 = dataset.get_split('train', self.checkpoints_dir, )
             image_size = inception.inception_resnet_v2.default_image_size
             self.graph_step2 = tf.Graph()
             with self.graph_step2.as_default():
@@ -71,14 +74,16 @@ class ImageDetector:
 
                 # Create the model, use the default arg scope to configure the batch norm parameters.
                 with slim.arg_scope(inception.inception_resnet_v2_arg_scope()):
-                    logits, _ = inception.inception_resnet_v2(processed_images, num_classes=157, is_training=False)
+                    logits, _ = inception.inception_resnet_v2(processed_images, num_classes=len(dataset_step2.labels_to_names), is_training=False)
                 probabilities = tf.nn.softmax(logits, name='detection_classes')
 
                 init_fn = slim.assign_from_checkpoint_fn(
-                    tf.train.latest_checkpoint(self.checkpoints_dir),
+                    step2_checkpoint,
                     slim.get_model_variables('InceptionResnetV2'))
 
-                self.session_step2 = tf.Session()
+                config = tf.ConfigProto()
+                config.gpu_options.allow_growth = True
+                self.session_step2 = tf.Session(config=config)
                 init_fn(self.session_step2)
 
             self.image_tensor_step2 = self.graph_step2.get_tensor_by_name('input_tensor:0')
@@ -88,7 +93,7 @@ class ImageDetector:
             # label_map = label_map_util.load_labelmap(self.step1_label_path)
             # categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
             #                                                             use_display_name=True)
-            self.category_index = dataset.get_split('train',self.checkpoints_dir,).labels_to_names
+            self.category_index = dataset_step2.labels_to_names
             logger.info('end loading model')
          # semaphore.release()
 
