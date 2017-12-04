@@ -1,16 +1,16 @@
 from rest_framework import serializers
-from .models import Image, Goods, TrainImage, ActionLog
+from .models import Image, ProblemGoods, TrainImage, ActionLog
 
-class GoodsSerializer(serializers.ModelSerializer):
+class ProblemGoodsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Goods
-        fields = ('pk', 'image', 'class_type', 'score', 'upc', 'xmin', 'ymin', 'xmax', 'ymax')
+        model = ProblemGoods
+        fields = ('pk', 'image', 'index', 'class_type_0', 'class_type_1', 'class_type_2', 'class_type_3', 'class_type_4', 'score_0', 'score_1', 'score_2', 'score_3', 'score_4')
 
 class ImageSerializer(serializers.ModelSerializer):
-    image_goods = GoodsSerializer(many=True, read_only=True)
+    image_problem_goods = ProblemGoodsSerializer(many=True, read_only=True)
     class Meta:
         model = Image
-        fields = ('pk', 'deviceid', 'source', 'image_goods')
+        fields = ('pk', 'deviceid', 'source', 'image_problem_goods')
 
 class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:

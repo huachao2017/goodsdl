@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from dl import imagedetection, imagedetectionV2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
-from .models import Image, Goods
+from .models import Image,ProblemGoods
 from .serializers import *
 import tensorflow as tf
 
@@ -89,14 +89,17 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == '109' or serializer.instance.deviceid == '0':
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
-            min_score_thresh = .7
+            step1_min_score_thresh = .7
+            step2_min_score_thresh = .7
+            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh, step2_min_score_thresh=step2_min_score_thresh)
         else:
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
+            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
 
 
-        logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-        ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
         if ret is None or len(ret) <= 0:
             logger.info('end detect:0')
             # 删除无用图片
@@ -111,15 +114,15 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 # 兼容上一个版本
                 if 'score2' not in goods:
                     goods['score2'] = .0
-                Goods.objects.create(image_id=serializer.instance.pk,
-                                     class_type=goods['class'],
-                                     score=goods['score'],
-                                     upc=goods['upc'],
-                                     xmin=goods['xmin'],
-                                     ymin=goods['ymin'],
-                                     xmax=goods['xmax'],
-                                     ymax=goods['ymax'],
-                                     )
+                # Goods.objects.create(image_id=serializer.instance.pk,
+                #                      class_type=goods['class'],
+                #                      score=goods['score'],
+                #                      upc=goods['upc'],
+                #                      xmin=goods['xmin'],
+                #                      ymin=goods['ymin'],
+                #                      xmax=goods['xmax'],
+                #                      ymax=goods['ymax'],
+                #                      )
                 if goods['class'] in class_index_dict:
                     ret_reborn[class_index_dict[goods['class']]]['box'].append({
                         'score': goods['score'],
@@ -151,9 +154,9 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         #return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
-class GoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Goods.objects.order_by('id')
-    serializer_class = GoodsSerializer
+class ProblemGoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = ProblemGoods.objects.order_by('-id')
+    serializer_class = ProblemGoodsSerializer
 
 def get_client_ip(request):
     try:

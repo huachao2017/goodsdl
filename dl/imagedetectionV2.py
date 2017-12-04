@@ -9,6 +9,7 @@ from object_detection.utils import label_map_util
 from .step2 import dataset
 from object_detection.utils import visualization_utils as vis_util
 import logging
+from goods.models import ProblemGoods
 
 logger = logging.getLogger("django")
 
@@ -216,12 +217,14 @@ class ImageDetector:
             logger.info('end loading model')
             # semaphore.release()
 
-    def detect(self, image_path, min_score_thresh=.5):
+    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
         if self.labels_to_names is None:
             self.load()
             if self.labels_to_names is None:
                 logger.warning('loading model failed')
                 return None
+
+        image_path = image_instance.source.path
         image = Image.open(image_path)
         if image.mode != 'RGB':
             image = image.convert('RGB')
@@ -248,7 +251,7 @@ class ImageDetector:
         for i in range(boxes.shape[0]):
             classes.append(-1)
             scores_step2.append(-1)
-            if scores_step1[i] > min_score_thresh:
+            if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
                 xmin = int(xmin * im_width)
@@ -276,17 +279,30 @@ class ImageDetector:
 
                 class_type = sorted_inds[0]
                 upc = self.labels_to_names[sorted_inds[0]]
-                if probabilities[sorted_inds[0]] < min_score_thresh:
+                if probabilities[sorted_inds[0]] < step2_min_score_thresh:
                     # 识别度不够
-                    # TODO add to database
                     class_type = -1
                     upc = ''
-                else:
+                elif probabilities[sorted_inds[0]]-probabilities[sorted_inds[1]] < 0.1:
                     # 两个类型有混淆
-                    # TODO add to database
-                    if probabilities[sorted_inds[0]]-probabilities[sorted_inds[1]] < 0.1:
-                        class_type = -1
-                        upc = ''
+                    class_type = -1
+                    upc = ''
+
+                if class_type == -1:
+                    # add to database
+                    ProblemGoods.objects.create(image_id=image_instance.pk,
+                                                index=i,
+                                                class_type_0=sorted_inds[0],
+                                                class_type_1=sorted_inds[1],
+                                                class_type_2=sorted_inds[2],
+                                                class_type_3=sorted_inds[3],
+                                                class_type_4=sorted_inds[4],
+                                                score_0=probabilities[sorted_inds[0]],
+                                                score_1=probabilities[sorted_inds[1]],
+                                                score_2=probabilities[sorted_inds[2]],
+                                                score_3=probabilities[sorted_inds[3]],
+                                                score_4=probabilities[sorted_inds[4]],
+                                                )
 
                 ret.append({'class': class_type,
                             'score': scores_step1[i],
@@ -306,7 +322,7 @@ class ImageDetector:
                 scores_step2,
                 self.labels_to_names,
                 use_normalized_coordinates=True,
-                min_score_thresh=min_score_thresh,
+                min_score_thresh=step1_min_score_thresh,
                 line_thickness=4)
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)

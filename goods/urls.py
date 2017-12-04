@@ -21,7 +21,7 @@ from . import views
 router = DefaultRouter()
 # router.register(r'image', views.ImageOldViewSet)
 router.register(r'imagenew', views.ImageViewSet)
-#router.register(r'goods', views.GoodsViewSet)
+router.register(r'problemgoods', views.ProblemGoodsViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
 router.register(r'action', views.ActionLogViewSet)
 urlpatterns = [
