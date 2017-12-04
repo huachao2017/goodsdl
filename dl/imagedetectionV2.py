@@ -113,16 +113,16 @@ def visualize_boxes_and_labels_on_image_array(image,
                 box_to_instance_masks_map[box],
                 color=color
             )
-            vis_util.draw_bounding_box_on_image_array(
-                image,
-                ymin,
-                xmin,
-                ymax,
-                xmax,
-                color=color,
-                thickness=line_thickness,
-                display_str_list=box_to_display_str_map[box],
-                use_normalized_coordinates=use_normalized_coordinates)
+        vis_util.draw_bounding_box_on_image_array(
+            image,
+            ymin,
+            xmin,
+            ymax,
+            xmax,
+            color=color,
+            thickness=line_thickness,
+            display_str_list=box_to_display_str_map[box],
+            use_normalized_coordinates=use_normalized_coordinates)
         if keypoints is not None:
             vis_util.draw_keypoints_on_image_array(
                 image,
@@ -255,8 +255,8 @@ class ImageDetector:
                 new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
                 newimage.save(new_image_path, 'JPEG')
 
-                np_image, probabilities = self.session_step2.run(
-                    [self.np_image_step2, self.detection_classes], feed_dict={self.image_tensor_step2: new_image_path})
+                probabilities = self.session_step2.run(
+                    [self.detection_classes], feed_dict={self.image_tensor_step2: new_image_path})
                 probabilities = probabilities[0]
                 sorted_inds = [i[0] for i in sorted(enumerate(-probabilities), key=lambda x: x[1])]
 
