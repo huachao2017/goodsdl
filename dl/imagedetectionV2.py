@@ -278,7 +278,7 @@ class ImageDetector:
                 scores_step2[i] = probabilities[sorted_inds[0]]
                 for j in range(5):
                     index = sorted_inds[j]
-                    logger.info('{} Probability %0.2f%% => [%s]' % (self.labels_to_names[sorted_inds[0]], probabilities[index] * 100, index))
+                    logger.info('[%s] Probability %0.2f%% => [%s]' % (self.labels_to_names[sorted_inds[0]], probabilities[index] * 100, index))
         # visualization
         if boxes.shape[0] > 0:
             image_dir = os.path.dirname(image_path)
