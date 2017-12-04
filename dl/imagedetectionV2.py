@@ -51,7 +51,7 @@ def visualize_boxes_and_labels_on_image_array(image,
         this function assumes that the boxes to be plotted are groundtruth
         boxes and plot all boxes as black with no classes or scores.
       labels_to_names: a dict containing category dictionaries (each holding
-        category index `id` and category name `name`) keyed by category indices.
+        category name) keyed by category indices.
       instance_masks: a numpy array of shape [N, image_height, image_width], can
         be None
       keypoints: a numpy array of shape [N, num_keypoints, 2], can
@@ -271,13 +271,14 @@ class ImageDetector:
 
         # visualization
         if boxes.shape[0] > 0:
+            print(boxes)
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
             visualize_boxes_and_labels_on_image_array(
                 image_np,
-                np.squeeze(boxes),
-                np.squeeze(classes).astype(np.int32),
-                np.squeeze(scores),
+                boxes,
+                classes,
+                scores,
                 self.labels_to_names,
                 use_normalized_coordinates=True,
                 min_score_thresh=min_score_thresh,
