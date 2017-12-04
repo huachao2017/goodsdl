@@ -116,7 +116,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     goods['score2'] = .0
                 Goods.objects.create(image_id=serializer.instance.pk,
                                      class_type=goods['class'],
-                                     score1=goods['score1'],
+                                     score1=goods['score'],
                                      score2=goods['score2'],
                                      upc=goods['upc'],
                                      xmin=goods['xmin'],
