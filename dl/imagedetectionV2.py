@@ -126,7 +126,8 @@ class ImageDetector:
         ret = []
         classes = []
         for i in range(boxes.shape[0]):
-            if scores is None or scores[i] > min_score_thresh:
+            classes.append(-1)
+            if scores[i] > min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin*im_height)
                 xmin = int(xmin*im_width)
@@ -151,7 +152,7 @@ class ImageDetector:
                             'upc':self.labels_to_names[sorted_inds[0]],
                             'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
                             })
-                classes.append(sorted_inds[0])
+                classes[i] = sorted_inds[0]
 
         # visualization
         if boxes.shape[0] > 0:
