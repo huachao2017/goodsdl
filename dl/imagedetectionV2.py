@@ -27,7 +27,7 @@ class ImageDetector:
         self.session_step1 = None
         self.graph_step2 = None
         self.session_step2 = None
-        self.category_index = None
+        self.labels_to_names = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
         self.checkpoints_dir = os.path.join(self.file_path, 'model', str(type))
@@ -35,7 +35,7 @@ class ImageDetector:
         self.step1_label_path = os.path.join(self.checkpoints_dir, 'goods_label_map.pbtxt')
 
     def load(self):
-        if self.category_index is None:
+        if self.labels_to_names is None:
             logger.info('begin loading step1 model: {}'.format(self.step1_model_path))
             self.graph_step1 = tf.Graph()
             with self.graph_step1.as_default():
@@ -93,14 +93,14 @@ class ImageDetector:
             # label_map = label_map_util.load_labelmap(self.step1_label_path)
             # categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
             #                                                             use_display_name=True)
-            self.category_index = dataset_step2.labels_to_names
+            self.labels_to_names = dataset_step2.labels_to_names
             logger.info('end loading model')
          # semaphore.release()
 
     def detect(self,image_path,min_score_thresh=.5):
-        if self.category_index is None:
+        if self.labels_to_names is None:
             self.load()
-            if self.category_index is None:
+            if self.labels_to_names is None:
                 logger.warning('loading model failed')
                 return None
         image = Image.open(image_path)
@@ -123,23 +123,8 @@ class ImageDetector:
         # classes = np.squeeze(classes).astype(np.int32)
         scores = np.squeeze(scores)
 
-        # if boxes.shape[0] > 0:
-        #     image_dir = os.path.dirname(image_path)
-        #     output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
-        #     vis_util.visualize_boxes_and_labels_on_image_array(
-        #         image_np,
-        #         np.squeeze(boxes),
-        #         np.squeeze(classes).astype(np.int32),
-        #         np.squeeze(scores),
-        #         self.category_index,
-        #         use_normalized_coordinates=True,
-        #         min_score_thresh=min_score_thresh,
-        #         line_thickness=4)
-        #     output_image = Image.fromarray(image_np)
-        #     output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
-        #     output_image.save(output_image_path)
-
         ret = []
+        classes = []
         for i in range(boxes.shape[0]):
             if scores is None or scores[i] > min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
@@ -163,10 +148,26 @@ class ImageDetector:
                 #print(self.class_to_name_dic)
                 ret.append({'class':sorted_inds[0],
                             'score':scores[i],
-                            'upc':self.category_index[sorted_inds[0]],
+                            'upc':self.labels_to_names[sorted_inds[0]],
                             'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
                             })
+                classes.append(sorted_inds[0])
 
-        # TODO need visualization
+        # visualization
+        if boxes.shape[0] > 0:
+            image_dir = os.path.dirname(image_path)
+            output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+            vis_util.visualize_boxes_and_labels_on_image_array(
+                image_np,
+                np.squeeze(boxes),
+                np.squeeze(classes).astype(np.int32),
+                np.squeeze(scores),
+                self.labels_to_names,
+                use_normalized_coordinates=True,
+                min_score_thresh=min_score_thresh,
+                line_thickness=4)
+            output_image = Image.fromarray(image_np)
+            output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
+            output_image.save(output_image_path)
 
         return ret
