@@ -91,6 +91,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
             min_score_thresh = .5
         else:
+            return Response(None, status=status.HTTP_201_CREATED, headers=headers)
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
 

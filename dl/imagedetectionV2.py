@@ -271,7 +271,7 @@ class ImageDetector:
 
         # visualization
         if boxes.shape[0] > 0:
-            print(boxes)
+            logger.info(boxes[0])
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
             visualize_boxes_and_labels_on_image_array(
