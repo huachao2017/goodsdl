@@ -262,7 +262,7 @@ class ImageDetector:
                 newimage.save(new_image_path, 'JPEG')
 
                 probabilities = self.session_step2.run(
-                    [self.detection_classes], feed_dict={self.image_tensor_step2: new_image_path})
+                    self.detection_classes, feed_dict={self.image_tensor_step2: new_image_path})
                 probabilities = probabilities[0]
                 sorted_inds = [i[0] for i in sorted(enumerate(-probabilities), key=lambda x: x[1])]
 
