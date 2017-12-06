@@ -35,7 +35,8 @@ def visualize_boxes_and_labels_on_image_array(image,
                                               keypoints=None,
                                               use_normalized_coordinates=False,
                                               max_boxes_to_draw=20,
-                                              min_score_thresh=.5,
+                                              step1_min_score_thresh=.5,
+                                              step2_min_score_thresh=.5,
                                               agnostic_mode=False,
                                               line_thickness=4):
     """Overlay labeled boxes on an image with formatted scores and label names.
@@ -63,7 +64,8 @@ def visualize_boxes_and_labels_on_image_array(image,
         normalized coordinates or not.
       max_boxes_to_draw: maximum number of boxes to visualize.  If None, draw
         all boxes.
-      min_score_thresh: minimum score threshold for a box to be visualized
+      step1_min_score_thresh: step1 minimum score threshold for a box to be visualized
+      step2_min_score_thresh: step2 minimum score threshold for a box to be visualized
       agnostic_mode: boolean (default: False) controlling whether to evaluate in
         class-agnostic mode or not.  This mode will display scores but ignore
         classes.
@@ -81,7 +83,7 @@ def visualize_boxes_and_labels_on_image_array(image,
     if not max_boxes_to_draw:
         max_boxes_to_draw = boxes.shape[0]
     for i in range(min(max_boxes_to_draw, boxes.shape[0])):
-        if scores_step1 is None or scores_step1[i] > min_score_thresh:
+        if scores_step1 is None or scores_step1[i] > step1_min_score_thresh:
             box = tuple(boxes[i].tolist())
             if instance_masks is not None:
                 box_to_instance_masks_map[box] = instance_masks[i]
@@ -107,8 +109,11 @@ def visualize_boxes_and_labels_on_image_array(image,
                 if agnostic_mode:
                     box_to_color_map[box] = 'DarkOrange'
                 else:
-                    box_to_color_map[box] = vis_util.STANDARD_COLORS[
-                        classes[i] % len(vis_util.STANDARD_COLORS)]
+                    if scores_step2[i] < step2_min_score_thresh:
+                        box_to_color_map[box] = 'Red'
+                    else:
+                        box_to_color_map[box] = vis_util.STANDARD_COLORS[
+                            classes[i] % len(vis_util.STANDARD_COLORS)]
 
     # Draw all boxes onto image.
     for box, color in box_to_color_map.items():
@@ -332,7 +337,8 @@ class ImageDetector:
                 scores_step2,
                 self.labels_to_names,
                 use_normalized_coordinates=True,
-                min_score_thresh=step1_min_score_thresh,
+                step1_min_score_thresh=step1_min_score_thresh,
+                step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=4)
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
