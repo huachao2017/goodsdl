@@ -97,15 +97,17 @@ def visualize_boxes_and_labels_on_image_array(image,
                         class_name = labels_to_names[classes[i]]
                     else:
                         class_name = 'N/A'
-                    display_str = '{}\n{}%, {}%'.format(
-                        class_name,
+                    display_str = '{}'.format(class_name)
+                    box_to_display_str_map[box].append(display_str)
+                    display_str = '{}%, {}%'.format(
                         int(100 * scores_step1[i]),
                         int(100 * scores_step2[i]),
                     )
+                    box_to_display_str_map[box].append(display_str)
                 else:
                     display_str = 'score: {}%, {}%'.format(int(100 * scores_step1[i]),
                         int(100 * scores_step2[i]))
-                box_to_display_str_map[box].append(display_str)
+                    box_to_display_str_map[box].append(display_str)
                 if agnostic_mode:
                     box_to_color_map[box] = 'DarkOrange'
                 else:
