@@ -170,6 +170,7 @@ class ImageDetector:
                     od_graph_def.ParseFromString(serialized_graph)
                     tf.import_graph_def(od_graph_def, name='')
 
+            logger.info('end loading step1 model')
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             # config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU50%的显存
@@ -213,6 +214,7 @@ class ImageDetector:
                 self.session_step2 = tf.Session(config=config)
                 init_fn(self.session_step2)
 
+            logger.info('end loading step2 model')
             self.image_tensor_step2 = self.graph_step2.get_tensor_by_name('input_tensor:0')
             self.np_image_step2 = self.graph_step2.get_tensor_by_name('image_tensor:0')
             self.detection_classes = self.graph_step2.get_tensor_by_name('detection_classes:0')
