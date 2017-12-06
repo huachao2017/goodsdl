@@ -33,7 +33,7 @@ class ImageDetector:
         if self.counter <= 0:
             self.counter = self.counter + 1
             if self.category_index is None:
-                logger.info('begin loading model: {}'.format(self.model_path))
+                logger.info('begin loading old model: {}'.format(self.model_path))
                 self.detection_graph = tf.Graph()
                 with self.detection_graph.as_default():
                     od_graph_def = tf.GraphDef()
@@ -62,7 +62,7 @@ class ImageDetector:
                 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
                                                                             use_display_name=True)
                 self.category_index = label_map_util.create_category_index(categories)
-                logger.info('end loading model')
+                logger.info('end loading old model')
          # semaphore.release()
 
     def detect(self,image_path,min_score_thresh=.5):

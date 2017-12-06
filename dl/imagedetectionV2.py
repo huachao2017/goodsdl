@@ -170,7 +170,7 @@ class ImageDetector:
                     od_graph_def.ParseFromString(serialized_graph)
                     tf.import_graph_def(od_graph_def, name='')
 
-            logger.info('end loading step1 model')
+            logger.info('end loading step1 graph...')
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             # config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU50%的显存
@@ -209,12 +209,13 @@ class ImageDetector:
                     step2_checkpoint,
                     slim.get_model_variables('InceptionResnetV2'))
 
+                logger.info('end loading step2 graph...')
+
                 config = tf.ConfigProto()
                 config.gpu_options.allow_growth = True
                 self.session_step2 = tf.Session(config=config)
                 init_fn(self.session_step2)
 
-            logger.info('end loading step2 model')
             self.image_tensor_step2 = self.graph_step2.get_tensor_by_name('input_tensor:0')
             self.np_image_step2 = self.graph_step2.get_tensor_by_name('image_tensor:0')
             self.detection_classes = self.graph_step2.get_tensor_by_name('detection_classes:0')
@@ -223,7 +224,7 @@ class ImageDetector:
             # categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
             #                                                             use_display_name=True)
             self.labels_to_names = dataset_step2.labels_to_names
-            logger.info('end loading model')
+            logger.info('end loading model...')
             # semaphore.release()
 
     def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
