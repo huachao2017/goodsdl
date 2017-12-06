@@ -203,7 +203,7 @@ def prepare_train(data_dir, train_dir, train_name):
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
     random.shuffle(photo_filenames)
-    training_filenames = photo_filenames[_NUM_VALIDATION:]
+    training_filenames = photo_filenames
     validation_filenames = photo_filenames[:_NUM_VALIDATION]
 
     # First, convert the training and validation sets.
