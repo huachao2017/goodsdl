@@ -399,8 +399,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             # 重写checkpoint file
             with open(checkpoint_file_path, 'w') as output:
                 a = os.path.split(checkpoint_model_path)
-                output.write('model_checkpoint_path: {}\n'.format(os.path.join(model_dir, a[1])))
-                output.write('all_model_checkpoint_path: {}\n'.format(os.path.join(model_dir, a[1])))
+                output.write('model_checkpoint_path: "{}"\n'.format(os.path.join(model_dir, a[1])))
+                output.write('all_model_checkpoint_path: "{}"\n'.format(os.path.join(model_dir, a[1])))
 
             shutil.copy(checkpoint_model_path + '.data-00000-of-00001', model_dir)
             shutil.copy(checkpoint_model_path + '.index', model_dir)
