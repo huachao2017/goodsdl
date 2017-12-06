@@ -97,7 +97,7 @@ def visualize_boxes_and_labels_on_image_array(image,
                         class_name = labels_to_names[classes[i]]
                     else:
                         class_name = 'N/A'
-                    display_str = '{}: {}%, {}%'.format(
+                    display_str = '{}\n{}%, {}%'.format(
                         class_name,
                         int(100 * scores_step1[i]),
                         int(100 * scores_step2[i]),
