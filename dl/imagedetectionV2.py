@@ -9,6 +9,7 @@ from object_detection.utils import label_map_util
 from .step2 import dataset
 from object_detection.utils import visualization_utils as vis_util
 import logging
+import time
 from goods.models import ProblemGoods
 
 logger = logging.getLogger("django")
@@ -151,8 +152,14 @@ class ImageDetector:
         self.checkpoints_dir = os.path.join(self.file_path, 'model', str(type))
         self.step1_model_path = os.path.join(self.checkpoints_dir, 'frozen_inference_graph.pb')
         self.step1_label_path = os.path.join(self.checkpoints_dir, 'goods_label_map.pbtxt')
+        self.counter = 0
 
     def load(self):
+        if self.counter > 0:
+            logger.info('waiting model to load (3s) ...')
+            time.sleep(3)
+            return
+        self.counter = self.counter + 1
         if self.labels_to_names is None:
             logger.info('begin loading step1 model: {}'.format(self.step1_model_path))
             self.graph_step1 = tf.Graph()
