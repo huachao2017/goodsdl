@@ -363,16 +363,22 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                     postfix = now.strftime('%Y%m%d%H%M%S')
                     os.rename(export_file_path, export_file_path+'.'+postfix)
                     os.rename(label_file_path, label_file_path+'.'+postfix)
-                    shutil.rmtree(os.path.join(model_dir, 'saved_model'))
+                    # shutil.rmtree(os.path.join(model_dir, 'saved_model'))
                     serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastT1.pk, prefix, postfix)
                     serializer.instance.save()
                 # 输出pb
+                tmp_dir = os.path.join(model_dir,'tmp')
                 e1.export(os.path.join(trained_checkpoint_dir, 'faster_rcnn_nas_goods.config'),
-                                              trained_checkpoint_prefix,
-                                              model_dir,
-                                              )
+                          trained_checkpoint_prefix,
+                          tmp_dir,
+                          )
                 # copy label
                 shutil.copy(os.path.join(settings.TRAIN_ROOT, str(lastT1.pk), 'goods_label_map.pbtxt'), label_file_path)
+                shutil.copy(os.path.join(tmp_dir, 'frozen_inference_graph.pb'), export_file_path)
+
+                # clean up temporary_files
+                if tf.gfile.Exists(tmp_dir):
+                    tf.gfile.DeleteRecursively(tmp_dir)
 
                 # reboot django
                 os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
