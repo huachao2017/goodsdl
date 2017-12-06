@@ -167,3 +167,5 @@ LOGGING = {
 
 # train setting
 TRAIN_ROOT = os.path.join(BASE_DIR, 'train')
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
