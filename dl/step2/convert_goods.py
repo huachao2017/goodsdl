@@ -143,6 +143,21 @@ def _tfrecord_exists(output_dir):
 
 
 def create_step2_goods(data_dir, dataset_dir):
+    graph = tf.Graph()
+
+    with graph.as_default():
+        image_input_path = tf.placeholder(dtype=tf.string, name='input_tensor')
+        image_output_path = tf.placeholder(dtype=tf.string, name='output_tensor')
+        image_string = tf.read_file(image_input_path)
+        image = tf.image.decode_jpeg(image_string, channels=3)
+        image = tf.image.rot90(image=image)
+        image = tf.image.encode_jpeg(image=image)
+        rot90_augment = tf.write_file(contents=image, filename=image_output_path, name='augment')
+
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        sess = tf.Session(config=config)
+
     """返回所有图片文件路径"""
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(dirlist)):
@@ -177,6 +192,23 @@ def create_step2_goods(data_dir, dataset_dir):
                         output_image_path = os.path.join(output_class_dir, "{}_{}.jpg".format(os.path.split(example)[1], index))
                         newimage.save(output_image_path, 'JPEG')
                         logger.info('save image:{}'.format(output_image_path))
+
+                        # augment small sample
+                        if len(filelist) < 3*10:
+                            augument_num = 3
+                        elif len(filelist) < 3*15:
+                            augument_num = 2
+                        elif len(filelist) < 3 * 20:
+                            augument_num = 1
+                        else:
+                            augument_num = 0
+
+                        if augument_num > 0:
+                            for augument_index in range(augument_num):
+                                output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augument{}.jpg".format(os.path.split(example)[1], index, augument_index))
+                                sess.run(rot90_augment, feed_dict={image_input_path: output_image_path, image_output_path: output_image_path_augment})
+                                output_image_path = output_image_path_augment
+    sess.close()
 
 def prepare_train(data_dir, train_dir, train_name):
     """Runs the download and conversion operation.
