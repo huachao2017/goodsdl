@@ -201,8 +201,7 @@ class ImageDetector:
                 image_path = tf.placeholder(dtype=tf.string, name='input_tensor')
                 image_string = tf.read_file(image_path)
                 image = tf.image.decode_jpeg(image_string, channels=3, name='image_tensor')
-                processed_image = inception_preprocessing.preprocess_image(image, image_size, image_size,
-                                                                           is_training=False)
+                processed_image = inception_preprocessing.preprocess_for_eval(image, image_size, image_size, central_fraction=None)
                 processed_images = tf.expand_dims(processed_image, 0)
 
                 # Create the model, use the default arg scope to configure the batch norm parameters.
