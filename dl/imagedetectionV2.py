@@ -341,7 +341,7 @@ class ImageDetector:
                 use_normalized_coordinates=True,
                 step1_min_score_thresh=step1_min_score_thresh,
                 step2_min_score_thresh=step2_min_score_thresh,
-                line_thickness=4)
+                line_thickness=2)
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
             output_image.save(output_image_path)
