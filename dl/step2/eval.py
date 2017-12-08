@@ -129,7 +129,7 @@ def main(_):
 
         eval_image_size = FLAGS.eval_image_size or network_fn.default_image_size
 
-        image = image_preprocessing_fn(image, eval_image_size, eval_image_size)
+        image = image_preprocessing_fn(image, eval_image_size, eval_image_size, central_fraction=None)
 
         images, labels = tf.train.batch(
             [image, label],
