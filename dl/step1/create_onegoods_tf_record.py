@@ -206,13 +206,15 @@ def create_label_map_file(output_filename,
 
 def update_config_file(train_dir,
                        train_name,
-                       num_classes):
+                       num_classes,
+                       num_steps=200000):
     config_template_file_path = os.path.join(train_dir, 'faster_rcnn_nas_goods.config.template_tt')
     output_filename = os.path.join(train_dir, train_name, 'faster_rcnn_nas_goods.config')
     with open(config_template_file_path, 'r') as file:
         data = file.read()
         #     p = re.compile(r'num_classes: \d+')
         output = re.sub('num_classes: \d+', 'num_classes: '+str(num_classes), data)
+        output = re.sub('num_steps: \d+', 'num_steps: '+str(num_steps), data)
         output = re.sub('PATH_TO_BE_CONFIGURED_MODEL', train_dir, output)
         output = re.sub('PATH_TO_BE_CONFIGURED_TRAIN', os.path.join(train_dir, train_name), output)
     with open(output_filename, 'w') as file:
@@ -260,6 +262,7 @@ def prepare_train(data_dir, train_dir, train_name):
     create_tf_record(val_output_path, label_map_dict, val_examples)
 
     create_label_map_file(label_map_file_path, label_map_dict)
-    update_config_file(train_dir, train_name, len(label_map_dict))
+    # 设定每张照片训练20次
+    update_config_file(train_dir, train_name, len(label_map_dict), num_examples*20)
     return label_map_dict
 
