@@ -198,10 +198,10 @@ class ImageDetector:
             image_size = inception.inception_resnet_v2.default_image_size
             self.graph_step2 = tf.Graph()
             with self.graph_step2.as_default():
-                # image_path = tf.placeholder(dtype=tf.string, name='input_tensor')
-                # image_string = tf.read_file(image_path)
-                # image = tf.image.decode_jpeg(image_string, channels=3, name='image_tensor')
-                image = tf.placeholder(dtype=tf.float32, shape=[None, None, 3], name='input_tensor')
+                image_path = tf.placeholder(dtype=tf.string, name='input_tensor')
+                image_string = tf.read_file(image_path)
+                image = tf.image.decode_jpeg(image_string, channels=3, name='image_tensor')
+                # image = tf.placeholder(dtype=tf.float32, shape=[None, None, 3], name='input_tensor')
                 processed_image = inception_preprocessing.preprocess_for_eval(image, image_size, image_size, central_fraction=None)
                 processed_images = tf.expand_dims(processed_image, 0)
 
@@ -277,17 +277,17 @@ class ImageDetector:
 
                 newimage = image.crop((xmin, ymin, xmax, ymax))
                 # 生成新的图片
-                # newimage_split = os.path.split(image_path)
-                # new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
-                # newimage.save(new_image_path, 'JPEG')
+                newimage_split = os.path.split(image_path)
+                new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
+                newimage.save(new_image_path, 'JPEG')
 
-                # probabilities = self.session_step2.run(
-                #     self.detection_classes, feed_dict={self.image_tensor_step2: new_image_path})
-
-                newimage = np.array(newimage, dtype=np.float32)
-                logger.info(newimage.shape)
                 probabilities = self.session_step2.run(
-                    self.detection_classes, feed_dict={self.image_tensor_step2: newimage})
+                    self.detection_classes, feed_dict={self.image_tensor_step2: new_image_path})
+
+                # newimage = np.array(newimage, dtype=np.float32)
+                # logger.info(newimage.shape)
+                # probabilities = self.session_step2.run(
+                #     self.detection_classes, feed_dict={self.image_tensor_step2: newimage})
                 probabilities = probabilities[0]
                 sorted_inds = [i[0] for i in sorted(enumerate(-probabilities), key=lambda x: x[1])]
 
