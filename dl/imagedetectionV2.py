@@ -201,7 +201,7 @@ class ImageDetector:
                 # image_path = tf.placeholder(dtype=tf.string, name='input_tensor')
                 # image_string = tf.read_file(image_path)
                 # image = tf.image.decode_jpeg(image_string, channels=3, name='image_tensor')
-                image = tf.placeholder(dtype=tf.int32, shape=[None,None,3], name='input_tensor')
+                image = tf.placeholder(dtype=tf.float32, shape=[None, None, 3], name='input_tensor')
                 processed_image = inception_preprocessing.preprocess_for_eval(image, image_size, image_size, central_fraction=None)
                 processed_images = tf.expand_dims(processed_image, 0)
 
@@ -284,7 +284,7 @@ class ImageDetector:
                 # probabilities = self.session_step2.run(
                 #     self.detection_classes, feed_dict={self.image_tensor_step2: new_image_path})
                 probabilities = self.session_step2.run(
-                    self.detection_classes, feed_dict={self.image_tensor_step2: np.array(newimage)})
+                    self.detection_classes, feed_dict={self.image_tensor_step2: np.array(newimage, dtype=np.float32)})
                 probabilities = probabilities[0]
                 sorted_inds = [i[0] for i in sorted(enumerate(-probabilities), key=lambda x: x[1])]
 
