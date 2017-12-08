@@ -310,13 +310,14 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             # 训练
-            command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={}  > /root/train2.out 2>&1 &'.format(
+            command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
                 len(training_filenames),
                 step2_model_name,
-                32
+                32,
+                int(len(training_filenames)*200/32) # 设定最大训练次数，保证每个样本进入网络200次
             )
             logger.info(command)
             subprocess.call(command, shell=True)
