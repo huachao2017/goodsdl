@@ -285,7 +285,7 @@ class ImageDetector:
                 #     self.detection_classes, feed_dict={self.image_tensor_step2: new_image_path})
 
                 newimage = np.array(newimage, dtype=np.float32)
-                logger.info(newimage.share)
+                logger.info(newimage.shape)
                 probabilities = self.session_step2.run(
                     self.detection_classes, feed_dict={self.image_tensor_step2: newimage})
                 probabilities = probabilities[0]
