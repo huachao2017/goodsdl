@@ -283,8 +283,11 @@ class ImageDetector:
 
                 # probabilities = self.session_step2.run(
                 #     self.detection_classes, feed_dict={self.image_tensor_step2: new_image_path})
+
+                newimage = np.array(newimage, dtype=np.float32)
+                logger.info(newimage.share)
                 probabilities = self.session_step2.run(
-                    self.detection_classes, feed_dict={self.image_tensor_step2: np.array(newimage, dtype=np.float32)})
+                    self.detection_classes, feed_dict={self.image_tensor_step2: newimage})
                 probabilities = probabilities[0]
                 sorted_inds = [i[0] for i in sorted(enumerate(-probabilities), key=lambda x: x[1])]
 
