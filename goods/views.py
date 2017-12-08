@@ -416,7 +416,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
         elif serializer.instance.action == 'E2':
-            lastT2 = ActionLog.objects.filter(action="T2").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            lastT2 = ActionLog.objects.filter(Q(action="T2")|Q(action="TC")).filter(traintype=serializer.instance.traintype).order_by('-id')[0]
             logger.info('Export Grapy from train2:{}'.format(lastT2.pk))
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastT2.pk))
             checkpoint_model_path = tf.train.latest_checkpoint(trained_checkpoint_dir)
