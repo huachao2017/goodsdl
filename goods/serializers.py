@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, Goods, ProblemGoods, TrainImage, ActionLog
+from .models import Image, ImageClass, Goods, ProblemGoods, TrainImage, ActionLog
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,6 +17,11 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ('pk', 'deviceid', 'source', 'image_goods', 'image_problem_goods')
+
+class ImageClassSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageClass
+        fields = ('pk', 'deviceid', 'source')
 
 class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:

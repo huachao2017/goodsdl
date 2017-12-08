@@ -16,9 +16,10 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetection, imagedetectionV2
+from dl import imagedetection, imagedetectionV2, imageclassifyV1
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
+from dl.only_step2 import create_goods_tf_record
 from .models import Image, Goods
 from .serializers import *
 import tensorflow as tf
@@ -33,44 +34,6 @@ class DefaultMixin:
     paginate_by = 25
     paginate_by_param = 'page_size'
     max_paginate_by = 100
-
-# 下线旧功能
-# class ImageOldViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-#     queryset = Image.objects.order_by('-id')
-#     serializer_class = ImageSerializer
-#
-#     def create(self, request, *args, **kwargs):
-#         logger.info('begin old create:')
-#         # 兼容没有那么字段的请求
-#         if 'deviceid' not in request.data :
-#             request.data['deviceid'] = get_client_ip(request)
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         self.perform_create(serializer)
-#         headers = self.get_success_headers(serializer.data)
-#         detector = imagedetection_old.ImageDetectorFactory.get_static_detector()
-#         logger.info('begin old detect:{}'.format(serializer.instance.source.path))
-#         ret = detector.detect(serializer.instance.source.path, min_score_thresh=.8)
-#         if len(ret) <= 0:
-#             logger.info('end old detect:0')
-#             # 删除无用图片
-#             os.remove(serializer.instance.source.path)
-#             Image.objects.get(pk=serializer.instance.pk).delete()
-#         else:
-#             logger.info('end old detect:{}'.format(str(len(ret))))
-#             for goods in ret:
-#                 Goods.objects.create(image_id=serializer.instance.pk,
-#                                      class_type=goods['class'],
-#                                      score=goods['score'],
-#                                      upc=goods['name'],
-#                                      xmin=goods['box']['xmin'],
-#                                      ymin=goods['box']['ymin'],
-#                                      xmax=goods['box']['xmax'],
-#                                      ymax=goods['box']['ymax'],
-#                                      )
-#         logger.info('end old create')
-#         #return Response({'Test':True})
-#         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
@@ -151,6 +114,39 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     class_index_dict[goods['class']] = index
                     index = index + 1
             ret = ret_reborn
+        logger.info('end create')
+        #return Response({'Test':True})
+        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
+class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = Image.objects.order_by('-id')
+    serializer_class = ImageClassSerializer
+
+    def create(self, request, *args, **kwargs):
+        logger.info('begin create:')
+        # 兼容没有那么字段的请求
+        if 'deviceid' not in request.data :
+            request.data['deviceid'] = get_client_ip(request)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        # 暂时性分解Detect，需要一个处理type编码
+        detector = imageclassifyV1.ImageDetectorFactory.get_static_detector('1')
+        min_score_thresh = .5
+        logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+        ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
+
+
+        if ret is None or len(ret) <= 0:
+            logger.info('end classify:0')
+            # 删除无用图片
+            os.remove(serializer.instance.source.path)
+            Image.objects.get(pk=serializer.instance.pk).delete()
+        else:
+            logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+
         logger.info('end create')
         #return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
@@ -326,6 +322,42 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             subprocess.call(command, shell=True)
             # 评估
             command = 'nohup python3 {}/step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+                os.path.join(train_logs_dir, 'eval_log'),
+                len(validation_filenames),
+                step2_model_name
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+        elif serializer.instance.action == 'TC':
+            # 杀死原来的train
+            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+            os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+
+            # 训练准备
+            if serializer.instance.traintype == 0:
+                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            else:
+                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
+            class_names_to_ids, training_filenames, validation_filenames = create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
+
+            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
+
+            # 训练
+            command = 'nohup python3 {}/only_step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={}  > /root/train_only2.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+                len(training_filenames),
+                step2_model_name,
+                32
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+            # 评估
+            command = 'nohup python3 {}/only_step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval_only2.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,

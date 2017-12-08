@@ -12,6 +12,25 @@ deviceid  string
 traintype int
 返回201
 
+分类图片接口：http://ai.fastxbox.cn/api/imageclass
+入参：
+source  file
+filename string
+deviceid  string
+返回201：
+[
+    {
+        "class": 1,                           -- 类型（可不用）
+        "upc": "123123123",                   -- 产品UPC
+        "score": 0.5095015168190002,          -- 分类可能性评分
+    },
+    {
+        "class": 2,                           -- 类型（可不用）
+        "upc": "123123124",                    -- 产品UPC
+        "score": 0.5095015168190002,           -- 分类可能性评分
+    }
+]
+
 检测图片接口：http://ai.fastxbox.cn/api/imagenew
 入参：
 source  file
