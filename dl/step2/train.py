@@ -22,7 +22,6 @@ import tensorflow as tf
 
 from deployment import model_deploy
 from nets import nets_factory
-from preprocessing import preprocessing_factory
 from preprocessing import inception_preprocessing
 import os
 
