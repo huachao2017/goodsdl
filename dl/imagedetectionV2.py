@@ -233,8 +233,8 @@ class ImageDetector:
                 self.session_step2 = tf.Session(config=config)
                 init_fn(self.session_step2)
 
-            self.input_image_tensor_step2 = self.pre_sess_step2.get_tensor_by_name('input_image:0')
-            self.output_image_tensor_step2 = self.pre_sess_step2.get_tensor_by_name('output_image:0')
+            self.input_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('input_image:0')
+            self.output_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('output_image:0')
             self.input_images_tensor_step2 = self.graph_step2.get_tensor_by_name('input_tensor:0')
             # self.np_image_step2 = self.graph_step2.get_tensor_by_name('image_tensor:0')
             self.detection_classes = self.graph_step2.get_tensor_by_name('detection_classes:0')
@@ -288,7 +288,7 @@ class ImageDetector:
                 newimage_split = os.path.split(image_path)
                 new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
                 newimage.save(new_image_path, 'JPEG')
-                step2_images.append(self.pre_sess_step2.run(self.output_image_tensor, feed_dict={self.input_image_tensor: new_image_path}))
+                step2_images.append(self.pre_sess_step2.run(self.output_image_tensor_step2, feed_dict={self.input_image_tensor_step2: new_image_path}))
 
         # 统一识别，用于加速
         step2_images_nps = np.array(step2_images)
