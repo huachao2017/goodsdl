@@ -196,18 +196,28 @@ class ImageDetector:
             logger.info('begin loading step2 model: {}'.format(step2_checkpoint))
             dataset_step2 = dataset.get_split('train', self.checkpoints_dir, )
             image_size = inception.inception_resnet_v2.default_image_size
-            self.graph_step2 = tf.Graph()
-            with self.graph_step2.as_default():
-                image_path = tf.placeholder(dtype=tf.string, name='input_tensor')
+
+            self.pre_graph_step2 = tf.Graph()
+            with self.pre_graph_step2.as_default():
+                image_path = tf.placeholder(dtype=tf.string, name='input_image')
                 image_string = tf.read_file(image_path)
                 image = tf.image.decode_jpeg(image_string, channels=3, name='image_tensor')
-                # image = tf.placeholder(dtype=tf.float32, shape=[None, None, 3], name='input_tensor')
-                processed_image = inception_preprocessing.preprocess_for_eval(image, image_size, image_size, central_fraction=None)
-                processed_images = tf.expand_dims(processed_image, 0)
+                image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+                image = tf.expand_dims(image, 0)
+                image = tf.image.resize_bilinear(image, [image_size, image_size], align_corners=False)
+                image = tf.squeeze(image, [0])
+                image = tf.subtract(image, 0.5)
+                image = tf.multiply(image, 2.0, name='output_image')
+
+            self.pre_sess_step2 = tf.Session(graph=self.pre_graph_step2, config=config)
+
+            self.graph_step2 = tf.Graph()
+            with self.graph_step2.as_default():
+                images = tf.placeholder(dtype=tf.float32, shape=[None, image_size, image_size, 3], name='input_tensor')
 
                 # Create the model, use the default arg scope to configure the batch norm parameters.
                 with slim.arg_scope(inception.inception_resnet_v2_arg_scope()):
-                    logits, _ = inception.inception_resnet_v2(processed_images,
+                    logits, _ = inception.inception_resnet_v2(images,
                                                               num_classes=len(dataset_step2.labels_to_names),
                                                               is_training=False)
                 probabilities = tf.nn.softmax(logits, name='detection_classes')
@@ -223,7 +233,9 @@ class ImageDetector:
                 self.session_step2 = tf.Session(config=config)
                 init_fn(self.session_step2)
 
-            self.image_tensor_step2 = self.graph_step2.get_tensor_by_name('input_tensor:0')
+            self.input_image_tensor_step2 = self.pre_sess_step2.get_tensor_by_name('input_image:0')
+            self.output_image_tensor_step2 = self.pre_sess_step2.get_tensor_by_name('output_image:0')
+            self.input_images_tensor_step2 = self.graph_step2.get_tensor_by_name('input_tensor:0')
             # self.np_image_step2 = self.graph_step2.get_tensor_by_name('image_tensor:0')
             self.detection_classes = self.graph_step2.get_tensor_by_name('detection_classes:0')
 
@@ -262,12 +274,8 @@ class ImageDetector:
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
 
-        ret = []
-        classes = []
-        scores_step2 = []
+        step2_images = []
         for i in range(boxes.shape[0]):
-            classes.append(-1)
-            scores_step2.append(-1)
             if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
@@ -280,32 +288,48 @@ class ImageDetector:
                 newimage_split = os.path.split(image_path)
                 new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
                 newimage.save(new_image_path, 'JPEG')
+                step2_images.append(self.pre_sess_step2.run(self.output_image_tensor, feed_dict={self.input_image_tensor: new_image_path}))
 
-                probabilities = self.session_step2.run(
-                    self.detection_classes, feed_dict={self.image_tensor_step2: new_image_path})
+        # 统一识别，用于加速
+        step2_images_nps = np.array(step2_images)
+        probabilities = self.session_step2.run(
+            self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
 
+        ret = []
+        classes = []
+        scores_step2 = []
+        index = -1
+        for i in range(boxes.shape[0]):
+            classes.append(-1)
+            scores_step2.append(-1)
+            if scores_step1[i] > step1_min_score_thresh:
+                index = index + 1
+                ymin, xmin, ymax, xmax = boxes[i]
+                ymin = int(ymin * im_height)
+                xmin = int(xmin * im_width)
+                ymax = int(ymax * im_height)
+                xmax = int(xmax * im_width)
                 # newimage = np.array(newimage, dtype=np.float32)
                 # logger.info(newimage.shape)
                 # probabilities = self.session_step2.run(
                 #     self.detection_classes, feed_dict={self.image_tensor_step2: newimage})
-                probabilities = probabilities[0]
-                sorted_inds = [i[0] for i in sorted(enumerate(-probabilities), key=lambda x: x[1])]
+                sorted_inds = [i[0] for i in sorted(enumerate(-probabilities[index]), key=lambda x: x[1])]
 
                 # print(classes[i])
                 # print(self.class_to_name_dic)
                 classes[i] = sorted_inds[0]
-                scores_step2[i] = probabilities[sorted_inds[0]]
+                scores_step2[i] = probabilities[index][sorted_inds[0]]
                 # for j in range(5):
                 #     index = sorted_inds[j]
                 #     logger.info('[%s] Probability %0.2f%% => [%s]' % (self.labels_to_names[index], probabilities[index] * 100, index))
 
                 class_type = sorted_inds[0]
                 upc = self.labels_to_names[sorted_inds[0]]
-                if probabilities[sorted_inds[0]] < step2_min_score_thresh:
+                if probabilities[index][sorted_inds[0]] < step2_min_score_thresh:
                     # 识别度不够
                     class_type = -1
                     upc = ''
-                elif probabilities[sorted_inds[0]]-probabilities[sorted_inds[1]] < 0.1:
+                elif probabilities[index][sorted_inds[0]]-probabilities[index][sorted_inds[1]] < 0.1:
                     # 两个类型有混淆
                     class_type = -1
                     upc = ''
@@ -319,19 +343,19 @@ class ImageDetector:
                                                 class_type_2=sorted_inds[2],
                                                 class_type_3=sorted_inds[3],
                                                 class_type_4=sorted_inds[4],
-                                                score_0=probabilities[sorted_inds[0]],
-                                                score_1=probabilities[sorted_inds[1]],
-                                                score_2=probabilities[sorted_inds[2]],
-                                                score_3=probabilities[sorted_inds[3]],
-                                                score_4=probabilities[sorted_inds[4]],
+                                                score_0=probabilities[index][sorted_inds[0]],
+                                                score_1=probabilities[index][sorted_inds[1]],
+                                                score_2=probabilities[index][sorted_inds[2]],
+                                                score_3=probabilities[index][sorted_inds[3]],
+                                                score_4=probabilities[index][sorted_inds[4]],
                                                 )
-
                 ret.append({'class': class_type,
                             'score': scores_step1[i],
                             'score2': scores_step2[i],
                             'upc': upc,
                             'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
                             })
+
         # visualization
         if boxes.shape[0] > 0:
             image_dir = os.path.dirname(image_path)
