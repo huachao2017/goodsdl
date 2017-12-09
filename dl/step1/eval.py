@@ -80,7 +80,7 @@ FLAGS = flags.FLAGS
 
 def main(unused_argv):
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
     assert FLAGS.checkpoint_dir, '`checkpoint_dir` is missing.'
     assert FLAGS.eval_dir, '`eval_dir` is missing.'
     tf.gfile.MakeDirs(FLAGS.eval_dir)
