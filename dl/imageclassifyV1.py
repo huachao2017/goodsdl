@@ -81,14 +81,16 @@ class ImageClassify:
             logger.info('end loading model...')
             # semaphore.release()
 
-    def detect(self, image_instance, min_score_thresh=.5):
+    def detect(self, image_path, min_score_thresh=.5):
         if self.labels_to_names is None:
             self.load()
             if self.labels_to_names is None:
                 logger.warning('loading model failed')
                 return None
 
-        image_path = image_instance.source.path
+        if not os.path.isfile(image_path):
+            logger.warning('file not exist')
+            return None
 
         ret = []
         classes = []
