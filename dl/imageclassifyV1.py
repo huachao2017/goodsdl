@@ -93,8 +93,6 @@ class ImageClassify:
             return None
 
         ret = []
-        classes = []
-        scores_step2 = []
         probabilities = self.session_step2.run(
             self.detection_classes, feed_dict={self.image_tensor_step2: image_path})
         probabilities = probabilities[0]
@@ -103,7 +101,7 @@ class ImageClassify:
         for i in range(5):
             class_type = sorted_inds[i]
             upc = self.labels_to_names[sorted_inds[i]]
-            if probabilities[sorted_inds[i]] < min_score_thresh:
+            if probabilities[sorted_inds[i]] > min_score_thresh:
                 ret.append({'class': class_type,
                         'score': probabilities[sorted_inds[i]],
                         'upc': upc,
