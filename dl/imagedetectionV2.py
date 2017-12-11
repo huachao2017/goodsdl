@@ -290,6 +290,8 @@ class ImageDetector:
                 newimage.save(new_image_path, 'JPEG')
                 step2_images.append(self.pre_sess_step2.run(self.output_image_tensor_step2, feed_dict={self.input_image_tensor_step2: new_image_path}))
 
+        if len(step2_images) <= 0:
+            return None
         # 统一识别，用于加速
         step2_images_nps = np.array(step2_images)
         probabilities = self.session_step2.run(
