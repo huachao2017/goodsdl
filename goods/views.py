@@ -430,7 +430,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 postfix = now.strftime('%Y%m%d%H%M%S')
                 os.rename(checkpoint_file_path, checkpoint_file_path+'.'+postfix)
                 label_file_path = os.path.join(model_dir, 'labels.txt')
-                os.rename(label_file_path, label_file_path+'.'+postfix)
+                if os.path.isfile(label_file_path):
+                    os.rename(label_file_path, label_file_path+'.'+postfix)
                 serializer.instance.param = 'trainid:{},postfix:{}'.format(lastT2.pk, postfix)
                 serializer.instance.save()
             # 输出pb
