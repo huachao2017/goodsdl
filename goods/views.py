@@ -143,7 +143,7 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
             logger.info('end classify:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
-            Image.objects.get(pk=serializer.instance.pk).delete()
+            ImageClass.objects.get(pk=serializer.instance.pk).delete()
         else:
             for goods_class in ret:
                 GoodsClass.objects.create(image_class_id=serializer.instance.pk,
