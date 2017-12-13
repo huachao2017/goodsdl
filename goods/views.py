@@ -254,6 +254,27 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = TrainImageClass.objects.order_by('-id')
+    serializer_class = TrainImageClassSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        a, b = os.path.splitext(instance.source.path)
+        dir = os.path.dirname(instance.source.path)
+        if os.path.isfile(instance.source.path):
+            os.remove(instance.source.path)
+
+        havefile = False
+        for i in os.listdir(dir):
+            havefile = True
+            break
+        if not havefile:
+            shutil.rmtree(dir)
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = ActionLog.objects.order_by('-id')

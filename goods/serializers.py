@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, ActionLog
+from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, ActionLog
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,6 +35,12 @@ class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainImage
         fields = ('pk', 'deviceid', 'traintype', 'source', 'upc', 'name', 'xmin', 'ymin', 'xmax', 'ymax', 'create_time')
+        read_only_fields = ('create_time',)
+
+class TrainImageClassSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrainImageClass
+        fields = ('pk', 'deviceid', 'traintype', 'source', 'upc', 'name', 'create_time')
         read_only_fields = ('create_time',)
 
 class ActionLogSerializer(serializers.ModelSerializer):

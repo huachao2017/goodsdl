@@ -1,4 +1,4 @@
-训练图片接口：http://train.fastxbox.cn/api/trainimage
+训练检测图片接口：http://train.fastxbox.cn/api/trainimage
 入参：
 source  file
 filename string
@@ -8,6 +8,16 @@ xmin  int
 ymin  int
 xmax  int
 ymax  int
+deviceid  string
+traintype int
+返回201
+
+训练分类图片接口：http://train.fastxbox.cn/api/trainimageclass
+入参：
+source  file
+filename string
+upc   string
+name  string
 deviceid  string
 traintype int
 返回201

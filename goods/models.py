@@ -66,6 +66,14 @@ class TrainImage(models.Model):
     ymax = models.PositiveIntegerField(default=0)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
+class TrainImageClass(models.Model):
+    deviceid = models.CharField(max_length=20, default='')
+    traintype = models.PositiveIntegerField(default=0)
+    source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
+    upc = models.CharField(max_length=20)
+    name = models.CharField(max_length=20, default='')
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
 class ActionLog(models.Model):
     ACTION_CHOICES = (
         (u'T1', u'Train Step 1'),

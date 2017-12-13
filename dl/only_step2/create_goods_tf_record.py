@@ -79,8 +79,7 @@ def _get_filenames_and_classes(dataset_dir):
         for filename in os.listdir(directory):
             path = os.path.join(directory, filename)
             example, ext = os.path.splitext(path)
-            xml_path = example + '.xml'
-            if ext == ".jpg" and os.path.isfile(xml_path):
+            if ext == ".jpg" and filename.split('_')[0] != 'visual':
                 photo_filenames.append(path)
 
     return photo_filenames, sorted(class_names)

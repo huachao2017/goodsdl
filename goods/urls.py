@@ -24,6 +24,7 @@ router.register(r'imagenew', views.ImageViewSet)
 router.register(r'imageclass', views.ImageClassViewSet)
 router.register(r'problemgoods', views.ProblemGoodsViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
+router.register(r'trainimageclass', views.TrainImageClassViewSet)
 router.register(r'action', views.ActionLogViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
