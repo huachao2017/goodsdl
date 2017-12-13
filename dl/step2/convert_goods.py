@@ -21,6 +21,9 @@ import xml.etree.ElementTree as ET
 from PIL import Image as im
 import logging
 import io
+import cv2
+import math
+import numpy as np
 
 import tensorflow as tf
 
@@ -142,21 +145,48 @@ def _tfrecord_exists(output_dir):
     return True
 
 
-def create_step2_goods(data_dir, dataset_dir):
-    graph = tf.Graph()
+def rotate_image(src, angle, scale=1.):
+    w = src.shape[1]
+    h = src.shape[0]
+    # 角度变弧度
+    rangle = np.deg2rad(angle)  # angle in radians
+    # now calculate new image width and height
+    nw = (abs(np.sin(rangle)*h) + abs(np.cos(rangle)*w))*scale
+    nh = (abs(np.cos(rangle)*h) + abs(np.sin(rangle)*w))*scale
+    # ask OpenCV for the rotation matrix
+    rot_mat = cv2.getRotationMatrix2D((nw*0.5, nh*0.5), angle, scale)
+    # calculate the move from the old center to the new center combined
+    # with the rotation
+    rot_move = np.dot(rot_mat, np.array([(nw-w)*0.5, (nh-h)*0.5,0]))
+    # the move only affects the translation, so update the translation
+    # part of the transform
+    rot_mat[0,2] += rot_move[0]
+    rot_mat[1,2] += rot_move[1]
+    # 仿射变换
+    return cv2.warpAffine(src, rot_mat, (int(math.ceil(nw)), int(math.ceil(nh))), flags=cv2.INTER_LANCZOS4, borderValue=(int(src[1][1][0]),int(src[1][1][1]),int(src[1][1][2])))
 
-    with graph.as_default():
-        image_input_path = tf.placeholder(dtype=tf.string, name='input_tensor')
-        image_output_path = tf.placeholder(dtype=tf.string, name='output_tensor')
-        image_string = tf.read_file(image_input_path)
-        image = tf.image.decode_jpeg(image_string, channels=3)
-        image = tf.image.rot90(image=image)
-        image = tf.image.encode_jpeg(image=image)
-        rot90_augment = tf.write_file(contents=image, filename=image_output_path, name='augment')
+def create_step2_goods(data_dir, dataset_dir, step1_model_path):
+    graph_step1 = tf.Graph()
+    with graph_step1.as_default():
+        od_graph_def = tf.GraphDef()
+        with tf.gfile.GFile(step1_model_path, 'rb') as fid:
+            serialized_graph = fid.read()
+            od_graph_def.ParseFromString(serialized_graph)
+            tf.import_graph_def(od_graph_def, name='')
 
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        sess = tf.Session(config=config)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU50%的显存
+    session_step1 = tf.Session(graph=graph_step1, config=config)
+
+    # Definite input and output Tensors for detection_graph
+    image_tensor_step1 = graph_step1.get_tensor_by_name('image_tensor:0')
+    # Each box represents a part of the image where a particular object was detected.
+    detection_boxes = graph_step1.get_tensor_by_name('detection_boxes:0')
+    # Each score represent how level of confidence for each of the objects.
+    # Score is shown on the result image, together with the class label.
+    detection_scores = graph_step1.get_tensor_by_name('detection_scores:0')
+
 
     """返回所有图片文件路径"""
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
@@ -167,6 +197,10 @@ def create_step2_goods(data_dir, dataset_dir):
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
+
+            output_tmp_dir = os.path.join(output_class_dir, 'tmp')
+            if not tf.gfile.Exists(output_tmp_dir):
+                tf.gfile.MakeDirs(output_tmp_dir)
 
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
@@ -193,24 +227,55 @@ def create_step2_goods(data_dir, dataset_dir):
                         newimage.save(output_image_path, 'JPEG')
                         logger.info('save image:{}'.format(output_image_path))
 
+                        img = cv2.imread(image_path)
+
                         # augment small sample
-                        if len(filelist) < 3*10:
-                            augument_num = 3
-                        elif len(filelist) < 3*15:
-                            augument_num = 2
-                        elif len(filelist) < 3 * 20:
-                            augument_num = 1
+                        if len(filelist) < 3*8:
+                            augment_ratio = 5
+                        elif len(filelist) < 3*20:
+                            augment_ratio = 3
+                        elif len(filelist) < 3 * 30:
+                            augment_ratio = 2
                         else:
-                            augument_num = 0
+                            augment_ratio = 1
+                        # 使图像旋转
+                        for k in range(12*augment_ratio-1):
+                            angle = 30/augment_ratio + k * 30/augment_ratio
+                            rotated_img = rotate_image(img, angle)
+                            # 写入图像
+                            tmp_image_path = os.path.join(output_tmp_dir, "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
+                            cv2.imwrite(tmp_image_path, rotated_img)
+                            logger.info("image:{} rotate {}.".format(output_image_path, angle))
 
-                        if augument_num > 0:
-                            for augument_index in range(augument_num):
-                                output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augument{}.jpg".format(os.path.split(example)[1], index, augument_index))
-                                sess.run(rot90_augment, feed_dict={image_input_path: output_image_path, image_output_path: output_image_path_augment})
-                                output_image_path = output_image_path_augment
-    sess.close()
+                            output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(os.path.split(example)[1], index, angle))
+                            augment_image = im.open(tmp_image_path)
+                            (im_width, im_height) = augment_image.size
+                            image_np = np.array(augment_image.getdata()).reshape(
+                                (im_height, im_width, 3)).astype(np.uint8)
+                            # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+                            image_np_expanded = np.expand_dims(image_np, axis=0)
+                            # Actual detection.
+                            (boxes, scores) = session_step1.run(
+                                [detection_boxes, detection_scores],
+                                feed_dict={image_tensor_step1: image_np_expanded})
+                            # data solving
+                            boxes = np.squeeze(boxes)
+                            # classes = np.squeeze(classes).astype(np.int32)
+                            scores_step1 = np.squeeze(scores)
+                            for l in range(boxes.shape[0]):
+                                if scores_step1[l] > 0.5:
+                                    ymin, xmin, ymax, xmax = boxes[l]
+                                    ymin = int(ymin * im_height)
+                                    xmin = int(xmin * im_width)
+                                    ymax = int(ymax * im_height)
+                                    xmax = int(xmax * im_width)
 
-def prepare_train(data_dir, train_dir, train_name):
+                                    augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
+                                    augment_newimage.save(output_image_path_augment, 'JPEG')
+                                    break
+    session_step1.close()
+
+def prepare_train(data_dir, train_dir, train_name, step1_model_path):
     """Runs the download and conversion operation.
 
     Args:
@@ -227,7 +292,7 @@ def prepare_train(data_dir, train_dir, train_name):
 
     dataset_dir = os.path.join(output_dir, 'step2')
     _clean_up_temporary_files(dataset_dir)
-    create_step2_goods(data_dir, dataset_dir)
+    create_step2_goods(data_dir, dataset_dir, step1_model_path)
 
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
     class_names_to_ids = dict(zip(class_names, range(len(class_names))))

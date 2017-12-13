@@ -331,7 +331,9 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-            class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
+
+            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model',str(serializer.instance.traintype),'frozen_inference_graph.pb')
+            class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk), step1_model_path)
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
