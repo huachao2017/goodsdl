@@ -132,9 +132,11 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
     writer.close()
     logger.info('generate tfrecord:{}'.format(output_filename))
 
+
 def _clean_up_temporary_files(dataset_dir):
     if tf.gfile.Exists(dataset_dir):
         tf.gfile.DeleteRecursively(dataset_dir)
+
 
 def _tfrecord_exists(output_dir):
     for split_name in ['train', 'validation']:
@@ -151,19 +153,21 @@ def rotate_image(src, angle, scale=1.):
     # 角度变弧度
     rangle = np.deg2rad(angle)  # angle in radians
     # now calculate new image width and height
-    nw = (abs(np.sin(rangle)*h) + abs(np.cos(rangle)*w))*scale
-    nh = (abs(np.cos(rangle)*h) + abs(np.sin(rangle)*w))*scale
+    nw = (abs(np.sin(rangle) * h) + abs(np.cos(rangle) * w)) * scale
+    nh = (abs(np.cos(rangle) * h) + abs(np.sin(rangle) * w)) * scale
     # ask OpenCV for the rotation matrix
-    rot_mat = cv2.getRotationMatrix2D((nw*0.5, nh*0.5), angle, scale)
+    rot_mat = cv2.getRotationMatrix2D((nw * 0.5, nh * 0.5), angle, scale)
     # calculate the move from the old center to the new center combined
     # with the rotation
-    rot_move = np.dot(rot_mat, np.array([(nw-w)*0.5, (nh-h)*0.5,0]))
+    rot_move = np.dot(rot_mat, np.array([(nw - w) * 0.5, (nh - h) * 0.5, 0]))
     # the move only affects the translation, so update the translation
     # part of the transform
-    rot_mat[0,2] += rot_move[0]
-    rot_mat[1,2] += rot_move[1]
+    rot_mat[0, 2] += rot_move[0]
+    rot_mat[1, 2] += rot_move[1]
     # 仿射变换
-    return cv2.warpAffine(src, rot_mat, (int(math.ceil(nw)), int(math.ceil(nh))), flags=cv2.INTER_LANCZOS4, borderValue=(int(src[1][1][0]),int(src[1][1][1]),int(src[1][1][2])))
+    return cv2.warpAffine(src, rot_mat, (int(math.ceil(nw)), int(math.ceil(nh))), flags=cv2.INTER_LANCZOS4,
+                          borderValue=(int(src[1][1][0]), int(src[1][1][1]), int(src[1][1][2])))
+
 
 def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     graph_step1 = tf.Graph()
@@ -186,7 +190,6 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     # Each score represent how level of confidence for each of the objects.
     # Score is shown on the result image, together with the class label.
     detection_scores = graph_step1.get_tensor_by_name('detection_scores:0')
-
 
     """返回所有图片文件路径"""
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
@@ -223,31 +226,36 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         ymax = int(box.find('ymax').text)
                         newimage = image.crop((xmin, ymin, xmax, ymax))
                         # 生成新的图片
-                        output_image_path = os.path.join(output_class_dir, "{}_{}.jpg".format(os.path.split(example)[1], index))
+                        output_image_path = os.path.join(output_class_dir,
+                                                         "{}_{}.jpg".format(os.path.split(example)[1], index))
                         newimage.save(output_image_path, 'JPEG')
                         logger.info('save image:{}'.format(output_image_path))
 
                         img = cv2.imread(image_path)
 
                         # augment small sample
-                        if len(filelist) < 3*8:
+                        if len(filelist) < 3 * 8:
                             augment_ratio = 5
-                        elif len(filelist) < 3*20:
-                            augment_ratio = 3
+                        elif len(filelist) < 3 * 20:
+                            augment_ratio = 4
                         elif len(filelist) < 3 * 30:
+                            augment_ratio = 3
+                        elif len(filelist) < 3 * 40:
                             augment_ratio = 2
                         else:
                             augment_ratio = 1
                         # 使图像旋转
-                        for k in range(12*augment_ratio-1):
-                            angle = 30/augment_ratio + k * 30/augment_ratio
+                        for k in range(6 * augment_ratio - 1):
+                            angle = 60 / augment_ratio + k * 60 / augment_ratio
                             rotated_img = rotate_image(img, angle)
                             # 写入图像
-                            tmp_image_path = os.path.join(output_tmp_dir, "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
+                            tmp_image_path = os.path.join(output_tmp_dir,
+                                                          "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
                             cv2.imwrite(tmp_image_path, rotated_img)
                             logger.info("image:{} rotate {}.".format(output_image_path, angle))
 
-                            output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(os.path.split(example)[1], index, angle))
+                            output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
+                                os.path.split(example)[1], index, angle))
                             augment_image = im.open(tmp_image_path)
                             (im_width, im_height) = augment_image.size
                             image_np = np.array(augment_image.getdata()).reshape(
@@ -275,6 +283,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     break
     session_step1.close()
 
+
 def prepare_train(data_dir, train_dir, train_name, step1_model_path):
     """Runs the download and conversion operation.
 
@@ -300,7 +309,7 @@ def prepare_train(data_dir, train_dir, train_name, step1_model_path):
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
     random.shuffle(photo_filenames)
-    training_filenames = photo_filenames
+    training_filenames = photo_filenames[_NUM_VALIDATION:]
     validation_filenames = photo_filenames[:_NUM_VALIDATION]
 
     # First, convert the training and validation sets.
