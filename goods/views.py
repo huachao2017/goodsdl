@@ -255,7 +255,6 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-step2_model_name = 'inception_resnet_v2'
 class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = ActionLog.objects.order_by('-id')
     serializer_class = ActionLogSerializer
@@ -315,6 +314,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
+            step2_model_name = 'inception_resnet_v2'
             # 训练
             command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
@@ -352,14 +352,15 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
+            model_name = 'nasnet_large'
             # 训练
             command = 'nohup python3 {}/only_step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={}  > /root/train_only2.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
                 len(training_filenames),
-                step2_model_name,
-                32
+                model_name,
+                1
             )
             logger.info(command)
             subprocess.call(command, shell=True)
@@ -370,7 +371,7 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 train_logs_dir,
                 os.path.join(train_logs_dir, 'eval_log'),
                 len(validation_filenames),
-                step2_model_name
+                model_name
             )
             logger.info(command)
             subprocess.call(command, shell=True)
