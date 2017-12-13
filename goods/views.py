@@ -20,7 +20,7 @@ from dl import imagedetection, imagedetectionV2, imageclassifyV1
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.only_step2 import create_goods_tf_record
-from .models import Image, Goods
+from .models import Image, Goods, GoodsClass
 from .serializers import *
 import tensorflow as tf
 
@@ -145,6 +145,12 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
             os.remove(serializer.instance.source.path)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
+            for goods_class in ret:
+                GoodsClass.objects.create(image_class_id=serializer.instance.pk,
+                                     class_type=goods_class['class'],
+                                     score=goods_class['score'],
+                                     upc=goods_class['upc'],
+                                     )
             logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
 
         logger.info('end create')

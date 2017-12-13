@@ -15,6 +15,12 @@ class ImageClass(models.Model):
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
+class GoodsClass(models.Model):
+    image_class = models.ForeignKey(ImageClass,related_name="image_class_goods",on_delete=models.CASCADE)
+    class_type = models.IntegerField(default=0)
+    score = models.FloatField(default=0.0)
+    upc = models.CharField(max_length=20)
+
 class Goods(models.Model):
     image = models.ForeignKey(Image,related_name="image_goods",on_delete=models.CASCADE)
     class_type = models.IntegerField(default=0)
