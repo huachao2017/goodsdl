@@ -304,7 +304,7 @@ def prepare_train(data_dir, train_dir, train_name, step1_model_path):
         return
 
     dataset_dir = os.path.join(output_dir, 'step2')
-    _clean_up_temporary_files(dataset_dir)
+    # _clean_up_temporary_files(dataset_dir)
     create_step2_goods(data_dir, dataset_dir, step1_model_path)
 
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)

@@ -26,23 +26,27 @@ import tensorflow as tf
 
 logger = logging.getLogger("django")
 
+
 class Test(APIView):
-    def get(self,request):
-        return Response({'Test':True})
+    def get(self, request):
+        return Response({'Test': True})
+
 
 class DefaultMixin:
     paginate_by = 25
     paginate_by_param = 'page_size'
     max_paginate_by = 100
 
-class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
     serializer_class = ImageSerializer
 
     def create(self, request, *args, **kwargs):
         logger.info('begin create:')
         # 兼容没有那么字段的请求
-        if 'deviceid' not in request.data :
+        if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -55,13 +59,13 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             step1_min_score_thresh = .8
             step2_min_score_thresh = .5
             logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh, step2_min_score_thresh=step2_min_score_thresh)
+            ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                  step2_min_score_thresh=step2_min_score_thresh)
         else:
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
             logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
-
+            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
         if ret is None or len(ret) <= 0:
             logger.info('end detect:0')
@@ -107,25 +111,27 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                         'ymax': goods['ymax'],
                     })
                     ret_reborn.append({
-                        'class':goods['class'],
-                        'upc':goods['upc'],
-                        'box':box
+                        'class': goods['class'],
+                        'upc': goods['upc'],
+                        'box': box
                     })
                     class_index_dict[goods['class']] = index
                     index = index + 1
             ret = ret_reborn
         logger.info('end create')
-        #return Response({'Test':True})
+        # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
-class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                        viewsets.GenericViewSet):
     queryset = ImageClass.objects.order_by('-id')
     serializer_class = ImageClassSerializer
 
     def create(self, request, *args, **kwargs):
         logger.info('begin create:')
         # 兼容没有那么字段的请求
-        if 'deviceid' not in request.data :
+        if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -136,8 +142,7 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         detector = imageclassifyV1.ImageClassifyFactory.get_static_detector('1')
         min_score_thresh = .5
         logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-        ret = detector.detect(serializer.instance.source.path, min_score_thresh = min_score_thresh)
-
+        ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
         if ret is None or len(ret) <= 0:
             logger.info('end classify:0')
@@ -147,30 +152,33 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         else:
             for goods_class in ret:
                 GoodsClass.objects.create(image_class_id=serializer.instance.pk,
-                                     class_type=goods_class['class'],
-                                     score=goods_class['score'],
-                                     upc=goods_class['upc'],
-                                     )
+                                          class_type=goods_class['class'],
+                                          score=goods_class['score'],
+                                          upc=goods_class['upc'],
+                                          )
             logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
 
         logger.info('end create')
-        #return Response({'Test':True})
+        # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class ProblemGoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = ProblemGoods.objects.order_by('-id')
     serializer_class = ProblemGoodsSerializer
 
+
 def get_client_ip(request):
     try:
-      real_ip = request.META['HTTP_X_FORWARDED_FOR']
-      regip = real_ip.split(",")[0]
+        real_ip = request.META['HTTP_X_FORWARDED_FOR']
+        regip = real_ip.split(",")[0]
     except:
-      try:
-        regip = request.META['REMOTE_ADDR']
-      except:
-        regip = ""
+        try:
+            regip = request.META['REMOTE_ADDR']
+        except:
+            regip = ""
     return regip
+
 
 class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImage.objects.order_by('-id')
@@ -180,9 +188,9 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         # 兼容没有那么字段的请求
         # if 'name' not in request.data :
         #     request.data['name'] = request.data['upc']
-        if 'deviceid' not in request.data :
+        if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
-        if 'traintype' not in request.data :
+        if 'traintype' not in request.data:
             request.data['traintype'] = 0
 
         serializer = self.get_serializer(data=request.data)
@@ -224,9 +232,11 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         image_pil = im.fromarray(np.uint8(image_np)).convert('RGB')
 
         vis_util.draw_bounding_box_on_image(image_pil,
-                                            serializer.instance.ymin, serializer.instance.xmin, serializer.instance.ymax, serializer.instance.xmax,
+                                            serializer.instance.ymin, serializer.instance.xmin,
+                                            serializer.instance.ymax, serializer.instance.xmax,
                                             color='DarkOrange',
-                                            display_str_list=(serializer.instance.name,), use_normalized_coordinates=False,thickness=2)
+                                            display_str_list=(serializer.instance.name,),
+                                            use_normalized_coordinates=False, thickness=2)
 
         np.copyto(image_np, np.array(image_pil))
         output_image = im.fromarray(image_np)
@@ -254,6 +264,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImageClass.objects.order_by('-id')
     serializer_class = TrainImageClassSerializer
@@ -276,7 +287,8 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                       mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = ActionLog.objects.order_by('-id')
     serializer_class = ActionLogSerializer
 
@@ -297,7 +309,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-            label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
+            label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
+                                                                     str(serializer.instance.pk))
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
 
@@ -322,89 +335,16 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
         elif serializer.instance.action == 'T2':
-            # 杀死原来的train
-            # os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-            # os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-
-            # 训练准备
-            if serializer.instance.traintype == 0:
-                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
-            else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-
-            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model',str(serializer.instance.traintype),'frozen_inference_graph.pb')
-            class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk), step1_model_path)
-
-            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
-
-            step2_model_name = 'inception_resnet_v2'
-            # 训练
-            command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-                len(training_filenames),
-                step2_model_name,
-                32,
-                int(len(training_filenames)*200/32) # 设定最大训练次数，保证每个样本进入网络200次
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
-            # 评估
-            command = 'nohup python3 {}/step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-                os.path.join(train_logs_dir, 'eval_log'),
-                len(validation_filenames),
-                step2_model_name
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
+            self.train_step2(serializer.instance)
         elif serializer.instance.action == 'TC':
-            # 杀死原来的train
-            # os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-            # os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-
-            # 训练准备
-            if serializer.instance.traintype == 0:
-                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
-            else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-            class_names_to_ids, training_filenames, validation_filenames = create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
-
-            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
-
-            model_name = 'inception_resnet_v2'
-            # 训练
-            command = 'nohup python3 {}/only_step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --learning_rate={} > /root/train_only2.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-                len(training_filenames),
-                model_name,
-                32,
-                0.01
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
-            # 评估
-            command = 'nohup python3 {}/only_step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval_only2.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-                os.path.join(train_logs_dir, 'eval_log'),
-                len(validation_filenames),
-                model_name
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
+            self.train_only_step2(serializer.instance)
         elif serializer.instance.action == 'ST':
             os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
             os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
         elif serializer.instance.action == 'E1':
 
-            lastT1 = ActionLog.objects.filter(action="T1").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            lastT1 = \
+            ActionLog.objects.filter(action="T1").filter(traintype=serializer.instance.traintype).order_by('-id')[0]
             logger.info('Export Grapy from train1:{}'.format(lastT1.pk))
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastT1.pk))
             prefix = 0
@@ -425,13 +365,13 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 if os.path.isfile(export_file_path):
                     now = datetime.datetime.now()
                     postfix = now.strftime('%Y%m%d%H%M%S')
-                    os.rename(export_file_path, export_file_path+'.'+postfix)
-                    os.rename(label_file_path, label_file_path+'.'+postfix)
+                    os.rename(export_file_path, export_file_path + '.' + postfix)
+                    os.rename(label_file_path, label_file_path + '.' + postfix)
                     # shutil.rmtree(os.path.join(model_dir, 'saved_model'))
                     serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(lastT1.pk, prefix, postfix)
                     serializer.instance.save()
                 # 输出pb
-                tmp_dir = os.path.join(model_dir,'tmp')
+                tmp_dir = os.path.join(model_dir, 'tmp')
                 e1.export(os.path.join(trained_checkpoint_dir, 'faster_rcnn_nas_goods.config'),
                           trained_checkpoint_prefix,
                           tmp_dir,
@@ -448,7 +388,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
         elif serializer.instance.action == 'E2':
-            lastT2 = ActionLog.objects.filter(Q(action="T2")|Q(action="TC")).filter(traintype=serializer.instance.traintype).order_by('-id')[0]
+            lastT2 = ActionLog.objects.filter(Q(action="T2") | Q(action="TC")).filter(
+                traintype=serializer.instance.traintype).order_by('-id')[0]
             logger.info('Export Grapy from train2:{}'.format(lastT2.pk))
             trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(lastT2.pk))
             checkpoint_model_path = tf.train.latest_checkpoint(trained_checkpoint_dir)
@@ -459,10 +400,10 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                 # 备份上一个checkpoint
                 now = datetime.datetime.now()
                 postfix = now.strftime('%Y%m%d%H%M%S')
-                os.rename(checkpoint_file_path, checkpoint_file_path+'.'+postfix)
+                os.rename(checkpoint_file_path, checkpoint_file_path + '.' + postfix)
                 label_file_path = os.path.join(model_dir, 'labels.txt')
                 if os.path.isfile(label_file_path):
-                    os.rename(label_file_path, label_file_path+'.'+postfix)
+                    os.rename(label_file_path, label_file_path + '.' + postfix)
                 serializer.instance.param = 'trainid:{},postfix:{}'.format(lastT2.pk, postfix)
                 serializer.instance.save()
             # 输出pb
@@ -487,6 +428,78 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def train_only_step2(self, actionlog):
+        # 训练准备
+        if actionlog.traintype == 0:
+            data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+        else:
+            data_dir = os.path.join(settings.MEDIA_ROOT, str(actionlog.traintype))
+        class_names_to_ids, training_filenames, validation_filenames = create_goods_tf_record.prepare_train(
+            data_dir, settings.TRAIN_ROOT, str(actionlog.pk))
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+        model_name = 'inception_resnet_v2'
+        # 训练
+        command = 'nohup python3 {}/only_step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --learning_rate={} > /root/train_only2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            len(training_filenames),
+            model_name,
+            32,
+            0.01
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+        # 评估
+        command = 'nohup python3 {}/only_step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval_only2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            os.path.join(train_logs_dir, 'eval_log'),
+            len(validation_filenames),
+            model_name
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+
+    def train_step2(self, actionlog):
+        # 训练准备
+        if actionlog.traintype == 0:
+            data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+        else:
+            data_dir = os.path.join(settings.MEDIA_ROOT, str(actionlog.traintype))
+        step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(actionlog.traintype),
+                                        'frozen_inference_graph.pb')
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(data_dir,
+                                                                                                   settings.TRAIN_ROOT,
+                                                                                                   str(actionlog.pk),
+                                                                                                   step1_model_path)
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+        step2_model_name = 'inception_resnet_v2'
+        # 训练
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            len(training_filenames),
+            step2_model_name,
+            32,
+            int(len(training_filenames) * 200 / 32)  # 设定最大训练次数，保证每个样本进入网络200次
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+        # 评估
+        command = 'nohup python3 {}/step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            os.path.join(train_logs_dir, 'eval_log'),
+            len(validation_filenames),
+            step2_model_name
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -520,50 +533,12 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             subprocess.call(command, shell=True)
 
         elif serializer.instance.action == 'T2':
-            # TODO
-            pass
+            self.train_step2(serializer.instance)
         elif serializer.instance.action == 'TC':
-            # 训练准备
-            if serializer.instance.traintype == 0:
-                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
-            else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-            class_names_to_ids, training_filenames, validation_filenames = create_goods_tf_record.prepare_train(data_dir,
-                                                                                                                settings.TRAIN_ROOT,
-                                                                                                                str(
-                                                                                                                    serializer.instance.pk))
-
-            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
-
-            model_name = 'inception_resnet_v2'
-            # 训练
-            command = 'nohup python3 {}/only_step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --learning_rate={} > /root/train_only2.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-                len(training_filenames),
-                model_name,
-                32,
-                0.01
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
-            # 评估
-            command = 'nohup python3 {}/only_step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval_only2.out 2>&1 &'.format(
-                os.path.join(settings.BASE_DIR, 'dl'),
-                train_logs_dir,
-                train_logs_dir,
-                os.path.join(train_logs_dir, 'eval_log'),
-                len(validation_filenames),
-                model_name
-            )
-            logger.info(command)
-            subprocess.call(command, shell=True)
-
+            self.train_only_step2(serializer.instance)
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
-
