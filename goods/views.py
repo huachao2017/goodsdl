@@ -497,8 +497,8 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
 
         if serializer.instance.action == 'T1':
             # 杀死原来的train
-            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-            os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+            # os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
+            # os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
             # 继续训练 --num_clones=2
@@ -519,9 +519,47 @@ class ActionLogViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             logger.info(command)
             subprocess.call(command, shell=True)
 
-        if serializer.instance.action == 'T2':
+        elif serializer.instance.action == 'T2':
             # TODO
             pass
+        elif serializer.instance.action == 'TC':
+            # 训练准备
+            if serializer.instance.traintype == 0:
+                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            else:
+                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
+            class_names_to_ids, training_filenames, validation_filenames = create_goods_tf_record.prepare_train(data_dir,
+                                                                                                                settings.TRAIN_ROOT,
+                                                                                                                str(
+                                                                                                                    serializer.instance.pk))
+
+            train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
+
+            model_name = 'inception_resnet_v2'
+            # 训练
+            command = 'nohup python3 {}/only_step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --batch_size={} --learning_rate={} > /root/train_only2.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+                len(training_filenames),
+                model_name,
+                32,
+                0.01
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+            # 评估
+            command = 'nohup python3 {}/only_step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval_only2.out 2>&1 &'.format(
+                os.path.join(settings.BASE_DIR, 'dl'),
+                train_logs_dir,
+                train_logs_dir,
+                os.path.join(train_logs_dir, 'eval_log'),
+                len(validation_filenames),
+                model_name
+            )
+            logger.info(command)
+            subprocess.call(command, shell=True)
+
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.

@@ -81,7 +81,8 @@ def _get_filenames_and_classes(dataset_dir):
     for directory in directories:
         for filename in os.listdir(directory):
             path = os.path.join(directory, filename)
-            photo_filenames.append(path)
+            if os.path.isfile(path):
+                photo_filenames.append(path)
 
     return photo_filenames, sorted(class_names)
 
@@ -200,6 +201,9 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
+            else:
+                # TODO 需要判断目录里面的文件是否需要更新
+                continue
 
             output_tmp_dir = os.path.join(output_class_dir, 'tmp')
             if not tf.gfile.Exists(output_tmp_dir):
