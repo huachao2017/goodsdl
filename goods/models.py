@@ -87,11 +87,11 @@ class TrainAction(models.Model):
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
 class ExportAction(models.Model):
-    train_action = models.ForeignKey(TrainAction,related_name="export_actions")
+    train_action = models.ForeignKey(TrainAction,related_name="export_actions",on_delete=models.CASCADE)
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
 class StopTrainAction(models.Model):
-    train_action = models.ForeignKey(TrainAction,related_name="stop_train_actions")
+    train_action = models.ForeignKey(TrainAction,related_name="stop_train_actions",on_delete=models.CASCADE)
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
