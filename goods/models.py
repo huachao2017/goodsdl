@@ -74,17 +74,25 @@ class TrainImageClass(models.Model):
     name = models.CharField(max_length=20, default='')
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
-class ActionLog(models.Model):
+class TrainAction(models.Model):
     ACTION_CHOICES = (
         (u'T1', u'Train Step 1'),
         (u'T2', u'Train Step 2'),
         (u'TC', u'Train Only Step 2'),
-        (u'ST', u'Stop Train'),
-        (u'E1', u'Export Step 1 Graph'),
-        (u'E2', u'Export Step 2 Graph'),
+        (u'ST', u'Stop All Train'),
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
     traintype = models.PositiveIntegerField(default=0)
-    desc = models.CharField(max_length=500)
+    desc = models.CharField(max_length=500,null=True)
+    param = models.CharField(max_length=500)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
+class ExportAction(models.Model):
+    train_action = models.ForeignKey(TrainAction,related_name="export_actions")
+    param = models.CharField(max_length=500)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
+class StopTrainAction(models.Model):
+    train_action = models.ForeignKey(TrainAction,related_name="stop_train_actions")
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)

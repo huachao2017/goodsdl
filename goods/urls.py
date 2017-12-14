@@ -25,7 +25,9 @@ router.register(r'imageclass', views.ImageClassViewSet)
 router.register(r'problemgoods', views.ProblemGoodsViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
 router.register(r'trainimageclass', views.TrainImageClassViewSet)
-router.register(r'action', views.ActionLogViewSet)
+router.register(r'trainaction', views.TrainActionViewSet)
+router.register(r'exportaction', views.ExportActionViewSet)
+router.register(r'stoptrainaction', views.StopTrainActionViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
     url(r'^api/', include(router.urls))

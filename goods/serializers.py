@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, ActionLog
+from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, TrainAction, ExportAction, StopTrainAction
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,9 +43,22 @@ class TrainImageClassSerializer(serializers.ModelSerializer):
         fields = ('pk', 'deviceid', 'traintype', 'source', 'upc', 'name', 'create_time')
         read_only_fields = ('create_time',)
 
-class ActionLogSerializer(serializers.ModelSerializer):
+class ExportActionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ActionLog
-        fields = ('pk', 'action', 'traintype', 'desc', 'param', 'create_time')
+        model = ExportAction
+        fields = ('pk', 'train_action', 'param', 'create_time')
         read_only_fields = ( 'param', 'create_time',)
 
+class StopTrainActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StopTrainAction
+        fields = ('pk', 'train_action', 'param', 'create_time')
+        read_only_fields = ( 'param', 'create_time',)
+
+class TrainActionSerializer(serializers.ModelSerializer):
+    export_actions = ExportActionSerializer(many=True, read_only=True)
+    stop_train_actions = StopTrainActionSerializer(many=True, read_only=True)
+    class Meta:
+        model = TrainAction
+        fields = ('pk', 'action', 'traintype', 'desc', 'param', 'export_actions', 'stop_train_actions', 'create_time')
+        read_only_fields = ( 'param', 'create_time',)
