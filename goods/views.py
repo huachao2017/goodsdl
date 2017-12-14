@@ -337,9 +337,6 @@ class TrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModel
             self.train_step2(serializer.instance)
         elif serializer.instance.action == 'TC':
             self.train_only_step2(serializer.instance)
-        elif serializer.instance.action == 'ST':
-            os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
-            os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
