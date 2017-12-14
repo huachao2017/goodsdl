@@ -2,3 +2,4 @@ fabric3
 django
 djangorestframework
 opencv_python
+mysqlclient
