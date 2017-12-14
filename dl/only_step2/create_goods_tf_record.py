@@ -151,15 +151,15 @@ def prepare_train(data_dir, train_dir, train_name):
     """
 
     output_dir = os.path.join(train_dir, train_name)
+    if _tfrecord_exists(output_dir):
+        _clean_up_temporary_files(output_dir)
+
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
-    if _tfrecord_exists(output_dir):
-        logger.warning('Dataset files already exist. Exiting without re-creating them.')
-        return
 
-    dataset_dir = os.path.join(output_dir, 'step2')
-    _clean_up_temporary_files(dataset_dir)
+    # dataset_dir = os.path.join(output_dir, 'step2')
+    # _clean_up_temporary_files(dataset_dir)
     # create_step2_goods(data_dir, dataset_dir)
 
     photo_filenames, class_names = _get_filenames_and_classes(data_dir)
