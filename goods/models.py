@@ -79,7 +79,6 @@ class TrainAction(models.Model):
         (u'T1', u'Train Step 1'),
         (u'T2', u'Train Step 2'),
         (u'TC', u'Train Only Step 2'),
-        (u'ST', u'Stop All Train'),
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
     traintype = models.PositiveIntegerField(default=0)
