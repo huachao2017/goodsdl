@@ -567,7 +567,13 @@ class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListM
         logger.info('stop train:{}'.format(serializer.instance.train_action.pk))
 
         train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.train_action.pk))
-        os.system('ps -ef | grep train.py | grep {} | grep -v grep | awk {"print $2"} | xargs kill -s 9'.format(train_logs_dir))
-        os.system('ps -ef | grep eval.py | grep {} | grep -v grep | awk {"print $2"} | xargs kill -s 9'.format(train_logs_dir))
+        train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_logs_dir)).readline()
+        if train_ps != '':
+            pid = int(train_ps.split()[1])
+            os.system('kill -s 9 {}'.format(str(pid)))
+        eval_ps = os.popen('ps -ef | grep eval.py | grep {} | grep -v grep'.format(train_logs_dir)).readline()
+        if eval_ps != '':
+            pid = int(eval_ps.split()[1])
+            os.system('kill -s 9 {}'.format(str(pid)))
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
