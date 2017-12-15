@@ -46,7 +46,7 @@ class TrainImageClassSerializer(serializers.ModelSerializer):
 class ExportActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportAction
-        fields = ('pk', 'train_action', 'param', 'create_time')
+        fields = ('pk', 'train_action', 'checkpoint_prefix', 'backup_postfix', 'param', 'create_time')
         read_only_fields = ( 'param', 'create_time',)
 
 class StopTrainActionSerializer(serializers.ModelSerializer):

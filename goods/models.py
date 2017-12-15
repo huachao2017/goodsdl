@@ -90,6 +90,8 @@ class TrainAction(models.Model):
 
 class ExportAction(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="export_actions",on_delete=models.CASCADE)
+    checkpoint_prefix = models.PositiveIntegerField(default=0)
+    backup_postfix = models.CharField(max_length=20, default='')
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 

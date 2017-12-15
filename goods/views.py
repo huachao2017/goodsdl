@@ -502,7 +502,8 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
                 if os.path.isfile(label_file_path):
                     shutil.move(label_file_path, os.path.join(backup_dir, 'goods_label_map.pbtxt.' + postfix))
-                serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(train_action.pk, prefix, postfix)
+                serializer.instance.checkpoint_prefix = int(prefix)
+                serializer.instance.backup_postfix = int(postfix)
                 serializer.instance.save()
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_label_map.pbtxt'), label_file_path)
@@ -537,7 +538,8 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 tfrecord_file_path = os.path.join(model_dir, 'goods_recogonize_train.tfrecord')
                 if os.path.isfile(tfrecord_file_path):
                     shutil.move(tfrecord_file_path, os.path.join(backup_dir, 'goods_recogonize_train.tfrecord.' + postfix))
-                serializer.instance.param = 'trainid:{},prefix:{},postfix:{}'.format(train_action.pk, prefix, postfix)
+                serializer.instance.checkpoint_prefix = int(prefix)
+                serializer.instance.backup_postfix = int(postfix)
                 serializer.instance.save()
             # 输出pb
             # e2.export(step2_model_name, trained_checkpoint_dir, export_file_path)
