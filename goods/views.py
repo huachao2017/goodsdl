@@ -287,8 +287,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                       mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')
     serializer_class = TrainActionSerializer
 
