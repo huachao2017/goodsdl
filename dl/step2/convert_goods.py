@@ -139,14 +139,12 @@ def _clean_up_temporary_files(dataset_dir):
         tf.gfile.DeleteRecursively(dataset_dir)
 
 
-def _tfrecord_exists(output_dir):
+def _remove_tfrecord_ifexists(output_dir):
     for split_name in ['train', 'validation']:
         output_filename = _get_tfrecord_filename(
             output_dir, split_name)
-        if not tf.gfile.Exists(output_filename):
-            return False
-    return True
-
+        if tf.gfile.Exists(output_filename):
+            tf.gfile.Remove(output_filename)
 
 def rotate_image(src, angle, scale=1.):
     w = src.shape[1]
@@ -299,9 +297,7 @@ def prepare_train(data_dir, train_dir, train_name, step1_model_path):
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
-    if _tfrecord_exists(output_dir):
-        logger.warning('Dataset files already exist. Exiting without re-creating them.')
-        return
+    _remove_tfrecord_ifexists(output_dir)
 
     dataset_dir = os.path.join(output_dir, 'step2')
     # _clean_up_temporary_files(dataset_dir)
