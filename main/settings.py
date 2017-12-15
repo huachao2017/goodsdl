@@ -81,37 +81,37 @@ WSGI_APPLICATION = 'main.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-def get_host_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        ip = s.getsockname()[0]
-    finally:
-        s.close()
-
-    return ip
-
-my_host_ip =  get_host_ip()
-
-# TODO need remove
-if my_host_ip == '192.168.1.173':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'goodsdl',
-            'USER': 'root',
-            'PASSWORD': 'iShehui',
-            'HOST': '192.168.1.173',
-            'PORT': '3306',
-        }
+# def get_host_ip():
+#     try:
+#         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#         s.connect(('8.8.8.8', 80))
+#         ip = s.getsockname()[0]
+#     finally:
+#         s.close()
+#
+#     return ip
+#
+# my_host_ip =  get_host_ip()
+#
+# # TODO need remove
+# if my_host_ip == '192.168.1.173':
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'goodsdl',
+        'USER': 'root',
+        'PASSWORD': 'iShehui',
+        'HOST': '192.168.1.173',
+        'PORT': '3306',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
-    }
+}
+# else:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#         }
+#     }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
