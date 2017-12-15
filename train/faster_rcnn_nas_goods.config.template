@@ -123,20 +123,18 @@ train_config: {
     }
     random_vertical_flip{
     }
-    random_rotation90{
-    }
-    # random_pixel_value_scale{
+    # random_rotation90{
     # }
+    random_pixel_value_scale{
+    }
     random_image_scale{
-        min_scale_ratio: 0.8
-        max_scale_ratio: 1.2
     }
     random_distort_color{
     }
     random_black_patches{
     }
-    # random_crop_image{
-    # }
+    random_crop_image{
+    }
   }
 }
 
