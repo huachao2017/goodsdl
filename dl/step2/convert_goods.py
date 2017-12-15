@@ -114,8 +114,9 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
         start_ndx = shard_id * num_per_shard
         end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
         for i in range(start_ndx, end_ndx):
-            logger.info('\r>> Converting image %d/%d shard %d' % (
+            sys.stdout.write('\r>> Converting image %d/%d shard %d' % (
                 i + 1, len(filenames), shard_id))
+            sys.stdout.flush()
 
             # Read the filename:
             with tf.gfile.GFile(filenames[i], 'rb') as fid:
@@ -131,6 +132,8 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
                 encoded_jpg, b'jpg', height, width, class_id)
             writer.write(example.SerializeToString())
     writer.close()
+    sys.stdout.write('\n')
+    sys.stdout.flush()
     logger.info('generate tfrecord:{}'.format(output_filename))
 
 
