@@ -214,7 +214,7 @@ def update_config_file(train_dir,
         data = file.read()
         #     p = re.compile(r'num_classes: \d+')
         output = re.sub('num_classes: \d+', 'num_classes: '+str(num_classes), data)
-        output = re.sub('num_steps: \d+', 'num_steps: '+str(num_steps), data)
+        output = re.sub('num_steps: \d+', 'num_steps: '+str(num_steps), output)
         output = re.sub('PATH_TO_BE_CONFIGURED_MODEL', train_dir, output)
         output = re.sub('PATH_TO_BE_CONFIGURED_TRAIN', os.path.join(train_dir, train_name), output)
     with open(output_filename, 'w') as file:
