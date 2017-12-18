@@ -86,7 +86,7 @@ class TrainAction(models.Model):
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     def __str__(self):
-        return '{}:{}'.format(self.action, self.pk)
+        return '{}:{}:{}'.format(self.action, self.pk, self.desc)
 
 class ExportAction(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="export_actions",on_delete=models.CASCADE)
