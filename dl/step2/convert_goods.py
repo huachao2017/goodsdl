@@ -249,12 +249,13 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         # 使图像旋转
                         for k in range(6 * augment_ratio - 1):
                             angle = 60 / augment_ratio + k * 60 / augment_ratio
+                            logger.info("image:{} rotate {}.".format(output_image_path, angle))
                             rotated_img = rotate_image(img, angle)
+                            logger.info("rotate image...")
                             # 写入图像
                             tmp_image_path = os.path.join(output_tmp_dir,
                                                           "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
                             cv2.imwrite(tmp_image_path, rotated_img)
-                            logger.info("image:{} rotate {}.".format(output_image_path, angle))
 
                             output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
                                 os.path.split(example)[1], index, angle))
@@ -265,9 +266,11 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
                             image_np_expanded = np.expand_dims(image_np, axis=0)
                             # Actual detection.
+                            logger.info("begin detect...")
                             (boxes, scores) = session_step1.run(
                                 [detection_boxes, detection_scores],
                                 feed_dict={image_tensor_step1: image_np_expanded})
+                            logger.info("end detect...")
                             # data solving
                             boxes = np.squeeze(boxes)
                             # classes = np.squeeze(classes).astype(np.int32)
@@ -282,6 +285,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
 
                                     augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
                                     augment_newimage.save(output_image_path_augment, 'JPEG')
+                                    logger.info("save image...")
                                     break
     session_step1.close()
 
