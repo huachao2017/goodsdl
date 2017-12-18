@@ -114,9 +114,8 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
         start_ndx = shard_id * num_per_shard
         end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
         for i in range(start_ndx, end_ndx):
-            sys.stdout.write('\r>> Converting image %d/%d shard %d' % (
+            logger.info('\r>> Converting image %d/%d shard %d' % (
                 i + 1, len(filenames), shard_id))
-            sys.stdout.flush()
 
             # Read the filename:
             with tf.gfile.GFile(filenames[i], 'rb') as fid:
@@ -132,8 +131,6 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
                 encoded_jpg, b'jpg', height, width, class_id)
             writer.write(example.SerializeToString())
     writer.close()
-    sys.stdout.write('\n')
-    sys.stdout.flush()
     logger.info('generate tfrecord:{}'.format(output_filename))
 
 
@@ -250,6 +247,8 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         else:
                             augment_ratio = 1
                         # 使图像旋转
+                        image_np = []
+                        output_image_path_augment = []
                         for k in range(6 * augment_ratio - 1):
                             angle = 60 / augment_ratio + k * 60 / augment_ratio
                             rotated_img = rotate_image(img, angle)
@@ -259,32 +258,35 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             cv2.imwrite(tmp_image_path, rotated_img)
                             logger.info("image:{} rotate {}.".format(output_image_path, angle))
 
-                            output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
-                                os.path.split(example)[1], index, angle))
+                            output_image_path_augment.append(os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
+                                os.path.split(example)[1], index, angle)))
                             augment_image = im.open(tmp_image_path)
                             (im_width, im_height) = augment_image.size
-                            image_np = np.array(augment_image.getdata()).reshape(
-                                (im_height, im_width, 3)).astype(np.uint8)
-                            # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-                            image_np_expanded = np.expand_dims(image_np, axis=0)
-                            # Actual detection.
-                            (boxes, scores) = session_step1.run(
-                                [detection_boxes, detection_scores],
-                                feed_dict={image_tensor_step1: image_np_expanded})
-                            # data solving
-                            boxes = np.squeeze(boxes)
-                            # classes = np.squeeze(classes).astype(np.int32)
-                            scores_step1 = np.squeeze(scores)
-                            for l in range(boxes.shape[0]):
-                                if scores_step1[l] > 0.5:
-                                    ymin, xmin, ymax, xmax = boxes[l]
+                            image_np.append(np.array(augment_image.getdata()).reshape(
+                                (im_height, im_width, 3)).astype(np.uint8))
+
+                        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+                        image_np_expanded = np.array(image_np)
+                        # Actual detection.
+                        (boxes, scores) = session_step1.run(
+                            [detection_boxes, detection_scores],
+                            feed_dict={image_tensor_step1: image_np_expanded})
+                        # data solving
+                        # boxes = np.squeeze(boxes)
+                        # classes = np.squeeze(classes).astype(np.int32)
+                        # scores_step1 = np.squeeze(scores)
+                        for k in range(boxes.shape[0]):
+                            box_on_goods = boxes[k]
+                            for l in range(box_on_goods[0]):
+                                if scores[k][l] > 0.5:
+                                    ymin, xmin, ymax, xmax = box_on_goods[l]
                                     ymin = int(ymin * im_height)
                                     xmin = int(xmin * im_width)
                                     ymax = int(ymax * im_height)
                                     xmax = int(xmax * im_width)
 
                                     augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
-                                    augment_newimage.save(output_image_path_augment, 'JPEG')
+                                    augment_newimage.save(output_image_path_augment[k], 'JPEG')
                                     break
     session_step1.close()
 
