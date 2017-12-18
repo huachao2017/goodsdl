@@ -140,7 +140,7 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
 
         # 暂时性分解Detect，需要一个处理type编码
         detector = imageclassifyV1.ImageClassifyFactory.get_static_detector('1')
-        min_score_thresh = .5
+        min_score_thresh = .8
         logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
