@@ -266,6 +266,8 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                 os.path.split(example)[1], index, angle))
                             # augment_image = im.open(tmp_image_path)
                             # (im_width, im_height) = augment_image.size
+                            im_height = augment_image.shape[0]
+                            im_width = augment_image.shape[1]
                             # image_np = np.array(augment_image.getdata()).reshape(
                             #     (im_height, im_width, 3)).astype(np.uint8)
                             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
