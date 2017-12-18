@@ -19,10 +19,10 @@ import random
 import sys
 import xml.etree.ElementTree as ET
 from PIL import Image as im
-import scipy.misc
 import logging
 import io
-# import cv2
+import cv2
+import math
 import numpy as np
 
 import tensorflow as tf
@@ -203,9 +203,9 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                 # TODO 需要判断目录里面的文件是否需要更新
                 continue
 
-            # output_tmp_dir = os.path.join(output_class_dir, 'tmp')
-            # if not tf.gfile.Exists(output_tmp_dir):
-            #     tf.gfile.MakeDirs(output_tmp_dir)
+            output_tmp_dir = os.path.join(output_class_dir, 'tmp')
+            if not tf.gfile.Exists(output_tmp_dir):
+                tf.gfile.MakeDirs(output_tmp_dir)
 
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
@@ -233,7 +233,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         newimage.save(output_image_path, 'JPEG')
                         logger.info('save image:{}'.format(output_image_path))
 
-                        # img = cv2.imread(image_path)
+                        img = cv2.imread(image_path)
 
                         # augment small sample
                         if len(filelist) < 3 * 8:
@@ -247,31 +247,23 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         else:
                             augment_ratio = 1
                         # 使图像旋转
-                        image_np = np.array(image)
                         for k in range(6 * augment_ratio - 1):
                             angle = 60 / augment_ratio + k * 60 / augment_ratio
-                            radian = angle * math.pi / 180
-                            tf_rotate_img = tf.contrib.image.rotate(image_np, radian)
-                            with tf.Session(config=config) as sess:
-                                sess.run(tf.global_variables_initializer())
-                                augment_image = sess.run(tf_rotate_img)
-                            # rotated_img = rotate_image(img, angle)
+                            rotated_img = rotate_image(img, angle)
                             # 写入图像
-                            # tmp_image_path = os.path.join(output_tmp_dir,
-                            #                               "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
-                            # cv2.imwrite(tmp_image_path, rotated_img)
+                            tmp_image_path = os.path.join(output_tmp_dir,
+                                                          "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
+                            cv2.imwrite(tmp_image_path, rotated_img)
                             logger.info("image:{} rotate {}.".format(output_image_path, angle))
 
                             output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
                                 os.path.split(example)[1], index, angle))
-                            # augment_image = im.open(tmp_image_path)
-                            # (im_width, im_height) = augment_image.size
-                            im_height = augment_image.shape[0]
-                            im_width = augment_image.shape[1]
-                            # image_np = np.array(augment_image.getdata()).reshape(
-                            #     (im_height, im_width, 3)).astype(np.uint8)
+                            augment_image = im.open(tmp_image_path)
+                            (im_width, im_height) = augment_image.size
+                            image_np = np.array(augment_image.getdata()).reshape(
+                                (im_height, im_width, 3)).astype(np.uint8)
                             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-                            image_np_expanded = np.expand_dims(augment_image, axis=0)
+                            image_np_expanded = np.expand_dims(image_np, axis=0)
                             # Actual detection.
                             (boxes, scores) = session_step1.run(
                                 [detection_boxes, detection_scores],
@@ -288,14 +280,8 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     ymax = int(ymax * im_height)
                                     xmax = int(xmax * im_width)
 
-                                    tf_crop_img = tf.image.crop_to_bounding_box(augment_image, ymin, xmin, ymax-ymin, xmax-xmin)
-                                    with tf.Session(config=config) as sess:
-                                        sess.run(tf.global_variables_initializer())
-                                        augment_newimage = sess.run(tf_crop_img)
-                                    # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
-                                    # augment_newimage.save(output_image_path_augment, 'JPEG')
-                                    scipy.misc.imsave(output_image_path_augment, augment_newimage)
-                                    logger.info("save image:{}.".format(output_image_path_augment))
+                                    augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
+                                    augment_newimage.save(output_image_path_augment, 'JPEG')
                                     break
     session_step1.close()
 
