@@ -253,15 +253,17 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             rotated_img = rotate_image(img, angle)
                             logger.info("rotate image...")
                             # 写入图像
-                            tmp_image_path = os.path.join(output_tmp_dir,
-                                                          "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
-                            cv2.imwrite(tmp_image_path, rotated_img)
+                            # tmp_image_path = os.path.join(output_tmp_dir,
+                            #                               "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
+                            # cv2.imwrite(tmp_image_path, rotated_img)
 
                             output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
                                 os.path.split(example)[1], index, angle))
-                            augment_image = im.open(tmp_image_path)
-                            (im_width, im_height) = augment_image.size
-                            image_np = np.array(augment_image.getdata()).reshape(
+                            # augment_image = im.open(tmp_image_path)
+                            # (im_width, im_height) = augment_image.size
+                            im_height = rotated_img.shape[0]
+                            im_width = rotated_img.shape[1]
+                            image_np = np.asarray(rotated_img).reshape(
                                 (im_height, im_width, 3)).astype(np.uint8)
                             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
                             image_np_expanded = np.expand_dims(image_np, axis=0)
