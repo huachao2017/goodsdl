@@ -498,7 +498,6 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 now = datetime.datetime.now()
                 postfix = now.strftime('%Y%m%d%H%M%S')
                 shutil.move(export_file_path, os.path.join(backup_dir, 'frozen_inference_graph.pb.' + postfix))
-                os.rename(export_file_path, export_file_path + '.' + postfix)
                 label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
                 if os.path.isfile(label_file_path):
                     shutil.move(label_file_path, os.path.join(backup_dir, 'goods_label_map.pbtxt.' + postfix))
