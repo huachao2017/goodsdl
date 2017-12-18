@@ -19,10 +19,10 @@ import random
 import sys
 import xml.etree.ElementTree as ET
 from PIL import Image as im
+import scipy.misc
 import logging
 import io
-import cv2
-import math
+# import cv2
 import numpy as np
 
 import tensorflow as tf
@@ -288,8 +288,13 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     ymax = int(ymax * im_height)
                                     xmax = int(xmax * im_width)
 
-                                    augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
-                                    augment_newimage.save(output_image_path_augment, 'JPEG')
+                                    tf_crop_img = tf.image.crop_to_bounding_box(augment_image, ymin, xmin, ymax-ymin, xmax-xmin)
+                                    with tf.Session(config=config) as sess:
+                                        sess.run(tf.global_variables_initializer())
+                                        augment_newimage = sess.run(tf_crop_img)
+                                    # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
+                                    # augment_newimage.save(output_image_path_augment, 'JPEG')
+                                    scipy.misc.imsave(output_image_path_augment, augment_newimage)
                                     logger.info("save image:{}.".format(output_image_path_augment))
                                     break
     session_step1.close()
