@@ -203,9 +203,9 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                 # TODO 需要判断目录里面的文件是否需要更新
                 continue
 
-            output_tmp_dir = os.path.join(output_class_dir, 'tmp')
-            if not tf.gfile.Exists(output_tmp_dir):
-                tf.gfile.MakeDirs(output_tmp_dir)
+            # output_tmp_dir = os.path.join(output_class_dir, 'tmp')
+            # if not tf.gfile.Exists(output_tmp_dir):
+            #     tf.gfile.MakeDirs(output_tmp_dir)
 
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
@@ -286,7 +286,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     xmax = int(xmax * im_width)
 
                                     # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
-                                    augment_newimage = rotated_img[ymin:ymax-ymin,xmin:xmax-xmin]
+                                    augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
                                     # augment_newimage.save(output_image_path_augment, 'JPEG')
                                     cv2.imwrite(output_image_path_augment, augment_newimage)
                                     logger.info("save image...")
