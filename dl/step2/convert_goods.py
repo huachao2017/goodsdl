@@ -285,8 +285,10 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     ymax = int(ymax * im_height)
                                     xmax = int(xmax * im_width)
 
-                                    augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
-                                    augment_newimage.save(output_image_path_augment, 'JPEG')
+                                    # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
+                                    augment_newimage = rotated_img[ymin:ymax-ymin,xmin:xmax-xmin]
+                                    # augment_newimage.save(output_image_path_augment, 'JPEG')
+                                    cv2.imwrite(output_image_path_augment, augment_newimage)
                                     logger.info("save image...")
                                     break
     session_step1.close()
