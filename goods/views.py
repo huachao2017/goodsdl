@@ -483,6 +483,9 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(train_action.traintype))
             # 输出pb
             tmp_dir = os.path.join(model_dir, 'tmp')
+            # clean up temporary_files
+            if tf.gfile.Exists(tmp_dir):
+                tf.gfile.DeleteRecursively(tmp_dir)
             e1.export(os.path.join(trained_checkpoint_dir, 'faster_rcnn_nas_goods.config'),
                       checkpoint_model_path,
                       tmp_dir,
