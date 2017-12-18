@@ -493,6 +493,7 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
 
             prefix = checkpoint_model_path.split('-')[-1]
             export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
+            label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
             # 备份pb和label
             if os.path.isfile(export_file_path):
                 backup_dir = os.path.join(model_dir, 'bak')
@@ -501,7 +502,6 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 now = datetime.datetime.now()
                 postfix = now.strftime('%Y%m%d%H%M%S')
                 shutil.move(export_file_path, os.path.join(backup_dir, 'frozen_inference_graph.pb.' + postfix))
-                label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
                 if os.path.isfile(label_file_path):
                     shutil.move(label_file_path, os.path.join(backup_dir, 'goods_label_map.pbtxt.' + postfix))
                 serializer.instance.checkpoint_prefix = int(prefix)
