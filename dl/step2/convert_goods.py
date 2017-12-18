@@ -247,13 +247,14 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         else:
                             augment_ratio = 1
                         # 使图像旋转
+                        image_np = np.array(image)
                         for k in range(6 * augment_ratio - 1):
                             angle = 60 / augment_ratio + k * 60 / augment_ratio
                             radian = angle * math.pi / 180
-                            tf_img = tf.contrib.image.rotate(image, radian)
+                            tf_rotate_img = tf.contrib.image.rotate(image_np, radian)
                             with tf.Session(config=config) as sess:
                                 sess.run(tf.global_variables_initializer())
-                                augment_image = sess.run(tf_img)
+                                augment_image = sess.run(tf_rotate_img)
                             # rotated_img = rotate_image(img, angle)
                             # 写入图像
                             # tmp_image_path = os.path.join(output_tmp_dir,
@@ -264,11 +265,11 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
                                 os.path.split(example)[1], index, angle))
                             # augment_image = im.open(tmp_image_path)
-                            (im_width, im_height) = augment_image.size
-                            image_np = np.array(augment_image.getdata()).reshape(
-                                (im_height, im_width, 3)).astype(np.uint8)
+                            # (im_width, im_height) = augment_image.size
+                            # image_np = np.array(augment_image.getdata()).reshape(
+                            #     (im_height, im_width, 3)).astype(np.uint8)
                             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-                            image_np_expanded = np.expand_dims(image_np, axis=0)
+                            image_np_expanded = np.expand_dims(augment_image, axis=0)
                             # Actual detection.
                             (boxes, scores) = session_step1.run(
                                 [detection_boxes, detection_scores],
