@@ -208,7 +208,8 @@ def update_config_file(train_dir,
                        train_name,
                        num_classes,
                        num_steps=200000):
-    config_template_file_path = os.path.join(train_dir, 'faster_rcnn_nas_goods.config.template')
+    file_path, _ = os.path.split(os.path.realpath(__file__))
+    config_template_file_path = os.path.join(file_path, 'faster_rcnn_nas_goods.config.template')
     output_filename = os.path.join(train_dir, train_name, 'faster_rcnn_nas_goods.config')
     with open(config_template_file_path, 'r') as file:
         data = file.read()
