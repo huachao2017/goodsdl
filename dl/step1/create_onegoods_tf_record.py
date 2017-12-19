@@ -263,6 +263,6 @@ def prepare_train(data_dir, train_dir, train_name):
 
     create_label_map_file(label_map_file_path, label_map_dict)
     # 设定每张照片训练20次
-    update_config_file(train_dir, train_name, len(label_map_dict), num_examples*20)
+    update_config_file(train_dir, train_name, len(label_map_dict), num_examples*100)
     return label_map_dict
 
