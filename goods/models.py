@@ -59,7 +59,7 @@ class TrainImage(models.Model):
     traintype = models.PositiveIntegerField(default=0)
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     upc = models.CharField(max_length=20)
-    name = models.CharField(max_length=20, default='')
+    name = models.CharField(max_length=128, default='')
     xmin = models.PositiveIntegerField(default=0)
     ymin = models.PositiveIntegerField(default=0)
     xmax = models.PositiveIntegerField(default=0)
