@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, TrainAction, ExportAction, StopTrainAction
+from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,6 +55,11 @@ class StopTrainActionSerializer(serializers.ModelSerializer):
         fields = ('pk', 'train_action', 'param', 'create_time')
         read_only_fields = ( 'param', 'create_time',)
 
+class RfidImageCompareActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RfidImageCompareAction
+        fields = ('pk', 'shopCode', 'startTime', 'endTime')
+
 class TrainActionSerializer(serializers.ModelSerializer):
     export_actions = ExportActionSerializer(many=True, read_only=True)
     stop_train_actions = StopTrainActionSerializer(many=True, read_only=True)
@@ -62,3 +67,20 @@ class TrainActionSerializer(serializers.ModelSerializer):
         model = TrainAction
         fields = ('pk', 'action', 'traintype', 'desc', 'param', 'export_actions', 'stop_train_actions', 'create_time')
         read_only_fields = ( 'param', 'create_time',)
+
+class RfidTransactionSerializer(serializers.ModelSerializer):
+    image = serializers.SlugRelatedField(
+        many=False,
+        read_only=True,
+        slug_field='source'
+     )
+    class Meta:
+        model = RfidTransaction
+        fields = ('image', 'transaction_time', 'create_time')
+
+class TransactionMetrixSerializer(serializers.ModelSerializer):
+    rfid_transaction = RfidTransactionSerializer(many=False, read_only=True)
+    class Meta:
+        model = TransactionMetrix
+        fields = ('pk', 'rfid_transaction', 'same_upc_num', 'rfid_minus_upc')
+        read_only_fields = ( 'rfid_transaction', 'same_upc_num', 'rfid_minus_upc',)

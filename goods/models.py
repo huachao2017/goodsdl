@@ -99,3 +99,23 @@ class StopTrainAction(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="stop_train_actions",on_delete=models.CASCADE)
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
+
+class RfidImageCompareAction(models.Model):
+    shopCode = models.CharField(max_length=20,default='ARBEEMkAABYQ')
+    startTime = models.DateField('start time')
+    endTime = models.DateField('end time')
+
+class RfidTransaction(models.Model):
+    image = models.ForeignKey(Image, related_name="rfid_transaction_image",on_delete=models.CASCADE)
+    transaction_time = models.DateTimeField('transaction date',db_index=True)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
+class RfidGoods(models.Model):
+    rfid_transaction = models.ForeignKey(RfidTransaction,related_name="rfid_goods",on_delete=models.CASCADE)
+    upc = models.CharField(max_length=20)
+
+class TransactionMetrix(models.Model):
+    rfid_transaction = models.OneToOneField(RfidTransaction,related_name="transaction_metrix",on_delete=models.CASCADE)
+    same_upc_num = models.PositiveIntegerField(default=0)
+    rfid_minus_upc = models.IntegerField(default=0)
+

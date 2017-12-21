@@ -28,6 +28,8 @@ router.register(r'trainimageclass', views.TrainImageClassViewSet)
 router.register(r'trainaction', views.TrainActionViewSet)
 router.register(r'exportaction', views.ExportActionViewSet)
 router.register(r'stoptrainaction', views.StopTrainActionViewSet)
+router.register(r'rfidimagecompareaction', views.RfidImageCompareActionViewSet)
+router.register(r'transactionmetrix', views.TransactionMetrixViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
     url(r'^api/', include(router.urls))

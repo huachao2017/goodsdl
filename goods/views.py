@@ -582,3 +582,22 @@ class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListM
             os.system('kill -s 9 {}'.format(str(pid)))
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = RfidImageCompareAction.objects.order_by('-id')
+    serializer_class = RfidImageCompareActionSerializer
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        logger.info('begin compare:{},{}'.format(request.data['startTime'],request.data['endTime']))
+        # TODO need caculate
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class TransactionMetrixViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = TransactionMetrix.objects.order_by('-id')
+    serializer_class = TransactionMetrixSerializer

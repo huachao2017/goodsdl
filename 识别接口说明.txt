@@ -1,3 +1,7 @@
+调用外部接口
+1、获取指定时间订单
+http://testpay.damaijianshen.cn/payment/order-by-ai.json?shopCode=ARBEEMkAABYQ&startTime=&endTime=
+
 训练检测图片接口：http://train.fastxbox.cn/api/trainimage
 入参：
 source  file
