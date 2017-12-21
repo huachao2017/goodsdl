@@ -396,8 +396,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             len(training_filenames),
             step2_model_name,
             2,
-            128,
-            int(len(training_filenames) * 200 / 128)  # 设定最大训练次数，保证每个样本进入网络200次
+            64,
+            int(len(training_filenames) * 200 / 64)  # 设定最大训练次数，保证每个样本进入网络200次
         )
         logger.info(command)
         subprocess.call(command, shell=True)
