@@ -22,6 +22,8 @@ from dl.step2 import convert_goods
 from dl.only_step2 import create_goods_tf_record
 from .serializers import *
 import tensorflow as tf
+import urllib.request
+import time
 
 logger = logging.getLogger("django")
 
@@ -589,11 +591,39 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        logger.info('begin compare:{},{}'.format(request.data['startTime'],request.data['endTime']))
-        # TODO need caculate
-
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
+
+        domain = 'testpay.damaijianshen.cn'
+        shopCode = serializer.instance.shopCode
+        if shopCode == '':
+            shopCode = 'ARBEEMkAABYQ'
+        startTime = int(time.mktime(serializer.instance.startTime.timetuple()) * 1000)
+        endTime = int(time.mktime(serializer.instance.endTime.timetuple()) * 1000)
+
+        logger.info('begin compare:{}:{},{}:{}'.format(serializer.instance.startTime, startTime, serializer.instance.endTime, endTime))
+
+        response = urllib.request.urlopen('http://{}/payment/order-by-ai.json?shopCode={}&startTime={}&endTime={}'.format(domain, shopCode, startTime, endTime))
+        html = response.read()
+        import json
+        rfid_ret = json.loads(html)
+        if rfid_ret['status'] == 200:
+            for transaction in rfid_ret['attachment']:
+                transaction_time = transaction['payTime']
+                # FIXME 时间需要转换
+                # FIXME 修订查询image
+                images = Image.objects.filter().order_by('-id')
+                rfid_transaction = RfidTransaction.objects.create(image_id = images[0].pk,
+                                               transaction_time=transaction_time,
+                                          )
+                for upc in transaction['upcModels']:
+                    RfidGoods.objects.create(rfid_transaction_id=rfid_transaction.pk,
+                                             upc=upc['upc'],
+                                             count = upc['count']
+                                            )
+
+        # TODO need caculate
+        logger.info('response:{}'.format(html))
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

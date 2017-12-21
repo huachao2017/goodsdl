@@ -1,6 +1,37 @@
 调用外部接口
 1、获取指定时间订单
 http://testpay.damaijianshen.cn/payment/order-by-ai.json?shopCode=ARBEEMkAABYQ&startTime=&endTime=
+返回：
+{
+    "status": 200,                        -- 状态
+    "attachment": [{
+        "payTime": 1513785600000          -- 交易时间
+        "upcModels": [
+         {
+            "upc": 22222222               -- upc
+            "count":1                     -- 数量
+         },
+         {
+            "upc": 22222222
+            "count":1
+         },
+        ]
+    },
+    {
+        "payTime": 1513785600000          -- 交易时间
+        "upcModels": [
+         {
+            "upc": 22222222
+            "count":1
+         },
+         {
+            "upc": 22222222
+            "count":1
+         },
+        ]
+    }],
+},
+
 
 训练检测图片接口：http://train.fastxbox.cn/api/trainimage
 入参：

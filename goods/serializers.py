@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix
+from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,11 +55,6 @@ class StopTrainActionSerializer(serializers.ModelSerializer):
         fields = ('pk', 'train_action', 'param', 'create_time')
         read_only_fields = ( 'param', 'create_time',)
 
-class RfidImageCompareActionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RfidImageCompareAction
-        fields = ('pk', 'shopCode', 'startTime', 'endTime')
-
 class TrainActionSerializer(serializers.ModelSerializer):
     export_actions = ExportActionSerializer(many=True, read_only=True)
     stop_train_actions = StopTrainActionSerializer(many=True, read_only=True)
@@ -67,6 +62,14 @@ class TrainActionSerializer(serializers.ModelSerializer):
         model = TrainAction
         fields = ('pk', 'action', 'traintype', 'desc', 'param', 'export_actions', 'stop_train_actions', 'create_time')
         read_only_fields = ( 'param', 'create_time',)
+
+class RfidImageCompareActionSerializer(serializers.ModelSerializer):
+    shopCode = serializers.CharField(default='ARBEEMkAABYQ')
+    startTime = serializers.DateField(default='2017-12-21')
+    endTime = serializers.DateField(default='2017-12-22')
+    class Meta:
+        model = RfidImageCompareAction
+        fields = ('pk', 'shopCode', 'startTime', 'endTime')
 
 class RfidTransactionSerializer(serializers.ModelSerializer):
     image = serializers.SlugRelatedField(

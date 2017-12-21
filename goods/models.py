@@ -113,6 +113,7 @@ class RfidTransaction(models.Model):
 class RfidGoods(models.Model):
     rfid_transaction = models.ForeignKey(RfidTransaction,related_name="rfid_goods",on_delete=models.CASCADE)
     upc = models.CharField(max_length=20)
+    count = models.PositiveIntegerField(default=1)
 
 class TransactionMetrix(models.Model):
     rfid_transaction = models.OneToOneField(RfidTransaction,related_name="transaction_metrix",on_delete=models.CASCADE)
