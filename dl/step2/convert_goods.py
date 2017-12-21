@@ -109,6 +109,8 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
 
     output_filename = _get_tfrecord_filename(
         output_dir, split_name)
+    if tf.gfile.Exists(output_filename):
+        tf.gfile.Remove(output_filename)
     writer = tf.python_io.TFRecordWriter(output_filename)
     for shard_id in range(len(class_names_to_ids)):
         start_ndx = shard_id * num_per_shard
