@@ -236,7 +236,7 @@ def read_examples_list_and_label_map_and_classnames(path):
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg" and os.path.isfile(example + '.xml'):
                     examples.append(example)
-    return examples, {'1':1},class_names
+    return examples, {'1':1},sorted(class_names)
 
 def prepare_train(data_dir, train_dir, train_name):
     logging.info('Reading from one good dataset.')
@@ -264,7 +264,7 @@ def prepare_train(data_dir, train_dir, train_name):
     create_tf_record(val_output_path, label_map_dict, val_examples)
 
     create_label_map_file(label_map_file_path, label_map_dict)
-    class_names_to_ids = dict(zip(class_names, range(len(class_names))))
+    # class_names_to_ids = dict(zip(class_names, range(len(class_names))))
     # Finally, write the labels file:
     labels_to_class_names = dict(zip(range(len(class_names)), class_names))
     from datasets import dataset_utils

@@ -170,6 +170,19 @@ def rotate_image(src, angle, scale=1.):
                           borderValue=(int(src[1][1][0]), int(src[1][1][1]), int(src[1][1][2])))
 
 
+def get_class_names(labels_filepath):
+    with tf.gfile.Open(labels_filepath, 'rb') as f:
+        lines = f.read().decode()
+    lines = lines.split('\n')
+    lines = filter(None, lines)
+
+    class_names = []
+    for line in lines:
+        index = line.index(':')
+        class_names.append(line[index + 1:])
+
+    return class_names
+
 def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     graph_step1 = tf.Graph()
     with graph_step1.as_default():
@@ -192,9 +205,13 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     # Score is shown on the result image, together with the class label.
     detection_scores = graph_step1.get_tensor_by_name('detection_scores:0')
 
+    class_names = get_class_names(os.path.join(step1_model_path, 'labels.txt'))
     """返回所有图片文件路径"""
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(dirlist)):
+        # 根据step1的classname确定进入step2的类别
+        if dirlist[i] not in class_names:
+            continue
         class_dir = os.path.join(data_dir, dirlist[i])
         if os.path.isdir(class_dir):
             logger.info('solve class:{}'.format(dirlist[i]))
@@ -288,6 +305,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     xmax = int(xmax * im_width)
 
                                     if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
+                                        # 如果没有识别准确，不采用次旋转样本
                                         logger.warning('detect failed:{}'.format(output_image_path_augment))
                                         break
 
