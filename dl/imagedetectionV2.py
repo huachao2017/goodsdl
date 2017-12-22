@@ -147,6 +147,19 @@ def visualize_boxes_and_labels_on_image_array(image,
     return image
 
 
+def get_step2_labels_to_names(labels_filepath):
+    with tf.gfile.Open(labels_filepath, 'rb') as f:
+        lines = f.read().decode()
+    lines = lines.split('\n')
+    lines = filter(None, lines)
+
+    labels_to_names = {}
+    for line in lines:
+        index = line.index(':')
+        labels_to_names[int(line[:index])] = line[index + 1:]
+
+    return labels_to_names
+
 class ImageDetector:
     def __init__(self, type):
         self.graph_step1 = None
@@ -194,7 +207,7 @@ class ImageDetector:
 
             step2_checkpoint = tf.train.latest_checkpoint(self.checkpoints_dir)
             logger.info('begin loading step2 model: {}'.format(step2_checkpoint))
-            dataset_step2 = dataset.get_split('train', self.checkpoints_dir, )
+            step2_labels_to_names = get_step2_labels_to_names(os.path.join(self.checkpoints_dir, 'labels.txt'))
             image_size = inception.inception_resnet_v2.default_image_size
 
             self.pre_graph_step2 = tf.Graph()
@@ -218,7 +231,7 @@ class ImageDetector:
                 # Create the model, use the default arg scope to configure the batch norm parameters.
                 with slim.arg_scope(inception.inception_resnet_v2_arg_scope()):
                     logits, _ = inception.inception_resnet_v2(images,
-                                                              num_classes=len(dataset_step2.labels_to_names),
+                                                              num_classes=len(step2_labels_to_names),
                                                               is_training=False)
                 probabilities = tf.nn.softmax(logits, name='detection_classes')
 
@@ -242,7 +255,7 @@ class ImageDetector:
             # label_map = label_map_util.load_labelmap(self.step1_label_path)
             # categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
             #                                                             use_display_name=True)
-            self.labels_to_names = dataset_step2.labels_to_names
+            self.labels_to_names = step2_labels_to_names
             logger.info('end loading model...')
             # semaphore.release()
 

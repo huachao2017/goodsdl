@@ -540,9 +540,9 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 label_file_path = os.path.join(model_dir, 'labels.txt')
                 if os.path.isfile(label_file_path):
                     shutil.move(label_file_path, os.path.join(backup_dir, 'labels.txt.' + postfix))
-                tfrecord_file_path = os.path.join(model_dir, 'goods_recogonize_train.tfrecord')
-                if os.path.isfile(tfrecord_file_path):
-                    shutil.move(tfrecord_file_path, os.path.join(backup_dir, 'goods_recogonize_train.tfrecord.' + postfix))
+                # tfrecord_file_path = os.path.join(model_dir, 'goods_recogonize_train.tfrecord')
+                # if os.path.isfile(tfrecord_file_path):
+                #     shutil.move(tfrecord_file_path, os.path.join(backup_dir, 'goods_recogonize_train.tfrecord.' + postfix))
                 serializer.instance.checkpoint_prefix = int(prefix)
                 serializer.instance.backup_postfix = int(postfix)
                 serializer.instance.save()
