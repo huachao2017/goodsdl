@@ -69,7 +69,7 @@ class RfidImageCompareActionSerializer(serializers.ModelSerializer):
     # endTime = serializers.DateField(default='2017-12-22')
     class Meta:
         model = RfidImageCompareAction
-        fields = ('pk', 'deviceid', 'shopCode', 'startTime', 'endTime')
+        fields = ('pk', 'deviceid', 'startTime', 'endTime')
 
 class RfidTransactionSerializer(serializers.ModelSerializer):
     image = serializers.SlugRelatedField(
