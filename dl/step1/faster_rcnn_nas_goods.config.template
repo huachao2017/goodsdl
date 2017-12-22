@@ -83,13 +83,13 @@ model {
     second_stage_localization_loss_weight: 10.0
     second_stage_classification_loss_weight: 1.0
 
-    hard_example_miner {
-      num_hard_examples: 3000
-      iou_threshold: 0.99
-      loss_type: LOCALIZATION
-      max_negatives_per_positive: 3
-      min_negatives_per_image: 0
-    }
+    # hard_example_miner {
+      # num_hard_examples: 3000
+      # iou_threshold: 0.99
+      # loss_type: LOCALIZATION
+      # max_negatives_per_positive: 3
+      # min_negatives_per_image: 0
+    # }
   }
 }
 
