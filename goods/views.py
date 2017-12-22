@@ -599,25 +599,28 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
         headers = self.get_success_headers(serializer.data)
 
         domain = 'testpay.damaijianshen.cn'
-        shopCode = serializer.instance.shopCode
-        if shopCode == '':
-            shopCode = 'ARBEEMkAABYQ'
         startTime = int(time.mktime(serializer.instance.startTime.timetuple()) * 1000)
         endTime = int(time.mktime(serializer.instance.endTime.timetuple()) * 1000)
+        deviceid = serializer.instance.deviceid
 
         logger.info('begin compare:{}:{},{}:{}'.format(serializer.instance.startTime, startTime, serializer.instance.endTime, endTime))
 
-        response = urllib.request.urlopen('http://{}/payment/order-by-ai.json?shopCode={}&startTime={}&endTime={}'.format(domain, shopCode, startTime, endTime))
+        response = urllib.request.urlopen('http://{}/payment/order-by-ai.json?deviceId={}&startTime={}&endTime={}'.format(domain, deviceid, startTime, endTime))
         html = response.read()
         import json
         rfid_ret = json.loads(html)
         if rfid_ret['status'] == 200:
             for transaction in rfid_ret['attachment']:
                 transaction_time = transaction['payTime']
-                # FIXME 时间需要转换
-                # FIXME 修订查询image
-                images = Image.objects.filter().order_by('-id')
-                rfid_transaction = RfidTransaction.objects.create(image_id = images[0].pk,
+                # 时间转换
+                transaction_time = datetime.datetime.fromtimestamp(transaction_time / 1e3)
+                # 查询image
+                images = Image.objects.filter(deviceid=deviceid).filter(create_time__lt=transaction_time).order_by('-id')[:1]
+                if len(images)>0:
+                    image_id = images[0].pk
+                else:
+                    image_id = None
+                rfid_transaction = RfidTransaction.objects.create(image_id = image_id,
                                                transaction_time=transaction_time,
                                           )
                 for upc in transaction['upcModels']:

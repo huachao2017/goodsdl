@@ -64,12 +64,12 @@ class TrainActionSerializer(serializers.ModelSerializer):
         read_only_fields = ( 'param', 'create_time',)
 
 class RfidImageCompareActionSerializer(serializers.ModelSerializer):
-    shopCode = serializers.CharField(default='ARBEEMkAABYQ')
-    startTime = serializers.DateField(default='2017-12-21')
-    endTime = serializers.DateField(default='2017-12-22')
+    # shopCode = serializers.CharField(default='ARBEEMkAABYQ')
+    # startTime = serializers.DateField(default='2017-12-21')
+    # endTime = serializers.DateField(default='2017-12-22')
     class Meta:
         model = RfidImageCompareAction
-        fields = ('pk', 'shopCode', 'startTime', 'endTime')
+        fields = ('pk', 'deviceid', 'shopCode', 'startTime', 'endTime')
 
 class RfidTransactionSerializer(serializers.ModelSerializer):
     image = serializers.SlugRelatedField(

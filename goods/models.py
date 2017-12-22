@@ -6,9 +6,9 @@ def image_upload_source(instance,filename):
     return '{}/{}/{}_{}_{}'.format(now.strftime('%Y%m/%d%H'), instance.deviceid, now.strftime('%M%S'), str(now.time()), filename)
 
 class Image(models.Model):
-    deviceid = models.CharField(max_length=20, default='0')
+    deviceid = models.CharField(max_length=20, default='0',db_index=True)
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
-    create_time = models.DateTimeField('date created', auto_now_add=True)
+    create_time = models.DateTimeField('date created', auto_now_add=True,db_index=True)
 
 class ImageClass(models.Model):
     deviceid = models.CharField(max_length=20, default='0')
@@ -101,12 +101,12 @@ class StopTrainAction(models.Model):
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
 class RfidImageCompareAction(models.Model):
-    shopCode = models.CharField(max_length=20,default='ARBEEMkAABYQ')
+    deviceid = models.CharField(max_length=20, default='0')
     startTime = models.DateField('start time')
     endTime = models.DateField('end time')
 
 class RfidTransaction(models.Model):
-    image = models.ForeignKey(Image, related_name="rfid_transaction_image",on_delete=models.CASCADE)
+    image = models.ForeignKey(Image, related_name="rfid_transaction_image",on_delete=models.CASCADE,null=True)
     transaction_time = models.DateTimeField('transaction date',db_index=True)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
