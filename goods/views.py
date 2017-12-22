@@ -513,6 +513,8 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_label_map.pbtxt'), label_file_path)
             shutil.move(os.path.join(tmp_dir, 'frozen_inference_graph.pb'), export_file_path)
+            # copy label
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
 
             # clean up temporary_files
             if tf.gfile.Exists(tmp_dir):
@@ -537,9 +539,10 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 if not tf.gfile.Exists(backup_dir):
                     tf.gfile.MakeDirs(backup_dir)
                 shutil.move(checkpoint_file_path, os.path.join(backup_dir, 'checkpoint.'+postfix))
-                label_file_path = os.path.join(model_dir, 'labels.txt')
-                if os.path.isfile(label_file_path):
-                    shutil.move(label_file_path, os.path.join(backup_dir, 'labels.txt.' + postfix))
+                if train_action.action == 'TC':
+                    label_file_path = os.path.join(model_dir, 'labels.txt')
+                    if os.path.isfile(label_file_path):
+                        shutil.move(label_file_path, os.path.join(backup_dir, 'labels.txt.' + postfix))
                 # tfrecord_file_path = os.path.join(model_dir, 'goods_recogonize_train.tfrecord')
                 # if os.path.isfile(tfrecord_file_path):
                 #     shutil.move(tfrecord_file_path, os.path.join(backup_dir, 'goods_recogonize_train.tfrecord.' + postfix))
@@ -558,8 +561,9 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             shutil.copy(checkpoint_model_path + '.meta', model_dir)
             # copy dataset
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'), model_dir)
-            # copy label
-            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
+            if train_action.action == 'TC':
+                # copy label
+                shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
             # reboot django
             # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 

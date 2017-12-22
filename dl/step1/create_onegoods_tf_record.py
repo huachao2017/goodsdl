@@ -221,25 +221,26 @@ def update_config_file(train_dir,
     with open(output_filename, 'w') as file:
         file.write(output)
 
-def read_examples_list_and_label_map(path):
+def read_examples_list_and_label_map_and_classnames(path):
     """返回所有图片文件路径"""
     dirlist = os.listdir(path)  # 列出文件夹下所有的目录与文件
     examples = []
-    label_map_dict = {}
+    class_names = []
     for i in range(0, len(dirlist)):
         class_dir = os.path.join(path, dirlist[i])
         if os.path.isdir(class_dir):
+            class_names.append(dirlist[i])
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
                 image_path = os.path.join(class_dir, filelist[j])
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg" and os.path.isfile(example + '.xml'):
                     examples.append(example)
-    return examples, {'1':1}
+    return examples, {'1':1},class_names
 
 def prepare_train(data_dir, train_dir, train_name):
     logging.info('Reading from one good dataset.')
-    examples_list, label_map_dict = read_examples_list_and_label_map(data_dir)
+    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir)
     logging.info(label_map_dict)
 
     # Test images are not included in the downloaded data set, so we shall perform
@@ -263,6 +264,12 @@ def prepare_train(data_dir, train_dir, train_name):
     create_tf_record(val_output_path, label_map_dict, val_examples)
 
     create_label_map_file(label_map_file_path, label_map_dict)
+    class_names_to_ids = dict(zip(class_names, range(len(class_names))))
+    # Finally, write the labels file:
+    labels_to_class_names = dict(zip(range(len(class_names)), class_names))
+    from datasets import dataset_utils
+    dataset_utils.write_label_file(labels_to_class_names, output_dir)
+
     # 设定每张照片训练20次
     update_config_file(train_dir, train_name, len(label_map_dict), num_examples*100)
     return label_map_dict
