@@ -205,7 +205,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     # Score is shown on the result image, together with the class label.
     detection_scores = graph_step1.get_tensor_by_name('detection_scores:0')
 
-    class_names = get_class_names(os.path.join(step1_model_path, 'labels.txt'))
+    class_names = get_class_names(os.path.join(os.path.dirname(step1_model_path), dataset_utils.LABELS_FILENAME))
     """返回所有图片文件路径"""
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(dirlist)):
