@@ -287,6 +287,10 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     ymax = int(ymax * im_height)
                                     xmax = int(xmax * im_width)
 
+                                    if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
+                                        logger.warning('detect failed:{}'.format(output_image_path_augment))
+                                        break
+
                                     # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
                                     augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
                                     # augment_newimage.save(output_image_path_augment, 'JPEG')
