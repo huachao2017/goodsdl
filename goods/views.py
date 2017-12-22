@@ -55,7 +55,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         headers = self.get_success_headers(serializer.data)
 
         # 暂时性分解Detect，需要一个处理type编码
-        if serializer.instance.deviceid != '275':
+        if serializer.instance.deviceid != '275' and serializer.instance.deviceid != '266':
         # if True:
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
             step1_min_score_thresh = .5
