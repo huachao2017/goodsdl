@@ -85,5 +85,5 @@ class TransactionMetrixSerializer(serializers.ModelSerializer):
     rfid_transaction = RfidTransactionSerializer(many=False, read_only=True)
     class Meta:
         model = TransactionMetrix
-        fields = ('pk', 'rfid_transaction', 'same_upc_num', 'rfid_minus_upc')
-        read_only_fields = ( 'rfid_transaction', 'same_upc_num', 'rfid_minus_upc',)
+        fields = ('pk', 'rfid_transaction', 'same_upc_num', 'only_rfid_upc_num', 'only_image_upc_num')
+        read_only_fields = ( 'rfid_transaction', 'same_upc_num', 'only_rfid_upc_num', 'only_image_upc_num')

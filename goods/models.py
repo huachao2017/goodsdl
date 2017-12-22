@@ -118,5 +118,6 @@ class RfidGoods(models.Model):
 class TransactionMetrix(models.Model):
     rfid_transaction = models.OneToOneField(RfidTransaction,related_name="transaction_metrix",on_delete=models.CASCADE)
     same_upc_num = models.PositiveIntegerField(default=0)
-    rfid_minus_upc = models.IntegerField(default=0)
+    only_rfid_upc_num = models.PositiveIntegerField(default=0)
+    only_image_upc_num = models.PositiveIntegerField(default=0)
 

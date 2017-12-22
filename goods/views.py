@@ -609,6 +609,7 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
         html = response.read()
         import json
         rfid_ret = json.loads(html)
+        print(rfid_ret)
         if rfid_ret['status'] == 200:
             for transaction in rfid_ret['attachment']:
                 transaction_time = transaction['payTime']
@@ -623,13 +624,40 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
                 rfid_transaction = RfidTransaction.objects.create(image_id = image_id,
                                                transaction_time=transaction_time,
                                           )
+                image_upc_to_count = {}
+                if len(images) > 0:
+                    for image_goods in images[0].image_goods:
+                        if image_goods.upc in image_upc_to_count:
+                            image_upc_to_count[image_goods.upc] = image_upc_to_count[image_goods.upc] + 1
+                        else:
+                            image_upc_to_count[image_goods.upc] = 1
+
+                same_upc_num = 0
+                only_rfid_upc_num = 0
+                only_image_upc_num = 0
                 for upc in transaction['upcModels']:
                     RfidGoods.objects.create(rfid_transaction_id=rfid_transaction.pk,
                                              upc=upc['upc'],
                                              count = upc['count']
                                             )
+                    # caculate
+                    if upc in image_upc_to_count:
+                        if upc['count'] >= image_upc_to_count[upc]:
+                            same_upc_num = same_upc_num + image_upc_to_count[upc]
+                            only_rfid_upc_num = only_rfid_upc_num + upc['count'] - image_upc_to_count[upc]
+                        else:
+                            same_upc_num = same_upc_num + upc['count']
+                            only_image_upc_num = only_image_upc_num + image_upc_to_count[upc] - upc['count']
+                    else:
+                        only_rfid_upc_num = only_rfid_upc_num + upc['count']
 
-        # TODO need caculate
+
+                TransactionMetrix.objects.create(rfid_transaction_id=rfid_transaction.pk,
+                                                 same_upc_num=same_upc_num,
+                                                 only_rfid_upc_num=only_rfid_upc_num,
+                                                 only_image_upc_num=only_image_upc_num,
+                                                )
+
         logger.info('response:{}'.format(html))
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
