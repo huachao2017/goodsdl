@@ -635,21 +635,21 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
                 same_upc_num = 0
                 only_rfid_upc_num = 0
                 only_image_upc_num = 0
-                for upc in transaction['upcModels']:
+                for one_rfid_upc in transaction['upcModels']:
                     RfidGoods.objects.create(rfid_transaction_id=rfid_transaction.pk,
-                                             upc=upc['upc'],
-                                             count = upc['count']
+                                             upc=one_rfid_upc['upc'],
+                                             count = one_rfid_upc['count']
                                             )
                     # caculate
-                    if upc in image_upc_to_count:
-                        if upc['count'] >= image_upc_to_count[upc]:
-                            same_upc_num = same_upc_num + image_upc_to_count[upc]
-                            only_rfid_upc_num = only_rfid_upc_num + upc['count'] - image_upc_to_count[upc]
+                    if one_rfid_upc['upc'] in image_upc_to_count:
+                        if one_rfid_upc['count'] >= image_upc_to_count[one_rfid_upc['upc']]:
+                            same_upc_num = same_upc_num + image_upc_to_count[one_rfid_upc['upc']]
+                            only_rfid_upc_num = only_rfid_upc_num + one_rfid_upc['count'] - image_upc_to_count[one_rfid_upc['upc']]
                         else:
-                            same_upc_num = same_upc_num + upc['count']
-                            only_image_upc_num = only_image_upc_num + image_upc_to_count[upc] - upc['count']
+                            same_upc_num = same_upc_num + one_rfid_upc['count']
+                            only_image_upc_num = only_image_upc_num + image_upc_to_count[one_rfid_upc['upc']] - one_rfid_upc['count']
                     else:
-                        only_rfid_upc_num = only_rfid_upc_num + upc['count']
+                        only_rfid_upc_num = only_rfid_upc_num + one_rfid_upc['count']
 
 
                 TransactionMetrix.objects.create(rfid_transaction_id=rfid_transaction.pk,
