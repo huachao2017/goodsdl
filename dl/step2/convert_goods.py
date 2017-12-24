@@ -297,7 +297,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             # classes = np.squeeze(classes).astype(np.int32)
                             scores_step1 = np.squeeze(scores)
                             for l in range(boxes.shape[0]):
-                                if scores_step1[l] > 0.5:
+                                if scores_step1[l] > 0.9:
                                     ymin, xmin, ymax, xmax = boxes[l]
                                     ymin = int(ymin * im_height)
                                     xmin = int(xmin * im_width)
