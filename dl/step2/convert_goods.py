@@ -270,7 +270,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             angle = 60 / augment_ratio + k * 60 / augment_ratio
                             logger.info("image:{} rotate {}.".format(output_image_path, angle))
                             rotated_img = rotate_image(img, angle)
-                            logger.info("rotate image...")
+                            # logger.info("rotate image...")
                             # 写入图像
                             # tmp_image_path = os.path.join(output_tmp_dir,
                             #                               "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
@@ -287,34 +287,36 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
                             image_np_expanded = np.expand_dims(image_np, axis=0)
                             # Actual detection.
-                            logger.info("begin detect...")
+                            # logger.info("begin detect...")
                             (boxes, scores) = session_step1.run(
                                 [detection_boxes, detection_scores],
                                 feed_dict={image_tensor_step1: image_np_expanded})
-                            logger.info("end detect...")
+                            # logger.info("end detect...")
                             # data solving
                             boxes = np.squeeze(boxes)
                             # classes = np.squeeze(classes).astype(np.int32)
                             scores_step1 = np.squeeze(scores)
                             for l in range(boxes.shape[0]):
-                                if scores_step1[l] > 0.9:
+                                if scores_step1[l] < 0.9:
+                                    logger.warning('detect score less than thresh 0.9:{}'.format(str(scores_step1[l])))
+                                else:
                                     ymin, xmin, ymax, xmax = boxes[l]
                                     ymin = int(ymin * im_height)
                                     xmin = int(xmin * im_width)
                                     ymax = int(ymax * im_height)
                                     xmax = int(xmax * im_width)
 
-                                    if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
-                                        # 如果没有识别准确，不采用次旋转样本
-                                        logger.warning('detect failed:{}'.format(output_image_path_augment))
-                                        break
+                                    # if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
+                                    #     # 如果没有识别准确，不采用次旋转样本
+                                    #     logger.warning('detect failed:{}'.format(output_image_path_augment))
+                                    #     break
 
                                     # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
                                     augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
                                     # augment_newimage.save(output_image_path_augment, 'JPEG')
                                     cv2.imwrite(output_image_path_augment, augment_newimage)
-                                    logger.info("save image...")
-                                    break
+                                    # logger.info("save image...")
+                                break
     session_step1.close()
 
 
