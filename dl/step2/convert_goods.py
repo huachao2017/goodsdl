@@ -167,7 +167,7 @@ def rotate_image(src, angle, scale=1.):
     rot_mat[1, 2] += rot_move[1]
     # 仿射变换
     return cv2.warpAffine(src, rot_mat, (int(math.ceil(nw)), int(math.ceil(nh))), flags=cv2.INTER_LANCZOS4,
-                          borderValue=(int(src[1][1][0]), int(src[1][1][1]), int(src[1][1][2])))
+                          borderValue=(236, 244, 234)) # 桌面样本背景色
 
 
 def get_class_names(labels_filepath):
