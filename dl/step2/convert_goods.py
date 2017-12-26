@@ -218,9 +218,8 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
-            else:
-                # TODO 需要判断目录里面的文件是否需要更新
-                continue
+            # else:
+            #     continue
 
             # output_tmp_dir = os.path.join(output_class_dir, 'tmp')
             # if not tf.gfile.Exists(output_tmp_dir):
@@ -249,8 +248,9 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         # 生成新的图片
                         output_image_path = os.path.join(output_class_dir,
                                                          "{}_{}.jpg".format(os.path.split(example)[1], index))
-                        newimage.save(output_image_path, 'JPEG')
-                        logger.info('save image:{}'.format(output_image_path))
+                        if not tf.gfile.Exists(output_image_path):
+                            newimage.save(output_image_path, 'JPEG')
+                            logger.info('save image:{}'.format(output_image_path))
 
                         img = cv2.imread(image_path)
 
@@ -268,6 +268,11 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         # 使图像旋转
                         for k in range(6 * augment_ratio - 1):
                             angle = 60 / augment_ratio + k * 60 / augment_ratio
+                            output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
+                                os.path.split(example)[1], index, angle))
+                            if tf.gfile.Exists(output_image_path_augment):
+                                # 文件存在不再重新生成，从而支持增量生成
+                                continue
                             logger.info("image:{} rotate {}.".format(output_image_path, angle))
                             rotated_img = rotate_image(img, angle)
                             # logger.info("rotate image...")
@@ -276,8 +281,6 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             #                               "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
                             # cv2.imwrite(tmp_image_path, rotated_img)
 
-                            output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
-                                os.path.split(example)[1], index, angle))
                             # augment_image = im.open(tmp_image_path)
                             # (im_width, im_height) = augment_image.size
                             im_height = rotated_img.shape[0]
@@ -321,10 +324,11 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
 
 
 def prepare_data(source_dir,dest_dir,step1_model_path):
-    """Runs the download and conversion operation.
+    """Runs the data augument.
 
     Args:
       source_dir: The source directory where the step1 dataset is stored.
+      dest_dir: step2 dataset will be stored.
     """
 
     if not tf.gfile.Exists(dest_dir):
@@ -334,6 +338,12 @@ def prepare_data(source_dir,dest_dir,step1_model_path):
     create_step2_goods(source_dir, dest_dir, step1_model_path)
 
 def prepare_train(dataset_dir, output_dir):
+    """Runs the conversion operation.
+
+    Args:
+      dataset_dir: The source directory where the step2 dataset is stored.
+      output_dir: tfrecord will be stored.
+    """
 
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
     class_names_to_ids = dict(zip(class_names, range(len(class_names))))
