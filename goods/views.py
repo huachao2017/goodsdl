@@ -16,7 +16,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetection, imagedetectionV2, imageclassifyV1
+from dl import imagedetection, imagedetectionV2, imageclassifyV1, imagedetection_only_step1
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.only_step2 import create_goods_tf_record
@@ -63,6 +63,12 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                   step2_min_score_thresh=step2_min_score_thresh)
+        elif serializer.instance.deviceid == 'os1':
+            # if True:
+            detector = imagedetection_only_step1.ImageDetectorFactory.get_static_detector('0')
+            step1_min_score_thresh = .5
+            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
         else:
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
