@@ -122,6 +122,7 @@ class ImageDetector:
         self.step1_model_path = os.path.join(self.checkpoints_dir, 'frozen_inference_graph.pb')
         self.step1_label_path = os.path.join(self.checkpoints_dir, 'goods_label_map.pbtxt')
         self.counter = 0
+        self.detection_scores = None
 
     def load(self):
         if self.counter > 0:
