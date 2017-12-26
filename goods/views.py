@@ -58,22 +58,23 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         if serializer.instance.deviceid == 'os1' or serializer.instance.deviceid == '290':
             # 手动测试和楼下290:
             detector = imagedetection_only_step1.ImageDetectorFactory.get_static_detector('0')
-            step1_min_score_thresh = .5
+            step1_min_score_thresh = .8
             logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
-        elif serializer.instance.deviceid != '275' and serializer.instance.deviceid != '266':
-            # 演示区275和锦州266:
+        elif serializer.instance.deviceid == '275' or serializer.instance.deviceid == '266':
+            # 演示区275和锦州266: 使用10类成熟识别
+            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+            min_score_thresh = .5
+            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
+        else:
+            # 385类识别
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
             step1_min_score_thresh = .5
             step2_min_score_thresh = .8
             logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                   step2_min_score_thresh=step2_min_score_thresh)
-        else:
-            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-            min_score_thresh = .5
-            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
         if ret is None or len(ret) <= 0:
             logger.info('end detect:0')
