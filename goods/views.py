@@ -56,7 +56,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid != '275' and serializer.instance.deviceid != '266':
-        # if True:
+            # if True:
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
             step1_min_score_thresh = .5
             step2_min_score_thresh = .8
@@ -289,6 +289,28 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = DatasetAction.objects.order_by('-id')
+    serializer_class = DatasetActionSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        logger.info('create action:{}'.format(serializer.instance.action))
+        if serializer.instance.action == 'D2':
+            if serializer.instance.traintype == 0:
+                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            else:
+                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
+            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(serializer.instance.traintype),
+                                            'frozen_inference_graph.pb')
+            convert_goods.prepare_data(data_dir,
+                                       os.path.join(settings.MEDIA_ROOT, 'step2'),
+                                       step1_model_path)
+
+
 class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')
     serializer_class = TrainActionSerializer
@@ -378,17 +400,11 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
     def train_step2(self, actionlog):
         # 训练准备
-        if actionlog.traintype == 0:
-            data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
-        else:
-            data_dir = os.path.join(settings.MEDIA_ROOT, str(actionlog.traintype))
-        step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(actionlog.traintype),
-                                        'frozen_inference_graph.pb')
-        class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(data_dir,
-                                                                                                   settings.TRAIN_ROOT,
-                                                                                                   str(actionlog.pk),
-                                                                                                   step1_model_path)
         train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(os.path.join(
+            settings.MEDIA_ROOT,
+            'step2'),
+            train_logs_dir)
         step2_model_name = 'inception_resnet_v2'
         # 训练
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
@@ -457,9 +473,12 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                          viewsets.GenericViewSet):
     queryset = ExportAction.objects.order_by('-id')
     serializer_class = ExportActionSerializer
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -511,7 +530,8 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 serializer.instance.backup_postfix = int(postfix)
                 serializer.instance.save()
             # copy label
-            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_label_map.pbtxt'), label_file_path)
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_label_map.pbtxt'),
+                        label_file_path)
             shutil.move(os.path.join(tmp_dir, 'frozen_inference_graph.pb'), export_file_path)
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
@@ -520,8 +540,8 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             if tf.gfile.Exists(tmp_dir):
                 tf.gfile.DeleteRecursively(tmp_dir)
 
-            # reboot django
-            # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
+                # reboot django
+                # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
     def export_classify_graph(self, train_action, serializer):
         logger.info('Export <trainid:{}> Grapy from classify train.'.format(train_action.pk))
@@ -538,7 +558,7 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
                 backup_dir = os.path.join(model_dir, 'bak')
                 if not tf.gfile.Exists(backup_dir):
                     tf.gfile.MakeDirs(backup_dir)
-                shutil.move(checkpoint_file_path, os.path.join(backup_dir, 'checkpoint.'+postfix))
+                shutil.move(checkpoint_file_path, os.path.join(backup_dir, 'checkpoint.' + postfix))
                 if train_action.action == 'TC':
                     label_file_path = os.path.join(model_dir, 'labels.txt')
                     if os.path.isfile(label_file_path):
@@ -560,16 +580,20 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             shutil.copy(checkpoint_model_path + '.index', model_dir)
             shutil.copy(checkpoint_model_path + '.meta', model_dir)
             # copy dataset
-            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'), model_dir)
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'),
+                        model_dir)
             if train_action.action == 'TC':
                 # copy label
                 shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
-            # reboot django
-            # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
+                # reboot django
+                # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
-class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                             viewsets.GenericViewSet):
     queryset = StopTrainAction.objects.order_by('-id')
     serializer_class = StopTrainActionSerializer
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -589,9 +613,12 @@ class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListM
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
+                                    mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = RfidImageCompareAction.objects.order_by('-id')
     serializer_class = RfidImageCompareActionSerializer
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -603,9 +630,13 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
         endTime = int(time.mktime(serializer.instance.endTime.timetuple()) * 1000)
         deviceid = serializer.instance.deviceid
 
-        logger.info('begin compare:{}:{},{}:{}'.format(serializer.instance.startTime, startTime, serializer.instance.endTime, endTime))
+        logger.info(
+            'begin compare:{}:{},{}:{}'.format(serializer.instance.startTime, startTime, serializer.instance.endTime,
+                                               endTime))
 
-        response = urllib.request.urlopen('http://{}/payment/order-by-ai.json?deviceId={}&startTime={}&endTime={}'.format(domain, deviceid, startTime, endTime))
+        response = urllib.request.urlopen(
+            'http://{}/payment/order-by-ai.json?deviceId={}&startTime={}&endTime={}'.format(domain, deviceid, startTime,
+                                                                                            endTime))
         html = response.read()
         import json
         rfid_ret = json.loads(html)
@@ -616,14 +647,15 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
                 # 时间转换
                 transaction_time = datetime.datetime.fromtimestamp(transaction_time / 1e3)
                 # 查询image
-                images = Image.objects.filter(deviceid=deviceid).filter(create_time__lt=transaction_time).order_by('-id')[:1]
-                if len(images)>0:
+                images = Image.objects.filter(deviceid=deviceid).filter(create_time__lt=transaction_time).order_by(
+                    '-id')[:1]
+                if len(images) > 0:
                     image_id = images[0].pk
                 else:
                     image_id = None
-                rfid_transaction = RfidTransaction.objects.create(image_id = image_id,
-                                               transaction_time=transaction_time,
-                                          )
+                rfid_transaction = RfidTransaction.objects.create(image_id=image_id,
+                                                                  transaction_time=transaction_time,
+                                                                  )
                 image_upc_to_count = {}
                 if len(images) > 0:
                     for image_goods in images[0].image_goods:
@@ -638,25 +670,26 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
                 for one_rfid_upc in transaction['upcModels']:
                     RfidGoods.objects.create(rfid_transaction_id=rfid_transaction.pk,
                                              upc=one_rfid_upc['upc'],
-                                             count = one_rfid_upc['count']
-                                            )
+                                             count=one_rfid_upc['count']
+                                             )
                     # caculate
                     if one_rfid_upc['upc'] in image_upc_to_count:
                         if one_rfid_upc['count'] >= image_upc_to_count[one_rfid_upc['upc']]:
                             same_upc_num = same_upc_num + image_upc_to_count[one_rfid_upc['upc']]
-                            only_rfid_upc_num = only_rfid_upc_num + one_rfid_upc['count'] - image_upc_to_count[one_rfid_upc['upc']]
+                            only_rfid_upc_num = only_rfid_upc_num + one_rfid_upc['count'] - image_upc_to_count[
+                                one_rfid_upc['upc']]
                         else:
                             same_upc_num = same_upc_num + one_rfid_upc['count']
-                            only_image_upc_num = only_image_upc_num + image_upc_to_count[one_rfid_upc['upc']] - one_rfid_upc['count']
+                            only_image_upc_num = only_image_upc_num + image_upc_to_count[one_rfid_upc['upc']] - \
+                                                 one_rfid_upc['count']
                     else:
                         only_rfid_upc_num = only_rfid_upc_num + one_rfid_upc['count']
-
 
                 TransactionMetrix.objects.create(rfid_transaction_id=rfid_transaction.pk,
                                                  same_upc_num=same_upc_num,
                                                  only_rfid_upc_num=only_rfid_upc_num,
                                                  only_image_upc_num=only_image_upc_num,
-                                                )
+                                                 )
 
         logger.info('response:{}'.format(html))
 

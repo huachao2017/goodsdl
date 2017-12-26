@@ -320,22 +320,20 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     session_step1.close()
 
 
-def prepare_train(data_dir, train_dir, train_name, step1_model_path):
+def prepare_data(source_dir,dest_dir,step1_model_path):
     """Runs the download and conversion operation.
 
     Args:
-      dataset_dir: The dataset directory where the dataset is stored.
+      source_dir: The source directory where the step1 dataset is stored.
     """
 
-    output_dir = os.path.join(train_dir, train_name)
-    if not tf.gfile.Exists(output_dir):
-        tf.gfile.MakeDirs(output_dir)
+    if not tf.gfile.Exists(dest_dir):
+        tf.gfile.MakeDirs(dest_dir)
 
-    _remove_tfrecord_ifexists(output_dir)
-
-    dataset_dir = os.path.join(output_dir, 'step2')
     # _clean_up_temporary_files(dataset_dir)
-    create_step2_goods(data_dir, dataset_dir, step1_model_path)
+    create_step2_goods(source_dir, dest_dir, step1_model_path)
+
+def prepare_train(dataset_dir, output_dir):
 
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
     class_names_to_ids = dict(zip(class_names, range(len(class_names))))
@@ -353,8 +351,8 @@ def prepare_train(data_dir, train_dir, train_name, step1_model_path):
                      output_dir)
 
     # Finally, write the labels file:
-    labels_to_class_names = dict(zip(range(len(class_names)), class_names))
-    dataset_utils.write_label_file(labels_to_class_names, output_dir)
+    # labels_to_class_names = dict(zip(range(len(class_names)), class_names))
+    # dataset_utils.write_label_file(labels_to_class_names, dataset_dir)
 
     logger.info('Finished converting the goods dataset!')
     return class_names_to_ids, training_filenames, validation_filenames

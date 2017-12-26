@@ -74,6 +74,18 @@ class TrainImageClass(models.Model):
     name = models.CharField(max_length=20, default='')
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
+class DatasetAction(models.Model):
+    ACTION_CHOICES = (
+        (u'D2', u'Dataset Step 2'),
+    )
+    action = models.CharField(max_length=2, choices=ACTION_CHOICES)
+    traintype = models.PositiveIntegerField(default=0)
+    desc = models.CharField(max_length=500,null=True)
+    param = models.CharField(max_length=500)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    def __str__(self):
+        return '{}:{}:{}'.format(self.action, self.pk, self.desc)
+
 class TrainAction(models.Model):
     ACTION_CHOICES = (
         (u'T1', u'Train Step 1'),
