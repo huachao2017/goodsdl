@@ -383,11 +383,9 @@ def main(_):
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
-
-    # FIXME gpu not release in convert_goods, so can't use gpu 0, need to transfer code of convert_goods from web to train
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-    tf.logging.set_verbosity(tf.logging.INFO)
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    # tf.logging.set_verbosity(tf.logging.INFO)
     with tf.Graph().as_default():
         #######################
         # Config model_deploy #

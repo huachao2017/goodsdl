@@ -422,7 +422,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             train_logs_dir,
             len(training_filenames),
             step2_model_name,
-            1,
+            2,
             32,
             int(len(training_filenames) * 200 / 32)  # 设定最大训练次数，保证每个样本进入网络200次
         )
