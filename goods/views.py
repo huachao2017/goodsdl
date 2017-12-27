@@ -57,9 +57,9 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == 'os1' or serializer.instance.deviceid == '290':
             # for test
-            return Response([], status=status.HTTP_201_CREATED, headers=headers)
+            # return Response([], status=status.HTTP_201_CREATED, headers=headers)
             # 手动测试和楼下290:
-            detector = imagedetection_only_step1.ImageDetectorFactory.get_static_detector('0')
+            detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector('0')
             step1_min_score_thresh = .8
             logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)

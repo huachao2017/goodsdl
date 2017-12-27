@@ -15,14 +15,14 @@ from goods.models import ProblemGoods
 logger = logging.getLogger("django")
 
 
-class ImageDetectorFactory:
+class ImageDetectorFactory_os1:
     _detector = {}
 
     @staticmethod
     def get_static_detector(type):
-        if type not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[type] = ImageDetector(type)
-        return ImageDetectorFactory._detector[type]
+        if type not in ImageDetectorFactory_os1._detector:
+            ImageDetectorFactory_os1._detector[type] = ImageDetector_os1(type)
+        return ImageDetectorFactory_os1._detector[type]
 
 
 def visualize_boxes_and_labels_on_image_array(image,
@@ -112,7 +112,7 @@ def visualize_boxes_and_labels_on_image_array(image,
 
     return image
 
-class ImageDetector:
+class ImageDetector_os1:
     def __init__(self, type):
         self.graph_step1 = None
         self.session_step1 = None
