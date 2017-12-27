@@ -316,7 +316,7 @@ class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             convert_goods.prepare_data(data_dir,
                                        os.path.join(settings.MEDIA_ROOT, 'step2'),
                                        step1_model_path)
-
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')
