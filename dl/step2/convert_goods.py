@@ -365,7 +365,7 @@ def prepare_train(dataset_dir, output_dir):
 
     # Finally, write the labels file:
     labels_to_class_names = dict(zip(range(len(class_names)), class_names))
-    dataset_utils.write_label_file(labels_to_class_names, dataset_dir)
+    dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
     logger.info('Finished converting the goods dataset!')
     return class_names_to_ids, training_filenames, validation_filenames
