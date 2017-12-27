@@ -345,6 +345,9 @@ def prepare_train(dataset_dir, output_dir):
       output_dir: tfrecord will be stored.
     """
 
+    if not tf.gfile.Exists(output_dir):
+        tf.gfile.MakeDirs(output_dir)
+
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
     class_names_to_ids = dict(zip(class_names, range(len(class_names))))
 
