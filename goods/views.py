@@ -26,6 +26,7 @@ import urllib.request
 import time
 
 logger = logging.getLogger("django")
+detect_logger = logging.getLogger("detect")
 
 
 class Test(APIView):
@@ -82,19 +83,20 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk,export2s[0].pk)
                 step1_min_score_thresh = .5
                 step2_min_score_thresh = .6
-                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                if serializer.instance.deviceid == 275:
+                    detect_logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                       step2_min_score_thresh=step2_min_score_thresh)
 
         if ret is None or len(ret) <= 0:
             if serializer.instance.deviceid == 275:
-                logger.info('end detect:0')
+                detect_logger.info('end detect:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
             if serializer.instance.deviceid == 275:
-                logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+                detect_logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
             ret_reborn = []
             index = 0
             class_index_dict = {}

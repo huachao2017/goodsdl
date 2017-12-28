@@ -12,7 +12,7 @@ import logging
 import time
 from goods.models import ProblemGoods
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("detect")
 
 
 class ImageDetectorFactory_os1:

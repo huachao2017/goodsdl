@@ -169,10 +169,18 @@ LOGGING = {
         # INFO 2016-09-03 16:25:20,067 /home/ubuntu/mysite/views.py views.py views get 29: some info...
     },
     'handlers': {
-        'file_handler': {
+        'request_file_handler': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, "logs", 'debug.log'),
+            'maxBytes': 1024 * 1024 * 50,  # 文件大小
+            'backupCount': 50,  # 备份份数
+            'formatter': 'standard'
+        },  # 用于文件输出
+        'detect_file_handler': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, "logs", 'detect.log'),
             'maxBytes': 1024 * 1024 * 50,  # 文件大小
             'backupCount': 50,  # 备份份数
             'formatter': 'standard'
@@ -186,7 +194,12 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file_handler'],
+            'handlers': ['console', 'request_file_handler'],
+            'level': 'DEBUG',
+            'propagate': True  # 是否继承父类的log信息
+        },  # handlers 来自于上面的 handlers 定义的内容
+        'detect': {
+            'handlers': ['console', 'detect_file_handler'],
             'level': 'DEBUG',
             'propagate': True  # 是否继承父类的log信息
         },  # handlers 来自于上面的 handlers 定义的内容
