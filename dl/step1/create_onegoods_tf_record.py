@@ -38,7 +38,7 @@ import tensorflow as tf
 
 from object_detection.utils import dataset_util
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("dataset")
 
 def get_class_name_from_filename(file_name):
     """Gets the class name from a file.

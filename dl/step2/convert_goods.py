@@ -35,7 +35,7 @@ _NUM_VALIDATION = 300
 # Seed for repeatability.
 _RANDOM_SEED = 0
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("dataset")
 
 
 class ImageReader(object):
@@ -300,8 +300,8 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             # classes = np.squeeze(classes).astype(np.int32)
                             scores_step1 = np.squeeze(scores)
                             for l in range(boxes.shape[0]):
-                                if scores_step1[l] < 0.9:
-                                    logger.warning('detect score less than thresh 0.9:{}'.format(str(scores_step1[l])))
+                                if scores_step1[l] < 0.8:
+                                    logger.warning('detect score less than thresh 0.8:{}'.format(str(scores_step1[l])))
                                 else:
                                     ymin, xmin, ymax, xmax = boxes[l]
                                     ymin = int(ymin * im_height)

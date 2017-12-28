@@ -61,10 +61,10 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # for test
             # return Response([], status=status.HTTP_201_CREATED, headers=headers)
             # 手动测试:
-            exports = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
-            if len(exports)>0:
-                detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(exports[0].pk)
+            if len(export1s)>0:
+                detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
                 step1_min_score_thresh = .8
                 # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
@@ -323,7 +323,8 @@ class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
                 data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
-            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(serializer.instance.traintype),
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', export1s[0].pk,
                                             'frozen_inference_graph.pb')
             convert_goods.prepare_data(data_dir,
                                        os.path.join(settings.MEDIA_ROOT, 'step2'),
