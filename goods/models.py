@@ -18,6 +18,12 @@ class TimeLog(models.Model):
     total = models.FloatField(default=.0)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
+class PreStep2TimeLog(models.Model):
+    image = models.ForeignKey(Image,related_name="image_prestep2timelog",on_delete=models.CASCADE)
+    param = models.CharField(max_length=500)
+    total = models.FloatField(default=.0)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
 class ImageClass(models.Model):
     deviceid = models.CharField(max_length=20, default='0')
     source = models.ImageField(max_length=200, upload_to=image_upload_source)

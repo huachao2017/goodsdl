@@ -10,7 +10,7 @@ from .step2 import dataset
 from object_detection.utils import visualization_utils as vis_util
 import logging
 import time
-from goods.models import ProblemGoods, TimeLog
+from goods.models import ProblemGoods, TimeLog, PreStep2TimeLog
 
 logger = logging.getLogger("detect")
 
@@ -297,8 +297,10 @@ class ImageDetector:
             time0 = time.time()
 
         step2_images = []
+        sub_time_param = ''
         for i in range(boxes.shape[0]):
             if scores_step1[i] > step1_min_score_thresh:
+                sub_time0 = time.time()
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
                 xmin = int(xmin * im_width)
@@ -310,11 +312,19 @@ class ImageDetector:
                 newimage_split = os.path.split(image_path)
                 new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
                 newimage.save(new_image_path, 'JPEG')
+                if image_instance.deviceid == '275':
+                    sub_time_param = sub_time_param + '%.2f,' %(time.time()-sub_time0)
+                    sub_time0 = time.time()
                 step2_images.append(self.pre_sess_step2.run(self.output_image_tensor_step2, feed_dict={self.input_image_tensor_step2: new_image_path}))
+                if image_instance.deviceid == '275':
+                    sub_time_param = sub_time_param + '%.2f,' %(time.time()-sub_time0)
 
         if image_instance.deviceid == '275':
             time2 = time.time() - time0
             time0 = time.time()
+            PreStep2TimeLog.objects.create(image_id=image_instance.pk,
+                                   param=sub_time_param,
+                                   total=time2)
 
         if len(step2_images) <= 0:
             return None
