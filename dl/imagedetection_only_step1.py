@@ -19,9 +19,9 @@ class ImageDetectorFactory_os1:
     _detector = None
 
     @staticmethod
-    def get_static_detector(type):
+    def get_static_detector(exportid):
         if not ImageDetectorFactory_os1._detector:
-            ImageDetectorFactory_os1._detector = ImageDetector_os1(type)
+            ImageDetectorFactory_os1._detector = ImageDetector_os1(exportid)
         return ImageDetectorFactory_os1._detector
 
 
@@ -113,12 +113,12 @@ def visualize_boxes_and_labels_on_image_array(image,
     return image
 
 class ImageDetector_os1:
-    def __init__(self, type):
+    def __init__(self, exportid):
         self.graph_step1 = None
         self.session_step1 = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
-        self.checkpoints_dir = os.path.join(self.file_path, 'model', str(type))
+        self.checkpoints_dir = os.path.join(self.file_path, 'model', str(exportid))
         self.step1_model_path = os.path.join(self.checkpoints_dir, 'frozen_inference_graph.pb')
         self.step1_label_path = os.path.join(self.checkpoints_dir, 'goods_label_map.pbtxt')
         self.counter = 0

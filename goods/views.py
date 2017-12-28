@@ -59,10 +59,13 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # for test
             # return Response([], status=status.HTTP_201_CREATED, headers=headers)
             # 手动测试:
-            detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector('0')
-            step1_min_score_thresh = .8
-            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+            exports = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
+
+            if len(exports)>0:
+                detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(exports[0].pk)
+                step1_min_score_thresh = .8
+                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
         elif serializer.instance.deviceid == '275' or serializer.instance.deviceid == '266':
             # 演示区275和锦州266: 使用10类成熟识别
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
