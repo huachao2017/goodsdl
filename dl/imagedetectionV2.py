@@ -268,8 +268,8 @@ class ImageDetector:
                 logger.warning('loading model failed')
                 return None
 
-        import time
-        time0 = time.time()
+        # import time
+        # time0 = time.time()
 
         image_path = image_instance.source.path
         image = Image.open(image_path)
@@ -292,15 +292,15 @@ class ImageDetector:
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
 
-        if image_instance.deviceid == '275':
-            time1 = time.time() - time0
-            time0 = time.time()
+        # if image_instance.deviceid == '275':
+        #     time1 = time.time() - time0
+        #     time0 = time.time()
 
         step2_images = []
-        sub_time_param = ''
+        # sub_time_param = ''
         for i in range(boxes.shape[0]):
             if scores_step1[i] > step1_min_score_thresh:
-                sub_time0 = time.time()
+                # sub_time0 = time.time()
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
                 xmin = int(xmin * im_width)
@@ -312,19 +312,19 @@ class ImageDetector:
                 newimage_split = os.path.split(image_path)
                 new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
                 newimage.save(new_image_path, 'JPEG')
-                if image_instance.deviceid == '275':
-                    sub_time_param = sub_time_param + '%.2f,' %(time.time()-sub_time0)
-                    sub_time0 = time.time()
+                # if image_instance.deviceid == '275':
+                #     sub_time_param = sub_time_param + '%.2f,' %(time.time()-sub_time0)
+                #     sub_time0 = time.time()
                 step2_images.append(self.pre_sess_step2.run(self.output_image_tensor_step2, feed_dict={self.input_image_tensor_step2: new_image_path}))
-                if image_instance.deviceid == '275':
-                    sub_time_param = sub_time_param + '%.2f,' %(time.time()-sub_time0)
+                # if image_instance.deviceid == '275':
+                #     sub_time_param = sub_time_param + '%.2f,' %(time.time()-sub_time0)
 
-        if image_instance.deviceid == '275':
-            time2 = time.time() - time0
-            time0 = time.time()
-            PreStep2TimeLog.objects.create(image_id=image_instance.pk,
-                                   param=sub_time_param,
-                                   total=time2)
+        # if image_instance.deviceid == '275':
+        #     time2 = time.time() - time0
+        #     time0 = time.time()
+        #     PreStep2TimeLog.objects.create(image_id=image_instance.pk,
+        #                            param=sub_time_param,
+        #                            total=time2)
 
         if len(step2_images) <= 0:
             return None
@@ -333,13 +333,13 @@ class ImageDetector:
         probabilities = self.session_step2.run(
             self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
 
-        if image_instance.deviceid == '275':
-            time3 = time.time() - time0
-            TimeLog.objects.create(image_id=image_instance.pk,
-                                   time1=time1,
-                                   time2=time2,
-                                   time3=time3,
-                                   total=time1+time2+time3)
+        # if image_instance.deviceid == '275':
+        #     time3 = time.time() - time0
+        #     TimeLog.objects.create(image_id=image_instance.pk,
+        #                            time1=time1,
+        #                            time2=time2,
+        #                            time3=time3,
+        #                            total=time1+time2+time3)
 
         ret = []
         classes = []
