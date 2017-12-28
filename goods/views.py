@@ -61,7 +61,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # for test
             # return Response([], status=status.HTTP_201_CREATED, headers=headers)
             # 手动测试:
-            exports = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
+            exports = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix_gt=0).order_by('-update_time')[:1]
 
             if len(exports)>0:
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(exports[0].pk)
@@ -78,8 +78,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
         else:
             # 385类识别
-            export1s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
-            export2s = ExportAction.objects.filter(train_action__action='T2').order_by('-update_time')[:1]
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix_gt=0).order_by('-update_time')[:1]
+            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix_gt=0).order_by('-update_time')[:1]
 
             if len(export1s)>0 and len(export2s)>0 :
                 detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk,export2s[0].pk)
@@ -509,17 +509,23 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info('export train:{}'.format(serializer.instance.train_action.pk))
 
         if serializer.instance.train_action.action == 'T1':
-            self.export_detection_graph(serializer.instance.train_action, serializer)
+            prefix = self.export_detection_graph(serializer.instance.train_action, serializer)
 
         elif serializer.instance.train_action.action == 'T2':
-            self.export_classify_graph(serializer.instance.train_action, serializer)
+            prefix = self.export_classify_graph(serializer.instance.train_action, serializer)
 
         elif serializer.instance.train_action.action == 'TC':
-            self.export_classify_graph(serializer.instance.train_action, serializer)
+            prefix = self.export_classify_graph(serializer.instance.train_action, serializer)
 
+        if prefix is None:
+            ExportAction.objects.get(pk=serializer.instance.pk).delete()
+        else:
+            serializer.instance.checkpoint_prefix = int(prefix)
+            serializer.instance.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def export_detection_graph(self, train_action, serializer):
+        prefix = None
         logger.info('Export <trainid:{}> Graph from detection train.'.format(train_action.pk))
         trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(train_action.pk))
         checkpoint_model_path = tf.train.latest_checkpoint(trained_checkpoint_dir)
@@ -536,15 +542,15 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
             export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
             label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
-            serializer.instance.checkpoint_prefix = int(prefix)
-            serializer.instance.save()
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_label_map.pbtxt'),
                         label_file_path)
             # copy classify label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
+        return prefix
 
     def export_classify_graph(self, train_action, serializer):
+        prefix = None
         logger.info('Export <trainid:{}> Graph from classify train.'.format(train_action.pk))
         trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(train_action.pk))
         checkpoint_model_path = tf.train.latest_checkpoint(trained_checkpoint_dir)
@@ -554,8 +560,6 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             if not tf.gfile.Exists(model_dir):
                 tf.gfile.MakeDirs(model_dir)
             checkpoint_file_path = os.path.join(model_dir, 'checkpoint')
-            serializer.instance.checkpoint_prefix = int(prefix)
-            serializer.instance.save()
             # 输出pb
             # e2.export(step2_model_name, trained_checkpoint_dir, export_file_path)
             # 重写checkpoint file
@@ -573,7 +577,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
             # reboot django
             # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
-
+        return prefix
 
 class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                              viewsets.GenericViewSet):
