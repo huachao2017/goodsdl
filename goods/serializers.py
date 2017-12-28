@@ -46,14 +46,14 @@ class TrainImageClassSerializer(serializers.ModelSerializer):
 class DatasetActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = DatasetAction
-        fields = ('pk', 'action', 'traintype', 'desc', 'param', 'create_time')
-        read_only_fields = ( 'filenum', 'param', 'create_time',)
+        fields = ('pk', 'action', 'traintype', 'desc', 'param', 'create_time', 'update_time')
+        read_only_fields = ( 'filenum', 'param', 'create_time', 'update_time',)
 
 class ExportActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportAction
-        fields = ('pk', 'train_action', 'checkpoint_prefix', 'backup_postfix', 'param', 'create_time')
-        read_only_fields = ( 'checkpoint_prefix', 'backup_postfix', 'param', 'create_time',)
+        fields = ('pk', 'train_action', 'checkpoint_prefix', 'param', 'create_time', 'update_time')
+        read_only_fields = ( 'checkpoint_prefix', 'param', 'create_time', 'update_time')
 
 class StopTrainActionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -66,8 +66,8 @@ class TrainActionSerializer(serializers.ModelSerializer):
     stop_train_actions = StopTrainActionSerializer(many=True, read_only=True)
     class Meta:
         model = TrainAction
-        fields = ('pk', 'action', 'traintype', 'desc', 'param', 'export_actions', 'stop_train_actions', 'create_time')
-        read_only_fields = ( 'param', 'create_time',)
+        fields = ('pk', 'action', 'traintype', 'desc', 'param', 'export_actions', 'stop_train_actions', 'create_time', 'update_time')
+        read_only_fields = ( 'param', 'create_time', 'update_time',)
 
 class RfidImageCompareActionSerializer(serializers.ModelSerializer):
     # shopCode = serializers.CharField(default='ARBEEMkAABYQ')

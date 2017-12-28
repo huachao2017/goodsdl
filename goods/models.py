@@ -83,6 +83,7 @@ class DatasetAction(models.Model):
     desc = models.CharField(max_length=500,null=True)
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
     def __str__(self):
         return '{}:{}:{}'.format(self.action, self.pk, self.desc)
 
@@ -97,15 +98,16 @@ class TrainAction(models.Model):
     desc = models.CharField(max_length=500,null=True)
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
     def __str__(self):
         return '{}:{}:{}'.format(self.action, self.pk, self.desc)
 
 class ExportAction(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="export_actions",on_delete=models.CASCADE)
     checkpoint_prefix = models.PositiveIntegerField(default=0)
-    backup_postfix = models.CharField(max_length=20, default='')
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
 
 class StopTrainAction(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="stop_train_actions",on_delete=models.CASCADE)

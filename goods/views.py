@@ -483,8 +483,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                          viewsets.GenericViewSet):
+class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = ExportAction.objects.order_by('-id')
     serializer_class = ExportActionSerializer
 
@@ -507,77 +506,38 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def export_detection_graph(self, train_action, serializer):
-        logger.info('Export <trainid:{}> Grapy from detection train.'.format(train_action.pk))
+        logger.info('Export <trainid:{}> Graph from detection train.'.format(train_action.pk))
         trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(train_action.pk))
         checkpoint_model_path = tf.train.latest_checkpoint(trained_checkpoint_dir)
         if checkpoint_model_path:
-            model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(train_action.traintype))
+            prefix = checkpoint_model_path.split('-')[-1]
+            model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(serializer.instance.pk))
             # 输出pb
-            tmp_dir = os.path.join(model_dir, 'tmp')
-            # clean up temporary_files
-            if tf.gfile.Exists(tmp_dir):
-                tf.gfile.DeleteRecursively(tmp_dir)
             e1.export(os.path.join(trained_checkpoint_dir, 'faster_rcnn_nas_goods.config'),
                       checkpoint_model_path,
-                      tmp_dir,
+                      model_dir,
                       )
 
-            prefix = checkpoint_model_path.split('-')[-1]
             export_file_path = os.path.join(model_dir, 'frozen_inference_graph.pb')
             label_file_path = os.path.join(model_dir, 'goods_label_map.pbtxt')
-            # 备份pb和label
-            if os.path.isfile(export_file_path):
-                backup_dir = os.path.join(model_dir, 'bak')
-                if not tf.gfile.Exists(backup_dir):
-                    tf.gfile.MakeDirs(backup_dir)
-                now = datetime.datetime.now()
-                postfix = now.strftime('%Y%m%d%H%M%S')
-                shutil.move(export_file_path, os.path.join(backup_dir, 'frozen_inference_graph.pb.' + postfix))
-                if os.path.isfile(label_file_path):
-                    shutil.move(label_file_path, os.path.join(backup_dir, 'goods_label_map.pbtxt.' + postfix))
-                serializer.instance.checkpoint_prefix = int(prefix)
-                serializer.instance.backup_postfix = int(postfix)
-                serializer.instance.save()
+            serializer.instance.checkpoint_prefix = int(prefix)
+            serializer.instance.save()
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_label_map.pbtxt'),
                         label_file_path)
-            shutil.move(os.path.join(tmp_dir, 'frozen_inference_graph.pb'), export_file_path)
-            # copy label
+            # copy classify label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
 
-            # clean up temporary_files
-            if tf.gfile.Exists(tmp_dir):
-                tf.gfile.DeleteRecursively(tmp_dir)
-
-                # reboot django
-                # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
-
     def export_classify_graph(self, train_action, serializer):
-        logger.info('Export <trainid:{}> Grapy from classify train.'.format(train_action.pk))
+        logger.info('Export <trainid:{}> Graph from classify train.'.format(train_action.pk))
         trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(train_action.pk))
         checkpoint_model_path = tf.train.latest_checkpoint(trained_checkpoint_dir)
-        model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(train_action.traintype))
-        checkpoint_file_path = os.path.join(model_dir, 'checkpoint')
         if checkpoint_model_path:
             prefix = checkpoint_model_path.split('-')[-1]
-            if os.path.isfile(checkpoint_file_path):
-                # 备份上一个checkpoint, label, tfrecord
-                now = datetime.datetime.now()
-                postfix = now.strftime('%Y%m%d%H%M%S')
-                backup_dir = os.path.join(model_dir, 'bak')
-                if not tf.gfile.Exists(backup_dir):
-                    tf.gfile.MakeDirs(backup_dir)
-                shutil.move(checkpoint_file_path, os.path.join(backup_dir, 'checkpoint.' + postfix))
-                if train_action.action == 'TC':
-                    label_file_path = os.path.join(model_dir, 'labels.txt')
-                    if os.path.isfile(label_file_path):
-                        shutil.move(label_file_path, os.path.join(backup_dir, 'labels.txt.' + postfix))
-                # tfrecord_file_path = os.path.join(model_dir, 'goods_recogonize_train.tfrecord')
-                # if os.path.isfile(tfrecord_file_path):
-                #     shutil.move(tfrecord_file_path, os.path.join(backup_dir, 'goods_recogonize_train.tfrecord.' + postfix))
-                serializer.instance.checkpoint_prefix = int(prefix)
-                serializer.instance.backup_postfix = int(postfix)
-                serializer.instance.save()
+            model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(serializer.instance.pk))
+            checkpoint_file_path = os.path.join(model_dir, 'checkpoint')
+            serializer.instance.checkpoint_prefix = int(prefix)
+            serializer.instance.save()
             # 输出pb
             # e2.export(step2_model_name, trained_checkpoint_dir, export_file_path)
             # 重写checkpoint file
