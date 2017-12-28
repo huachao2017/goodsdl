@@ -45,7 +45,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = ImageSerializer
 
     def create(self, request, *args, **kwargs):
-        logger.info('begin create:')
+        # logger.info('begin create:')
         # 兼容没有那么字段的请求
         if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
@@ -64,14 +64,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             if len(exports)>0:
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(exports[0].pk)
                 step1_min_score_thresh = .8
-                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
         # elif serializer.instance.deviceid == '275' or serializer.instance.deviceid == '266':
         elif serializer.instance.deviceid == '266':
             # 演示区275和锦州266: 使用10类成熟识别
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
-            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
         else:
             # 385类识别
@@ -87,12 +87,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                       step2_min_score_thresh=step2_min_score_thresh)
 
         if ret is None or len(ret) <= 0:
-            logger.info('end detect:0')
+            if serializer.instance.deviceid == 275:
+                logger.info('end detect:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
-            logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+            if serializer.instance.deviceid == 275:
+                logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
             ret_reborn = []
             index = 0
             class_index_dict = {}
@@ -137,7 +139,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     class_index_dict[goods['class']] = index
                     index = index + 1
             ret = ret_reborn
-        logger.info('end create')
+        # logger.info('end create')
         # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
