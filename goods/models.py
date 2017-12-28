@@ -3,7 +3,7 @@ import datetime
 
 def image_upload_source(instance,filename):
     now = datetime.datetime.now()
-    return '{}/{}/{}_{}_{}'.format(instance.deviceid, now.strftime('%Y%m/%d%H'), now.strftime('%M%S'), str(now.time()), filename)
+    return 'images/{}/{}/{}_{}_{}'.format(instance.deviceid, now.strftime('%Y%m/%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
 class Image(models.Model):
     deviceid = models.CharField(max_length=20, default='0',db_index=True)
