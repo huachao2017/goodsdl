@@ -61,7 +61,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # for test
             # return Response([], status=status.HTTP_201_CREATED, headers=headers)
             # 手动测试:
-            exports = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix_gt=0).order_by('-update_time')[:1]
+            exports = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
             if len(exports)>0:
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(exports[0].pk)
@@ -78,8 +78,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
         else:
             # 385类识别
-            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix_gt=0).order_by('-update_time')[:1]
-            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix_gt=0).order_by('-update_time')[:1]
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
             if len(export1s)>0 and len(export2s)>0 :
                 detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk,export2s[0].pk)
