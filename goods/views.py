@@ -512,6 +512,8 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if checkpoint_model_path:
             prefix = checkpoint_model_path.split('-')[-1]
             model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(serializer.instance.pk))
+            if not tf.gfile.Exists(model_dir):
+                tf.gfile.MakeDirs(model_dir)
             # 输出pb
             e1.export(os.path.join(trained_checkpoint_dir, 'faster_rcnn_nas_goods.config'),
                       checkpoint_model_path,
@@ -535,6 +537,8 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if checkpoint_model_path:
             prefix = checkpoint_model_path.split('-')[-1]
             model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(serializer.instance.pk))
+            if not tf.gfile.Exists(model_dir):
+                tf.gfile.MakeDirs(model_dir)
             checkpoint_file_path = os.path.join(model_dir, 'checkpoint')
             serializer.instance.checkpoint_prefix = int(prefix)
             serializer.instance.save()
