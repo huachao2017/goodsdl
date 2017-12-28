@@ -27,6 +27,7 @@ import time
 
 logger = logging.getLogger("django")
 detect_logger = logging.getLogger("detect")
+classify_logger = logging.getLogger("classify")
 
 
 class Test(APIView):
@@ -72,7 +73,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 演示区275和锦州266: 使用10类成熟识别
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
-            # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            if serializer.instance.deviceid == '275':
+                detect_logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
         else:
             # 385类识别
@@ -83,19 +85,19 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk,export2s[0].pk)
                 step1_min_score_thresh = .5
                 step2_min_score_thresh = .6
-                if serializer.instance.deviceid == 275:
+                if serializer.instance.deviceid == '275':
                     detect_logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                       step2_min_score_thresh=step2_min_score_thresh)
 
         if ret is None or len(ret) <= 0:
-            if serializer.instance.deviceid == 275:
+            if serializer.instance.deviceid == '275':
                 detect_logger.info('end detect:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
-            if serializer.instance.deviceid == 275:
+            if serializer.instance.deviceid == '275':
                 detect_logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
             ret_reborn = []
             index = 0
@@ -152,7 +154,7 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
     serializer_class = ImageClassSerializer
 
     def create(self, request, *args, **kwargs):
-        logger.info('begin create:')
+        # logger.info('begin create:')
         # 兼容没有那么字段的请求
         if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
@@ -164,11 +166,11 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         # 暂时性分解Detect，需要一个处理type编码
         detector = imageclassifyV1.ImageClassifyFactory.get_static_detector('1')
         min_score_thresh = .8
-        logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+        classify_logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
         if ret is None or len(ret) <= 0:
-            logger.info('end classify:0')
+            classify_logger.info('end classify:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
             ImageClass.objects.get(pk=serializer.instance.pk).delete()
@@ -179,9 +181,9 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
                                           score=goods_class['score'],
                                           upc=goods_class['upc'],
                                           )
-            logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+            classify_logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
 
-        logger.info('end create')
+        # logger.info('end create')
         # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 

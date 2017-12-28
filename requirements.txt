@@ -3,3 +3,4 @@ django
 djangorestframework
 opencv_python
 mysqlclient
+gputil

@@ -11,7 +11,7 @@ import logging
 import time
 from goods.models import ProblemGoods
 
-logger = logging.getLogger("detect")
+logger = logging.getLogger("classify")
 
 
 class ImageClassifyFactory:
