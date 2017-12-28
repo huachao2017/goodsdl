@@ -10,7 +10,7 @@ from .step2 import dataset
 from object_detection.utils import visualization_utils as vis_util
 import logging
 import time
-from goods.models import ProblemGoods
+from goods.models import ProblemGoods, TimeLog
 
 logger = logging.getLogger("detect")
 
@@ -269,7 +269,7 @@ class ImageDetector:
                 return None
 
         import time
-        time1 = time.time()
+        time0 = time.time()
 
         image_path = image_instance.source.path
         image = Image.open(image_path)
@@ -293,9 +293,8 @@ class ImageDetector:
         scores_step1 = np.squeeze(scores)
 
         if image_instance.deviceid == '275':
-            time2 = time.time()
-            logger.info('end step1:{}'.format(str(time2-time1)))
-            time1 = time.time()
+            time1 = time.time() - time0
+            time0 = time.time()
 
         step2_images = []
         for i in range(boxes.shape[0]):
@@ -313,6 +312,10 @@ class ImageDetector:
                 newimage.save(new_image_path, 'JPEG')
                 step2_images.append(self.pre_sess_step2.run(self.output_image_tensor_step2, feed_dict={self.input_image_tensor_step2: new_image_path}))
 
+        if image_instance.deviceid == '275':
+            time2 = time.time() - time0
+            time0 = time.time()
+
         if len(step2_images) <= 0:
             return None
         # 统一识别，用于加速
@@ -321,9 +324,12 @@ class ImageDetector:
             self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
 
         if image_instance.deviceid == '275':
-            time2 = time.time()
-            logger.info('end pre step2:{}'.format(str(time2-time1)))
-            time1 = time.time()
+            time3 = time.time() - time0
+            TimeLog.objects.create(image_id=image_instance.pk,
+                                   time1=time1,
+                                   time2=time2,
+                                   time3=time3,
+                                   total=time1+time2+time3)
 
         ret = []
         classes = []
@@ -385,11 +391,6 @@ class ImageDetector:
                             'upc': upc,
                             'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
                             })
-
-        if image_instance.deviceid == '275':
-            time2 = time.time()
-            logger.info('end step2:{}'.format(str(time2 - time1)))
-            time1 = time.time()
 
         # visualization
         if len(ret) > 0:

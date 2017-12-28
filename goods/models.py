@@ -10,6 +10,14 @@ class Image(models.Model):
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
     create_time = models.DateTimeField('date created', auto_now_add=True,db_index=True)
 
+class TimeLog(models.Model):
+    image = models.ForeignKey(Image,related_name="image_timelog",on_delete=models.CASCADE)
+    time1 = models.FloatField(default=.0)
+    time2 = models.FloatField(default=.0)
+    time3 = models.FloatField(default=.0)
+    total = models.FloatField(default=.0)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
 class ImageClass(models.Model):
     deviceid = models.CharField(max_length=20, default='0')
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
