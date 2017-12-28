@@ -16,13 +16,14 @@ logger = logging.getLogger("django")
 
 
 class ImageDetectorFactory:
-    _detector = None
+    _detector = {}
 
     @staticmethod
-    def get_static_detector(type):
-        if not ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector = ImageDetector(type)
-        return ImageDetectorFactory._detector
+    def get_static_detector(export1id,export2id):
+        key = '{}_{}'.format(str(export1id),str(export2id))
+        if key not in ImageDetectorFactory._detector:
+            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id)
+        return ImageDetectorFactory._detector[key]
 
 
 def visualize_boxes_and_labels_on_image_array(image,
@@ -161,7 +162,7 @@ def get_step2_labels_to_names(labels_filepath):
     return labels_to_names
 
 class ImageDetector:
-    def __init__(self, type):
+    def __init__(self, export1id, export2id):
         self.graph_step1 = None
         self.session_step1 = None
         self.graph_step2 = None
@@ -169,9 +170,10 @@ class ImageDetector:
         self.labels_to_names = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
-        self.checkpoints_dir = os.path.join(self.file_path, 'model', str(type))
-        self.step1_model_path = os.path.join(self.checkpoints_dir, 'frozen_inference_graph.pb')
-        self.step1_label_path = os.path.join(self.checkpoints_dir, 'goods_label_map.pbtxt')
+        self.step1_model_dir = os.path.join(self.file_path, 'model', str(export1id))
+        self.step2_model_dir = os.path.join(self.file_path, 'model', str(export2id))
+        self.step1_model_path = os.path.join(self.step1_model_dir, 'frozen_inference_graph.pb')
+        # self.step1_label_path = os.path.join(self.step1_model_dir, 'goods_label_map.pbtxt')
         self.counter = 0
 
     def load(self):
@@ -205,9 +207,9 @@ class ImageDetector:
             self.detection_scores = self.graph_step1.get_tensor_by_name('detection_scores:0')
             # self.detection_classes = self.graph_step1.get_tensor_by_name('detection_classes:0')
 
-            step2_checkpoint = tf.train.latest_checkpoint(self.checkpoints_dir)
+            step2_checkpoint = tf.train.latest_checkpoint(self.step2_model_dir)
             logger.info('begin loading step2 model: {}'.format(step2_checkpoint))
-            step2_labels_to_names = get_step2_labels_to_names(os.path.join(self.checkpoints_dir, 'labels.txt'))
+            step2_labels_to_names = get_step2_labels_to_names(os.path.join(self.step2_model_dir, 'labels.txt'))
             image_size = inception.inception_resnet_v2.default_image_size
 
             self.pre_graph_step2 = tf.Graph()

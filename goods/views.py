@@ -74,12 +74,16 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
         else:
             # 385类识别
-            detector = imagedetectionV2.ImageDetectorFactory.get_static_detector('0')
-            step1_min_score_thresh = .5
-            step2_min_score_thresh = .8
-            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                  step2_min_score_thresh=step2_min_score_thresh)
+            export1s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
+            export2s = ExportAction.objects.filter(train_action__action='T2').order_by('-update_time')[:1]
+
+            if len(export1s)>0 and len(export2s)>0 :
+                detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk,export2s[0].pk)
+                step1_min_score_thresh = .5
+                step2_min_score_thresh = .8
+                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                      step2_min_score_thresh=step2_min_score_thresh)
 
         if ret is None or len(ret) <= 0:
             logger.info('end detect:0')

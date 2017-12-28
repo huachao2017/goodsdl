@@ -16,13 +16,13 @@ logger = logging.getLogger("django")
 
 
 class ImageDetectorFactory_os1:
-    _detector = None
+    _detector = {}
 
     @staticmethod
     def get_static_detector(exportid):
-        if not ImageDetectorFactory_os1._detector:
-            ImageDetectorFactory_os1._detector = ImageDetector_os1(exportid)
-        return ImageDetectorFactory_os1._detector
+        if exportid not in ImageDetectorFactory_os1._detector:
+            ImageDetectorFactory_os1._detector[exportid] = ImageDetector_os1(exportid)
+        return ImageDetectorFactory_os1._detector[exportid]
 
 
 def visualize_boxes_and_labels_on_image_array(image,
@@ -35,12 +35,12 @@ def visualize_boxes_and_labels_on_image_array(image,
                                               step1_min_score_thresh=.5,
                                               line_thickness=4):
     """Overlay labeled boxes on an image with formatted scores and label names.
-  
+
     This function groups boxes that correspond to the same location
     and creates a display string for each detection and overlays these
     on the image. Note that this function modifies the image in place, and returns
     that same image.
-  
+
     Args:
       image: uint8 numpy array with shape (img_height, img_width, 3)
       boxes: a numpy array of shape [N, 4]
@@ -57,7 +57,7 @@ def visualize_boxes_and_labels_on_image_array(image,
         all boxes.
       step1_min_score_thresh: step1 minimum score threshold for a box to be visualized
       line_thickness: integer (default: 4) controlling line width of the boxes.
-  
+
     Returns:
       uint8 numpy array with shape (img_height, img_width, 3) with overlaid boxes.
     """
@@ -118,9 +118,9 @@ class ImageDetector_os1:
         self.session_step1 = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
-        self.checkpoints_dir = os.path.join(self.file_path, 'model', str(exportid))
-        self.step1_model_path = os.path.join(self.checkpoints_dir, 'frozen_inference_graph.pb')
-        self.step1_label_path = os.path.join(self.checkpoints_dir, 'goods_label_map.pbtxt')
+        self.model_dir = os.path.join(self.file_path, 'model', str(exportid))
+        self.step1_model_path = os.path.join(self.model_dir, 'frozen_inference_graph.pb')
+        self.step1_label_path = os.path.join(self.model_dir, 'goods_label_map.pbtxt')
         self.counter = 0
         self.detection_scores = None
 
