@@ -268,6 +268,9 @@ class ImageDetector:
                 logger.warning('loading model failed')
                 return None
 
+        import time
+        time1 = time.time()
+
         image_path = image_instance.source.path
         image = Image.open(image_path)
         if image.mode != 'RGB':
@@ -288,6 +291,11 @@ class ImageDetector:
         boxes = np.squeeze(boxes)
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
+
+        if image_instance.deviceid == '275':
+            time2 = time.time()
+            logger.info('end step1:{}'.format(str(time2-time1)))
+            time1 = time.time()
 
         step2_images = []
         for i in range(boxes.shape[0]):
@@ -311,6 +319,11 @@ class ImageDetector:
         step2_images_nps = np.array(step2_images)
         probabilities = self.session_step2.run(
             self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
+
+        if image_instance.deviceid == '275':
+            time2 = time.time()
+            logger.info('end pre step2:{}'.format(str(time2-time1)))
+            time1 = time.time()
 
         ret = []
         classes = []
@@ -372,6 +385,11 @@ class ImageDetector:
                             'upc': upc,
                             'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
                             })
+
+        if image_instance.deviceid == '275':
+            time2 = time.time()
+            logger.info('end step2:{}'.format(str(time2 - time1)))
+            time1 = time.time()
 
         # visualization
         if len(ret) > 0:
