@@ -16,13 +16,13 @@ logger = logging.getLogger("django")
 
 
 class ImageDetectorFactory_os1:
-    _detector = {}
+    _detector = None
 
     @staticmethod
     def get_static_detector(type):
-        if type not in ImageDetectorFactory_os1._detector:
-            ImageDetectorFactory_os1._detector[type] = ImageDetector_os1(type)
-        return ImageDetectorFactory_os1._detector[type]
+        if not ImageDetectorFactory_os1._detector:
+            ImageDetectorFactory_os1._detector = ImageDetector_os1(type)
+        return ImageDetectorFactory_os1._detector
 
 
 def visualize_boxes_and_labels_on_image_array(image,

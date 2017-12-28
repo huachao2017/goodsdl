@@ -591,11 +591,10 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             # copy dataset
             # shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'),
             #             model_dir)
-            if train_action.action == 'TC':
-                # copy label
-                shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
-                # reboot django
-                # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
+            # copy label
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
+            # reboot django
+            # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
 
 
 class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,

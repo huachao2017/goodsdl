@@ -15,13 +15,13 @@ logger = logging.getLogger("django")
 
 
 class ImageClassifyFactory:
-    _detector = {}
+    _detector = None
 
     @staticmethod
     def get_static_detector(type):
-        if type not in ImageClassifyFactory._detector:
-            ImageClassifyFactory._detector[type] = ImageClassify(type)
-        return ImageClassifyFactory._detector[type]
+        if not ImageClassifyFactory._detector:
+            ImageClassifyFactory._detector = ImageClassify(type)
+        return ImageClassifyFactory._detector
 
 class ImageClassify:
     def __init__(self, type):
