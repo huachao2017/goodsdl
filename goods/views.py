@@ -589,8 +589,8 @@ class ExportActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             shutil.copy(checkpoint_model_path + '.index', model_dir)
             shutil.copy(checkpoint_model_path + '.meta', model_dir)
             # copy dataset
-            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'),
-                        model_dir)
+            # shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'),
+            #             model_dir)
             if train_action.action == 'TC':
                 # copy label
                 shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
