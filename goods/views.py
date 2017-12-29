@@ -90,8 +90,12 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         if ret is None or len(ret) <= 0:
             detect_logger.info('end detect:0')
-            # 删除无用图片
-            os.remove(serializer.instance.source.path)
+            tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
+            if not tf.gfile.Exists(tmp_dir):
+                tf.gfile.MakeDirs(tmp_dir)
+
+            # 移动无检测图片
+            shutil.move(serializer.instance.source.path, tmp_dir)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
             detect_logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
