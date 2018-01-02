@@ -63,7 +63,7 @@ class ProblemGoods(models.Model):
 def train_image_upload_source(instance,filename):
     now = datetime.datetime.now()
     if instance.traintype == 0:
-        ret = 'data/{}/{}_{}'.format(instance.upc, str(now.time()), filename)
+        ret = 'data_new/{}/{}_{}'.format(instance.upc, str(now.time()), filename)
     else:
         ret = '{}/{}/{}_{}'.format(instance.traintype, instance.upc, str(now.time()), filename)
     return ret
