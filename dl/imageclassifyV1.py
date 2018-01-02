@@ -56,7 +56,7 @@ class ImageClassify:
             step2_checkpoint = tf.train.latest_checkpoint(self.checkpoints_dir)
             logger.info('begin loading step2 model: {}'.format(step2_checkpoint))
             image_size = inception.inception_resnet_v2.default_image_size
-            labels_to_names = get_labels_to_names(os.path.join(self.step2_checkpoint, 'labels.txt'))
+            labels_to_names = get_labels_to_names(os.path.join(self.checkpoints_dir, 'labels.txt'))
             self.graph_step2 = tf.Graph()
             with self.graph_step2.as_default():
                 image_path = tf.placeholder(dtype=tf.string, name='input_tensor')
