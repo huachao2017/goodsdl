@@ -21,6 +21,7 @@ from . import views
 router = DefaultRouter()
 # router.register(r'image', views.ImageOldViewSet)
 router.register(r'imagenew', views.ImageViewSet)
+router.register(r'imageteststep2', views.ImageTestClassViewSet)
 router.register(r'imageclass', views.ImageClassViewSet)
 router.register(r'problemgoods', views.ProblemGoodsViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)

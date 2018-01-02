@@ -188,6 +188,41 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
 
+# Test for step2
+class ImageTestClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                        viewsets.GenericViewSet):
+    queryset = ImageClass.objects.order_by('-id')
+    serializer_class = ImageClassSerializer
+
+    def create(self, request, *args, **kwargs):
+        # logger.info('begin create:')
+        # 兼容没有那么字段的请求
+        if 'deviceid' not in request.data:
+            request.data['deviceid'] = get_client_ip(request)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
+            '-update_time')[:1]
+
+        if len(export2s) > 0:
+            detector = imageclassifyV1.ImageClassifyFactory.get_static_detector(export2s[0].pk)
+            min_score_thresh = .3
+            classify_logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
+
+            # 删除无用图片
+            os.remove(serializer.instance.source.path)
+            ImageClass.objects.get(pk=serializer.instance.pk).delete()
+            classify_logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+
+            # logger.info('end create')
+            # return Response({'Test':True})
+        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
+
 class ProblemGoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = ProblemGoods.objects.order_by('-id')
     serializer_class = ProblemGoodsSerializer
