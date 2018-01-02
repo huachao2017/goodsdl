@@ -15,13 +15,13 @@ logger = logging.getLogger("classify")
 
 
 class ImageClassifyFactory:
-    _detector = None
+    _detector = {}
 
     @staticmethod
-    def get_static_detector(type):
+    def get_static_detector(export2id):
         if not ImageClassifyFactory._detector:
-            ImageClassifyFactory._detector = ImageClassify(type)
-        return ImageClassifyFactory._detector
+            ImageClassifyFactory._detector[export2id] = ImageClassify(export2id)
+        return ImageClassifyFactory._detector[export2id]
 
 def get_labels_to_names(labels_filepath):
     with tf.gfile.Open(labels_filepath, 'rb') as f:
