@@ -295,7 +295,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
                                             serializer.instance.ymin, serializer.instance.xmin,
                                             serializer.instance.ymax, serializer.instance.xmax,
                                             color='DarkOrange',
-                                            display_str_list=(serializer.instance.name,),
+                                            display_str_list=((serializer.instance.name if serializer.instance.name != '' else 'None'),),
                                             use_normalized_coordinates=False, thickness=2)
 
         np.copyto(image_np, np.array(image_pil))
