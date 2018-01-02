@@ -19,7 +19,7 @@ class ImageClassifyFactory:
 
     @staticmethod
     def get_static_detector(export2id):
-        if not ImageClassifyFactory._detector:
+        if export2id not in ImageClassifyFactory._detector:
             ImageClassifyFactory._detector[export2id] = ImageClassify(export2id)
         return ImageClassifyFactory._detector[export2id]
 
