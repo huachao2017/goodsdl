@@ -68,8 +68,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step1_min_score_thresh = .8
                 # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
-        # elif serializer.instance.deviceid == '275' or serializer.instance.deviceid == '266':
-        elif serializer.instance.deviceid == '266':
+        elif serializer.instance.deviceid == '275' or serializer.instance.deviceid == '266':
+        # elif serializer.instance.deviceid == '266':
             # 演示区275和锦州266: 使用10类成熟识别
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
