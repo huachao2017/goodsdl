@@ -1,10 +1,40 @@
 import cv2
 import numpy as np
-import skimage
-from skimage.filters import roberts, sobel, scharr, prewitt
-from skimage.filters import gaussian
+import os
 
-def find_contour(thresh_x):
+def find_contour(input_path, debug_type=0, thresh_x = 30, top_n = 50):
+    # param@debug_type:0 not debug; 1 store file; 2 show window
+    image_dir, image_name = os.path.split(input_path)
+    output_dir = os.path.join(image_dir,'contour')
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+
+    # step0: read image
+    img = cv2.imread(input_path)
+    source = img
+    compress = 1
+    if source.shape[0]>1000 or source.shape[1]>1000:
+        source = cv2.pyrDown(source)
+        compress = 2
+        if source.shape[0]>1000 or source.shape[1]>1000:
+            source = cv2.pyrDown(source)
+            compress = 4
+
+    # step1: blur image
+    max_area = source.shape[0] * source.shape[1]
+    # Apply gaussian blur to the grayscale image
+    # blur = cv2.pyrMeanShiftFiltering(img, 31, 91)
+    blur = source
+    # blur = cv2.pyrMeanShiftFiltering(img, 21, 51)
+    blur = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+    blur = cv2.equalizeHist(blur)
+    # blur = cv2.GaussianBlur(blur, (5, 5), 0)
+    if debug_type>0:
+        blur_path = os.path.join(output_dir, 'blur_'+image_name)
+        cv2.imwrite(blur_path, blur)
+
+    # step2: sobel caculate edges
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     x = cv2.Sobel(blur, cv2.CV_16S, 1, 0)
     y = cv2.Sobel(blur, cv2.CV_16S, 0, 1)
 
@@ -19,23 +49,28 @@ def find_contour(thresh_x):
     # edges = cv2.erode(edges, kernel)
     # edges = cv2.erode(edges, kernel)
     # edges = cv2.erode(edges, kernel)
+    if debug_type>0:
+        edges_path = os.path.join(output_dir, 'edges_'+image_name)
+        cv2.imwrite(edges_path, edges)
+
+    # step3: binary edges
     _, thresh = cv2.threshold(edges, thresh_x, 255, cv2.THRESH_BINARY_INV)
     # thresh = cv2.GaussianBlur(thresh, (3, 3), 0)
     # _, thresh = cv2.threshold(gray, x, 255, cv2.THRESH_BINARY_INV)
+    if debug_type>0:
+        thresh_path = os.path.join(output_dir, 'thresh_'+image_name)
+        cv2.imwrite(thresh_path, thresh)
 
     # Find the edges
     # edges = cv2.Canny(gray,x1,x2)
     # edges = gray
 
-    # Image to draw the contours
-    drawing = np.zeros(img.shape, np.uint8)
-
-    # Detect and store the contours
+    # step4: Detect contours
     _, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     print('find contours: {}'.format(len(contours)))
     # print('first contour: {}'.format(contours[0]))
 
-    # Display the contours using different colors
+    # step5: contour filter with area
     area_to_contour = {}
     for cnt in contours:
         leftmost = cnt[cnt[:, :, 0].argmin()][0][0]
@@ -54,6 +89,8 @@ def find_contour(thresh_x):
         # print(tuple(cnt[cnt[:, :, 0].argmin()][0]))
         # print(tuple(cnt[cnt[:, :, 0].argmax()][0]))
 
+    # step6: caculate bounding box and draw contours
+    drawing_contours = np.zeros(source.shape, np.uint8)
     areas = sorted(area_to_contour, reverse=True)
     index = 0
     boxes = []
@@ -63,23 +100,37 @@ def find_contour(thresh_x):
             break
         cnt = area_to_contour[area]
         color = np.random.randint(0, 255, (3)).tolist()  # Select a random color
-        cv2.drawContours(drawing, [cnt], 0, color, 1)
+        if debug_type > 0:
+            cv2.drawContours(drawing_contours, [cnt], 0, color, 1)
         x, y, w, h = cv2.boundingRect(cnt)
         boxes.append([x,y,x+w,y+h])
-        drawing = cv2.rectangle(drawing, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        # if debug_type > 0:
+        #     drawing_contours = cv2.rectangle(drawing_contours, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
+    if debug_type>0:
+        contours_path = os.path.join(output_dir, 'contours_'+image_name)
+        cv2.imwrite(contours_path, drawing_contours)
+
+    # step7: nms and store last bounding box
     boxes = non_max_suppression_fast(boxes,0.5)
+    boxes = boxes*compress
     for box in boxes:
-        drawing = cv2.rectangle(drawing, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
-        output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
+        drawing_contours = cv2.rectangle(drawing_contours, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
+        if debug_type > 0:
+            output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
 
+    if debug_type>0:
+        output_path = os.path.join(output_dir, 'bbox_'+image_name)
+        cv2.imwrite(output_path, output)
 
-    cv2.imshow('input', blur)
-    cv2.imshow('middle_1', edges)
-    cv2.imshow('middle_2', thresh)
-    cv2.imshow('middle3', drawing)
-    cv2.imshow('output', output)
+    if debug_type>1:
+        cv2.imshow('input', blur)
+        cv2.imshow('edges', edges)
+        cv2.imshow('thresh', thresh)
+        cv2.imshow('drawing_contours', drawing_contours)
+        cv2.imshow('output', output)
 
+    return boxes
 
 def non_max_suppression_fast(boxes, overlapThresh):
     # if there are no boxes, return an empty list
@@ -138,32 +189,18 @@ def non_max_suppression_fast(boxes, overlapThresh):
     # integer data type
     return boxes[pick].astype("int")
 
-# Enter the input image file
-img_name = "1_1.jpg"
-img = cv2.imread(img_name)
-print(img.shape)
-max_area = img.shape[0]*img.shape[1]
-# Apply gaussian blur to the grayscale image
-# blur = cv2.pyrMeanShiftFiltering(img, 31, 91)
-blur = cv2.pyrMeanShiftFiltering(img, 21, 51)
-blur = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-# blur = cv2.GaussianBlur(blur, (5, 5), 0)
-kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(3, 3))
-# blur = cv2.dilate(blur, kernel)
-# blur = cv2.dilate(blur, kernel)
-# blur = cv2.dilate(blur, kernel)
-# blur = cv2.erode(blur, kernel)
-# blur = cv2.erode(blur, kernel)
-# blur = cv2.erode(blur, kernel)
+if __name__ == "__main__":
+    # Enter the input image file
+    image_dir, _ = os.path.split(os.path.realpath(__file__))
+    image_path = os.path.join(image_dir, "1_1.jpg")
 
-cv2.namedWindow('input', cv2.WINDOW_NORMAL)
+    # cv2.createTrackbar('canny threshold2:','input',x2,max_x,find_contour_x2)
+    import time
+    time0 = time.time()
+    boxes = find_contour(image_path, debug_type=2)
+    time1 = time.time()
 
-# Set the default and max threshold value
-thresh_x = 30
-max_x = 100
-top_n = 50
-cv2.createTrackbar('binary thresh:', 'input', thresh_x, max_x, find_contour)
-# cv2.createTrackbar('canny threshold2:','input',x2,max_x,find_contour_x2)
-find_contour(thresh_x)
-if cv2.waitKey(0) == 27:
-    cv2.destroyAllWindows()
+    print('%.2f: %d' %(time1-time0,len(boxes)))
+
+    if cv2.waitKey(0) == 27:
+        cv2.destroyAllWindows()
