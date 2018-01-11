@@ -2,10 +2,9 @@ import cv2
 import numpy as np
 import os
 
-def find_contour(input_path, debug_type=0, thresh_x = 30, top_n = 50):
+def find_contour(input_path, output_dir, debug_type=0, thresh_x = 30, top_n = 50):
     # param@debug_type:0 not debug; 1 store file; 2 show window
     image_dir, image_name = os.path.split(input_path)
-    output_dir = os.path.join(image_dir,'contour')
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
@@ -104,8 +103,8 @@ def find_contour(input_path, debug_type=0, thresh_x = 30, top_n = 50):
             cv2.drawContours(drawing_contours, [cnt], 0, color, 1)
         x, y, w, h = cv2.boundingRect(cnt)
         boxes.append([x,y,x+w,y+h])
-        # if debug_type > 0:
-        #     drawing_contours = cv2.rectangle(drawing_contours, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        if debug_type > 0:
+            drawing_contours = cv2.rectangle(drawing_contours, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
     if debug_type>0:
         contours_path = os.path.join(output_dir, 'contours_'+image_name)
@@ -115,7 +114,7 @@ def find_contour(input_path, debug_type=0, thresh_x = 30, top_n = 50):
     boxes = non_max_suppression_fast(boxes,0.5)
     boxes = boxes*compress
     for box in boxes:
-        drawing_contours = cv2.rectangle(drawing_contours, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
+        # drawing_contours = cv2.rectangle(drawing_contours, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
         if debug_type > 0:
             output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
 
@@ -193,11 +192,12 @@ if __name__ == "__main__":
     # Enter the input image file
     image_dir, _ = os.path.split(os.path.realpath(__file__))
     image_path = os.path.join(image_dir, "1_1.jpg")
+    output_dir = os.path.join(image_dir,'contour')
 
     # cv2.createTrackbar('canny threshold2:','input',x2,max_x,find_contour_x2)
     import time
     time0 = time.time()
-    boxes = find_contour(image_path, debug_type=2)
+    boxes = find_contour(image_path, output_dir, debug_type=2)
     time1 = time.time()
 
     print('%.2f: %d' %(time1-time0,len(boxes)))
