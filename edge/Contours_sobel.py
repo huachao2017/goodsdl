@@ -46,6 +46,10 @@ def find_contour(thresh_x):
         # print('%d,%d,%d,%d' %(leftmost,rightmost,topmost,bottommost))
         # return
         area = (bottommost-topmost) * (rightmost-leftmost)
+        if area < max_area/100: # 去除面积过小的物体
+            continue
+        if area > max_area*.9: # 去除面积过大的物体
+            continue
         area_to_contour[area] = cnt
         # print(tuple(cnt[cnt[:, :, 0].argmin()][0]))
         # print(tuple(cnt[cnt[:, :, 0].argmax()][0]))
@@ -55,8 +59,6 @@ def find_contour(thresh_x):
     boxes = []
     for area in areas:
         index += 1
-        if index == 1:# TODO 第一条去除还得研究更好的方法
-            continue
         if index > top_n:
             break
         cnt = area_to_contour[area]
@@ -69,7 +71,7 @@ def find_contour(thresh_x):
     boxes = non_max_suppression_fast(boxes,0.5)
     for box in boxes:
         drawing = cv2.rectangle(drawing, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
-        output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
+        output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
 
 
     cv2.imshow('input', blur)
@@ -140,7 +142,7 @@ def non_max_suppression_fast(boxes, overlapThresh):
 img_name = "1_1.jpg"
 img = cv2.imread(img_name)
 print(img.shape)
-
+max_area = img.shape[0]*img.shape[1]
 # Apply gaussian blur to the grayscale image
 # blur = cv2.pyrMeanShiftFiltering(img, 31, 91)
 blur = cv2.pyrMeanShiftFiltering(img, 21, 51)
@@ -159,7 +161,7 @@ cv2.namedWindow('input', cv2.WINDOW_NORMAL)
 # Set the default and max threshold value
 thresh_x = 30
 max_x = 100
-top_n = 20
+top_n = 50
 cv2.createTrackbar('binary thresh:', 'input', thresh_x, max_x, find_contour)
 # cv2.createTrackbar('canny threshold2:','input',x2,max_x,find_contour_x2)
 find_contour(thresh_x)
