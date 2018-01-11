@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n = 50):
-    # param@debug_type:0 not debug; 1 store file; 2 show window
+    # param@debug_type:0,not debug; 1,store bbox file; 2,store middle caculate file; 3,show window
     image_dir, image_name = os.path.split(input_path)
     if output_dir is None:
         output_dir = image_dir
