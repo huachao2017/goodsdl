@@ -2,9 +2,11 @@ import cv2
 import numpy as np
 import os
 
-def find_contour(input_path, output_dir, debug_type=0, thresh_x = 30, top_n = 50):
+def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n = 50):
     # param@debug_type:0 not debug; 1 store file; 2 show window
     image_dir, image_name = os.path.split(input_path)
+    if output_dir is None:
+        output_dir = image_dir
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
@@ -28,7 +30,7 @@ def find_contour(input_path, output_dir, debug_type=0, thresh_x = 30, top_n = 50
     blur = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     blur = cv2.equalizeHist(blur)
     # blur = cv2.GaussianBlur(blur, (5, 5), 0)
-    if debug_type>0:
+    if debug_type>1:
         blur_path = os.path.join(output_dir, 'blur_'+image_name)
         cv2.imwrite(blur_path, blur)
 
@@ -48,7 +50,7 @@ def find_contour(input_path, output_dir, debug_type=0, thresh_x = 30, top_n = 50
     # edges = cv2.erode(edges, kernel)
     # edges = cv2.erode(edges, kernel)
     # edges = cv2.erode(edges, kernel)
-    if debug_type>0:
+    if debug_type>1:
         edges_path = os.path.join(output_dir, 'edges_'+image_name)
         cv2.imwrite(edges_path, edges)
 
@@ -56,7 +58,7 @@ def find_contour(input_path, output_dir, debug_type=0, thresh_x = 30, top_n = 50
     _, thresh = cv2.threshold(edges, thresh_x, 255, cv2.THRESH_BINARY_INV)
     # thresh = cv2.GaussianBlur(thresh, (3, 3), 0)
     # _, thresh = cv2.threshold(gray, x, 255, cv2.THRESH_BINARY_INV)
-    if debug_type>0:
+    if debug_type>1:
         thresh_path = os.path.join(output_dir, 'thresh_'+image_name)
         cv2.imwrite(thresh_path, thresh)
 
@@ -99,14 +101,14 @@ def find_contour(input_path, output_dir, debug_type=0, thresh_x = 30, top_n = 50
             break
         cnt = area_to_contour[area]
         color = np.random.randint(0, 255, (3)).tolist()  # Select a random color
-        if debug_type > 0:
+        if debug_type > 1:
             cv2.drawContours(drawing_contours, [cnt], 0, color, 1)
         x, y, w, h = cv2.boundingRect(cnt)
         boxes.append([x,y,x+w,y+h])
-        if debug_type > 0:
+        if debug_type > 1:
             drawing_contours = cv2.rectangle(drawing_contours, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-    if debug_type>0:
+    if debug_type>1:
         contours_path = os.path.join(output_dir, 'contours_'+image_name)
         cv2.imwrite(contours_path, drawing_contours)
 
@@ -122,7 +124,7 @@ def find_contour(input_path, output_dir, debug_type=0, thresh_x = 30, top_n = 50
         output_path = os.path.join(output_dir, 'bbox_'+image_name)
         cv2.imwrite(output_path, output)
 
-    if debug_type>1:
+    if debug_type>2:
         cv2.imshow('input', blur)
         cv2.imshow('edges', edges)
         cv2.imshow('thresh', thresh)
