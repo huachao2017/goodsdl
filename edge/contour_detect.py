@@ -63,9 +63,9 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # step3: binary edges
     _, thresh1 = cv2.threshold(edges, thresh_x, 255, cv2.THRESH_BINARY)
     thresh2 = thresh1
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    thresh2 = cv2.erode(thresh2, kernel)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
+    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    # thresh2 = cv2.erode(thresh2, kernel)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     thresh2 = cv2.morphologyEx(thresh2, cv2.MORPH_CLOSE, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
@@ -105,7 +105,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
         area = (bottommost-topmost) * (rightmost-leftmost)
         if area < max_area/100: # 去除面积过小的物体
             continue
-        if area > max_area*.9: # 去除面积过大的物体
+        if area > max_area*.8: # 去除面积过大的物体
             continue
         area_to_contour[area] = cnt
         # print(tuple(cnt[cnt[:, :, 0].argmin()][0]))
