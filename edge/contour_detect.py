@@ -29,7 +29,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # blur = cv2.pyrMeanShiftFiltering(img, 21, 51)
     blur = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
     # 双向滤波比较不错
-    blur = cv2.bilateralFilter(blur, 5, 75, 75)
+    blur = cv2.bilateralFilter(blur, 3, 75, 75)
     # blur = cv2.split(blur)[0]
     # blur = cv2.equalizeHist(blur)
     # blur = cv2.GaussianBlur(blur, (5, 5), 0)
@@ -62,9 +62,17 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
 
     # step3: binary edges
     _, thresh1 = cv2.threshold(edges, thresh_x, 255, cv2.THRESH_BINARY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
-    thresh2 = cv2.morphologyEx(thresh1, cv2.MORPH_CLOSE, kernel)
+    thresh2 = thresh1
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     thresh2 = cv2.erode(thresh2, kernel)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
+    thresh2 = cv2.morphologyEx(thresh2, cv2.MORPH_CLOSE, kernel)
+    # thresh2 = cv2.dilate(thresh2, kernel)
+    # thresh2 = cv2.dilate(thresh2, kernel)
+    # thresh2 = cv2.dilate(thresh2, kernel)
+    # thresh2 = cv2.dilate(thresh2, kernel)
+    # thresh2 = cv2.dilate(thresh2, kernel)
+    # thresh2 = cv2.erode(thresh2, kernel)
     # thresh = cv2.GaussianBlur(thresh, (3, 3), 0)
     # _, thresh = cv2.threshold(gray, x, 255, cv2.THRESH_BINARY_INV)
     # thresh = cv2.GaussianBlur(thresh, (5, 5), 0)
@@ -86,7 +94,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # step5: contour filter with area
     area_to_contour = {}
     for cnt in contours:
-        cnt = cv2.convexHull(cnt, returnPoints=True)
+        # cnt = cv2.convexHull(cnt, returnPoints=True)
         leftmost = cnt[cnt[:, :, 0].argmin()][0][0]
         rightmost = cnt[cnt[:, :, 0].argmax()][0][0]
         topmost = cnt[cnt[:, :, 1].argmin()][0][1]
@@ -133,7 +141,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
         if debug_type > 0:
             output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
 
-    if debug_type>0:
+    if debug_type>0 and len(boxes)>0:
         output_path = os.path.join(output_dir, 'bbox_'+image_name)
         cv2.imwrite(output_path, output)
 
@@ -143,7 +151,8 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
         cv2.imshow('thresh1', thresh1)
         cv2.imshow('thresh2', thresh2)
         cv2.imshow('drawing_contours', drawing_contours)
-        cv2.imshow('output', output)
+        if len(boxes) > 0:
+            cv2.imshow('output', output)
 
     return boxes
 
