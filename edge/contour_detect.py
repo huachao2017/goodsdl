@@ -55,15 +55,16 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # edges = cv2.erode(edges, kernel)
     # edges = cv2.erode(edges, kernel)
     # edges = cv2.erode(edges, kernel)
-    edges = cv2.GaussianBlur(edges, (9, 9),0)
+    # edges = cv2.GaussianBlur(edges, (9, 9),0)
     if debug_type>1:
         edges_path = os.path.join(output_dir, 'edges_'+image_name)
         cv2.imwrite(edges_path, edges)
 
     # step3: binary edges
     _, thresh1 = cv2.threshold(edges, thresh_x, 255, cv2.THRESH_BINARY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 20))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
     thresh2 = cv2.morphologyEx(thresh1, cv2.MORPH_CLOSE, kernel)
+    thresh2 = cv2.erode(thresh2, kernel)
     # thresh = cv2.GaussianBlur(thresh, (3, 3), 0)
     # _, thresh = cv2.threshold(gray, x, 255, cv2.THRESH_BINARY_INV)
     # thresh = cv2.GaussianBlur(thresh, (5, 5), 0)
