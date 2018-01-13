@@ -39,8 +39,8 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
 
     # step2: sobel caculate edges
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    x = cv2.Sobel(blur, cv2.CV_32F, 1, 0, ksize=-1)
-    y = cv2.Sobel(blur, cv2.CV_32F, 0, 1, ksize=-1)
+    x = cv2.Sobel(blur, cv2.CV_64F, 1, 0, ksize=-1)
+    y = cv2.Sobel(blur, cv2.CV_64F, 0, 1, ksize=-1)
     edges = cv2.subtract(x, y)
     edges = cv2.convertScaleAbs(edges)
     # absX = cv2.convertScaleAbs(x)  # 转回uint8
@@ -65,8 +65,8 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     thresh2 = thresh1
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     # thresh2 = cv2.erode(thresh2, kernel)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    thresh2 = cv2.morphologyEx(thresh2, cv2.MORPH_CLOSE, kernel)
+    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    # thresh2 = cv2.morphologyEx(thresh2, cv2.MORPH_CLOSE, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
@@ -79,8 +79,8 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     if debug_type>1:
         thresh1_path = os.path.join(output_dir, 'thresh1_'+image_name)
         cv2.imwrite(thresh1_path, thresh1)
-        thresh2_path = os.path.join(output_dir, 'thresh2_' + image_name)
-        cv2.imwrite(thresh2_path, thresh2)
+        # thresh2_path = os.path.join(output_dir, 'thresh2_' + image_name)
+        # cv2.imwrite(thresh2_path, thresh2)
 
     # Find the edges
     # edges = cv2.Canny(gray,x1,x2)
@@ -103,8 +103,8 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
         # print('%d,%d,%d,%d' %(leftmost,rightmost,topmost,bottommost))
         # return
         area = (bottommost-topmost) * (rightmost-leftmost)
-        if area < max_area/100: # 去除面积过小的物体
-            continue
+        # if area < max_area/100: # 去除面积过小的物体
+        #     continue
         if area > max_area*.8: # 去除面积过大的物体
             continue
         area_to_contour[area] = cnt
@@ -149,7 +149,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
         cv2.imshow('input', blur)
         cv2.imshow('edges', edges)
         cv2.imshow('thresh1', thresh1)
-        cv2.imshow('thresh2', thresh2)
+        # cv2.imshow('thresh2', thresh2)
         cv2.imshow('drawing_contours', drawing_contours)
         if len(boxes) > 0:
             cv2.imshow('output', output)
