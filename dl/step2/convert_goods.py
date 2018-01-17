@@ -207,6 +207,9 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
 
     class_names = get_class_names(os.path.join(os.path.dirname(step1_model_path), dataset_utils.LABELS_FILENAME))
     """返回所有图片文件路径"""
+
+    augment_total = 0
+    augment_total_error = 0
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(dirlist)):
         # 根据step1的classname确定进入step2的类别
@@ -250,18 +253,18 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                                          "{}_{}.jpg".format(os.path.split(example)[1], index))
                         if not tf.gfile.Exists(output_image_path):
                             newimage.save(output_image_path, 'JPEG')
-                            logger.info('save image:{}'.format(output_image_path))
+                            # logger.info('save image:{}'.format(output_image_path))
 
                         img = cv2.imread(image_path)
 
                         # augment small sample
-                        if len(filelist) < 3 * 8:
+                        if len(filelist) < 3 * 6:
                             augment_ratio = 5
-                        elif len(filelist) < 3 * 20:
+                        elif len(filelist) < 3 * 8:
                             augment_ratio = 4
-                        elif len(filelist) < 3 * 30:
+                        elif len(filelist) < 3 * 10:
                             augment_ratio = 3
-                        elif len(filelist) < 3 * 40:
+                        elif len(filelist) < 3 * 15:
                             augment_ratio = 2
                         else:
                             augment_ratio = 1
@@ -273,7 +276,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             if tf.gfile.Exists(output_image_path_augment):
                                 # 文件存在不再重新生成，从而支持增量生成
                                 continue
-                            logger.info("image:{} rotate {}.".format(output_image_path, angle))
+                            # logger.info("image:{} rotate {}.".format(output_image_path, angle))
                             rotated_img = rotate_image(img, angle)
                             # logger.info("rotate image...")
                             # 写入图像
@@ -300,8 +303,11 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             # classes = np.squeeze(classes).astype(np.int32)
                             scores_step1 = np.squeeze(scores)
                             for l in range(boxes.shape[0]):
+                                augment_total += 1
                                 if scores_step1[l] < 0.8:
-                                    logger.warning('detect score less than thresh 0.8:{}'.format(str(scores_step1[l])))
+                                    augment_total_error += 1
+                                    logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                        output_image_path, angle, str(scores_step1[l]), augment_total_error, augment_total))
                                 else:
                                     ymin, xmin, ymax, xmax = boxes[l]
                                     ymin = int(ymin * im_height)
@@ -320,6 +326,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                                     cv2.imwrite(output_image_path_augment, augment_newimage)
                                     # logger.info("save image...")
                                 break
+    logger.info("augment complete: {}/{}".format(augment_total_error, augment_total))
     session_step1.close()
 
 
