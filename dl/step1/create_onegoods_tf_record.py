@@ -219,7 +219,7 @@ def update_config_file(train_dir,
         output = re.sub('# num_steps: \d+', 'num_steps: '+str(num_steps), output)
         if is_fineture:
             # FIXME need restore some new checkpoint
-            output = re.sub('fine_tune_checkpoint: false', 'fine_tune_checkpoint:"'+train_dir+'/model.ckpt"', output)
+            output = re.sub('fine_tune_checkpoint: ""', 'fine_tune_checkpoint:"'+train_dir+'/model.ckpt"', output)
         output = re.sub('PATH_TO_BE_CONFIGURED_TRAIN', os.path.join(train_dir, train_name), output)
     with open(output_filename, 'w') as file:
         file.write(output)
