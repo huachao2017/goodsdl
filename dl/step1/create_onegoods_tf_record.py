@@ -207,7 +207,8 @@ def create_label_map_file(output_filename,
 def update_config_file(train_dir,
                        train_name,
                        num_classes,
-                       num_steps=200000):
+                       num_steps=200000,
+                       is_fineture=False):
     file_path, _ = os.path.split(os.path.realpath(__file__))
     config_template_file_path = os.path.join(file_path, 'faster_rcnn_nas_goods.config.template')
     output_filename = os.path.join(train_dir, train_name, 'faster_rcnn_nas_goods.config')
@@ -216,7 +217,9 @@ def update_config_file(train_dir,
         #     p = re.compile(r'num_classes: \d+')
         output = re.sub('num_classes: \d+', 'num_classes: '+str(num_classes), data)
         output = re.sub('# num_steps: \d+', 'num_steps: '+str(num_steps), output)
-        output = re.sub('PATH_TO_BE_CONFIGURED_MODEL', train_dir, output)
+        if is_fineture:
+            # FIXME need restore some new checkpoint
+            output = re.sub('fine_tune_checkpoint: false', 'fine_tune_checkpoint:"'+train_dir+'/model.ckpt"', output)
         output = re.sub('PATH_TO_BE_CONFIGURED_TRAIN', os.path.join(train_dir, train_name), output)
     with open(output_filename, 'w') as file:
         file.write(output)
@@ -238,7 +241,7 @@ def read_examples_list_and_label_map_and_classnames(path):
                     examples.append(example)
     return examples, {'1':1},sorted(class_names)
 
-def prepare_train(data_dir, train_dir, train_name):
+def prepare_train(data_dir, train_dir, train_name, is_fineture=False):
     logging.info('Reading from one good dataset.')
     examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir)
     logging.info(label_map_dict)
@@ -271,6 +274,6 @@ def prepare_train(data_dir, train_dir, train_name):
     dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
     # 设定每张照片训练20次
-    update_config_file(train_dir, train_name, len(label_map_dict), num_examples*100)
+    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=num_examples*100, is_fineture=is_fineture)
     return label_map_dict
 

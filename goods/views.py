@@ -392,7 +392,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
             label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
-                                                                     str(serializer.instance.pk))
+                                                                     str(serializer.instance.pk),
+                                                                     is_fineture=serializer.instance.is_fineture)
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
 

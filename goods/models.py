@@ -109,6 +109,7 @@ class TrainAction(models.Model):
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
     traintype = models.PositiveIntegerField(default=0)
+    is_fineture = models.BooleanField(default=True)
     desc = models.CharField(max_length=500,null=True)
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
