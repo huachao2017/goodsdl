@@ -99,17 +99,21 @@ train_config: {
     momentum_optimizer: {
       learning_rate: {
         manual_step_learning_rate {
-          initial_learning_rate: 0.0003
+          initial_learning_rate: 0.003
           schedule {
             step: 0
+            learning_rate: .003
+          }
+          schedule {
+            step: 10000
             learning_rate: .0003
           }
           schedule {
-            step: 900000
+            step: 100000
             learning_rate: .00003
           }
           schedule {
-            step: 1200000
+            step: 200000
             learning_rate: .000003
           }
         }
