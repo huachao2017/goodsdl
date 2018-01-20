@@ -255,10 +255,10 @@ class ImageDetector:
         image_np = cv_image
 
         # cv 坐标需要处理成tf
-        tmp = boxes[:, 0]
+        tmp = boxes[:, 0].copy()
         boxes[:, 0] = boxes[:, 1]
         boxes[:, 1] = tmp
-        tmp = boxes[:, 2]
+        tmp = boxes[:, 2].copy()
         boxes[:, 2] = boxes[:, 3]
         boxes[:, 3] = tmp
 
