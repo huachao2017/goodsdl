@@ -68,7 +68,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step1_min_score_thresh = .5
                 # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
-        elif serializer.instance.deviceid == 't2_1':
+        elif serializer.instance.deviceid == 't2_1' or serializer.instance.deviceid == '275':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
 
@@ -78,7 +78,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detect_logger.info(
                     'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
-        elif serializer.instance.deviceid == '275':
+        elif serializer.instance.deviceid == 'nnn':
             # 演示区275: 110类识别
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
