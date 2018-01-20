@@ -68,25 +68,27 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step1_min_score_thresh = .8
                 # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
-        elif serializer.instance.deviceid == '275' or serializer.instance.deviceid == '266':
-        # elif serializer.instance.deviceid == '266':
-            # 演示区275和锦州266: 使用10类成熟识别
+        elif serializer.instance.deviceid == '275':
+            # 演示区275: 110类识别
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+
+            if len(export1s) > 0 and len(export2s) > 0:
+                detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk)
+                step1_min_score_thresh = .5
+                step2_min_score_thresh = .6
+                detect_logger.info(
+                    'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                      step2_min_score_thresh=step2_min_score_thresh)
+        else:
+            # 其他: 使用10类成熟识别
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
             detect_logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
-        else:
-            # 385类识别
-            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
-            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
-
-            if len(export1s)>0 and len(export2s)>0 :
-                detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk,export2s[0].pk)
-                step1_min_score_thresh = .5
-                step2_min_score_thresh = .6
-                detect_logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                      step2_min_score_thresh=step2_min_score_thresh)
 
         if ret is None or len(ret) <= 0:
             detect_logger.info('end detect:0')
