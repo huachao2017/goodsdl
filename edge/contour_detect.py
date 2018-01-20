@@ -2,17 +2,9 @@ import cv2
 import numpy as np
 import os
 
-def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n = 50):
+def _find_contour(img, image_name, output_dir=None, debug_type=1, thresh_x = 120, morphology = False, channel='all'):
     # param@debug_type:0,not debug; 1,store bbox file; 2,store middle caculate file; 3,show window
-    image_dir, image_name = os.path.split(input_path)
-    if output_dir is None:
-        output_dir = image_dir
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
-
-    # step0: read image
-    img = cv2.imread(input_path)
-    source = img
+    source = img.copy()
     compress = 1
     if source.shape[0]>1000 or source.shape[1]>1000:
         source = cv2.pyrDown(source)
@@ -24,23 +16,42 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # step1: blur image
     max_area = source.shape[0] * source.shape[1]
     # Apply gaussian blur to the grayscale image
-    # blur = cv2.pyrMeanShiftFiltering(img, 31, 91)
-    blur = source
-    # blur = cv2.pyrMeanShiftFiltering(img, 21, 51)
-    blur = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+    # blur = cv2.pyrMeanShiftFiltering(source, 31, 91)
+    sharpen = source
+    # blur = cv2.pyrMeanShiftFiltering(source, 21, 51)
+    # kernel_sharpen = np.array([[-1,-1,-1,-1,-1],
+    #                            [-1,2,2,2,-1],
+    #                            [-1,2,8,2,-1],
+    #                            [-2,2,2,2,-1],
+    #                            [-1,-1,-1,-1,-1]])/8.0
+    # sharpen = cv2.filter2D(sharpen, -1, kernel_sharpen)
+    if channel == 'all':
+        sharpen = cv2.cvtColor(sharpen, cv2.COLOR_BGR2GRAY)
+    else:
+        b, g, r = cv2.split(sharpen)
+        if channel == 'b':
+            sharpen = b
+        elif channel == 'g':
+            sharpen = g
+        elif channel == 'r':
+            sharpen = r
+        else:
+            sharpen = cv2.cvtColor(sharpen, cv2.COLOR_BGR2GRAY)
+
+
     # 双向滤波比较不错
-    blur = cv2.bilateralFilter(blur, 3, 75, 75)
+    # blur = cv2.bilateralFilter(blur, 3, 30, 30)
     # blur = cv2.split(blur)[0]
     # blur = cv2.equalizeHist(blur)
     # blur = cv2.GaussianBlur(blur, (5, 5), 0)
     if debug_type>1:
-        blur_path = os.path.join(output_dir, 'blur_'+image_name)
-        cv2.imwrite(blur_path, blur)
+        sharpen_path = os.path.join(output_dir, channel+'_'+'sharpen_'+image_name)
+        cv2.imwrite(sharpen_path, sharpen)
 
     # step2: sobel caculate edges
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    x = cv2.Sobel(blur, cv2.CV_64F, 1, 0, ksize=-1)
-    y = cv2.Sobel(blur, cv2.CV_64F, 0, 1, ksize=-1)
+    x = cv2.Sobel(sharpen, cv2.CV_64F, 1, 0, ksize=-1)
+    y = cv2.Sobel(sharpen, cv2.CV_64F, 0, 1, ksize=-1)
     edges = cv2.subtract(x, y)
     edges = cv2.convertScaleAbs(edges)
     # absX = cv2.convertScaleAbs(x)  # 转回uint8
@@ -57,7 +68,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # edges = cv2.erode(edges, kernel)
     # edges = cv2.GaussianBlur(edges, (9, 9),0)
     if debug_type>1:
-        edges_path = os.path.join(output_dir, 'edges_'+image_name)
+        edges_path = os.path.join(output_dir, channel+'_'+'edges_'+image_name)
         cv2.imwrite(edges_path, edges)
 
     # step3: binary edges
@@ -65,8 +76,9 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     thresh2 = thresh1
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     # thresh2 = cv2.erode(thresh2, kernel)
-    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    # thresh2 = cv2.morphologyEx(thresh2, cv2.MORPH_CLOSE, kernel)
+    if morphology:
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        thresh2 = cv2.morphologyEx(thresh2, cv2.MORPH_CLOSE, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
     # thresh2 = cv2.dilate(thresh2, kernel)
@@ -77,10 +89,11 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # _, thresh = cv2.threshold(gray, x, 255, cv2.THRESH_BINARY_INV)
     # thresh = cv2.GaussianBlur(thresh, (5, 5), 0)
     if debug_type>1:
-        thresh1_path = os.path.join(output_dir, 'thresh1_'+image_name)
+        thresh1_path = os.path.join(output_dir, channel+'_'+'thresh1_'+image_name)
         cv2.imwrite(thresh1_path, thresh1)
-        # thresh2_path = os.path.join(output_dir, 'thresh2_' + image_name)
-        # cv2.imwrite(thresh2_path, thresh2)
+        if morphology:
+            thresh2_path = os.path.join(output_dir, channel+'_'+'thresh2_' + image_name)
+            cv2.imwrite(thresh2_path, thresh2)
 
     # Find the edges
     # edges = cv2.Canny(gray,x1,x2)
@@ -94,7 +107,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
     # step5: contour filter with area
     area_to_contour = {}
     for cnt in contours:
-        # cnt = cv2.convexHull(cnt, returnPoints=True)
+        cnt = cv2.convexHull(cnt, returnPoints=True)
         leftmost = cnt[cnt[:, :, 0].argmin()][0][0]
         rightmost = cnt[cnt[:, :, 0].argmax()][0][0]
         topmost = cnt[cnt[:, :, 1].argmin()][0][1]
@@ -103,8 +116,8 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
         # print('%d,%d,%d,%d' %(leftmost,rightmost,topmost,bottommost))
         # return
         area = (bottommost-topmost) * (rightmost-leftmost)
-        # if area < max_area/100: # 去除面积过小的物体
-        #     continue
+        if area < max_area/100: # 去除面积过小的物体
+            continue
         if area > max_area*.8: # 去除面积过大的物体
             continue
         area_to_contour[area] = cnt
@@ -130,33 +143,34 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 30, top_n
         #     drawing_contours = cv2.rectangle(drawing_contours, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
     if debug_type>1:
-        contours_path = os.path.join(output_dir, 'contours_'+image_name)
+        contours_path = os.path.join(output_dir, channel+'_'+'contours_'+image_name)
         cv2.imwrite(contours_path, drawing_contours)
 
     # step7: nms and store last bounding box
-    boxes = non_max_suppression_fast(boxes,0.5)
+    boxes = _non_max_suppression_fast(boxes, 0.5)
     boxes = boxes*compress
     for box in boxes:
         # drawing_contours = cv2.rectangle(drawing_contours, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
         if debug_type > 0:
-            output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
+            output = cv2.rectangle(source, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
 
     if debug_type>0 and len(boxes)>0:
-        output_path = os.path.join(output_dir, 'bbox_'+image_name)
+        output_path = os.path.join(output_dir, channel+'_'+'bbox_'+image_name)
         cv2.imwrite(output_path, output)
 
     if debug_type>2:
-        cv2.imshow('input', blur)
-        cv2.imshow('edges', edges)
-        cv2.imshow('thresh1', thresh1)
-        # cv2.imshow('thresh2', thresh2)
-        cv2.imshow('drawing_contours', drawing_contours)
+        cv2.imshow(channel+'_'+'input', sharpen)
+        cv2.imshow(channel+'_'+'edges', edges)
+        cv2.imshow(channel+'_'+'thresh1', thresh1)
+        if morphology:
+            cv2.imshow(channel+'_'+'thresh2', thresh2)
+        cv2.imshow(channel+'_'+'drawing_contours', drawing_contours)
         if len(boxes) > 0:
-            cv2.imshow('output', output)
+            cv2.imshow(channel+'_'+'output', output)
 
     return boxes
 
-def non_max_suppression_fast(boxes, overlapThresh):
+def _non_max_suppression_fast(boxes, overlapThresh):
     # if there are no boxes, return an empty list
     if len(boxes) == 0:
         return []
@@ -213,19 +227,46 @@ def non_max_suppression_fast(boxes, overlapThresh):
     # integer data type
     return boxes[pick].astype("int")
 
+def find_contour(input_path, output_dir=None, debug_type=0, thresh_x = 120, morphology = False):
+    image_dir, image_name = os.path.split(input_path)
+    if output_dir is None:
+        output_dir = image_dir
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+
+    # step0: read image
+    img = cv2.imread(input_path)
+    all_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all')
+    r_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='r')
+    g_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='g')
+    b_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='b')
+
+
+    concate_boxes = np.concatenate((all_boxes,r_boxes,g_boxes,b_boxes))
+    concate_boxes = _non_max_suppression_fast(concate_boxes, 0.5)
+    for box in concate_boxes:
+        output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
+
+    if len(concate_boxes)>0:
+        output_path = os.path.join(output_dir, 'output_'+image_name)
+        cv2.imwrite(output_path, output)
+
+    return concate_boxes
+
+
 if __name__ == "__main__":
     # Enter the input image file
     image_dir, _ = os.path.split(os.path.realpath(__file__))
-    image_path = os.path.join(image_dir, "4_1.jpg")
-    output_dir = os.path.join(image_dir,'contour')
+    image_path = os.path.join(image_dir, "1_1.jpg")
+    # image_path = os.path.join(image_dir, "7_1.jpg")
+    output_dir = os.path.join(image_dir, 'contour')
 
     # cv2.createTrackbar('canny threshold2:','input',x2,max_x,find_contour_x2)
     import time
     time0 = time.time()
-    boxes = find_contour(image_path, output_dir, debug_type=3, thresh_x=120)
+    boxes = find_contour(image_path, output_dir)
     time1 = time.time()
-
-    print('%.2f: %d' %(time1-time0,len(boxes)))
+    print('%.2f, %d' %(time1-time0, len(boxes)))
 
     if cv2.waitKey(0) == 27:
         cv2.destroyAllWindows()
