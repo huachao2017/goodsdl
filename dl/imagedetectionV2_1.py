@@ -249,9 +249,9 @@ class ImageDetector:
         image_path = image_instance.source.path
         # FIXME 需要标定
         image, boxes, scores_step1 = find_contour(image_path,area=(69,86,901,516))
-        (im_width, im_height) = image.size
-        image_np = np.array(image.getdata()).reshape(
-            (im_height, im_width, 3)).astype(np.uint8)
+        im_width = image.shape[1]
+        im_height = image.shape[0]
+        image_np = image
 
         # if image_instance.deviceid == '275':
         #     time1 = time.time() - time0
