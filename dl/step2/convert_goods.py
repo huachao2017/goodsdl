@@ -302,6 +302,12 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                             boxes = np.squeeze(boxes)
                             # classes = np.squeeze(classes).astype(np.int32)
                             scores_step1 = np.squeeze(scores)
+                            if boxes.shape[0] <= 0:
+                                augment_total += 1
+                                augment_total_error += 1
+                                logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                    output_image_path, angle, str(scores_step1[l]), augment_total_error, augment_total))
+
                             for l in range(boxes.shape[0]):
                                 augment_total += 1
                                 if scores_step1[l] < 0.8:
