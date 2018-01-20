@@ -365,7 +365,7 @@ class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
-            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', export1s[0].pk,
+            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(export1s[0].pk),
                                             'frozen_inference_graph.pb')
             convert_goods.prepare_data(data_dir,
                                        os.path.join(settings.MEDIA_ROOT, 'step2'),
