@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 
-def _find_contour(img, image_name, output_dir=None, debug_type=1, thresh_x = 120, morphology = False, channel='all'):
+def _find_contour(img, image_name, output_dir=None, debug_type=0, thresh_x = 120, morphology = False, channel='all'):
     # param@debug_type:0,not debug; 1,store bbox file; 2,store middle caculate file; 3,show window
     source = img.copy()
     compress = 1
@@ -149,9 +149,8 @@ def _find_contour(img, image_name, output_dir=None, debug_type=1, thresh_x = 120
     # step7: nms and store last bounding box
     boxes = _non_max_suppression_fast(boxes, 0.5)
     boxes = boxes*compress
-    for box in boxes:
-        # drawing_contours = cv2.rectangle(drawing_contours, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 4)
-        if debug_type > 0:
+    if debug_type > 0:
+        for box in boxes:
             output = cv2.rectangle(source, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
 
     if debug_type>0 and len(boxes)>0:
@@ -227,7 +226,7 @@ def _non_max_suppression_fast(boxes, overlapThresh):
     # integer data type
     return boxes[pick].astype("int")
 
-def find_contour(input_path, output_dir=None, debug_type=0, thresh_x = 120, morphology = False):
+def find_contour(input_path, area=None, output_dir=None, debug_type=0, thresh_x = 120, morphology = False):
     image_dir, image_name = os.path.split(input_path)
     if output_dir is None:
         output_dir = image_dir
@@ -236,35 +235,45 @@ def find_contour(input_path, output_dir=None, debug_type=0, thresh_x = 120, morp
 
     # step0: read image
     img = cv2.imread(input_path)
-    all_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all')
-    r_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='r')
-    g_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='g')
-    b_boxes = _find_contour(img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='b')
+    if area is not None:
+        area_img = img[area[1]:area[3],area[0]:area[2],:]
+    all_boxes = _find_contour(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all')
+    r_boxes = _find_contour(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='r')
+    g_boxes = _find_contour(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='g')
+    b_boxes = _find_contour(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='b')
 
 
     concate_boxes = np.concatenate((all_boxes,r_boxes,g_boxes,b_boxes))
     concate_boxes = _non_max_suppression_fast(concate_boxes, 0.5)
-    for box in concate_boxes:
-        output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
+    if area is not None:
+        concate_boxes[:, 0] = concate_boxes[:, 0]+area[0]
+        concate_boxes[:, 1] = concate_boxes[:, 1] + area[1]
+        concate_boxes[:, 2] = concate_boxes[:, 2] + area[0]
+        concate_boxes[:, 3] = concate_boxes[:, 3] + area[1]
+    if debug_type > 0:
+        for box in concate_boxes:
+            output = cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 1)
 
-    if len(concate_boxes)>0:
+    if debug_type > 0 and len(concate_boxes)>0:
         output_path = os.path.join(output_dir, 'output_'+image_name)
         cv2.imwrite(output_path, output)
 
-    return concate_boxes
+    scores = np.ones((len(concate_boxes)))
+    return img, concate_boxes, scores
 
 
 if __name__ == "__main__":
     # Enter the input image file
     image_dir, _ = os.path.split(os.path.realpath(__file__))
-    image_path = os.path.join(image_dir, "1_1.jpg")
+    image_path = os.path.join(image_dir, "7.jpg")
     # image_path = os.path.join(image_dir, "7_1.jpg")
     output_dir = os.path.join(image_dir, 'contour')
 
     # cv2.createTrackbar('canny threshold2:','input',x2,max_x,find_contour_x2)
     import time
     time0 = time.time()
-    boxes = find_contour(image_path, output_dir)
+    _,boxes,_ = find_contour(image_path, area=(69,86,901,516),output_dir=output_dir,debug_type=1)
+    # _,boxes,_ = find_contour(image_path, output_dir=output_dir,debug_type=1)
     time1 = time.time()
     print('%.2f, %d' %(time1-time0, len(boxes)))
 

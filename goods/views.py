@@ -16,7 +16,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetection, imagedetectionV2, imageclassifyV1, imagedetection_only_step1
+from dl import imagedetection, imagedetectionV2, imagedetectionV2_1, imageclassifyV1, imagedetection_only_step1
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.only_step2 import create_goods_tf_record
@@ -68,6 +68,16 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step1_min_score_thresh = .5
                 # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+        elif serializer.instance.deviceid == 't2_1':
+            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+
+            if len(export2s) > 0:
+                detector = imagedetectionV2_1.ImageDetectorFactory.get_static_detector(export2s[0].pk)
+                step2_min_score_thresh = .6
+                detect_logger.info(
+                    'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
         elif serializer.instance.deviceid == '275':
             # 演示区275: 110类识别
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
