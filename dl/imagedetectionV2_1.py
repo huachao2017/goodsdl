@@ -254,6 +254,14 @@ class ImageDetector:
         im_height = cv_image.shape[0]
         image_np = cv_image
 
+        # cv 坐标需要处理成tf
+        tmp = boxes[:, 0]
+        boxes[:, 0] = boxes[:, 1]
+        boxes[:, 1] = tmp
+        tmp = boxes[:, 2]
+        boxes[:, 2] = boxes[:, 3]
+        boxes[:, 3] = tmp
+
         # if image_instance.deviceid == '275':
         #     time1 = time.time() - time0
         #     time0 = time.time()
