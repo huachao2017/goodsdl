@@ -252,7 +252,8 @@ class ImageDetector:
         cv_image, boxes, scores_step1 = find_contour(image_path,area=(69,86,901,516))
         im_width = cv_image.shape[1]
         im_height = cv_image.shape[0]
-        image_np = cv_image
+        image_np = np.array(image.getdata()).reshape(
+            (im_height, im_width, 3)).astype(np.uint8)
 
         # cv 坐标需要处理成tf
         tmp = boxes[:, 0].copy()
@@ -384,7 +385,6 @@ class ImageDetector:
                 scores_step2,
                 self.labels_to_names,
                 use_normalized_coordinates=True,
-                step1_min_score_thresh=step1_min_score_thresh,
                 step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=2)
             output_image = Image.fromarray(image_np)
