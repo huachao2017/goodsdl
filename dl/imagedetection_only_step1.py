@@ -70,21 +70,20 @@ def visualize_boxes_and_labels_on_image_array(image,
     if not max_boxes_to_draw:
         max_boxes_to_draw = boxes.shape[0]
     for i in range(min(max_boxes_to_draw, boxes.shape[0])):
+        box = tuple(boxes[i].tolist())
+        if instance_masks is not None:
+            box_to_instance_masks_map[box] = instance_masks[i]
+        if keypoints is not None:
+            box_to_keypoints_map[box].extend(keypoints[i])
         if scores_step1 is None:
-            box = tuple(boxes[i].tolist())
-            if instance_masks is not None:
-                box_to_instance_masks_map[box] = instance_masks[i]
-            if keypoints is not None:
-                box_to_keypoints_map[box].extend(keypoints[i])
-            if scores_step1 is None:
-                box_to_color_map[box] = 'black'
+            box_to_color_map[box] = 'black'
+        else:
+            display_str = '{}%'.format(int(100 * scores_step1[i]),)
+            box_to_display_str_map[box].append(display_str)
+            if scores_step1[i] > step1_min_score_thresh:
+                box_to_color_map[box] = 'RoyalBlue'
             else:
-                display_str = '{}%'.format(int(100 * scores_step1[i]),)
-                box_to_display_str_map[box].append(display_str)
-                if scores_step1[i] > step1_min_score_thresh:
-                    box_to_color_map[box] = 'RoyalBlue'
-                else:
-                    box_to_color_map[box] = 'Red'
+                box_to_color_map[box] = 'Red'
 
     # Draw all boxes onto image.
     for box, color in box_to_color_map.items():
