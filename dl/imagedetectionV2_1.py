@@ -384,7 +384,7 @@ class ImageDetector:
                 scores_step1,
                 scores_step2,
                 self.labels_to_names,
-                use_normalized_coordinates=True,
+                use_normalized_coordinates=False,
                 step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=2)
             output_image = Image.fromarray(image_np)
