@@ -278,7 +278,7 @@ class ImageDetector:
 
         # 移除非工作台干扰
         if area:
-            image = image.crop(area[0], area[1], area[2], area[3])
+            image = image.crop((area[0], area[1], area[2], area[3]))
 
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
