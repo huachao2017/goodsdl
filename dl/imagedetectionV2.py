@@ -261,7 +261,7 @@ class ImageDetector:
             logger.info('end loading model...')
             # semaphore.release()
 
-    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
+    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5, area=None):
         if self.labels_to_names is None:
             self.load()
             if self.labels_to_names is None:
@@ -275,6 +275,11 @@ class ImageDetector:
         image = Image.open(image_path)
         if image.mode != 'RGB':
             image = image.convert('RGB')
+
+        # 移除非工作台干扰
+        if area:
+            image = image.crop(area[0], area[1], area[2], area[3])
+
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
         (im_width, im_height) = image.size
@@ -395,11 +400,23 @@ class ImageDetector:
                                                 score_3=probabilities[index][sorted_inds[3]],
                                                 score_4=probabilities[index][sorted_inds[4]],
                                                 )
+
+                if area:
+                    fix_xmin = xmin + area[0]
+                    fix_ymin = ymin + area[1]
+                    fix_xmax = xmax + area[0]
+                    fix_ymax = ymax + area[1]
+                else:
+                    fix_xmin = xmin
+                    fix_ymin = ymin
+                    fix_xmax = xmax
+                    fix_ymax = ymax
+
                 ret.append({'class': class_type,
                             'score': scores_step1[i],
                             'score2': scores_step2[i],
                             'upc': upc,
-                            'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
+                            'xmin': fix_xmin, 'ymin': fix_ymin, 'xmax': fix_xmax, 'ymax': fix_ymax
                             })
 
         # visualization
