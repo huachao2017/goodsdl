@@ -268,17 +268,22 @@ class ImageDetector:
                 logger.warning('loading model failed')
                 return None
 
-        # import time
-        # time0 = time.time()
+        import time
+        time0 = time.time()
 
         image_path = image_instance.source.path
         image = Image.open(image_path)
         if image.mode != 'RGB':
             image = image.convert('RGB')
 
+
         # 移除非工作台干扰
         if area:
             image = image.crop((area[0], area[1], area[2], area[3]))
+
+        time1 = time.time()
+        logger.info('step1: %.2f' %(time1-time0))
+        time0 = time1
 
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
@@ -297,6 +302,9 @@ class ImageDetector:
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
 
+        time1 = time.time()
+        logger.info('step2: %.2f' %(time1-time0))
+        time0 = time1
         # if image_instance.deviceid == '275':
         #     time1 = time.time() - time0
         #     time0 = time.time()
@@ -324,6 +332,9 @@ class ImageDetector:
                 # if image_instance.deviceid == '275':
                 #     sub_time_param = sub_time_param + '%.2f,' %(time.time()-sub_time0)
 
+        time1 = time.time()
+        logger.info('step3: %.2f' %(time1-time0))
+        time0 = time1
         # if image_instance.deviceid == '275':
         #     time2 = time.time() - time0
         #     time0 = time.time()
@@ -338,6 +349,9 @@ class ImageDetector:
         probabilities = self.session_step2.run(
             self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
 
+        time1 = time.time()
+        logger.info('step4: %.2f' %(time1-time0))
+        time0 = time1
         # if image_instance.deviceid == '275':
         #     time3 = time.time() - time0
         #     TimeLog.objects.create(image_id=image_instance.pk,
@@ -419,6 +433,9 @@ class ImageDetector:
                             'xmin': fix_xmin, 'ymin': fix_ymin, 'xmax': fix_xmax, 'ymax': fix_ymax
                             })
 
+        time1 = time.time()
+        logger.info('step5: %.2f' %(time1-time0))
+        time0 = time1
         # visualization
         if len(ret) > 0:
             image_dir = os.path.dirname(image_path)
@@ -437,5 +454,9 @@ class ImageDetector:
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
             output_image.save(output_image_path)
+
+        time1 = time.time()
+        logger.info('step6: %.2f' %(time1-time0))
+        time0 = time1
 
         return ret
