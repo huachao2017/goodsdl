@@ -78,8 +78,16 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detect_logger.info(
                     'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
-        elif serializer.instance.deviceid == '275':
-            # 演示区275: 110类识别
+        elif serializer.instance.deviceid == 'nnn':
+            # 其他: 使用10类成熟识别
+            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+            min_score_thresh = .5
+            detect_logger.info(
+                'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
+
+        else:
+            # 所有演示区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
@@ -91,15 +99,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step2_min_score_thresh = .6
                 detect_logger.info(
                     'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                      step2_min_score_thresh=step2_min_score_thresh, area=(69,86,901,516))
-        else:
-            # 其他: 使用10类成熟识别
-            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-            min_score_thresh = .5
-            detect_logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
+                # TODO 需要标定
+                if serializer.instance.deviceid == '275':
+                    area = (69,86,901,516)
+                else:
+                    area = (63,55,800,492)
+                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                      step2_min_score_thresh=step2_min_score_thresh, area=area)
         if ret is None or len(ret) <= 0:
             detect_logger.info('end detect:0')
             tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
