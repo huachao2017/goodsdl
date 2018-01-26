@@ -545,8 +545,9 @@ def main(_):
             summaries.add(tf.summary.scalar('losses/%s' % loss.op.name, loss))
 
         # Add summaries for variables.
-        for variable in slim.get_model_variables():
-            summaries.add(tf.summary.histogram(variable.op.name, variable))
+        # FIXME Nan in summary histogram for: aux_11/aux_logits/aux_bn1/moving_variance_1
+        # for variable in slim.get_model_variables():
+        #     summaries.add(tf.summary.histogram(variable.op.name, variable))
 
         #################################
         # Configure the moving averages #
