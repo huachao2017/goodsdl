@@ -41,10 +41,10 @@ model {
         }
       }
     }
-    first_stage_nms_score_threshold: 0.1
+    first_stage_nms_score_threshold: 0.0
     first_stage_nms_iou_threshold: 0.7
-    first_stage_max_proposals: 300
-    first_stage_localization_loss_weight: 10.0
+    first_stage_max_proposals: 150
+    first_stage_localization_loss_weight: 2.0
     first_stage_objectness_loss_weight: 1.0
     initial_crop_size: 17
     maxpool_kernel_size: 1
@@ -72,7 +72,7 @@ model {
     }
     second_stage_post_processing {
       batch_non_max_suppression {
-        score_threshold: 0.5
+        score_threshold: 0.0
         iou_threshold: 0.6
         max_detections_per_class: 100
         max_total_detections: 100
