@@ -385,7 +385,7 @@ def main(_):
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-    # tf.logging.set_verbosity(tf.logging.INFO)
+    tf.logging.set_verbosity(tf.logging.INFO)
     with tf.Graph().as_default():
         #######################
         # Config model_deploy #
