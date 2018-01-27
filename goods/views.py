@@ -78,7 +78,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detect_logger.info(
                     'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
-        elif serializer.instance.deviceid == '275':
+        elif serializer.instance.deviceid == 'nnn':
             # 使用10类成熟识别，随时转换
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
@@ -86,7 +86,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
-        elif serializer.instance.deviceid == 'nnn':
+        elif serializer.instance.deviceid == '275':
             # 新训练测试区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
@@ -106,7 +106,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 else:
                     area = (63,55,800,492)
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                      step2_min_score_thresh=step2_min_score_thresh, area=area)
+                                      step2_min_score_thresh=step2_min_score_thresh, area=area, compress=True)
 
 
         else:

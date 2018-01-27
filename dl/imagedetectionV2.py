@@ -261,7 +261,7 @@ class ImageDetector:
             logger.info('end loading model...')
             # semaphore.release()
 
-    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5, area=None):
+    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5, area=None, compress=False):
         if self.labels_to_names is None:
             self.load()
             if self.labels_to_names is None:
@@ -279,6 +279,9 @@ class ImageDetector:
         # 移除非工作台干扰
         if area:
             image = image.crop((area[0], area[1], area[2], area[3]))
+        if compress:
+            image0 = image
+            image = image.resize((int(image.size[0]/2), int(image.size[1]/2)), Image.ANTIALIAS)
 
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
@@ -300,6 +303,10 @@ class ImageDetector:
         # if image_instance.deviceid == '275':
         #     time1 = time.time() - time0
         #     time0 = time.time()
+
+        if compress:
+            image = image0
+            boxes = boxes * 2
 
         step2_images = []
         # sub_time_param = ''
@@ -421,6 +428,8 @@ class ImageDetector:
 
         # visualization
         if len(ret) > 0:
+            image_np = np.array(image.getdata()).reshape(
+                (im_height, im_width, 3)).astype(np.uint8)
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
             visualize_boxes_and_labels_on_image_array(
