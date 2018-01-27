@@ -106,7 +106,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 else:
                     area = (63,55,800,492)
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                      step2_min_score_thresh=step2_min_score_thresh, area=area, compress=True)
+                                      step2_min_score_thresh=step2_min_score_thresh, area=area) #, compress=True)
 
 
         else:
