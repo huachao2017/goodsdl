@@ -285,9 +285,8 @@ class ImageDetector:
 
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
-        (im_width, im_height) = image.size
         image_np = np.array(image.getdata()).reshape(
-            (im_height, im_width, 3)).astype(np.uint8)
+            (image.size[1], image.size[0], 3)).astype(np.uint8)
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.
@@ -306,7 +305,12 @@ class ImageDetector:
 
         if compress:
             image = image0
-            boxes = boxes * 2
+
+        boxes[:,0] = boxes[:,0]*image.size[1]
+        boxes[:,1] = boxes[:,1]*image.size[0]
+        boxes[:,2] = boxes[:,2]*image.size[1]
+        boxes[:,3] = boxes[:,3]*image.size[0]
+        boxes = np.array(boxes,dtype=np.int)
 
         step2_images = []
         # sub_time_param = ''
@@ -314,10 +318,6 @@ class ImageDetector:
             if scores_step1[i] > step1_min_score_thresh:
                 # sub_time0 = time.time()
                 ymin, xmin, ymax, xmax = boxes[i]
-                ymin = int(ymin * im_height)
-                xmin = int(xmin * im_width)
-                ymax = int(ymax * im_height)
-                xmax = int(xmax * im_width)
 
                 newimage = image.crop((xmin, ymin, xmax, ymax))
                 # 生成新的图片
@@ -363,10 +363,6 @@ class ImageDetector:
             if scores_step1[i] > step1_min_score_thresh:
                 index = index + 1
                 ymin, xmin, ymax, xmax = boxes[i]
-                ymin = int(ymin * im_height)
-                xmin = int(xmin * im_width)
-                ymax = int(ymax * im_height)
-                xmax = int(xmax * im_width)
                 # newimage = np.array(newimage, dtype=np.float32)
                 # logger.info(newimage.shape)
                 # probabilities = self.session_step2.run(
@@ -429,7 +425,7 @@ class ImageDetector:
         # visualization
         if len(ret) > 0:
             image_np = np.array(image.getdata()).reshape(
-                (im_height, im_width, 3)).astype(np.uint8)
+                (image.size[1], image.size[0], 3)).astype(np.uint8)
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
             visualize_boxes_and_labels_on_image_array(
@@ -439,12 +435,11 @@ class ImageDetector:
                 scores_step1,
                 scores_step2,
                 self.labels_to_names,
-                use_normalized_coordinates=True,
+                use_normalized_coordinates=False,
                 step1_min_score_thresh=step1_min_score_thresh,
                 step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=2)
             output_image = Image.fromarray(image_np)
-            output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
             output_image.save(output_image_path)
 
         return ret
