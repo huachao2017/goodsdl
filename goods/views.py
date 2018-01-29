@@ -16,7 +16,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetection, imagedetectionV2, imagedetectionV2_1, imageclassifyV1, imagedetection_only_step1
+from dl import imagedetection, imagedetectionV2, imagedetectionV2_1, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.only_step2 import create_goods_tf_record
@@ -58,16 +58,22 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == 'os1':
-            # for test
-            # return Response([], status=status.HTTP_201_CREATED, headers=headers)
             # 手动测试:
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
             if len(export1s)>0:
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
                 step1_min_score_thresh = .5
-                # logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+        elif serializer.instance.deviceid == 'os2':
+            # 手动测试:
+            export2s = ExportAction.objects.filter(train_action__action='T2').filter(
+                checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+
+            if len(export2s) > 0:
+                detector = imagedetection_only_step2.ImageDetectorFactory_os2.get_static_detector(
+                    export2s[0].pk)
+                ret = detector.detect(serializer.instance)
         elif serializer.instance.deviceid == 't2_1': # or serializer.instance.deviceid == '275':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
