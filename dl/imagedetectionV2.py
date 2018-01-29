@@ -268,8 +268,8 @@ class ImageDetector:
                 logger.warning('loading model failed')
                 return None
 
-        # import time
-        # time0 = time.time()
+        import time
+        time0 = time.time()
 
         image_path = image_instance.source.path
         image = Image.open(image_path)
@@ -299,9 +299,10 @@ class ImageDetector:
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
 
-        # if image_instance.deviceid == '275':
-        #     time1 = time.time() - time0
-        #     time0 = time.time()
+        if image_instance.deviceid == '275':
+            time1 = time.time() - time0
+            # time0 = time.time()
+            logger.info('step1 time consume:%.2f' % time1)
 
         if compress:
             image = image0
