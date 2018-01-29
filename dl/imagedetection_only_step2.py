@@ -38,7 +38,7 @@ def get_step2_labels_to_names(labels_filepath):
     return labels_to_names
 
 class ImageDetector_os2:
-    def __init__(self, export1id, export2id):
+    def __init__(self, export2id):
         self.graph_step2 = None
         self.session_step2 = None
         self.labels_to_names = None
