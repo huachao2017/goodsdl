@@ -41,7 +41,7 @@ model {
         }
       }
     }
-    first_stage_nms_score_threshold: 0.0
+    first_stage_nms_score_threshold: 0.2
     first_stage_nms_iou_threshold: 0.7
     first_stage_max_proposals: 150
     first_stage_localization_loss_weight: 2.0
@@ -72,7 +72,7 @@ model {
     }
     second_stage_post_processing {
       batch_non_max_suppression {
-        score_threshold: 0.0
+        score_threshold: 0.4
         iou_threshold: 0.6
         max_detections_per_class: 100
         max_total_detections: 100
