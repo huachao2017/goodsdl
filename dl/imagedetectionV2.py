@@ -299,10 +299,9 @@ class ImageDetector:
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
 
-        if image_instance.deviceid == '275':
-            time1 = time.time() - time0
-            # time0 = time.time()
-            logger.info('step1 time consume:%.2f' % time1)
+        time1 = time.time() - time0
+        time0 = time.time()
+        logger.info('step1 time consume:%s, %.2f' %(image_instance.deviceid, time1))
 
         if compress:
             image = image0
@@ -345,6 +344,10 @@ class ImageDetector:
         step2_images_nps = np.array(step2_images)
         probabilities = self.session_step2.run(
             self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
+
+        time1 = time.time() - time0
+        time0 = time.time()
+        logger.info('step2 time consume:%s, %.2f' %(image_instance.deviceid, time1))
 
         # if image_instance.deviceid == '275':
         #     time3 = time.time() - time0
