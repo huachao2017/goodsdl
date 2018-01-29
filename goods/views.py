@@ -26,9 +26,6 @@ import urllib.request
 import time
 
 logger = logging.getLogger("django")
-detect_logger = logging.getLogger("detect")
-classify_logger = logging.getLogger("classify")
-
 
 class Test(APIView):
     def get(self, request):
@@ -78,14 +75,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             if len(export2s) > 0:
                 detector = imagedetectionV2_1.ImageDetectorFactory.get_static_detector(export2s[0].pk)
                 step2_min_score_thresh = .6
-                detect_logger.info(
+                logger.info(
                     'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
                 ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
         elif serializer.instance.deviceid == 'nnn':
             # 使用10类成熟识别，随时转换
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
-            detect_logger.info(
+            logger.info(
                 'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
@@ -100,7 +97,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk)
                 step1_min_score_thresh = .6
                 step2_min_score_thresh = .6
-                detect_logger.info(
+                logger.info(
                     'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
 
                 # TODO 需要标定
@@ -120,7 +117,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1, export2)
             step1_min_score_thresh = .8
             step2_min_score_thresh = .6
-            detect_logger.info(
+            logger.info(
                 'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
 
             # TODO 需要标定
@@ -132,7 +129,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                   step2_min_score_thresh=step2_min_score_thresh, area=area)
 
         if ret is None or len(ret) <= 0:
-            detect_logger.info('end detect:0')
+            logger.info('end detect:0')
             tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
             if not tf.gfile.Exists(tmp_dir):
                 tf.gfile.MakeDirs(tmp_dir)
@@ -141,7 +138,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             shutil.move(serializer.instance.source.path, tmp_dir)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
-            detect_logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+            logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
             ret_reborn = []
             index = 0
             class_index_dict = {}
