@@ -443,5 +443,5 @@ class ImageDetector:
             output_image.save(output_image_path)
 
         time3 = time.time()
-        logger.info('detectV2:%s, %d,%.2f,%.2f,%.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1))
+        logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1))
         return ret

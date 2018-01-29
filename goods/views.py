@@ -74,6 +74,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector = imagedetection_only_step2.ImageDetectorFactory_os2.get_static_detector(
                     export2s[0].pk)
                 ret = detector.detect(serializer.instance)
+            return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
         elif serializer.instance.deviceid == 't2_1': # or serializer.instance.deviceid == '275':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
