@@ -514,7 +514,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             train_logs_dir)
         # step2_model_name = 'inception_resnet_v2'
         step2_model_name = 'nasnet_large'
-        batch_size = 32
+        batch_size = 2
         # 训练
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
