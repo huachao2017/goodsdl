@@ -206,11 +206,11 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         # 暂时性分解Detect，需要一个处理type编码
         detector = imageclassifyV1.ImageClassifyFactory.get_static_detector('1')
         min_score_thresh = .8
-        classify_logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+        logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
         if ret is None or len(ret) <= 0:
-            classify_logger.info('end classify:0')
+            logger.info('end classify:0')
             # 删除无用图片
             os.remove(serializer.instance.source.path)
             ImageClass.objects.get(pk=serializer.instance.pk).delete()
@@ -221,7 +221,7 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
                                           score=goods_class['score'],
                                           upc=goods_class['upc'],
                                           )
-            classify_logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+            logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
 
         # logger.info('end create')
         # return Response({'Test':True})
@@ -250,13 +250,13 @@ class ImageTestClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMo
         if len(export2s) > 0:
             detector = imageclassifyV1.ImageClassifyFactory.get_static_detector(export2s[0].pk)
             min_score_thresh = .3
-            classify_logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
             # 删除无用图片
             os.remove(serializer.instance.source.path)
             ImageClass.objects.get(pk=serializer.instance.pk).delete()
-            classify_logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+            logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
 
             # logger.info('end create')
             # return Response({'Test':True})
