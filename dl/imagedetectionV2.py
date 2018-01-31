@@ -337,6 +337,8 @@ class ImageDetector:
         #                            total=time2)
 
         if len(step2_images) <= 0:
+            time2 = time.time()
+            logger.info('detectV2: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
             return None
         # 统一识别，用于加速
         step2_images_nps = np.array(step2_images)
