@@ -429,6 +429,7 @@ class ImageDetector:
                             'xmin': fix_xmin, 'ymin': fix_ymin, 'xmax': fix_xmax, 'ymax': fix_ymax
                             })
 
+        time3 = time.time()
         # visualization
         if len(ret) > 0:
             image_np = np.array(image.getdata()).reshape(
@@ -449,6 +450,6 @@ class ImageDetector:
             output_image = Image.fromarray(image_np)
             output_image.save(output_image_path)
 
-        time3 = time.time()
-        logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1))
+        time4 = time.time()
+        logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time3))
         return ret
