@@ -94,16 +94,19 @@ class ImageDetector_os2:
                 logits, _ = network_fn(images)
                 probabilities = tf.nn.softmax(logits, name='detection_classes')
 
-                init_fn = slim.assign_from_checkpoint_fn(
-                    step2_checkpoint,
-                    slim.get_model_variables('InceptionResnetV2'))
+                variables_to_restore = tf.global_variables()
+                saver = tf.train.Saver(variables_to_restore)
+                # init_fn = slim.assign_from_checkpoint_fn(
+                #     step2_checkpoint,
+                #     slim.get_model_variables('InceptionResnetV2'))
 
                 logger.info('end loading step2 graph...')
 
                 config = tf.ConfigProto()
                 config.gpu_options.allow_growth = True
                 self.session_step2 = tf.Session(config=config)
-                init_fn(self.session_step2)
+                saver.restore(self.session_step2, step2_checkpoint)
+                # init_fn(self.session_step2)
 
             self.input_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('input_image:0')
             self.output_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('output_image:0')
