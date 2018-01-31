@@ -1,9 +1,10 @@
 from django.db import models
 import datetime
+from django.conf import settings
 
 def image_upload_source(instance,filename):
     now = datetime.datetime.now()
-    return 'images/{}/{}/{}_{}_{}'.format(instance.deviceid, now.strftime('%Y%m/%d%H'), now.strftime('%M%S'), str(now.time()), filename)
+    return '{}/{}/{}/{}_{}_{}'.format(settings.DETECT_DIR_NAME, instance.deviceid, now.strftime('%Y%m/%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
 class Image(models.Model):
     deviceid = models.CharField(max_length=20, default='0',db_index=True)
@@ -63,17 +64,17 @@ class ProblemGoods(models.Model):
 def train_image_upload_source(instance,filename):
     now = datetime.datetime.now()
     if instance.traintype == 0:
-        ret = 'data_new/{}/{}_{}'.format(instance.upc, str(now.time()), filename)
+        ret = '{}/data_new/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()), filename)
     else:
-        ret = '{}/{}/{}_{}'.format(instance.traintype, instance.upc, str(now.time()), filename)
+        ret = '{}/{}/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.traintype, instance.upc, str(now.time()), filename)
     return ret
 
 def train_image_only_upload_source(instance,filename):
     now = datetime.datetime.now()
     if instance.traintype == 0:
-        ret = 'data_raw/{}_{}'.format(str(now.time()), filename)
+        ret = '{}/data_raw/{}_{}'.format(settings.DATASET_DIR_NAME, str(now.time()), filename)
     else:
-        ret = '{}/{}_{}'.format(instance.traintype, str(now.time()), filename)
+        ret = '{}/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.traintype, str(now.time()), filename)
     return ret
 
 class TrainImage(models.Model):

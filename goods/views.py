@@ -427,14 +427,14 @@ class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info('create action:{}'.format(serializer.instance.action))
         if serializer.instance.action == 'D2':
             if serializer.instance.traintype == 0:
-                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+                data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data')
             else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
+                data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, str(serializer.instance.traintype))
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
             step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(export1s[0].pk),
                                             'frozen_inference_graph.pb')
             convert_goods.prepare_data(data_dir,
-                                       os.path.join(settings.MEDIA_ROOT, 'step2'),
+                                       os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2'),
                                        step1_model_path)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -456,9 +456,9 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
             # 训练准备
             if serializer.instance.traintype == 0:
-                data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+                data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data')
             else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, str(serializer.instance.traintype))
+                data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, str(serializer.instance.traintype))
             label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
                                                                      str(serializer.instance.pk),
                                                                      is_fineture=serializer.instance.is_fineture)
@@ -495,9 +495,9 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     def train_only_step2(self, actionlog):
         # 训练准备
         if actionlog.traintype == 0:
-            data_dir = os.path.join(settings.MEDIA_ROOT, 'data')
+            data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data')
         else:
-            data_dir = os.path.join(settings.MEDIA_ROOT, str(actionlog.traintype))
+            data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, str(actionlog.traintype))
         class_names_to_ids, training_filenames, validation_filenames = create_goods_tf_record.prepare_train(
             data_dir, settings.TRAIN_ROOT, str(actionlog.pk))
         train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
