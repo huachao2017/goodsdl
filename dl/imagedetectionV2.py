@@ -20,10 +20,12 @@ class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(export1id,export2id):
+    def get_static_detector(export1id,export2id, step2_model_name='inception_resnet_v2'):
+        # step2_model_name : 'nasnet_large','inception_resnet_v2'
+
         key = '{}_{}'.format(str(export1id),str(export2id))
         if key not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id)
+            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,step2_model_name)
         return ImageDetectorFactory._detector[key]
 
 
@@ -163,7 +165,7 @@ def get_step2_labels_to_names(labels_filepath):
     return labels_to_names
 
 class ImageDetector:
-    def __init__(self, export1id, export2id):
+    def __init__(self, export1id, export2id, step2_model_name):
         self.graph_step1 = None
         self.session_step1 = None
         self.graph_step2 = None
@@ -173,8 +175,7 @@ class ImageDetector:
 
         self.step1_model_dir = os.path.join(self.file_path, 'model', str(export1id))
         self.step2_model_dir = os.path.join(self.file_path, 'model', str(export2id))
-        self.step2_model_name = 'inception_resnet_v2'
-        # self.step2_model_name = 'nasnet_large'
+        self.step2_model_name = step2_model_name
         self.step1_model_path = os.path.join(self.step1_model_dir, 'frozen_inference_graph.pb')
         # self.step1_label_path = os.path.join(self.step1_model_dir, 'goods_label_map.pbtxt')
         self.counter = 0

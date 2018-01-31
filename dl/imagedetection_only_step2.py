@@ -20,9 +20,11 @@ class ImageDetectorFactory_os2:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(exportid):
+    def get_static_detector(exportid, model_name='inception_resnet_v2'):
+        # model_name : 'nasnet_large','inception_resnet_v2'
+
         if exportid not in ImageDetectorFactory_os2._detector:
-            ImageDetectorFactory_os2._detector[exportid] = ImageDetector_os2(exportid)
+            ImageDetectorFactory_os2._detector[exportid] = ImageDetector_os2(exportid, model_name)
         return ImageDetectorFactory_os2._detector[exportid]
 
 def get_step2_labels_to_names(labels_filepath):
@@ -39,15 +41,14 @@ def get_step2_labels_to_names(labels_filepath):
     return labels_to_names
 
 class ImageDetector_os2:
-    def __init__(self, export2id):
+    def __init__(self, export2id, model_name):
         self.graph_step2 = None
         self.session_step2 = None
         self.labels_to_names = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
         self.step2_model_dir = os.path.join(self.file_path, 'model', str(export2id))
-        self.step2_model_name = 'inception_resnet_v2'
-        # self.step2_model_name = 'nasnet_large'
+        self.step2_model_name = model_name
         self.counter = 0
 
     def load(self):
