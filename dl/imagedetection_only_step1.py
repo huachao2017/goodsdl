@@ -175,8 +175,7 @@ class ImageDetector_os1:
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
         (im_width, im_height) = image.size
-        image_np = np.array(image.getdata()).reshape(
-            (im_height, im_width, 3)).astype(np.uint8)
+        image_np = np.array(image)
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.

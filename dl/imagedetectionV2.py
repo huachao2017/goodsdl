@@ -268,7 +268,7 @@ class ImageDetector:
             logger.info('end loading model...')
             # semaphore.release()
 
-    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5, area=None, compress=False):
+    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5, area=None):
         if self.labels_to_names is None:
             self.load()
             if self.labels_to_names is None:
@@ -286,14 +286,10 @@ class ImageDetector:
         # 移除非工作台干扰
         if area:
             image = image.crop((area[0], area[1], area[2], area[3]))
-        if compress:
-            image0 = image
-            image = image.resize((int(image.size[0]/2), int(image.size[1]/2)), Image.ANTIALIAS)
 
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
-        image_np = np.array(image.getdata()).reshape(
-            (image.size[1], image.size[0], 3)).astype(np.uint8)
+        image_np = np.array(image)
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.
@@ -307,9 +303,6 @@ class ImageDetector:
         scores_step1 = np.squeeze(scores)
 
         time1 = time.time()
-
-        if compress:
-            image = image0
 
         boxes[:,0] = boxes[:,0]*image.size[1]
         boxes[:,1] = boxes[:,1]*image.size[0]
@@ -429,11 +422,8 @@ class ImageDetector:
                             'xmin': fix_xmin, 'ymin': fix_ymin, 'xmax': fix_xmax, 'ymax': fix_ymax
                             })
 
-        time3 = time.time()
         # visualization
         if len(ret) > 0:
-            image_np = np.array(image.getdata()).reshape(
-                (image.size[1], image.size[0], 3)).astype(np.uint8)
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
             time4_1 = time.time()
@@ -452,7 +442,6 @@ class ImageDetector:
             output_image = Image.fromarray(image_np)
             output_image.save(output_image_path)
 
-        time4 = time.time()
-        logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time3))
-        logger.info('detectV2_step4: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time3, time4_1-time3, time4_2-time4_1, time4-time4_2))
+        time3 = time.time()
+        logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
         return ret
