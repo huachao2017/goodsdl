@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction
+from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,6 +35,12 @@ class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainImage
         fields = ('pk', 'deviceid', 'traintype', 'source', 'upc', 'name', 'xmin', 'ymin', 'xmax', 'ymax', 'create_time')
+        read_only_fields = ('create_time',)
+
+class TrainImageOnlySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrainImageOnly
+        fields = ('pk', 'deviceid', 'traintype', 'source', 'create_time')
         read_only_fields = ('create_time',)
 
 class TrainImageClassSerializer(serializers.ModelSerializer):

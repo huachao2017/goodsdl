@@ -373,6 +373,25 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class TrainImageOnlyViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = TrainImageOnly.objects.order_by('-id')
+    serializer_class = TrainImageOnlySerializer
+
+    def create(self, request, *args, **kwargs):
+        # 兼容没有那么字段的请求
+        # if 'name' not in request.data :
+        #     request.data['name'] = request.data['upc']
+        if 'deviceid' not in request.data:
+            request.data['deviceid'] = get_client_ip(request)
+        if 'traintype' not in request.data:
+            request.data['traintype'] = 0
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImageClass.objects.order_by('-id')

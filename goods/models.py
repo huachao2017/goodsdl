@@ -68,6 +68,14 @@ def train_image_upload_source(instance,filename):
         ret = '{}/{}/{}_{}'.format(instance.traintype, instance.upc, str(now.time()), filename)
     return ret
 
+def train_image_only_upload_source(instance,filename):
+    now = datetime.datetime.now()
+    if instance.traintype == 0:
+        ret = 'data_raw/{}_{}'.format(str(now.time()), filename)
+    else:
+        ret = '{}/{}_{}'.format(instance.traintype, str(now.time()), filename)
+    return ret
+
 class TrainImage(models.Model):
     deviceid = models.CharField(max_length=20, default='')
     traintype = models.PositiveIntegerField(default=0)
@@ -78,6 +86,12 @@ class TrainImage(models.Model):
     ymin = models.PositiveIntegerField(default=0)
     xmax = models.PositiveIntegerField(default=0)
     ymax = models.PositiveIntegerField(default=0)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
+class TrainImageOnly(models.Model):
+    deviceid = models.CharField(max_length=20, default='')
+    traintype = models.PositiveIntegerField(default=0)
+    source = models.ImageField(max_length=200, upload_to=train_image_only_upload_source)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
 class TrainImageClass(models.Model):
