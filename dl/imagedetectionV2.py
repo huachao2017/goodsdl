@@ -436,6 +436,7 @@ class ImageDetector:
                 (image.size[1], image.size[0], 3)).astype(np.uint8)
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+            time4_1 = time.time()
             visualize_boxes_and_labels_on_image_array(
                 image_np,
                 boxes,
@@ -447,9 +448,11 @@ class ImageDetector:
                 step1_min_score_thresh=step1_min_score_thresh,
                 step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=2)
+            time4_2 = time.time()
             output_image = Image.fromarray(image_np)
             output_image.save(output_image_path)
 
         time4 = time.time()
         logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time3))
+        logger.info('detectV2_step4: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time3, time4_1-time3, time4_2-time4_1, time4-time4_2))
         return ret
