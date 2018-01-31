@@ -93,7 +93,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
-        elif serializer.instance.deviceid == '275':
+        elif serializer.instance.deviceid in ['275', '571']:
             # 新训练测试区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
@@ -110,6 +110,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 # TODO 需要标定
                 if serializer.instance.deviceid == '275':
                     area = (69,86,901,516)
+                elif serializer.instance.deviceid == '571':
+                    area = (20, 30, 930, 500)
                 else:
                     area = (63,55,800,492)
                 ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
