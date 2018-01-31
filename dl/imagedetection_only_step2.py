@@ -46,8 +46,8 @@ class ImageDetector_os2:
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
         self.step2_model_dir = os.path.join(self.file_path, 'model', str(export2id))
-        self.model_name = 'inception_resnet_v2'
-        # self.model_name = 'nasnet_large'
+        self.step2_model_name = 'inception_resnet_v2'
+        # self.step2_model_name = 'nasnet_large'
         self.counter = 0
 
     def load(self):
@@ -67,7 +67,7 @@ class ImageDetector_os2:
             # Select the model #
             ####################
             network_fn = nets_factory.get_network_fn(
-                self.model_name,
+                self.step2_model_name,
                 num_classes=len(step2_labels_to_names),
                 is_training=False)
             image_size = network_fn.default_image_size

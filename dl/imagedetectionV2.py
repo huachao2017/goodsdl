@@ -11,6 +11,7 @@ from object_detection.utils import visualization_utils as vis_util
 import logging
 import time
 from goods.models import ProblemGoods, TimeLog, PreStep2TimeLog
+from nets import nets_factory
 
 logger = logging.getLogger("detect")
 
@@ -172,6 +173,8 @@ class ImageDetector:
 
         self.step1_model_dir = os.path.join(self.file_path, 'model', str(export1id))
         self.step2_model_dir = os.path.join(self.file_path, 'model', str(export2id))
+        self.step2_model_name = 'inception_resnet_v2'
+        # self.step2_model_name = 'nasnet_large'
         self.step1_model_path = os.path.join(self.step1_model_dir, 'frozen_inference_graph.pb')
         # self.step1_label_path = os.path.join(self.step1_model_dir, 'goods_label_map.pbtxt')
         self.counter = 0
@@ -210,7 +213,14 @@ class ImageDetector:
             step2_checkpoint = tf.train.latest_checkpoint(self.step2_model_dir)
             logger.info('begin loading step2 model: {}'.format(step2_checkpoint))
             step2_labels_to_names = get_step2_labels_to_names(os.path.join(self.step2_model_dir, 'labels.txt'))
-            image_size = inception.inception_resnet_v2.default_image_size
+            ####################
+            # Select step2 model #
+            ####################
+            network_fn = nets_factory.get_network_fn(
+                self.step2_model_name,
+                num_classes=len(step2_labels_to_names),
+                is_training=False)
+            image_size = network_fn.default_image_size
 
             self.pre_graph_step2 = tf.Graph()
             with self.pre_graph_step2.as_default():
@@ -231,22 +241,18 @@ class ImageDetector:
                 images = tf.placeholder(dtype=tf.float32, shape=[None, image_size, image_size, 3], name='input_tensor')
 
                 # Create the model, use the default arg scope to configure the batch norm parameters.
-                with slim.arg_scope(inception.inception_resnet_v2_arg_scope()):
-                    logits, _ = inception.inception_resnet_v2(images,
-                                                              num_classes=len(step2_labels_to_names),
-                                                              is_training=False)
+                logits, _ = network_fn(images)
                 probabilities = tf.nn.softmax(logits, name='detection_classes')
 
-                init_fn = slim.assign_from_checkpoint_fn(
-                    step2_checkpoint,
-                    slim.get_model_variables('InceptionResnetV2'))
+                variables_to_restore = tf.global_variables()
+                saver = tf.train.Saver(variables_to_restore)
 
                 logger.info('end loading step2 graph...')
 
                 config = tf.ConfigProto()
                 config.gpu_options.allow_growth = True
                 self.session_step2 = tf.Session(config=config)
-                init_fn(self.session_step2)
+                saver.restore(self.session_step2, step2_checkpoint)
 
             self.input_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('input_image:0')
             self.output_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('output_image:0')
