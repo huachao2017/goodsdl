@@ -72,19 +72,19 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             if len(export2s) > 0:
                 detector = imagedetection_only_step2.ImageDetectorFactory_os2.get_static_detector(
-                    export2s[0].pk)
+                    export2s[0].pk,export2s[0].model_name)
                 ret = detector.detect(serializer.instance)
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
-        elif serializer.instance.deviceid == 't2_1': # or serializer.instance.deviceid == '275':
-            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
-                '-update_time')[:1]
-
-            if len(export2s) > 0:
-                detector = imagedetectionV2_1.ImageDetectorFactory.get_static_detector(export2s[0].pk)
-                step2_min_score_thresh = .6
-                logger.info(
-                    'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-                ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
+        # elif serializer.instance.deviceid == 't2_1': # or serializer.instance.deviceid == '275':
+        #     export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
+        #         '-update_time')[:1]
+        #
+        #     if len(export2s) > 0:
+        #         detector = imagedetectionV2_1.ImageDetectorFactory.get_static_detector(export2s[0].pk)
+        #         step2_min_score_thresh = .6
+        #         logger.info(
+        #             'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+        #         ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
         elif serializer.instance.deviceid == 'nnn':
             # 使用10类成熟识别，随时转换
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
@@ -101,7 +101,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 '-update_time')[:1]
 
             if len(export1s) > 0 and len(export2s) > 0:
-                detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk)
+                detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, export2s[0].model_name)
                 step1_min_score_thresh = .6
                 step2_min_score_thresh = .6
                 logger.info(

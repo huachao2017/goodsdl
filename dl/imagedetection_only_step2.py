@@ -14,6 +14,7 @@ from goods.models import ProblemGoods, TimeLog, PreStep2TimeLog
 from nets import nets_factory
 
 logger = logging.getLogger("detect")
+model_names = ['inception_resnet_v2','nasnet_large']
 
 
 class ImageDetectorFactory_os2:
@@ -21,6 +22,8 @@ class ImageDetectorFactory_os2:
 
     @staticmethod
     def get_static_detector(exportid, model_name='inception_resnet_v2'):
+        if model_name not in model_names:
+            return None
         # model_name : 'nasnet_large','inception_resnet_v2'
 
         if exportid not in ImageDetectorFactory_os2._detector:

@@ -15,12 +15,16 @@ from nets import nets_factory
 
 logger = logging.getLogger("detect")
 
+step2_model_names = ['inception_resnet_v2','nasnet_large']
+
 
 class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
     def get_static_detector(export1id,export2id, step2_model_name='inception_resnet_v2'):
+        if step2_model_name not in step2_model_names:
+            return None
         # step2_model_name : 'nasnet_large','inception_resnet_v2'
 
         key = '{}_{}'.format(str(export1id),str(export2id))

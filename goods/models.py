@@ -137,10 +137,10 @@ class ExportAction(models.Model):
     checkpoint_prefix = models.PositiveIntegerField(default=0)
     MODEL_CHOICES = (
         (u'ANY', u'not specify'),
-        (u'T2_INV2', u'inception resnat V2'),
-        (u'T2_NASL', u'nas large'),
+        (u'inception_resnet_v2', u'inception resnet V2'),
+        (u'nasnet_large', u'nas large'),
     )
-    model_name = models.CharField(max_length=10, choices=MODEL_CHOICES, default='ANY')
+    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
