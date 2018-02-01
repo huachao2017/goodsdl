@@ -90,7 +90,7 @@ def main(_):
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     tf.logging.set_verbosity(tf.logging.INFO)
     with tf.Graph().as_default():
         tf_global_step = slim.get_or_create_global_step()
@@ -165,7 +165,7 @@ def main(_):
         for name, value in names_to_values.items():
             summary_name = 'eval/%s' % name
             op = tf.summary.scalar(summary_name, value, collections=[])
-            op = tf.Print(op, [value], summary_name)
+            # op = tf.Print(op, [value], summary_name)
             tf.add_to_collection(tf.GraphKeys.SUMMARIES, op)
 
         # TODO(sguada) use num_epochs=1
