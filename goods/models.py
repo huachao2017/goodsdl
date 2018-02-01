@@ -135,6 +135,12 @@ class TrainAction(models.Model):
 class ExportAction(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="export_actions",on_delete=models.CASCADE)
     checkpoint_prefix = models.PositiveIntegerField(default=0)
+    MODEL_CHOICES = (
+        (u'ANY', u'not specify'),
+        (u'T2_INV2', u'inception resnat V2'),
+        (u'T2_NASL', u'nas large'),
+    )
+    model_name = models.CharField(max_length=10, choices=MODEL_CHOICES, default='ANY')
     param = models.CharField(max_length=500)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
