@@ -154,6 +154,11 @@ def main(_):
         predictions = tf.argmax(logits, 1)
         labels = tf.squeeze(labels)
 
+        for i in range(FLAGS.batch_size):
+            name = 'image-{}-{}/{}' % (i,predictions[i],labels[i])
+            tf.summary.image(name,
+                             tf.expand_dims(images[0], 0))
+
         # Define the metrics:
         names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
             'Accuracy': slim.metrics.streaming_accuracy(predictions, labels),
@@ -165,7 +170,7 @@ def main(_):
         for name, value in names_to_values.items():
             summary_name = 'eval/%s' % name
             op = tf.summary.scalar(summary_name, value, collections=[])
-            # op = tf.Print(op, [value], summary_name)
+            op = tf.Print(op, [value], summary_name)
             tf.add_to_collection(tf.GraphKeys.SUMMARIES, op)
 
         # TODO(sguada) use num_epochs=1
