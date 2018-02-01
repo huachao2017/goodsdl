@@ -155,7 +155,7 @@ def main(_):
         labels = tf.squeeze(labels)
 
         for i in range(FLAGS.batch_size):
-            name = 'image-{}-{}/{}' % (i,predictions[i],labels[i])
+            name = 'image-%d-%d/%d' % (i,predictions[i],labels[i])
             tf.summary.image(name,
                              tf.expand_dims(images[0], 0))
 
