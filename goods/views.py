@@ -51,6 +51,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         if request.data['deviceid'] in ['290','353','571']:
             return Response([], status=status.HTTP_403_FORBIDDEN)
+        logger.info('begin detect:{}'.format(request.data['deviceid']))
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -89,8 +90,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 使用10类成熟识别，随时转换
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             min_score_thresh = .5
-            logger.info(
-                'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
         elif serializer.instance.deviceid in ['275', '571']:
@@ -104,8 +103,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, export2s[0].model_name)
                 step1_min_score_thresh = .6
                 step2_min_score_thresh = .6
-                logger.info(
-                    'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
 
                 # TODO 需要标定
                 if serializer.instance.deviceid == '275':
@@ -126,8 +123,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1, export2)
             step1_min_score_thresh = .8
             step2_min_score_thresh = .6
-            logger.info(
-                'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
 
             # TODO 需要标定
             if serializer.instance.deviceid == '275':
@@ -138,7 +133,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                   step2_min_score_thresh=step2_min_score_thresh, area=area)
 
         if ret is None or len(ret) <= 0:
-            logger.info('end detect:0')
             tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
             if not tf.gfile.Exists(tmp_dir):
                 tf.gfile.MakeDirs(tmp_dir)
@@ -147,7 +141,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             shutil.move(serializer.instance.source.path, tmp_dir)
             Image.objects.get(pk=serializer.instance.pk).delete()
         else:
-            logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
             ret_reborn = []
             index = 0
             class_index_dict = {}
@@ -192,6 +185,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     class_index_dict[goods['class']] = index
                     index = index + 1
             ret = ret_reborn
+        logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
         # logger.info('end create')
         # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
