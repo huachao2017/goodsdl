@@ -49,7 +49,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
 
-        if request.data['deviceid'] in ['290','353']:
+        if request.data['deviceid'] in ['290','353','571']:
             return Response([], status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
