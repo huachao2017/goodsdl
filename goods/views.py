@@ -120,8 +120,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         else:
             # 稳定训练版本
-            export1 = 46
-            export2 = 41
+            export1 = 52
+            export2 = 49
 
             detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1, export2)
             step1_min_score_thresh = .8
