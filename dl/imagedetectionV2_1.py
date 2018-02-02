@@ -10,7 +10,7 @@ from .step2 import dataset
 from object_detection.utils import visualization_utils as vis_util
 import logging
 import time
-from goods.models import ProblemGoods, TimeLog, PreStep2TimeLog
+from goods.models import ProblemGoods
 from edge.contour_detect import find_contour
 
 logger = logging.getLogger("detect")

@@ -10,7 +10,6 @@ from .step2 import dataset
 from object_detection.utils import visualization_utils as vis_util
 import logging
 import time
-from goods.models import ProblemGoods, TimeLog, PreStep2TimeLog
 from nets import nets_factory
 
 logger = logging.getLogger("detect")
