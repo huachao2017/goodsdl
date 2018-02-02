@@ -185,7 +185,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     class_index_dict[goods['class']] = index
                     index = index + 1
             ret = ret_reborn
-        logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+        logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret) if ret is not None else 0)))
         # logger.info('end create')
         # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
