@@ -343,7 +343,7 @@ class ImageDetector:
         if len(step2_images) <= 0:
             time2 = time.time()
             logger.info('detectV2: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
-            return None
+            return None, .0
         # 统一识别，用于加速
         step2_images_nps = np.array(step2_images)
         probabilities = self.session_step2.run(
@@ -450,4 +450,4 @@ class ImageDetector:
 
         time3 = time.time()
         logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
-        return ret
+        return ret, time3-time0

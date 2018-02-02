@@ -162,4 +162,4 @@ class ImageDetector_os2:
 
         time3 = time.time()
         logger.info('detect_only_step2: %s, %.2f, %.2f, %.2f' %(image_instance.deviceid, time3-time0, time1-time0, time2-time1))
-        return ret
+        return ret, time3-time0

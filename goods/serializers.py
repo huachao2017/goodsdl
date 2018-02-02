@@ -17,7 +17,7 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ('pk', 'deviceid', 'source', 'image_goods', 'image_problem_goods', 'create_time')
-        read_only_fields = ('create_time',)
+        read_only_fields = ('aiinterval', 'create_time',)
 
 class GoodsClassSerializer(serializers.ModelSerializer):
     class Meta:

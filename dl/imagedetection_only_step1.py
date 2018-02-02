@@ -168,6 +168,9 @@ class ImageDetector_os1:
                 logger.warning('loading model failed')
                 return None
 
+        import time
+        time0 = time.time()
+
         image_path = image_instance.source.path
         image = Image.open(image_path)
         if image.mode != 'RGB':
@@ -218,4 +221,5 @@ class ImageDetector_os1:
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
             output_image.save(output_image_path)
 
-        return ret
+        time1 = time.time()
+        return ret, time1-time0

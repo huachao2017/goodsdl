@@ -38,7 +38,7 @@ http://testpay.damaijianshen.cn/payment/order-by-ai.json?deviceId=277&startTime=
 source  file
 filename string
 deviceid  string
-traintype int     -- 传0和trainimage一致
+traintype int     -- 传2
 返回201
 
 训练检测图片接口：http://train.fastxbox.cn/api/trainimage
@@ -62,7 +62,7 @@ filename string
 upc   string
 name  string
 deviceid  string
-traintype int
+traintype int     -- 传1
 返回201
 
 分类图片接口：http://ai.fastxbox.cn/api/imageclass
@@ -89,6 +89,7 @@ deviceid  string
 source  file
 filename string
 deviceid  string
+lastinterval float                            -- 秒数，保留两位小数的
 返回201：
 [
     {

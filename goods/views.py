@@ -48,6 +48,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # 兼容没有那么字段的请求
         if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
+        if 'lastinterval' not in request.data:
+            request.data['lastinterval'] = 0.0
 
         if request.data['deviceid'] in ['290','353','571']:
             return Response([], status=status.HTTP_403_FORBIDDEN)
@@ -57,6 +59,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
+        aiinterval = .0
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == 'os1':
             # 手动测试:
@@ -65,7 +68,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             if len(export1s)>0:
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
                 step1_min_score_thresh = .5
-                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
         elif serializer.instance.deviceid == 'os2':
             # 手动测试:
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(
@@ -74,7 +77,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             if len(export2s) > 0:
                 detector = imagedetection_only_step2.ImageDetectorFactory_os2.get_static_detector(
                     export2s[0].pk,export2s[0].model_name)
-                ret = detector.detect(serializer.instance)
+                ret, aiinterval = detector.detect(serializer.instance)
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
         # elif serializer.instance.deviceid == 't2_1': # or serializer.instance.deviceid == '275':
         #     export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
@@ -111,7 +114,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     area = (20, 30, 930, 500)
                 else:
                     area = (63,55,800,492)
-                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                       step2_min_score_thresh=step2_min_score_thresh, area=area) #, compress=True)
 
 
@@ -129,7 +132,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 area = (69,86,901,516)
             else:
                 area = (63,55,800,492)
-            ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+            ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                   step2_min_score_thresh=step2_min_score_thresh, area=area)
 
         if ret is None or len(ret) <= 0:
@@ -185,6 +188,11 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     class_index_dict[goods['class']] = index
                     index = index + 1
             ret = ret_reborn
+
+        # 保存ai计算时间
+        if aiinterval > .0:
+            serializer.instance.aiinterval = aiinterval
+            serializer.instance.save()
         logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret) if ret is not None else 0)))
         # logger.info('end create')
         # return Response({'Test':True})

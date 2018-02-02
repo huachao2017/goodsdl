@@ -9,6 +9,8 @@ def image_upload_source(instance,filename):
 class Image(models.Model):
     deviceid = models.CharField(max_length=20, default='0',db_index=True)
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
+    aiinterval = models.FloatField(default=0.0)
+    lastinterval = models.FloatField(default=0.0)
     create_time = models.DateTimeField('date created', auto_now_add=True,db_index=True)
 
 class TimeLog(models.Model):
