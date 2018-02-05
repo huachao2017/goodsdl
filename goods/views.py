@@ -113,7 +113,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 elif serializer.instance.deviceid == '571':
                     area = (20, 30, 930, 500)
                 else:
-                    area = (63,55,800,492)
+                    area = None
                 ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                       step2_min_score_thresh=step2_min_score_thresh, area=area) #, compress=True)
 
