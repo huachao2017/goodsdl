@@ -95,7 +95,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             min_score_thresh = .5
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
-        elif serializer.instance.deviceid in ['275', '571']:
+        else:
             # 新训练测试区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
@@ -117,23 +117,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
                                       step2_min_score_thresh=step2_min_score_thresh, area=area) #, compress=True)
 
-
-        else:
-            # 稳定训练版本
-            export1 = 52
-            export2 = 49
-
-            detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1, export2)
-            step1_min_score_thresh = .8
-            step2_min_score_thresh = .6
-
-            # TODO 需要标定
-            if serializer.instance.deviceid == '275':
-                area = (69,86,901,516)
-            else:
-                area = (63,55,800,492)
-            ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                  step2_min_score_thresh=step2_min_score_thresh, area=area)
 
         if ret is None or len(ret) <= 0:
             tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
