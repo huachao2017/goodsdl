@@ -183,7 +183,7 @@ def visualize_detection_results(result_dict,
       'original_image', 'detection_scores', 'groundtruth_classes'
   ]).issubset(set(result_dict.keys())):
     raise ValueError('result_dict does not contain all expected keys.')
-  logging.info('Creating detection visualizations.')
+  logging.debug('Creating detection visualizations.')
 
   image = result_dict['original_image']
   detection_scores = result_dict['detection_scores']
@@ -213,7 +213,7 @@ def visualize_detection_results(result_dict,
   summary_writer.add_summary(summary, global_step)
   summary_writer.close()
 
-  logging.info('Detection visualizations written to summary with tag %s.', tag)
+  logging.debug('Detection visualizations written to summary with tag %s.', tag)
 
 
 def _run_checkpoint_once(tensor_dict,
