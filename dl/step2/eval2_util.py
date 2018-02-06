@@ -187,7 +187,7 @@ def visualize_detection_results(result_dict,
     raise ValueError('result_dict does not contain all expected keys.')
   logging.info('Creating detection visualizations.')
 
-  image = np.squeeze(result_dict['original_image'], axis=0)
+  image = result_dict['original_image']
   detection_scores = result_dict['detection_scores']
   groundtruth_class_label = result_dict['groundtruth_classes']
 
