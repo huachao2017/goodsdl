@@ -178,18 +178,14 @@ def visualize_groundtruth_and_labels_on_image_array(image,
   detection_class_label = np.argpartition(-scores, 1)[0]
   display_str_list = []
   if detection_class_label == groundtruth_class_label:
-    display_str = '{}: {}%'.format(
-      labels_to_names[detection_class_label],
-      int(100 * scores[detection_class_label]))
-    display_str_list.append(display_str)
+    display_str_list.append('{}'.format(labels_to_names[detection_class_label]))
+    display_str_list.append('{}%'.format(int(100 * scores[detection_class_label])))
     bg_color = 'White'
     font_color = 'Black'
   else:
-    display_str = '{}: {}%--{}'.format(
-      labels_to_names[detection_class_label],
-      int(100 * scores[detection_class_label]),
-      labels_to_names[groundtruth_class_label])
-    display_str_list.append(display_str)
+    display_str_list.append('{}'.format(labels_to_names[detection_class_label]))
+    display_str_list.append('{}%'.format(int(100 * scores[detection_class_label])))
+    display_str_list.append('{}'.format(labels_to_names[groundtruth_class_label]))
     bg_color = 'Red'
     font_color = 'Black'
 

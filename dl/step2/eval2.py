@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import functools
 import os
+import logging
 
 import tensorflow as tf
 from nets import nets_factory
@@ -96,6 +97,8 @@ def main(_):
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     tf.logging.set_verbosity(tf.logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel('INFO')
     with tf.Graph().as_default():
         tf_global_step = slim.get_or_create_global_step()
 
@@ -158,7 +161,6 @@ def main(_):
                     global_step,
                     labels_to_names=dataset.labels_to_names,
                     summary_dir=FLAGS.eval_dir,
-                    export_dir=FLAGS.eval_dir,
                     max_num_predictions=FLAGS.example_num)
             return result_dict
 

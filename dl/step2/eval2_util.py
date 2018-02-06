@@ -151,7 +151,6 @@ def visualize_detection_results(result_dict,
                                 global_step,
                                 labels_to_names,
                                 summary_dir='',
-                                export_dir='',
                                 max_num_predictions=20):
   """Visualizes detection results and writes visualizations to image summaries.
 
@@ -174,8 +173,6 @@ def visualize_detection_results(result_dict,
     global_step: global step at which the visualization are generated.
     labels_to_names: a dict
     summary_dir: the output directory to which the image summaries are written.
-    export_dir: the output directory to which images are written.  If this is
-      empty (default), then images are not exported.
     max_num_predictions: maximum number of detections to visualize
   Raises:
     ValueError: if result_dict does not contain the expected keys (i.e.,
@@ -199,9 +196,9 @@ def visualize_detection_results(result_dict,
       groundtruth_class_label,
       labels_to_names)
 
-  if export_dir:
-    export_path = os.path.join(export_dir, 'export-{}.png'.format(tag))
-    vis_utils.save_image_array_as_png(image, export_path)
+  export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
+  export_path = os.path.join(export_dir, 'export-{}-{}.png'.format(global_step, tag))
+  vis_utils.save_image_array_as_png(image, export_path)
 
   summary = tf.Summary(value=[
       tf.Summary.Value(
