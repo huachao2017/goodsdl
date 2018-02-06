@@ -139,15 +139,14 @@ def draw_info_on_image(image,
     text_width, text_height = font.getsize(display_str)
     margin = np.ceil(0.05 * text_height)
     draw.rectangle(
-        [(left, text_bottom - text_height - 2 * margin), (left + text_width,
-                                                          text_bottom)],
+        [(left, text_bottom), (left + text_width,text_bottom + text_height + 2 * margin)],
         fill=bg_color)
     draw.text(
-        (left + margin, text_bottom - text_height - margin),
+        (left + margin, text_bottom + margin),
         display_str,
         fill=font_color,
         font=font)
-    text_bottom -= text_height - 2 * margin
+    text_bottom += text_height + 2 * margin
 
 
 def visualize_groundtruth_and_labels_on_image_array(image,
@@ -177,10 +176,12 @@ def visualize_groundtruth_and_labels_on_image_array(image,
 
   scores = np.squeeze(scores,0)
   detection_class_label = np.argpartition(-scores, 1)[0]
+  display_str_list = []
   if detection_class_label == groundtruth_class_label:
     display_str = '{}: {}%'.format(
       labels_to_names[detection_class_label],
       int(100 * scores[detection_class_label]))
+    display_str_list.append(display_str)
     bg_color = 'White'
     font_color = 'Black'
   else:
@@ -188,6 +189,7 @@ def visualize_groundtruth_and_labels_on_image_array(image,
       labels_to_names[detection_class_label],
       int(100 * scores[detection_class_label]),
       labels_to_names[groundtruth_class_label])
+    display_str_list.append(display_str)
     bg_color = 'Red'
     font_color = 'Black'
 
@@ -196,7 +198,7 @@ def visualize_groundtruth_and_labels_on_image_array(image,
     image,
     bg_color,
     font_color,
-    display_str_list=display_str)
+    display_str_list=display_str_list)
 
   return image
 
