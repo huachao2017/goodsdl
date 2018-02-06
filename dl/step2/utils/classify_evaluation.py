@@ -230,8 +230,8 @@ class ObjectClassifyEvaluation(object):
       tp_fp_labels = np.array(self.tp_fp_labels_per_class[class_index])
       true_positive_labels = tp_fp_labels
       false_positive_labels = 1 - true_positive_labels
-      cum_true_positives = np.cumsum(true_positive_labels)
-      cum_false_positives = np.cumsum(false_positive_labels)
+      cum_true_positives = np.sum(true_positive_labels)
+      cum_false_positives = np.sum(false_positive_labels)
       precision = cum_true_positives.astype(float) / (
         cum_true_positives + cum_false_positives)
       self.average_precision_per_class[class_index] = precision
