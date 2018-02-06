@@ -108,9 +108,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step2_min_score_thresh = .6
 
                 # TODO 需要标定
-                if serializer.instance.deviceid == '275':
-                    area = (69,86,901,516)
-                elif serializer.instance.deviceid == '571':
+                if serializer.instance.deviceid == '571':
                     area = (20, 30, 930, 500)
                 else:
                     area = None
