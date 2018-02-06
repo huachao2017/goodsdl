@@ -175,6 +175,7 @@ def visualize_groundtruth_and_labels_on_image_array(image,
   # Create a display string (and color) for every box location, group any boxes
   # that correspond to the same location.
 
+  print(groundtruth_class_label.shape)
   scores = np.squeeze(scores,0)
   detection_class_label = np.argpartition(-scores, 1)[0]
   if detection_class_label == groundtruth_class_label:
