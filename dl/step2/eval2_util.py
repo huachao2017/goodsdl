@@ -36,7 +36,8 @@ def extract_prediction_tensors(network_fn,
   eval_image_size = network_fn.default_image_size
 
   preprocessed_image = inception_preprocessing.preprocess_for_eval(original_image, eval_image_size, eval_image_size, central_fraction=None)
-  logits, _ = network_fn(preprocessed_image)
+  preprocessed_images = tf.expand_dims(preprocessed_image, 0)
+  logits, _ = network_fn(preprocessed_images)
   probabilities = tf.nn.softmax(logits)
 
   input_data_fields = fields.InputDataFields()
