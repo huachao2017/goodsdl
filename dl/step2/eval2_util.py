@@ -32,7 +32,7 @@ def extract_prediction_tensors(network_fn,
   input_dict = create_input_dict_fn()
   prefetch_queue = prefetch(input_dict, capacity=500)
   input_dict = prefetch_queue.dequeue()
-  original_image = tf.expand_dims(input_dict[fields.InputDataFields.image], 0)
+  original_image = input_dict[fields.InputDataFields.image]
   eval_image_size = network_fn.default_image_size
 
   preprocessed_image = inception_preprocessing.preprocess_for_eval(original_image, eval_image_size, eval_image_size, central_fraction=None)
