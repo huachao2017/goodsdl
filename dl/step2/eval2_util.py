@@ -190,7 +190,7 @@ def visualize_detection_results(result_dict,
 
   image = result_dict['original_image']
   detection_scores = result_dict['detection_scores']
-  groundtruth_class_label = result_dict['groundtruth_classes']
+  groundtruth_class_label = result_dict['groundtruth_classes'][0]
 
   # Plot groundtruth underneath detections
   vis_utils.visualize_groundtruth_and_labels_on_image_array(
