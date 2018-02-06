@@ -43,7 +43,7 @@ class TfExampleDecoder(data_decoder.DataDecoder):
         'image/width':
             tf.FixedLenFeature((), tf.int64, 1),
         # Object classes.
-        'image/object/class/label':
+        'image/class/label':
             tf.VarLenFeature(tf.int64),
     }
     self.items_to_handlers = {
@@ -53,7 +53,7 @@ class TfExampleDecoder(data_decoder.DataDecoder):
     }
     # primarily after the recent tf.contrib.slim changes make into a release
     # supported by cloudml.
-    label_handler = slim_example_decoder.Tensor('image/object/class/label')
+    label_handler = slim_example_decoder.Tensor('image/class/label')
     self.items_to_handlers[
         fields.InputDataFields.groundtruth_classes] = label_handler
 
