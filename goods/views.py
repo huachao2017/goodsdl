@@ -514,6 +514,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
         class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(os.path.join(
             settings.MEDIA_ROOT,
+            settings.DATASET_DIR_NAME,
             'step2'),
             train_logs_dir)
         # step2_model_name = 'inception_resnet_v2'
