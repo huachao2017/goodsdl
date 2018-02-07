@@ -158,6 +158,7 @@ def main(_):
                 counters['skipped'] += 1
                 return {}
             global_step = tf.train.global_step(sess, tf.train.get_global_step())
+            print(result_dict)
             if batch_index < 10000: # TODO
                 tag = 'image-{}'.format(batch_index)
                 eval2_util.visualize_detection_results(
