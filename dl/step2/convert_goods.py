@@ -86,6 +86,47 @@ def _get_filenames_and_classes(dataset_dir):
 
     return photo_filenames, sorted(class_names)
 
+def _get_split_filenames_and_classes(dataset_dir):
+    """Returns a list of filenames and inferred class names.
+
+    Args:
+      dataset_dir: A directory containing a set of subdirectories representing
+        class names. Each subdirectory should contain PNG or JPG encoded images.
+
+    Returns:
+      A list of image file paths, relative to `dataset_dir` and the list of
+      subdirectories, representing class names.
+    """
+    directories = []
+    class_names = []
+    for dir_name in os.listdir(dataset_dir):
+        path = os.path.join(dataset_dir, dir_name)
+        if os.path.isdir(path):
+            directories.append(path)
+            class_names.append(dir_name)
+
+    train_photo_filenames = []
+    validation_photo_filenames = []
+    for directory in directories:
+        local_filenames = []
+        for filename in os.listdir(directory):
+            path = os.path.join(directory, filename)
+            if os.path.isfile(path):
+                local_filenames.append(path)
+
+        count = len(local_filenames)
+        if count>0:
+            validation_index = random.randint(0, count-1)
+            for i in range(count):
+                if i == validation_index:
+                    validation_photo_filenames.append(local_filenames[i])
+                    if count < 20:# 样本太少的不减少训练样本
+                        train_photo_filenames.append(local_filenames[i])
+                else:
+                    train_photo_filenames.append(local_filenames[i])
+
+    return train_photo_filenames, validation_photo_filenames, sorted(class_names)
+
 def _get_test_filenames_and_classes(dataset_dir):
     """Returns a list of filenames and inferred class names.
 
@@ -390,14 +431,14 @@ def prepare_train(dataset_dir, output_dir):
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
-    photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
+    training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
     names_to_labels = dict(zip(class_names, range(len(class_names))))
 
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
-    random.shuffle(photo_filenames)
-    training_filenames = photo_filenames[_NUM_VALIDATION:]
-    validation_filenames = photo_filenames[:_NUM_VALIDATION]
+    random.shuffle(training_filenames)
+    # training_filenames = photo_filenames[_NUM_VALIDATION:]
+    # validation_filenames = photo_filenames[:_NUM_VALIDATION]
 
     # First, convert the training and validation sets.
     _convert_dataset('train', training_filenames, names_to_labels,
