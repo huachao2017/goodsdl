@@ -29,6 +29,8 @@ logger = logging.getLogger("django")
 
 class Test(APIView):
     def get(self, request):
+
+        subprocess('nohup python3 /home/src/goodsdl/dl/step2/train.py --dataset_split_name=train --dataset_dir=/home/src/goodsdl/train/51 --train_dir=/home/src/goodsdl/train/51 --example_num=64281 --model_name=nasnet_large --num_clones=1 --batch_size=8 --max_number_of_steps=1607025  > /root/train2.out 2>&1 &', shell=True)
         import sys
         path = sys.path
         return Response({'Test': path})
@@ -500,7 +502,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/only_step2/eval2.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval_only2.out 2>&1 &'.format(
+        command = 'nohup python3 {}/only_step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval_only2.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
@@ -536,7 +538,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step2/eval.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
