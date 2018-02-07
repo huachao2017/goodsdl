@@ -6,25 +6,19 @@ import os
 
 import numpy as np
 import tensorflow as tf
-from object_detection.core import standard_fields as fields
 from preprocessing import inception_preprocessing
 
-from dl.step2.utils import tf_example_decoder
 from dl.step2.utils import visualization_utils as vis_utils
 
 slim = tf.contrib.slim
-parallel_reader = tf.contrib.slim.parallel_reader
-
 
 def extract_prediction_tensors(network_fn,
-                                create_input_dict_fn,
-                                ignore_groundtruth=False):
+                                create_input_dict_fn):
   """Restores the model in a tensorflow session.
 
   Args:
     model: model to perform predictions with.
     create_input_dict_fn: function to create input tensor dictionaries.
-    ignore_groundtruth: whether groundtruth should be ignored.
 
   Returns:
     tensor_dict: A tensor dictionary with evaluations.
@@ -38,65 +32,13 @@ def extract_prediction_tensors(network_fn,
   logits, _ = network_fn(preprocessed_images)
   probabilities = tf.nn.softmax(logits)
 
-  input_data_fields = fields.InputDataFields()
   output_dict = {
-      input_data_fields.original_image: original_image,
+      'original_image': original_image,
+      'detection_scores': probabilities,
+      'label': label
   }
 
-  detection_fields = fields.DetectionResultFields
-  output_dict[detection_fields.detection_scores] = probabilities
-
-  if not ignore_groundtruth:
-    groundtruth = {
-        fields.InputDataFields.groundtruth_classes:
-            label,
-    }
-    output_dict.update(groundtruth)
-
   return output_dict
-
-def prefetch(tensor_dict, capacity):
-  """Creates a prefetch queue for tensors.
-
-  Creates a FIFO queue to asynchronously enqueue tensor_dicts and returns a
-  dequeue op that evaluates to a tensor_dict. This function is useful in
-  prefetching preprocessed tensors so that the data is readily available for
-  consumers.
-
-  Example input pipeline when you don't need batching:
-  ----------------------------------------------------
-  key, string_tensor = slim.parallel_reader.parallel_read(...)
-  tensor_dict = decoder.decode(string_tensor)
-  tensor_dict = preprocessor.preprocess(tensor_dict, ...)
-  prefetch_queue = prefetcher.prefetch(tensor_dict, capacity=20)
-  tensor_dict = prefetch_queue.dequeue()
-  outputs = Model(tensor_dict)
-  ...
-  ----------------------------------------------------
-
-  For input pipelines with batching, refer to core/batcher.py
-
-  Args:
-    tensor_dict: a dictionary of tensors to prefetch.
-    capacity: the size of the prefetch queue.
-
-  Returns:
-    a FIFO prefetcher queue
-  """
-  names = list(tensor_dict.keys())
-  dtypes = [t.dtype for t in tensor_dict.values()]
-  shapes = [t.get_shape() for t in tensor_dict.values()]
-  prefetch_queue = tf.PaddingFIFOQueue(capacity, dtypes=dtypes,
-                                       shapes=shapes,
-                                       names=names,
-                                       name='prefetch_queue')
-  enqueue_op = prefetch_queue.enqueue(tensor_dict)
-  tf.train.queue_runner.add_queue_runner(tf.train.queue_runner.QueueRunner(
-      prefetch_queue, [enqueue_op]))
-  tf.summary.scalar('queue/%s/fraction_of_%d_full' % (prefetch_queue.name,
-                                                      capacity),
-                    tf.to_float(prefetch_queue.size()) * (1. / capacity))
-  return prefetch_queue
 
 def write_metrics(metrics, global_step, summary_dir):
   """Write metrics to a summary directory.
@@ -160,7 +102,7 @@ def visualize_detection_results(result_dict,
 
   image = result_dict['original_image']
   detection_scores = result_dict['detection_scores']
-  groundtruth_class_label = result_dict['groundtruth_classes'][0]
+  groundtruth_class_label = result_dict['label']
 
   # Plot groundtruth underneath detections
   vis_utils.visualize_groundtruth_and_labels_on_image_array(

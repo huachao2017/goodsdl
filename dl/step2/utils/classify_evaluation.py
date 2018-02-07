@@ -33,8 +33,6 @@ import collections
 import logging
 import numpy as np
 
-from object_detection.core import standard_fields
-
 
 class ClassifyEvaluator(object):
   """Interface for object classify evalution classes.
@@ -122,9 +120,9 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
           array of shape [num_class] containing detection scores for the boxes.
     """
     self._num_example += 1
-    detection_scores = detections_dict[standard_fields.DetectionResultFields.detection_scores]
+    detection_scores = detections_dict['detection_scores']
     detection_class_label = np.argpartition(-detection_scores[0],1)[0]
-    groundtruth_class_label = detections_dict[standard_fields.InputDataFields.groundtruth_classes][0]
+    groundtruth_class_label = detections_dict['label']
     # print('{}:detection:{},groundtruth:{}'.format(self._num_example, detection_class_label, groundtruth_class_label))
     self._evaluation.add_single_detected_image_info(
       detection_class_label,

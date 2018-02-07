@@ -1,7 +1,6 @@
 import os
 import tensorflow as tf
 import logging
-from dl.step2.utils import tf_example_decoder
 
 slim = tf.contrib.slim
 
@@ -53,8 +52,6 @@ def get_split(split_name, dataset_dir, example_num=2000, file_pattern=None, read
 
     decoder = slim.tfexample_decoder.TFExampleDecoder(
         keys_to_features, items_to_handlers)
-
-    # decoder = tf_example_decoder.TfExampleDecoder()
 
     labels_filename = os.path.join(dataset_dir, 'labels.txt')
     with tf.gfile.Open(labels_filename, 'rb') as f:
