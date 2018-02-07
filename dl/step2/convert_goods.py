@@ -156,12 +156,12 @@ def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
 
             name = os.path.basename(os.path.dirname(filenames[i]))
             label = names_to_labels[name]
-            print('{}:{}'.format(filenames[i],label))
+            # print('{}:{}'.format(filenames[i],label))
             example = dataset_utils.image_to_tfexample(
                 encoded_jpg, b'jpg', height, width, label)
             writer.write(example.SerializeToString())
     writer.close()
-    print('generate tfrecord:{}'.format(output_filename))
+    # print('generate tfrecord:{}'.format(output_filename))
     logger.info('generate tfrecord:{}'.format(output_filename))
 
 
