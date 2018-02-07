@@ -74,7 +74,7 @@ def create_input_dict(input_path):
       input_path,  # Convert `RepeatedScalarContainer` to list.
       reader_class=tf.TFRecordReader,
       num_epochs=None,
-      num_readers=8,
+      num_readers=1,
       shuffle=False,
       dtypes=[tf.string, tf.string],
       capacity=2000,
