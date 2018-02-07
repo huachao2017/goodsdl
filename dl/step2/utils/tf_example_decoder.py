@@ -75,5 +75,5 @@ class TfExampleDecoder(data_decoder.DataDecoder):
     keys = decoder.list_items()
     tensors = decoder.decode(serialized_example, items=keys)
     tensor_dict = dict(zip(keys, tensors))
-    tensor_dict[fields.InputDataFields.image].set_shape([None, None, 3])
+    tensor_dict['image'].set_shape([None, None, 3])
     return tensor_dict
