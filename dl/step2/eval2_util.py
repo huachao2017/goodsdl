@@ -137,11 +137,12 @@ def write_metrics(metrics, global_step, summary_dir):
   logging.info('Writing metrics to tf summary.')
   summary_writer = tf.summary.FileWriter(summary_dir)
   for key in sorted(metrics):
-    summary = tf.Summary(value=[
-        tf.Summary.Value(tag=key, simple_value=metrics[key]),
-    ])
-    summary_writer.add_summary(summary, global_step)
-    logging.info('%s: %f', key, metrics[key])
+    if not np.isnan(metrics[key]):
+        summary = tf.Summary(value=[
+            tf.Summary.Value(tag=key, simple_value=metrics[key]),
+        ])
+        summary_writer.add_summary(summary, global_step)
+        logging.info('%s: %f', key, metrics[key])
   summary_writer.close()
   logging.info('Metrics written to tf summary.')
 
