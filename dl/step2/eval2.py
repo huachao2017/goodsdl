@@ -118,7 +118,6 @@ def main(_):
         ##############################################################
         # Create a dataset provider that loads data from the dataset #
         ##############################################################
-        print(dataset.data_sources)
         create_input_dict_fn = functools.partial(
             eval2_util.create_input_dict,
             dataset.data_sources)

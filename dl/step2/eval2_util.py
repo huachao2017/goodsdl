@@ -32,7 +32,7 @@ def extract_prediction_tensors(network_fn,
   input_dict = create_input_dict_fn()
   prefetch_queue = prefetch(input_dict, capacity=500)
   input_dict = prefetch_queue.dequeue()
-  original_image = input_dict[fields.InputDataFields.image]
+  original_image = input_dict['image']
   eval_image_size = network_fn.default_image_size
 
   preprocessed_image = inception_preprocessing.preprocess_for_eval(original_image, eval_image_size, eval_image_size, central_fraction=None)
@@ -51,7 +51,7 @@ def extract_prediction_tensors(network_fn,
   if not ignore_groundtruth:
     groundtruth = {
         fields.InputDataFields.groundtruth_classes:
-            input_dict[fields.InputDataFields.groundtruth_classes],
+            input_dict['label'],
     }
     output_dict.update(groundtruth)
 

@@ -1,6 +1,7 @@
 import os
 import tensorflow as tf
 import logging
+from dl.step2.utils import tf_example_decoder
 
 slim = tf.contrib.slim
 
@@ -38,20 +39,22 @@ def get_split(split_name, dataset_dir, example_num=2000, file_pattern=None, read
     if not reader:
         reader = tf.TFRecordReader
 
-    keys_to_features = {
-        'image/encoded': tf.FixedLenFeature((), tf.string, default_value=''),
-        'image/format': tf.FixedLenFeature((), tf.string, default_value='jpg'),
-        'image/class/label': tf.FixedLenFeature(
-            [], tf.int64, default_value=tf.zeros([], dtype=tf.int64)),
-    }
+    # keys_to_features = {
+    #     'image/encoded': tf.FixedLenFeature((), tf.string, default_value=''),
+    #     'image/format': tf.FixedLenFeature((), tf.string, default_value='jpg'),
+    #     'image/class/label': tf.FixedLenFeature(
+    #         [], tf.int64, default_value=tf.zeros([], dtype=tf.int64)),
+    # }
+    #
+    # items_to_handlers = {
+    #     'image': slim.tfexample_decoder.Image(),
+    #     'label': slim.tfexample_decoder.Tensor('image/class/label'),
+    # }
+    #
+    # decoder = slim.tfexample_decoder.TFExampleDecoder(
+    #     keys_to_features, items_to_handlers)
 
-    items_to_handlers = {
-        'image': slim.tfexample_decoder.Image(),
-        'label': slim.tfexample_decoder.Tensor('image/class/label'),
-    }
-
-    decoder = slim.tfexample_decoder.TFExampleDecoder(
-        keys_to_features, items_to_handlers)
+    decoder = tf_example_decoder.TfExampleDecoder()
 
     labels_filename = os.path.join(dataset_dir, 'labels.txt')
     with tf.gfile.Open(labels_filename, 'rb') as f:

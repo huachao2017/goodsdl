@@ -21,7 +21,6 @@ protos for object detection.
 import tensorflow as tf
 
 from object_detection.core import data_decoder
-from object_detection.core import standard_fields as fields
 
 slim_example_decoder = tf.contrib.slim.tfexample_decoder
 
@@ -47,15 +46,14 @@ class TfExampleDecoder(data_decoder.DataDecoder):
             tf.VarLenFeature(tf.int64),
     }
     self.items_to_handlers = {
-        fields.InputDataFields.image: slim_example_decoder.Image(
+        'image': slim_example_decoder.Image(
             image_key='image/encoded', format_key='image/format', channels=3),
         # Object classes.
     }
     # primarily after the recent tf.contrib.slim changes make into a release
     # supported by cloudml.
     label_handler = slim_example_decoder.Tensor('image/class/label')
-    self.items_to_handlers[
-        fields.InputDataFields.groundtruth_classes] = label_handler
+    self.items_to_handlers['label'] = label_handler
 
   def decode(self, tf_example_string_tensor):
     """Decodes serialized tensorflow example and returns a tensor dictionary.
