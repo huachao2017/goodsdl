@@ -29,7 +29,9 @@ logger = logging.getLogger("django")
 
 class Test(APIView):
     def get(self, request):
-        return Response({'Test': True})
+        import sys
+        path = sys.path
+        return Response({'Test': path})
 
 
 class DefaultMixin:
