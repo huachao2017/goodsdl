@@ -425,4 +425,4 @@ if __name__ == '__main__':
     # First, convert the training and validation sets.
     _convert_dataset('validation', validation_filenames, names_to_labels,
                      output_dir)
-    print(len(test_photo_filenames))
+    print(len(validation_filenames))
