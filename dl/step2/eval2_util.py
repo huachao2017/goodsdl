@@ -94,11 +94,6 @@ def visualize_detection_results(result_dict,
       'original_image', 'detection_scores',
       'groundtruth_classes')
   """
-  if not set([
-      'original_image', 'detection_scores', 'groundtruth_classes'
-  ]).issubset(set(result_dict.keys())):
-    raise ValueError('result_dict does not contain all expected keys.')
-  logging.debug('Creating detection visualizations.')
 
   image = result_dict['original_image']
   detection_scores = result_dict['detection_scores']

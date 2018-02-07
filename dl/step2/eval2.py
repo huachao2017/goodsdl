@@ -157,6 +157,10 @@ def main(_):
                 tf.logging.info('Skipping image')
                 counters['skipped'] += 1
                 return {}
+            if not set([
+                'original_image', 'detection_scores', 'label'
+            ]).issubset(set(result_dict.keys())):
+                raise ValueError('result_dict does not contain all expected keys.')
             global_step = tf.train.global_step(sess, tf.train.get_global_step())
             if batch_index < 10000: # TODO
                 tag = 'image-{}'.format(batch_index)
