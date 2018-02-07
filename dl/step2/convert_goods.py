@@ -86,6 +86,34 @@ def _get_filenames_and_classes(dataset_dir):
 
     return photo_filenames, sorted(class_names)
 
+def _get_test_filenames_and_classes(dataset_dir):
+    """Returns a list of filenames and inferred class names.
+
+    Args:
+      dataset_dir: A directory containing a set of subdirectories representing
+        class names. Each subdirectory should contain PNG or JPG encoded images.
+
+    Returns:
+      A list of image file paths, relative to `dataset_dir` and the list of
+      subdirectories, representing class names.
+    """
+    directories = []
+    class_names = []
+    for dir_name in os.listdir(dataset_dir):
+        path = os.path.join(dataset_dir, dir_name)
+        if os.path.isdir(path):
+            directories.append(path)
+            class_names.append(dir_name)
+
+    test_photo_filenames = []
+    for directory in directories:
+        for filename in os.listdir(directory):
+            path = os.path.join(directory, filename)
+            if os.path.isfile(path):
+                test_photo_filenames.append(path)
+                break
+
+    return test_photo_filenames, sorted(class_names)
 
 def _get_tfrecord_filename(output_dir, split_name):
     output_filename = 'goods_recogonize_%s.tfrecord' % (
@@ -382,3 +410,17 @@ def prepare_train(dataset_dir, output_dir):
 
     logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
+
+if __name__ == '__main__':
+    dataset_dir = '/home/src/goodsdl/media/dataset/step2'
+    output_dir = '/home/src/goodsdl/train/48'
+    test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
+    names_to_labels = dict(zip(class_names, range(len(class_names))))
+
+    # Divide into train and test:
+    validation_filenames = test_photo_filenames
+
+    # First, convert the training and validation sets.
+    _convert_dataset('validation', validation_filenames, names_to_labels,
+                     output_dir)
+    print(len(test_photo_filenames))
