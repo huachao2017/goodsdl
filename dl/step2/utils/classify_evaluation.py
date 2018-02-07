@@ -236,6 +236,7 @@ class ObjectClassifyEvaluation(object):
         cum_true_positives + cum_false_positives)
       self.average_precision_per_class[class_index] = precision
 
+    print(self.average_precision_per_class)
     mean_ap = np.nanmean(self.average_precision_per_class)
     return ObjectClassifyEvalMetrics(
       self.average_precision_per_class, mean_ap, self.average_precision_per_class, 0)
