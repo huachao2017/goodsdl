@@ -125,7 +125,7 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
     detection_scores = detections_dict[standard_fields.DetectionResultFields.detection_scores]
     detection_class_label = np.argpartition(-detection_scores[0],1)[0]
     groundtruth_class_label = detections_dict[standard_fields.InputDataFields.groundtruth_classes][0]
-    print(detections_dict[standard_fields.InputDataFields.groundtruth_classes])
+    print(detections_dict)
     print('{}:detection:{},groundtruth:{}'.format(self._num_example, detection_class_label, groundtruth_class_label))
     self._evaluation.add_single_detected_image_info(
       detection_class_label,
