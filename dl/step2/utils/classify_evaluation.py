@@ -106,6 +106,7 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
     """
     super(ObjectClassifyEvaluator, self).__init__(labels_to_names)
     self._num_classes = len(labels_to_names)
+    self._num_example = 0
     self._label_id_offset = 0
     self._evaluation = ObjectClassifyEvaluation(
         self._num_classes,
@@ -120,11 +121,11 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
         standard_fields.DetectionResultFields.detection_scores: float32 numpy
           array of shape [num_class] containing detection scores for the boxes.
     """
-
+    self._num_example += 1
     detection_scores = detections_dict[standard_fields.DetectionResultFields.detection_scores]
     detection_class_label = np.argpartition(-detection_scores[0],1)[0]
     groundtruth_class_label = detections_dict[standard_fields.InputDataFields.groundtruth_classes][0]
-    print('detection:{},groundtruth:{}'.format(detection_class_label, groundtruth_class_label))
+    print('{}:detection:{},groundtruth:{}'.format(self._num_example, detection_class_label, groundtruth_class_label))
     self._evaluation.add_single_detected_image_info(
       detection_class_label,
       groundtruth_class_label)
@@ -159,6 +160,7 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
     return pascal_metrics
 
   def clear(self):
+    self._num_example = 0
     """Clears the state to prepare for a fresh evaluation."""
     self._evaluation = ObjectClassifyEvaluation(
         self._num_classes,
