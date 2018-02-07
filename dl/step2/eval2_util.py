@@ -75,7 +75,7 @@ def create_input_dict(input_path):
       reader_class=tf.TFRecordReader,
       num_epochs=None,
       num_readers=8,
-      shuffle=True,
+      shuffle=False,
       dtypes=[tf.string, tf.string],
       capacity=2000,
       min_after_dequeue=1000)
