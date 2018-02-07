@@ -420,7 +420,7 @@ if __name__ == '__main__':
 
     # Divide into train and test:
     validation_filenames = test_photo_filenames
-    validation_filenames = validation_filenames[:10]
+    # validation_filenames = validation_filenames[:10]
 
     # First, convert the training and validation sets.
     _convert_dataset('validation', validation_filenames, names_to_labels,
