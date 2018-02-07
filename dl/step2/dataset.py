@@ -1,5 +1,6 @@
 import os
 import tensorflow as tf
+import logging
 
 slim = tf.contrib.slim
 
@@ -31,6 +32,7 @@ def get_split(split_name, dataset_dir, example_num=2000, file_pattern=None, read
     if not file_pattern:
         file_pattern = 'goods_recogonize_%s.tfrecord'
     file_pattern = os.path.join(dataset_dir, file_pattern % split_name)
+    logging.info(file_pattern)
 
     # Allowing None in the signature so that dataset_factory can use the default.
     if not reader:
