@@ -71,11 +71,11 @@ def _get_filenames_and_classes(dataset_dir):
     """
     directories = []
     class_names = []
-    for filename in os.listdir(dataset_dir):
-        path = os.path.join(dataset_dir, filename)
+    for dir_name in os.listdir(dataset_dir):
+        path = os.path.join(dataset_dir, dir_name)
         if os.path.isdir(path):
             directories.append(path)
-            class_names.append(filename)
+            class_names.append(dir_name)
 
     photo_filenames = []
     for directory in directories:
@@ -93,26 +93,26 @@ def _get_tfrecord_filename(output_dir, split_name):
     return os.path.join(output_dir, output_filename)
 
 
-def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
+def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
     """Converts the given filenames to a TFRecord dataset.
 
     Args:
       split_name: The name of the dataset, either 'train' or 'validation'.
       filenames: A list of absolute paths to png or jpg images.
-      class_names_to_ids: A dictionary from class names (strings) to ids
+      names_to_labels: A dictionary from class names (strings) to ids
         (integers).
       output_dir: The directory where the converted tfrecord are stored.
     """
     assert split_name in ['train', 'validation']
 
-    num_per_shard = int(math.ceil(len(filenames) / float(len(class_names_to_ids))))
+    num_per_shard = int(math.ceil(len(filenames) / float(len(names_to_labels))))
 
     output_filename = _get_tfrecord_filename(
         output_dir, split_name)
     if tf.gfile.Exists(output_filename):
         tf.gfile.Remove(output_filename)
     writer = tf.python_io.TFRecordWriter(output_filename)
-    for shard_id in range(len(class_names_to_ids)):
+    for shard_id in range(len(names_to_labels)):
         start_ndx = shard_id * num_per_shard
         end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
         for i in range(start_ndx, end_ndx):
@@ -126,11 +126,11 @@ def _convert_dataset(split_name, filenames, class_names_to_ids, output_dir):
             image = im.open(encoded_jpg_io)
             width, height = image.size
 
-            class_name = os.path.basename(os.path.dirname(filenames[i]))
-            class_id = class_names_to_ids[class_name]
+            name = os.path.basename(os.path.dirname(filenames[i]))
+            label = names_to_labels[name]
 
             example = dataset_utils.image_to_tfexample(
-                encoded_jpg, b'jpg', height, width, class_id)
+                encoded_jpg, b'jpg', height, width, label)
             writer.write(example.SerializeToString())
     writer.close()
     logger.info('generate tfrecord:{}'.format(output_filename))
@@ -362,7 +362,7 @@ def prepare_train(dataset_dir, output_dir):
         tf.gfile.MakeDirs(output_dir)
 
     photo_filenames, class_names = _get_filenames_and_classes(dataset_dir)
-    class_names_to_ids = dict(zip(class_names, range(len(class_names))))
+    names_to_labels = dict(zip(class_names, range(len(class_names))))
 
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
@@ -371,14 +371,14 @@ def prepare_train(dataset_dir, output_dir):
     validation_filenames = photo_filenames[:_NUM_VALIDATION]
 
     # First, convert the training and validation sets.
-    _convert_dataset('train', training_filenames, class_names_to_ids,
+    _convert_dataset('train', training_filenames, names_to_labels,
                      output_dir)
-    _convert_dataset('validation', validation_filenames, class_names_to_ids,
+    _convert_dataset('validation', validation_filenames, names_to_labels,
                      output_dir)
 
     # Finally, write the labels file:
-    labels_to_class_names = dict(zip(range(len(class_names)), class_names))
-    dataset_utils.write_label_file(labels_to_class_names, output_dir)
+    labels_to_names = dict(zip(range(len(class_names)), class_names))
+    dataset_utils.write_label_file(labels_to_names, output_dir)
 
     logger.info('Finished converting the goods dataset!')
-    return class_names_to_ids, training_filenames, validation_filenames
+    return names_to_labels, training_filenames, validation_filenames
