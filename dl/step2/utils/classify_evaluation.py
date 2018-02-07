@@ -124,6 +124,7 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
     detection_scores = detections_dict[standard_fields.DetectionResultFields.detection_scores]
     detection_class_label = np.argpartition(-detection_scores[0],1)[0]
     groundtruth_class_label = detections_dict[standard_fields.InputDataFields.groundtruth_classes][0]
+    print('detection:{},groundtruth:{}'.format(detection_class_label, groundtruth_class_label))
     self._evaluation.add_single_detected_image_info(
       detection_class_label,
       groundtruth_class_label)
@@ -236,7 +237,6 @@ class ObjectClassifyEvaluation(object):
         cum_true_positives + cum_false_positives)
       self.average_precision_per_class[class_index] = precision
 
-    print(self.average_precision_per_class)
     mean_ap = np.nanmean(self.average_precision_per_class)
     return ObjectClassifyEvalMetrics(
       self.average_precision_per_class, mean_ap, self.average_precision_per_class, 0)
