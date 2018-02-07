@@ -161,6 +161,7 @@ def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
                 encoded_jpg, b'jpg', height, width, label)
             writer.write(example.SerializeToString())
     writer.close()
+    print('generate tfrecord:{}'.format(output_filename))
     logger.info('generate tfrecord:{}'.format(output_filename))
 
 
