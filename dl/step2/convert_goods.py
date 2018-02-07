@@ -156,7 +156,7 @@ def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
 
             name = os.path.basename(os.path.dirname(filenames[i]))
             label = names_to_labels[name]
-
+            print('{}:{}'.format(filenames[i],label))
             example = dataset_utils.image_to_tfexample(
                 encoded_jpg, b'jpg', height, width, label)
             writer.write(example.SerializeToString())
@@ -412,8 +412,6 @@ def prepare_train(dataset_dir, output_dir):
     return names_to_labels, training_filenames, validation_filenames
 
 if __name__ == '__main__':
-    logger = logging.getLogger()
-    logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset/step2'
     output_dir = '/home/src/goodsdl/train/48'
     test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
