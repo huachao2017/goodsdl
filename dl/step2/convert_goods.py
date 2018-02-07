@@ -156,7 +156,7 @@ def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
 
             name = os.path.basename(os.path.dirname(filenames[i]))
             label = names_to_labels[name]
-            # print('{}:{}'.format(filenames[i],label))
+            print('{}:{}'.format(filenames[i],label))
             example = dataset_utils.image_to_tfexample(
                 encoded_jpg, b'jpg', height, width, label)
             writer.write(example.SerializeToString())
@@ -420,6 +420,7 @@ if __name__ == '__main__':
 
     # Divide into train and test:
     validation_filenames = test_photo_filenames
+    validation_filenames = validation_filenames[:10]
 
     # First, convert the training and validation sets.
     _convert_dataset('validation', validation_filenames, names_to_labels,
