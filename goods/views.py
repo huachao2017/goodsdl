@@ -30,7 +30,7 @@ logger = logging.getLogger("django")
 class Test(APIView):
     def get(self, request):
 
-        subprocess.call('nohup python3 /home/src/goodsdl/dl/step2/train.py --dataset_split_name=train --dataset_dir=/home/src/goodsdl/train/51 --train_dir=/home/src/goodsdl/train/51 --example_num=64281 --model_name=nasnet_large --num_clones=1 --batch_size=8 --max_number_of_steps=1607025  > /root/train2.out 2>&1 &', shell=True)
+        subprocess.call('nohup python3 /home/src/goodsdl/dl/test.py  > /root/test.out 2>&1 &', shell=True)
         import sys
         path = sys.path
         return Response({'Test': path})
