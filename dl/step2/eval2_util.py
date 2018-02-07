@@ -29,10 +29,8 @@ def extract_prediction_tensors(network_fn,
   Returns:
     tensor_dict: A tensor dictionary with evaluations.
   """
-  input_dict = create_input_dict_fn()
-  prefetch_queue = prefetch(input_dict, capacity=500)
-  input_dict = prefetch_queue.dequeue()
-  original_image = input_dict['image']
+  image, label = create_input_dict_fn()
+  original_image = image
   eval_image_size = network_fn.default_image_size
 
   preprocessed_image = inception_preprocessing.preprocess_for_eval(original_image, eval_image_size, eval_image_size, central_fraction=None)
@@ -51,37 +49,11 @@ def extract_prediction_tensors(network_fn,
   if not ignore_groundtruth:
     groundtruth = {
         fields.InputDataFields.groundtruth_classes:
-            input_dict['label'],
+            label,
     }
     output_dict.update(groundtruth)
 
   return output_dict
-
-def create_input_dict(input_path):
-  """Builds a tensor dictionary based on the InputReader config.
-
-  Args:
-    input_path: A input_reader_pb2.InputReader object.
-
-  Returns:
-    A tensor dict based on the input_reader_config.
-
-  Raises:
-    ValueError: On invalid input reader proto.
-    ValueError: If no input paths are specified.
-  """
-  _, string_tensor = parallel_reader.parallel_read(
-      input_path,  # Convert `RepeatedScalarContainer` to list.
-      reader_class=tf.TFRecordReader,
-      num_epochs=None,
-      num_readers=1,
-      shuffle=False,
-      dtypes=[tf.string, tf.string],
-      capacity=2000,
-      min_after_dequeue=1000)
-
-  decoder = tf_example_decoder.TfExampleDecoder()
-  return decoder.decode(string_tensor)
 
 def prefetch(tensor_dict, capacity):
   """Creates a prefetch queue for tensors.

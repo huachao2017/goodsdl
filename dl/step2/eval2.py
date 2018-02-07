@@ -118,9 +118,14 @@ def main(_):
         ##############################################################
         # Create a dataset provider that loads data from the dataset #
         ##############################################################
-        create_input_dict_fn = functools.partial(
-            eval2_util.create_input_dict,
-            dataset.data_sources)
+        def create_input_dict_fn():
+            provider = slim.dataset_data_provider.DatasetDataProvider(
+                dataset,
+                shuffle=False,
+                common_queue_capacity=2 * FLAGS.batch_size,
+                common_queue_min=FLAGS.batch_size)
+            [image, label] = provider.get(['image', 'label'])
+            return image, label
 
         tensor_dict = eval2_util.extract_prediction_tensors(
             network_fn,
