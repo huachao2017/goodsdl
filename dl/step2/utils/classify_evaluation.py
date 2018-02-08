@@ -141,7 +141,7 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
       2. per_category_ap: category specific results with keys of the form
         'PerformanceByCategory/mAP@<matching_iou_threshold>IOU/category'.
     """
-    (per_class_ap, mean_ap, _, _) = (
+    (per_class_ap, mean_ap) = (
         self._evaluation.evaluate())
     pascal_metrics = {
         self._metric_prefix +
@@ -151,7 +151,7 @@ class ObjectClassifyEvaluator(ClassifyEvaluator):
     for idx in range(per_class_ap.size):
       if idx + self._label_id_offset in self._labels_to_names:
         display_name = (
-            self._metric_prefix + 'PerformanceByCategory/AP/{}'.format(
+            self._metric_prefix + 'PerformanceByCategory/AP/{}-{}'.format(idx + self._label_id_offset,
                 self._labels_to_names[idx + self._label_id_offset]))
         pascal_metrics[display_name] = per_class_ap[idx]
 
@@ -176,7 +176,7 @@ class PascalClassifyEvaluator(ObjectClassifyEvaluator):
 
 ObjectClassifyEvalMetrics = collections.namedtuple(
     'ObjectClassifyEvalMetrics', [
-        'average_precisions', 'mean_ap', 'precisions', 'recalls'
+        'average_precisions', 'mean_ap'
     ])
 
 
@@ -239,4 +239,4 @@ class ObjectClassifyEvaluation(object):
 
     mean_ap = np.nanmean(self.average_precision_per_class)
     return ObjectClassifyEvalMetrics(
-      self.average_precision_per_class, mean_ap, self.average_precision_per_class, 0)
+      self.average_precision_per_class, mean_ap)
