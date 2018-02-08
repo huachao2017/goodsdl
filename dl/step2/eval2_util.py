@@ -111,12 +111,12 @@ def visualize_detection_results(result_dict,
           detection_score,
           labels_to_names)
   else:
-      groundtruth_image_path = None
+      detection_sample_image_path = None
       if source_dataset_dir:
-          groundtruth_image_dir=os.path.join(source_dataset_dir, labels_to_names[groundtruth_class_label])
-          for image_name in os.listdir(groundtruth_image_dir):
-              groundtruth_image_path = os.path.join(groundtruth_image_dir,image_name)
-              if os.path.isfile(groundtruth_image_path):
+          detection_image_dir=os.path.join(source_dataset_dir, labels_to_names[detection_class_label])
+          for image_name in os.listdir(detection_image_dir):
+              detection_sample_image_path = os.path.join(detection_image_dir,image_name)
+              if os.path.isfile(detection_sample_image_path):
                   break
       vis_utils.visualize_false_on_image_array(
           image,
@@ -124,7 +124,7 @@ def visualize_detection_results(result_dict,
           detection_score,
           groundtruth_class_label,
           labels_to_names,
-          groundtruth_image_path=groundtruth_image_path
+          detection_sample_image_path=detection_sample_image_path
       )
 
   export_dir = os.path.join(summary_dir, str(groundtruth_class_label))

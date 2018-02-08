@@ -93,7 +93,7 @@ def draw_info_on_image_array(image,
                              bg_color='red',
                              font_color='black',
                              display_str_list=(),
-                             groundtruth_image_path=None):
+                             detection_sample_image_path=None):
   """Adds a bounding box to an image (numpy array).
 
   Args:
@@ -105,9 +105,9 @@ def draw_info_on_image_array(image,
   """
   image_pil = Image.fromarray(np.uint8(image)).convert('RGB')
   groundtruth_image = None
-  if groundtruth_image_path:
-      groundtruth_image = Image.open(groundtruth_image_path)
-  draw_info_on_image(image_pil, bg_color, font_color, display_str_list,groundtruth_image=groundtruth_image)
+  if detection_sample_image_path:
+      detection_sample_image = Image.open(detection_sample_image_path)
+  draw_info_on_image(image_pil, bg_color, font_color, display_str_list,detection_sample_image=detection_sample_image)
   np.copyto(image, np.array(image_pil))
 
 
@@ -116,7 +116,7 @@ def draw_info_on_image(image,
                        bg_color='red',
                        font_color='black',
                        display_str_list=(),
-                       groundtruth_image=None):
+                       detection_sample_image=None):
   """Adds a bounding box to an image.
 
   Each string in display_str_list is displayed on a separate line above the
@@ -153,11 +153,11 @@ def draw_info_on_image(image,
         fill=font_color,
         font=font)
     text_bottom += text_height + 2 * margin
-  if groundtruth_image is not None:
+  if detection_sample_image is not None:
       width, height = image.size
       crop_width = int(width / 3)
       crop_height = int(height / 3)
-      im = groundtruth_image.resize((crop_width, crop_height))
+      im = detection_sample_image.resize((crop_width, crop_height))
 
       box = (width - crop_width, height - crop_height, width, height)
       image.paste(im, box)
@@ -191,7 +191,7 @@ def visualize_false_on_image_array(image,
                                    detection_score,
                                    groundtruth_class_label,
                                    labels_to_names,
-                                   groundtruth_image_path=None):
+                                   detection_sample_image_path=None):
   """
   """
   # Create a display string (and color) for every box location, group any boxes
@@ -210,7 +210,7 @@ def visualize_false_on_image_array(image,
     bg_color,
     font_color,
     display_str_list=display_str_list,
-    groundtruth_image_path=groundtruth_image_path
+    detection_sample_image_path=detection_sample_image_path
   )
 
   return image
