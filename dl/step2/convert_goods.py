@@ -468,7 +468,7 @@ def prepare_train(dataset_dir, output_dir):
 
 if __name__ == '__main__':
     dataset_dir = '/home/src/goodsdl/media/dataset/step2'
-    output_dir = '/home/src/goodsdl/train/48'
+    output_dir = '/home/src/goodsdl/train/51'
     test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
     names_to_labels = dict(zip(class_names, range(len(class_names))))
 
