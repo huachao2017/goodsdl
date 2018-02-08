@@ -163,7 +163,7 @@ def main(_):
                 raise ValueError('result_dict does not contain all expected keys.')
             global_step = tf.train.global_step(sess, tf.train.get_global_step())
             if batch_index < 10000: # TODO
-                tag = 'image-{}'.format(result_dict['label'])
+                tag = 'image-{}-{}'.format(result_dict['label'], batch_index)
                 eval2_util.visualize_detection_results(
                     result_dict,
                     tag,
