@@ -169,8 +169,7 @@ def main(_):
                     tag,
                     global_step,
                     labels_to_names=dataset.labels_to_names,
-                    summary_dir=FLAGS.eval_dir,
-                    max_num_predictions=FLAGS.example_num)
+                    summary_dir=FLAGS.eval_dir)
             return result_dict
 
         variables_to_restore = tf.global_variables()

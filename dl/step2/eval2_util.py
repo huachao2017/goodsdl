@@ -65,8 +65,7 @@ def visualize_detection_results(result_dict,
                                 tag,
                                 global_step,
                                 labels_to_names,
-                                summary_dir='',
-                                max_num_predictions=20):
+                                summary_dir=''):
   """Visualizes detection results and writes visualizations to image summaries.
 
   This function visualizes an image with its detected bounding boxes and writes
@@ -79,16 +78,15 @@ def visualize_detection_results(result_dict,
       data corresponding to each image being evaluated.  The following keys
       are required:
         'original_image': a numpy array representing the image with shape
-          [1, height, width, 3]
+          [height, width, 3]
         'detection_scores': a numpy array of shape [1,N]
-        'groundtruth_classes': int value
+        'label': int value
       Detections are assumed to be provided in decreasing order of score and for
       display, and we assume that scores are probabilities between 0 and 1.
     tag: tensorboard tag (string) to associate with image.
     global_step: global step at which the visualization are generated.
     labels_to_names: a dict
     summary_dir: the output directory to which the image summaries are written.
-    max_num_predictions: maximum number of detections to visualize
   Raises:
     ValueError: if result_dict does not contain the expected keys (i.e.,
       'original_image', 'detection_scores',
@@ -99,18 +97,37 @@ def visualize_detection_results(result_dict,
   detection_scores = result_dict['detection_scores']
   groundtruth_class_label = result_dict['label']
 
+  detection_scores = np.squeeze(detection_scores,0)
+  detection_class_label = np.argpartition(-detection_scores, 1)[0]
+  detection_score = detection_scores[detection_class_label]
+
   # Plot groundtruth underneath detections
-  vis_utils.visualize_groundtruth_and_labels_on_image_array(
-      image,
-      detection_scores,
-      groundtruth_class_label,
-      labels_to_names)
+  if groundtruth_class_label == detection_class_label:
+      vis_utils.visualize_truth_on_image_array(
+          image,
+          detection_class_label,
+          detection_score,
+          labels_to_names)
+  else:
+      vis_utils.visualize_false_on_image_array(
+          image,
+          detection_class_label,
+          detection_score,
+          groundtruth_class_label,
+          labels_to_names)
 
   export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
   if not tf.gfile.Exists(export_dir):
       tf.gfile.MakeDirs(export_dir)
   export_path = os.path.join(export_dir, 'export-{}-{}.png'.format(global_step, tag))
   vis_utils.save_image_array_as_png(image, export_path)
+  if groundtruth_class_label != detection_class_label:
+      # 单独记录错误识别图片
+      false_export_path = os.path.join(summary_dir, 'false')
+      if not tf.gfile.Exists(false_export_path):
+          tf.gfile.MakeDirs(false_export_path)
+      false_export_path = os.path.join(false_export_path, 'export-{}-{}.png'.format(global_step, tag))
+      vis_utils.save_image_array_as_png(image, false_export_path)
 
   summary = tf.Summary(value=[
       tf.Summary.Value(

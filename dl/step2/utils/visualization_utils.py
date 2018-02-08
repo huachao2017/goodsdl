@@ -149,45 +149,20 @@ def draw_info_on_image(image,
     text_bottom += text_height + 2 * margin
 
 
-def visualize_groundtruth_and_labels_on_image_array(image,
-                                              scores,
-                                              groundtruth_class_label,
-                                              labels_to_names):
-  """Overlay labeled boxes on an image with formatted scores and label names.
-
-  This function groups boxes that correspond to the same location
-  and creates a display string for each detection and overlays these
-  on the image. Note that this function modifies the image in place, and returns
-  that same image.
-
-  Args:
-    image: uint8 numpy array with shape (img_height, img_width, 3)
-    scores: a numpy array of shape [N] or None.  If scores=None, then
-      this function assumes that the boxes to be plotted are groundtruth
-      boxes and plot all boxes as black with no classes or scores.
-    groundtruth_class_label: .
-    labels_to_names:
-
-  Returns:
-    uint8 numpy array with shape (img_height, img_width, 3) with overlaid boxes.
+def visualize_truth_on_image_array(image,
+                                   detection_class_label,
+                                   detection_score,
+                                   labels_to_names):
+  """
   """
   # Create a display string (and color) for every box location, group any boxes
   # that correspond to the same location.
 
-  scores = np.squeeze(scores,0)
-  detection_class_label = np.argpartition(-scores, 1)[0]
   display_str_list = []
-  if detection_class_label == groundtruth_class_label:
-    display_str_list.append('{}'.format(labels_to_names[detection_class_label]))
-    display_str_list.append('{}%'.format(int(100 * scores[detection_class_label])))
-    bg_color = 'White'
-    font_color = 'Black'
-  else:
-    display_str_list.append('{}'.format(labels_to_names[detection_class_label]))
-    display_str_list.append('{}%'.format(int(100 * scores[detection_class_label])))
-    display_str_list.append('{}'.format(labels_to_names[groundtruth_class_label]))
-    bg_color = 'Red'
-    font_color = 'Black'
+  display_str_list.append('{}'.format(labels_to_names[detection_class_label]))
+  display_str_list.append('{}%'.format(int(100 * detection_score)))
+  bg_color = 'White'
+  font_color = 'Black'
 
   # Draw all boxes onto image.
   draw_info_on_image_array(
@@ -198,3 +173,28 @@ def visualize_groundtruth_and_labels_on_image_array(image,
 
   return image
 
+def visualize_false_on_image_array(image,
+                                   detection_class_label,
+                                   detection_score,
+                                   groundtruth_class_label,
+                                   labels_to_names):
+  """
+  """
+  # Create a display string (and color) for every box location, group any boxes
+  # that correspond to the same location.
+
+  display_str_list = []
+  display_str_list.append('{}'.format(labels_to_names[detection_class_label]))
+  display_str_list.append('{}%'.format(int(100 * detection_score)))
+  display_str_list.append('{}'.format(labels_to_names[groundtruth_class_label]))
+  bg_color = 'Red'
+  font_color = 'Black'
+
+  # Draw all boxes onto image.
+  draw_info_on_image_array(
+    image,
+    bg_color,
+    font_color,
+    display_str_list=display_str_list)
+
+  return image
