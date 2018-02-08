@@ -225,7 +225,7 @@ def update_config_file(train_dir,
     with open(output_filename, 'w') as file:
         file.write(output)
 
-def read_examples_list_and_label_map_and_classnames(path):
+def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
     """返回所有图片文件路径"""
     dirlist = os.listdir(path)  # 列出文件夹下所有的目录与文件
     examples = []
@@ -240,47 +240,22 @@ def read_examples_list_and_label_map_and_classnames(path):
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg" and os.path.isfile(example + '.xml'):
                     examples.append(example)
+
+    additional_dirlist = os.listdir(additional_path)
+    for i in range(0, len(additional_dirlist)):
+        class_dir = os.path.join(path, additional_dirlist[i])
+        if os.path.isdir(class_dir):
+            filelist = os.listdir(class_dir)
+            for j in range(0, len(filelist)):
+                image_path = os.path.join(class_dir, filelist[j])
+                example, ext = os.path.splitext(image_path)
+                if ext == ".jpg" and os.path.isfile(example + '.xml'):
+                    examples.append(example)
     return examples, {'1':1},sorted(class_names)
 
-def prepare_train(data_dir, train_dir, train_name, is_fineture=False):
+def prepare_train(data_dir, train_dir, train_name, is_fineture=False, additional_data_dir=None):
     logging.info('Reading from one good dataset.')
-    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir)
-    logging.info(label_map_dict)
-
-    # Test images are not included in the downloaded data set, so we shall perform
-    # our own split.
-    random.seed(42)
-    random.shuffle(examples_list)
-    num_examples = len(examples_list)
-    num_train = int(0.7 * num_examples)
-    train_examples = examples_list
-    val_examples = examples_list[num_train:]
-    logging.info('%d training and %d validation examples.',
-                 len(train_examples), len(val_examples))
-
-    output_dir = os.path.join(train_dir, train_name)
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
-    train_output_path = os.path.join(output_dir, 'goods_train.record')
-    val_output_path = os.path.join(output_dir, 'goods_val.record')
-    label_map_file_path = os.path.join(output_dir, 'goods_label_map.pbtxt')
-    create_tf_record(train_output_path, label_map_dict, train_examples)
-    create_tf_record(val_output_path, label_map_dict, val_examples)
-
-    create_label_map_file(label_map_file_path, label_map_dict)
-    # class_names_to_ids = dict(zip(class_names, range(len(class_names))))
-    # Finally, write the labels file:
-    labels_to_class_names = dict(zip(range(len(class_names)), class_names))
-    from datasets import dataset_utils
-    dataset_utils.write_label_file(labels_to_class_names, output_dir)
-
-    # 设定每张照片训练20次
-    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=num_examples*100, is_fineture=is_fineture)
-    return label_map_dict
-
-def prepare_train(data_dir, train_dir, train_name, is_fineture=False):
-    logging.info('Reading from one good dataset.')
-    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir)
+    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir,additional_data_dir)
     logging.info(label_map_dict)
 
     # Test images are not included in the downloaded data set, so we shall perform
@@ -316,7 +291,7 @@ def prepare_train(data_dir, train_dir, train_name, is_fineture=False):
 
 def prepare_rawdata_update_train(data_dir, train_dir, train_name):
     logging.info('Reading from one good dataset.')
-    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir)
+    examples_list, label_map_dict, _ = read_examples_list_and_label_map_and_classnames(data_dir)
     logging.info(label_map_dict)
 
     # Test images are not included in the downloaded data set, so we shall perform

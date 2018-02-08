@@ -442,13 +442,16 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             # os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
             # 训练准备
+            additional_data_dir = None
             if serializer.instance.traintype == 0:
                 data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data')
+                additional_data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data_raw')
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, str(serializer.instance.traintype))
             label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
                                                                      str(serializer.instance.pk),
-                                                                     is_fineture=serializer.instance.is_fineture)
+                                                                     is_fineture=serializer.instance.is_fineture,
+                                                                     additional_data_dir=additional_data_dir)
             serializer.instance.param = str(label_map_dict)
             serializer.instance.save()
 
