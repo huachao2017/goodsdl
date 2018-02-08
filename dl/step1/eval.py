@@ -46,6 +46,7 @@ Example usage:
 import functools
 import os
 import tensorflow as tf
+import logging
 
 from object_detection import evaluator
 from object_detection.builders import input_reader_builder
@@ -81,6 +82,9 @@ FLAGS = flags.FLAGS
 def main(unused_argv):
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    tf.logging.set_verbosity(tf.logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel('INFO')
     assert FLAGS.checkpoint_dir, '`checkpoint_dir` is missing.'
     assert FLAGS.eval_dir, '`eval_dir` is missing.'
     tf.gfile.MakeDirs(FLAGS.eval_dir)
