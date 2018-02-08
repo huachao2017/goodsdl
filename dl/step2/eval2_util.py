@@ -65,7 +65,8 @@ def visualize_detection_results(result_dict,
                                 tag,
                                 global_step,
                                 labels_to_names,
-                                summary_dir=''):
+                                summary_dir='',
+                                source_dataset_dir=None):
   """Visualizes detection results and writes visualizations to image summaries.
 
   This function visualizes an image with its detected bounding boxes and writes
@@ -87,6 +88,7 @@ def visualize_detection_results(result_dict,
     global_step: global step at which the visualization are generated.
     labels_to_names: a dict
     summary_dir: the output directory to which the image summaries are written.
+    source_dataset_dir: the source_dataset directory to which the source image stored.
   Raises:
     ValueError: if result_dict does not contain the expected keys (i.e.,
       'original_image', 'detection_scores',
@@ -109,12 +111,21 @@ def visualize_detection_results(result_dict,
           detection_score,
           labels_to_names)
   else:
+      groundtruth_image_path = None
+      if source_dataset_dir:
+          groundtruth_image_dir=os.path.join(source_dataset_dir, labels_to_names[groundtruth_class_label])
+          for image_name in os.listdir(groundtruth_image_dir):
+              groundtruth_image_path = os.path.join(groundtruth_image_dir,image_name)
+              if os.path.isfile(groundtruth_image_path):
+                  break
       vis_utils.visualize_false_on_image_array(
           image,
           detection_class_label,
           detection_score,
           groundtruth_class_label,
-          labels_to_names)
+          labels_to_names,
+          groundtruth_image_path=groundtruth_image_path
+      )
 
   export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
   if not tf.gfile.Exists(export_dir):

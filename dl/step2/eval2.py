@@ -63,7 +63,10 @@ tf.app.flags.DEFINE_string(
     'dataset_split_name', 'test', 'The name of the train/test split.')
 
 tf.app.flags.DEFINE_string(
-    'dataset_dir', None, 'The directory where the dataset files are stored.')
+    'dataset_dir', None, 'The directory where the tf_dataset files are stored.')
+
+tf.app.flags.DEFINE_string(
+    'source_dataset_dir', None, 'The directory where the source dataset files are stored.')
 
 tf.app.flags.DEFINE_integer(
     'labels_offset', 0,
@@ -169,7 +172,8 @@ def main(_):
                     tag,
                     global_step,
                     labels_to_names=dataset.labels_to_names,
-                    summary_dir=FLAGS.eval_dir)
+                    summary_dir=FLAGS.eval_dir,
+                    source_dataset_dir=FLAGS.source_dataset_dir)
             return result_dict
 
         variables_to_restore = tf.global_variables()

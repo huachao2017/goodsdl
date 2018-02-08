@@ -516,10 +516,11 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     def train_step2(self, actionlog):
         # 训练准备
         train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
-        class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(os.path.join(
+        source_dataset_dir = os.path.join(
             settings.MEDIA_ROOT,
             settings.DATASET_DIR_NAME,
-            'step2'),
+            'step2')
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(source_dataset_dir,
             train_logs_dir)
         # step2_model_name = 'inception_resnet_v2'
         step2_model_name = 'nasnet_large'
@@ -538,9 +539,10 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
+            source_dataset_dir,
             train_logs_dir,
             os.path.join(train_logs_dir, 'eval_log'),
             len(validation_filenames),
