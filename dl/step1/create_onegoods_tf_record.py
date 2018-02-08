@@ -35,6 +35,7 @@ import re
 from lxml import etree
 import PIL.Image
 import tensorflow as tf
+import shutil
 
 from object_detection.utils import dataset_util
 
@@ -277,3 +278,74 @@ def prepare_train(data_dir, train_dir, train_name, is_fineture=False):
     update_config_file(train_dir, train_name, len(label_map_dict), num_steps=num_examples*100, is_fineture=is_fineture)
     return label_map_dict
 
+def prepare_train(data_dir, train_dir, train_name, is_fineture=False):
+    logging.info('Reading from one good dataset.')
+    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir)
+    logging.info(label_map_dict)
+
+    # Test images are not included in the downloaded data set, so we shall perform
+    # our own split.
+    random.seed(42)
+    random.shuffle(examples_list)
+    num_examples = len(examples_list)
+    num_train = int(0.7 * num_examples)
+    train_examples = examples_list
+    val_examples = examples_list[num_train:]
+    logging.info('%d training and %d validation examples.',
+                 len(train_examples), len(val_examples))
+
+    output_dir = os.path.join(train_dir, train_name)
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+    train_output_path = os.path.join(output_dir, 'goods_train.record')
+    val_output_path = os.path.join(output_dir, 'goods_val.record')
+    label_map_file_path = os.path.join(output_dir, 'goods_label_map.pbtxt')
+    create_tf_record(train_output_path, label_map_dict, train_examples)
+    create_tf_record(val_output_path, label_map_dict, val_examples)
+
+    create_label_map_file(label_map_file_path, label_map_dict)
+    # class_names_to_ids = dict(zip(class_names, range(len(class_names))))
+    # Finally, write the labels file:
+    labels_to_class_names = dict(zip(range(len(class_names)), class_names))
+    from datasets import dataset_utils
+    dataset_utils.write_label_file(labels_to_class_names, output_dir)
+
+    # 设定每张照片训练20次
+    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=num_examples*100, is_fineture=is_fineture)
+    return label_map_dict
+
+def prepare_rawdata_update_train(data_dir, train_dir, train_name):
+    logging.info('Reading from one good dataset.')
+    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir)
+    logging.info(label_map_dict)
+
+    # Test images are not included in the downloaded data set, so we shall perform
+    # our own split.
+    random.seed(42)
+    random.shuffle(examples_list)
+    train_examples = examples_list
+    logging.info('%d training examples.',
+                 len(train_examples))
+
+    output_dir = os.path.join(train_dir, train_name)
+
+    train_output_path = os.path.join(output_dir, 'goods_train.record')
+    import datetime
+    now = datetime.datetime.now()
+    shutil.move(train_output_path, train_output_path+'.'+ str(now.time()))
+    create_tf_record(train_output_path, label_map_dict, train_examples)
+
+    # class_names_to_ids = dict(zip(class_names, range(len(class_names))))
+    # Finally, write the labels file:
+
+    # 设定每张照片训练100次
+    config_file_path = os.path.join(output_dir, 'faster_rcnn_nas_goods.config')
+    checkpoint = tf.train.latest_checkpoint(output_dir)
+    with open(config_file_path, 'r') as file:
+        data = file.read()
+        #     p = re.compile(r'num_classes: \d+')
+        output = re.sub('# num_steps: \d+', 'num_steps: '+str(106300+len(train_examples)*100), data)
+
+    shutil.move(config_file_path, config_file_path+'.'+ str(now.time()))
+    with open(config_file_path, 'w') as file:
+        file.write(output)

@@ -563,6 +563,10 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             # os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
             # os.system('ps -ef | grep eval.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
 
+            if serializer.instance.traintype == 2:
+                # TODO 这是一个临时功能
+                data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data_raw')
+                create_onegoods_tf_record.prepare_rawdata_update_train(data_dir, settings.TRAIN_ROOT, str(serializer.instance.pk))
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
             # 继续训练 --num_clones=2
             command = 'nohup python3 {}/step1/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train1.out 2>&1 &'.format(
