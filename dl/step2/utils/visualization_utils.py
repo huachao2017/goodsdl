@@ -104,7 +104,7 @@ def draw_info_on_image_array(image,
                       (each to be shown on its own line).
   """
   image_pil = Image.fromarray(np.uint8(image)).convert('RGB')
-  groundtruth_image = None
+  detection_sample_image = None
   if detection_sample_image_path:
       detection_sample_image = Image.open(detection_sample_image_path)
   draw_info_on_image(image_pil, bg_color, font_color, display_str_list,detection_sample_image=detection_sample_image)
