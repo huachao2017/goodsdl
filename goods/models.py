@@ -59,10 +59,7 @@ def train_image_upload_source(instance,filename):
 
 def train_image_only_upload_source(instance,filename):
     now = datetime.datetime.now()
-    if instance.traintype == 0:
-        ret = '{}/data_raw/{}_{}'.format(settings.DATASET_DIR_NAME, str(now.time()), filename)
-    else:
-        ret = '{}/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.traintype, str(now.time()), filename)
+    ret = '{}/data_raw/{}/{}_{}'.format(settings.DATASET_DIR_NAME, now.strftime('%Y%m%d'), str(now.time()), filename)
     return ret
 
 class TrainImage(models.Model):
