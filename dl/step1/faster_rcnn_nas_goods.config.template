@@ -157,6 +157,7 @@ eval_config: {
   metrics_set: "pascal_voc_metrics"
   num_visualizations: 100
   num_examples: 100
+  visualization_export_dir: "PATH_TO_BE_CONFIGURED_TRAIN/eval_log"
   # Note: The below line limits the evaluation process to 10 evaluations.
   # Remove the below line to evaluate indefinitely.
   # max_evals: 10
