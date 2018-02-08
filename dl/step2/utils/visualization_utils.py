@@ -135,7 +135,7 @@ def draw_info_on_image(image,
   im_width, im_height = image.size
   (left, top) = (0, 0)
   try:
-    font = ImageFont.truetype('arial.ttf', 24)
+    font = ImageFont.truetype('arial.ttf', 12)
   except IOError:
     font = ImageFont.load_default()
 
