@@ -480,3 +480,5 @@ if __name__ == '__main__':
     _convert_dataset('validation', validation_filenames, names_to_labels,
                      output_dir)
     print(len(validation_filenames))
+    labels_to_names = dict(zip(range(len(class_names)), class_names))
+    print(labels_to_names)
