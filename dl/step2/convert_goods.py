@@ -116,9 +116,12 @@ def _get_split_filenames_and_classes(dataset_dir):
 
         count = len(local_filenames)
         if count>0:
-            validation_index = random.randint(0, count-1)
+            validation_indexes = []
+            for c in range(5):
+                validation_indexes.append(random.randint(0, count - 1))
+
             for i in range(count):
-                if i == validation_index:
+                if i in validation_indexes:
                     validation_photo_filenames.append(local_filenames[i])
                     if count < 20:# 样本太少的不减少训练样本
                         train_photo_filenames.append(local_filenames[i])
@@ -146,15 +149,25 @@ def _get_test_filenames_and_classes(dataset_dir):
             directories.append(path)
             class_names.append(dir_name)
 
-    test_photo_filenames = []
+    validation_photo_filenames = []
     for directory in directories:
+        local_filenames = []
         for filename in os.listdir(directory):
             path = os.path.join(directory, filename)
             if os.path.isfile(path):
-                test_photo_filenames.append(path)
-                break
+                local_filenames.append(path)
 
-    return test_photo_filenames, sorted(class_names)
+        count = len(local_filenames)
+        if count>0:
+            validation_indexes = []
+            for c in range(5):
+                validation_indexes.append(random.randint(0, count-1))
+
+            for i in range(count):
+                if i in validation_indexes:
+                    validation_photo_filenames.append(local_filenames[i])
+
+    return validation_photo_filenames, sorted(class_names)
 
 def _get_tfrecord_filename(output_dir, split_name):
     output_filename = 'goods_recogonize_%s.tfrecord' % (
