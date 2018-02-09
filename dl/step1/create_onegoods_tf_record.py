@@ -227,6 +227,7 @@ def update_config_file(train_dir,
 
 def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
     """返回所有图片文件路径"""
+    logging.info('dataset path:{},{}'.format(path,additional_path))
     dirlist = os.listdir(path)  # 列出文件夹下所有的目录与文件
     examples = []
     class_names = []
