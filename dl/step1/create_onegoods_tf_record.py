@@ -244,7 +244,7 @@ def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
 
     additional_dirlist = os.listdir(additional_path)
     for i in range(0, len(additional_dirlist)):
-        class_dir = os.path.join(path, additional_dirlist[i])
+        class_dir = os.path.join(additional_path, additional_dirlist[i])
         if os.path.isdir(class_dir):
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
