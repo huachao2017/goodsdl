@@ -139,10 +139,10 @@ train_config: {
     }
     random_distort_color{
     }
-    random_black_patches{
-    }
-    random_crop_image{
-    }
+    # random_black_patches{
+    # }
+    # random_crop_image{
+    # }
   }
 }
 
