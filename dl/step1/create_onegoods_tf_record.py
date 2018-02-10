@@ -233,6 +233,7 @@ def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
     logger.info('dataset path:{},{}'.format(path,additional_path))
     dirlist = os.listdir(path)  # 列出文件夹下所有的目录与文件
     examples = []
+    addition_examples = []
     class_names = []
     for i in range(0, len(dirlist)):
         class_dir = os.path.join(path, dirlist[i])
@@ -254,23 +255,28 @@ def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
                 image_path = os.path.join(class_dir, filelist[j])
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg" and os.path.isfile(example + '.xml'):
-                    examples.append(example)
-    return examples, {'1':1},sorted(class_names)
+                    addition_examples.append(example)
+    return examples, addition_examples, {'1':1},sorted(class_names)
 
 def prepare_train(data_dir, train_dir, train_name, is_fineture=False, additional_data_dir=None):
-    examples_list, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir,additional_data_dir)
+    normal_examples_list, addition_examples, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir,additional_data_dir)
     logger.info(label_map_dict)
 
     # Test images are not included in the downloaded data set, so we shall perform
     # our own split.
-    random.seed(42)
-    random.shuffle(examples_list)
-    num_examples = len(examples_list)
-    num_train = int(0.7 * num_examples)
-    train_examples = examples_list
-    val_examples = examples_list[num_train:]
+    normal_examples_list.extend(addition_examples)
+    num_examples = len(normal_examples_list)
+    num_train = int(0.9 * num_examples)
+    # 评估时必然包括addition_examples
+    val_examples = normal_examples_list[num_train:]
+
+    # TODO 拼接两遍addition to train，用于增加权重
+    normal_examples_list.extend(addition_examples)
+    train_examples = normal_examples_list
     logger.info('%d training and %d validation examples.',
                  len(train_examples), len(val_examples))
+    random.seed(42)
+    random.shuffle(train_examples)
 
     output_dir = os.path.join(train_dir, train_name)
     if not os.path.isdir(output_dir):
@@ -293,14 +299,17 @@ def prepare_train(data_dir, train_dir, train_name, is_fineture=False, additional
     return label_map_dict
 
 def prepare_rawdata_update_train(data_dir, train_dir, train_name):
-    examples_list, label_map_dict, _ = read_examples_list_and_label_map_and_classnames(data_dir)
+    # @remove: this function should be removed
+    normal_examples_list, addition_examles_list, label_map_dict, _ = read_examples_list_and_label_map_and_classnames(data_dir)
     logger.info(label_map_dict)
 
     # Test images are not included in the downloaded data set, so we shall perform
     # our own split.
+
+    normal_examples_list.extend(addition_examles_list)
     random.seed(42)
-    random.shuffle(examples_list)
-    train_examples = examples_list
+    random.shuffle(normal_examples_list)
+    train_examples = normal_examples_list
     logger.info('%d training examples.',
                  len(train_examples))
 
