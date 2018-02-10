@@ -109,7 +109,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             if len(export1s) > 0 and len(export2s) > 0:
                 detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, export2s[0].model_name)
-                step1_min_score_thresh = .6
+                step1_min_score_thresh = .9
                 step2_min_score_thresh = .6
 
                 # TODO 需要标定
