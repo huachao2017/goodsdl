@@ -56,6 +56,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             request.data['lastinterval'] = 0.0
 
         if request.data['deviceid'] in ['290','353','571']:
+            logger.info('{} forbidden'.format(request.data['deviceid']))
             return Response([], status=status.HTTP_403_FORBIDDEN)
         logger.info('begin detect:{}'.format(request.data['deviceid']))
         serializer = self.get_serializer(data=request.data)
