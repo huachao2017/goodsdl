@@ -293,7 +293,7 @@ def prepare_train(data_dir, train_dir, train_name, is_fineture=False, additional
     dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
     # 设定每张照片训练20次
-    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=num_examples*100, is_fineture=is_fineture, eval_num=len(val_examples))
+    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=len(train_examples)*100, is_fineture=is_fineture, eval_num=len(val_examples))
     return label_map_dict
 
 def prepare_rawdata_update_train(data_dir, train_dir, train_name):
