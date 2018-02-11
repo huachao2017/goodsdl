@@ -267,9 +267,8 @@ def prepare_train(data_dir, train_dir, train_name, is_fineture=False, additional
     # 评估时必然包括addition_examples
     val_examples = addition_examples
 
-    # TODO 拼接两遍addition to train，用于增加权重
     normal_examples_list.extend(addition_examples)
-    normal_examples_list.extend(addition_examples)
+    # normal_examples_list.extend(addition_examples)
     train_examples = normal_examples_list
     logger.info('%d training and %d validation examples.',
                  len(train_examples), len(val_examples))
