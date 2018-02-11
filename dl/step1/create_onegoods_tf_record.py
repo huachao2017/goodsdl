@@ -59,6 +59,7 @@ def get_class_name_from_filename(file_name):
 def dict_to_tf_example(data,
                        label_map_dict,
                        example,
+                       index,
                        ignore_difficult_instances=False):
     """Convert XML derived dict to tf.Example proto.
 
@@ -123,8 +124,7 @@ def dict_to_tf_example(data,
         'image/width': dataset_util.int64_feature(width),
         'image/filename': dataset_util.bytes_feature(
             data['filename'].encode('utf8')),
-        'image/source_id': dataset_util.bytes_feature(
-            data['filename'].encode('utf8')),
+        'image/source_id': dataset_util.bytes_feature(str(index)),
         'image/key/sha256': dataset_util.bytes_feature(key.encode('utf8')),
         'image/encoded': dataset_util.bytes_feature(encoded_jpg),
         'image/format': dataset_util.bytes_feature('jpeg'.encode('utf8')),
@@ -191,7 +191,7 @@ def create_tf_record(output_filename,
         data = recursive_parse_xml_to_dict(xml)['annotation']
 
         # TODO 必须为jpg后缀的图片
-        tf_example = dict_to_tf_example(data, label_map_dict, example + '.jpg')
+        tf_example = dict_to_tf_example(data, label_map_dict, example + '.jpg', idx)
         writer.write(tf_example.SerializeToString())
 
     writer.close()
