@@ -112,13 +112,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step1_min_score_thresh = .9
                 step2_min_score_thresh = .6
 
-                # TODO 需要标定
-                if serializer.instance.deviceid == '571':
-                    area = (20, 30, 930, 500)
-                else:
-                    area = None
                 ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                      step2_min_score_thresh=step2_min_score_thresh, area=area) #, compress=True)
+                                      step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
 
 
         if ret is None or len(ret) <= 0:
