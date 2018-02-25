@@ -194,8 +194,8 @@ def _convert_dataset(split_name, filenames, names_to_labels, class_names_to_clus
         start_ndx = shard_id * num_per_shard
         end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
         for i in range(start_ndx, end_ndx):
-            logger.info('\r>> Converting image %d/%d shard %d' % (
-                i + 1, len(filenames), shard_id))
+            # logger.info('\r>> Converting image %d/%d shard %d' % (
+            #     i + 1, len(filenames), shard_id))
 
             # Read the filename:
             with tf.gfile.GFile(filenames[i], 'rb') as fid:
