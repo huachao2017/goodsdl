@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 
 from dl import imagedetection, imagedetectionV2, imagedetectionV2_1, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
-from dl.step2 import convert_goods
+from dl.step2 import create_goods_data, convert_goods
 from dl.only_step2 import create_goods_tf_record
 from .serializers import *
 import tensorflow as tf
@@ -416,7 +416,7 @@ class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
             step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(export1s[0].pk),
                                             'frozen_inference_graph.pb')
-            convert_goods.prepare_data(data_dir,
+            create_goods_data.prepare_data(data_dir,
                                        os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2'),
                                        step1_model_path)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
