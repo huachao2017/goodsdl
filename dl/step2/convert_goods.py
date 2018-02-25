@@ -245,7 +245,7 @@ def get_class_names_to_cluster_class_names(cluster_filepath):
     """
     with tf.gfile.Open(cluster_filepath, 'rb') as f:
         lines = f.read().decode()
-    lines = lines.split('\n')
+    lines = lines.split('\r\n') # TODO use windows to edit
     lines = filter(None, lines)
 
     class_names_to_cluster_class_names = {}
