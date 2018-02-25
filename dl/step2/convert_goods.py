@@ -294,6 +294,7 @@ def prepare_train(dataset_dir, output_dir):
 
     training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
     class_names_to_cluster_class_names = get_class_names_to_cluster_class_names(os.path.join(dataset_dir, 'cluster.txt'))
+    print(class_names_to_cluster_class_names)
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
 
     # Divide into train and test:
