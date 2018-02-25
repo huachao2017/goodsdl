@@ -171,7 +171,7 @@ def _get_tfrecord_filename(output_dir, split_name):
     return os.path.join(output_dir, output_filename)
 
 
-def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
+def _convert_dataset(split_name, filenames, names_to_labels, cluster_class_names_to_class_name, output_dir):
     """Converts the given filenames to a TFRecord dataset.
 
     Args:
@@ -205,6 +205,12 @@ def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
             width, height = image.size
 
             name = os.path.basename(os.path.dirname(filenames[i]))
+            # 使用聚类的类别
+            if name in cluster_class_names_to_class_name:
+                name = cluster_class_names_to_class_name[name]
+                # TODO 目前允许最多2层级联聚类
+                if name in cluster_class_names_to_class_name:
+                    name = cluster_class_names_to_class_name[name]
             label = names_to_labels[name]
             print('{}:{}'.format(filenames[i],label))
             example = dataset_utils.image_to_tfexample(
@@ -242,12 +248,38 @@ def get_cluster_class_names_to_class_name(cluster_filepath):
     lines = lines.split('\n')
     lines = filter(None, lines)
 
-    class_names_to_class_name = {}
+    cluster_class_names_to_class_name = {}
     for line in lines:
         index = line.index(':')
-        class_names_to_class_name[line[index + 1:]] = line[:index]
+        cluster_class_names_to_class_name[line[index + 1:]] = line[:index]
 
-    return class_names_to_class_name
+    return cluster_class_names_to_class_name
+
+def get_names_to_labels(class_names, cluster_class_names_to_class_name):
+    if cluster_class_names_to_class_name is None:
+        return dict(zip(class_names, range(len(class_names))))
+
+    new_class_names = []
+    for class_name in class_names:
+        if class_name not in cluster_class_names_to_class_name:
+            new_class_names.append(class_name)
+
+    # TODO 目前还没有支持创建新类
+    return dict(zip(new_class_names, range(len(new_class_names))))
+
+
+def get_labels_to_names(class_names, cluster_class_names_to_class_name):
+    if cluster_class_names_to_class_name is None:
+        return dict(zip(range(len(class_names)), class_names))
+
+    new_class_names = []
+    for class_name in class_names:
+        if class_name not in cluster_class_names_to_class_name:
+            new_class_names.append(class_name)
+
+    # TODO 目前还没有支持创建新类
+    return dict(zip(range(len(new_class_names)), new_class_names))
+
 
 def prepare_train(dataset_dir, output_dir):
     """Runs the conversion operation.
@@ -261,7 +293,8 @@ def prepare_train(dataset_dir, output_dir):
         tf.gfile.MakeDirs(output_dir)
 
     training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
-    names_to_labels = dict(zip(class_names, range(len(class_names))))
+    cluster_class_names_to_class_name = get_cluster_class_names_to_class_name(os.path.join(dataset_dir, 'cluster.txt'))
+    names_to_labels = get_names_to_labels(class_names, cluster_class_names_to_class_name)
 
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
@@ -270,13 +303,13 @@ def prepare_train(dataset_dir, output_dir):
     # validation_filenames = photo_filenames[:_NUM_VALIDATION]
 
     # First, convert the training and validation sets.
-    _convert_dataset('train', training_filenames, names_to_labels,
+    _convert_dataset('train', training_filenames, names_to_labels,cluster_class_names_to_class_name,
                      output_dir)
-    _convert_dataset('validation', validation_filenames, names_to_labels,
+    _convert_dataset('validation', validation_filenames, names_to_labels,cluster_class_names_to_class_name,
                      output_dir)
 
     # Finally, write the labels file:
-    labels_to_names = dict(zip(range(len(class_names)), class_names))
+    labels_to_names = get_labels_to_names(class_names,cluster_class_names_to_class_name)
     dataset_utils.write_label_file(labels_to_names, output_dir)
 
     logger.info('Finished converting the goods dataset!')
@@ -286,7 +319,8 @@ if __name__ == '__main__':
     dataset_dir = '/home/src/goodsdl/media/dataset/step2'
     output_dir = '/home/src/goodsdl/train/51'
     test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
-    names_to_labels = dict(zip(class_names, range(len(class_names))))
+    cluster_class_names_to_class_name = get_cluster_class_names_to_class_name(os.path.join(dataset_dir, 'cluster.txt'))
+    names_to_labels = get_names_to_labels(class_names, cluster_class_names_to_class_name)
 
     # Divide into train and test:
     validation_filenames = test_photo_filenames
@@ -296,5 +330,5 @@ if __name__ == '__main__':
     _convert_dataset('validation', validation_filenames, names_to_labels,
                      output_dir)
     print(len(validation_filenames))
-    labels_to_names = dict(zip(range(len(class_names)), class_names))
+    labels_to_names = get_labels_to_names(class_names,cluster_class_names_to_class_name)
     print(labels_to_names)
