@@ -104,13 +104,7 @@ def visualize_detection_results(result_dict,
   detection_score = detection_scores[detection_class_label]
 
   # Plot groundtruth underneath detections
-  if groundtruth_class_label == detection_class_label:
-      vis_utils.visualize_truth_on_image_array(
-          image,
-          detection_class_label,
-          detection_score,
-          labels_to_names)
-  else:
+  if groundtruth_class_label != detection_class_label:
       detection_sample_image_path = None
       if source_dataset_dir:
           detection_image_dir=os.path.join(source_dataset_dir, labels_to_names[detection_class_label])
@@ -127,29 +121,29 @@ def visualize_detection_results(result_dict,
           detection_sample_image_path=detection_sample_image_path
       )
 
-  export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
-  if not tf.gfile.Exists(export_dir):
-      tf.gfile.MakeDirs(export_dir)
-  export_path = os.path.join(export_dir, 'export-{}-{}.png'.format(global_step, tag))
-  vis_utils.save_image_array_as_png(image, export_path)
-  if groundtruth_class_label != detection_class_label:
-      # 单独记录错误识别图片
-      false_export_path = os.path.join(summary_dir, 'false')
-      if not tf.gfile.Exists(false_export_path):
-          tf.gfile.MakeDirs(false_export_path)
-      false_export_path = os.path.join(false_export_path, 'export-{}-{}.png'.format(global_step, tag))
-      vis_utils.save_image_array_as_png(image, false_export_path)
+      export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
+      if not tf.gfile.Exists(export_dir):
+          tf.gfile.MakeDirs(export_dir)
+      export_path = os.path.join(export_dir, 'export-{}-{}.png'.format(global_step, tag))
+      vis_utils.save_image_array_as_png(image, export_path)
+  # if groundtruth_class_label != detection_class_label:
+  #     # 单独记录错误识别图片
+  #     false_export_path = os.path.join(summary_dir, 'false')
+  #     if not tf.gfile.Exists(false_export_path):
+  #         tf.gfile.MakeDirs(false_export_path)
+  #     false_export_path = os.path.join(false_export_path, 'export-{}-{}.png'.format(global_step, tag))
+  #     vis_utils.save_image_array_as_png(image, false_export_path)
 
-  summary = tf.Summary(value=[
-      tf.Summary.Value(
-          tag=tag,
-          image=tf.Summary.Image(
-              encoded_image_string=vis_utils.encode_image_array_as_png_str(
-                  image)))
-  ])
-  summary_writer = tf.summary.FileWriter(summary_dir)
-  summary_writer.add_summary(summary, global_step)
-  summary_writer.close()
+  # summary = tf.Summary(value=[
+  #     tf.Summary.Value(
+  #         tag=tag,
+  #         image=tf.Summary.Image(
+  #             encoded_image_string=vis_utils.encode_image_array_as_png_str(
+  #                 image)))
+  # ])
+  # summary_writer = tf.summary.FileWriter(summary_dir)
+  # summary_writer.add_summary(summary, global_step)
+  # summary_writer.close()
 
   logging.debug('Detection visualizations written to summary with tag %s.', tag)
 
