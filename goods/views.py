@@ -696,7 +696,7 @@ class StopTrainActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListM
         if train_ps != '':
             pid = int(train_ps.split()[1])
             os.system('kill -s 9 {}'.format(str(pid)))
-        eval_ps = os.popen('ps -ef | grep eval.py | grep {} | grep -v grep'.format(train_logs_dir)).readline()
+        eval_ps = os.popen('ps -ef | grep eval | grep {} | grep -v grep'.format(train_logs_dir)).readline()
         if eval_ps != '':
             pid = int(eval_ps.split()[1])
             os.system('kill -s 9 {}'.format(str(pid)))
