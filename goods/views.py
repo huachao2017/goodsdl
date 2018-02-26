@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 from dl import imagedetection, imagedetectionV2, imagedetectionV2_1, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import create_goods_data, convert_goods
+from dl.step3 import convert_goods_step3
 from dl.only_step2 import create_goods_tf_record
 from .serializers import *
 import tensorflow as tf
@@ -473,6 +474,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             subprocess.call(command, shell=True)
         elif serializer.instance.action == 'T2':
             self.train_step2(serializer.instance)
+        elif serializer.instance.action == 'T3D':
+            self.train_step3(serializer.instance)
         elif serializer.instance.action == 'TC':
             self.train_only_step2(serializer.instance)
 
@@ -550,6 +553,45 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
 
+    def train_step3(self, actionlog):
+        # 训练准备
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+        source_dataset_dir = os.path.join(
+            settings.MEDIA_ROOT,
+            settings.DATASET_DIR_NAME,
+            'step3',
+            str(actionlog.traintype))
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods_step3.prepare_train(source_dataset_dir,
+            train_logs_dir)
+        # step2_model_name = 'inception_resnet_v2'
+        step2_model_name = 'nasnet_large'
+        batch_size = 8
+        # 训练
+        command = 'nohup python3 {}/step3/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            len(training_filenames),
+            step2_model_name,
+            1,
+            batch_size,
+            int(len(training_filenames) * 200 / batch_size)  # 设定最大训练次数，每个样本进入网络200次
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+        # 评估
+        command = 'nohup python3 {}/step3/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            source_dataset_dir,
+            train_logs_dir,
+            os.path.join(train_logs_dir, 'eval_log'),
+            len(validation_filenames),
+            step2_model_name
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -587,6 +629,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         elif serializer.instance.action == 'T2':
             self.train_step2(serializer.instance)
+        elif serializer.instance.action == 'T3':
+            self.train_step3(serializer.instance)
         elif serializer.instance.action == 'TC':
             self.train_only_step2(serializer.instance)
         if getattr(instance, '_prefetched_objects_cache', None):
@@ -611,7 +655,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if serializer.instance.train_action.action == 'T1':
             prefix = self.export_detection_graph(serializer.instance.train_action, serializer)
 
-        elif serializer.instance.train_action.action == 'T2':
+        elif serializer.instance.train_action.action == 'T2' or serializer.instance.train_action.action == 'T3':
             prefix = self.export_classify_graph(serializer.instance.train_action, serializer)
 
         elif serializer.instance.train_action.action == 'TC':
@@ -673,8 +717,10 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             #             model_dir)
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
-            # copy cluster
-            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'cluster.txt'), model_dir)
+
+            if train_action.action == 'T2':
+                # copy cluster
+                shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'cluster.txt'), model_dir)
             # reboot django
             # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
         return prefix

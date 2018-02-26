@@ -105,10 +105,11 @@ class TrainAction(models.Model):
     ACTION_CHOICES = (
         (u'T1', u'Train Step 1'),
         (u'T2', u'Train Step 2'),
+        (u'T3', u'Train Step 3'),
         (u'TC', u'Train Only Step 2'),
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
-    traintype = models.PositiveIntegerField(default=0)
+    traintype = models.PositiveIntegerField(default=0) # use for step3
     is_fineture = models.BooleanField(default=True)
     desc = models.CharField(max_length=500,null=True)
     param = models.CharField(max_length=500)
