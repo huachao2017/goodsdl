@@ -95,8 +95,8 @@ def visualize_detection_results(result_dict,
       'groundtruth_classes')
   """
 
-  # 减少磁盘存储，前10000次不记录
-  if global_step < 10000:
+  # 减少磁盘存储，前1000次不记录
+  if global_step < 1000:
       return
   image = result_dict['original_image']
   detection_scores = result_dict['detection_scores']
