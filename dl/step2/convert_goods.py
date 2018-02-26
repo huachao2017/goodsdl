@@ -274,7 +274,9 @@ def prepare_train(dataset_dir, output_dir):
         tf.gfile.MakeDirs(output_dir)
 
     training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
-    class_names_to_cluster_class_names = cluster.get_class_names_to_cluster_class_names(os.path.join(dataset_dir, 'cluster.txt'))
+
+    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, 'cluster.txt'))
+    class_names_to_cluster_class_names = cluster_settings.get_class_names_to_cluster_class_names()
     logger.info(class_names_to_cluster_class_names)
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
 
@@ -303,7 +305,8 @@ if __name__ == '__main__':
     dataset_dir = '/home/src/goodsdl/media/dataset/step2'
     output_dir = '/home/src/goodsdl/train/51'
     test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
-    class_names_to_cluster_class_names = cluster.get_class_names_to_cluster_class_names(os.path.join(dataset_dir, 'cluster.txt'))
+    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, 'cluster.txt'))
+    class_names_to_cluster_class_names = cluster_settings.get_class_names_to_cluster_class_names()
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
 
     # Divide into train and test:
