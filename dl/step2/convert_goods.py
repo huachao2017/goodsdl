@@ -21,6 +21,7 @@ import logging
 import io
 import math
 import shutil
+from dl.step2 import cluster
 
 import tensorflow as tf
 
@@ -234,27 +235,6 @@ def _remove_tfrecord_ifexists(output_dir):
         if tf.gfile.Exists(output_filename):
             tf.gfile.Remove(output_filename)
 
-def get_class_names_to_cluster_class_names(cluster_filepath):
-    """
-
-    :param cluster_filepath:
-    :return: class_names_to_class_name
-    :example file content:
-    111111111:222222222
-    111111111:333333333
-    class_names_to_class_name={'222222222':'111111111','333333333':'111111111'}
-    """
-    with tf.gfile.Open(cluster_filepath, 'rb') as f:
-        lines = f.read().decode()
-    lines = lines.split('\r\n') # TODO use windows to edit
-    lines = filter(None, lines)
-
-    class_names_to_cluster_class_names = {}
-    for line in lines:
-        index = line.index(':')
-        class_names_to_cluster_class_names[line[index + 1:]] = line[:index]
-
-    return class_names_to_cluster_class_names
 
 def get_names_to_labels(class_names, class_names_to_cluster_class_names):
     if class_names_to_cluster_class_names is None:
@@ -294,7 +274,7 @@ def prepare_train(dataset_dir, output_dir):
         tf.gfile.MakeDirs(output_dir)
 
     training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
-    class_names_to_cluster_class_names = get_class_names_to_cluster_class_names(os.path.join(dataset_dir, 'cluster.txt'))
+    class_names_to_cluster_class_names = cluster.get_class_names_to_cluster_class_names(os.path.join(dataset_dir, 'cluster.txt'))
     logger.info(class_names_to_cluster_class_names)
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
 
@@ -323,7 +303,7 @@ if __name__ == '__main__':
     dataset_dir = '/home/src/goodsdl/media/dataset/step2'
     output_dir = '/home/src/goodsdl/train/51'
     test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
-    class_names_to_cluster_class_names = get_class_names_to_cluster_class_names(os.path.join(dataset_dir, 'cluster.txt'))
+    class_names_to_cluster_class_names = cluster.get_class_names_to_cluster_class_names(os.path.join(dataset_dir, 'cluster.txt'))
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
 
     # Divide into train and test:
