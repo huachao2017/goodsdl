@@ -20,6 +20,7 @@ from PIL import Image as im
 import logging
 import io
 import math
+import shutil
 
 import tensorflow as tf
 
@@ -309,9 +310,11 @@ def prepare_train(dataset_dir, output_dir):
     _convert_dataset('validation', validation_filenames, names_to_labels,class_names_to_cluster_class_names,
                      output_dir)
 
-    # Finally, write the labels file:
+    # Second, write the labels file:
     labels_to_names = get_labels_to_names(class_names,class_names_to_cluster_class_names)
     dataset_utils.write_label_file(labels_to_names, output_dir)
+    # Finally, copy the cluster file:
+    shutil.copy(os.path.join(dataset_dir, 'cluster.txt'), output_dir)
 
     logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames

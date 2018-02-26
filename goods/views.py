@@ -673,6 +673,8 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             #             model_dir)
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
+            # copy cluster
+            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'cluster.txt'), model_dir)
             # reboot django
             # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
         return prefix
