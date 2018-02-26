@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 
 import tensorflow as tf
 
-from datasets import dataset_utils
+# from datasets import dataset_utils
 
 logger = logging.getLogger("dataset")
 
@@ -35,18 +35,18 @@ def rotate_image(src, angle, scale=1.):
                           borderValue=(236, 244, 234)) # 桌面样本背景色
 
 
-def get_class_names(labels_filepath):
-    with tf.gfile.Open(labels_filepath, 'rb') as f:
-        lines = f.read().decode()
-    lines = lines.split('\n')
-    lines = filter(None, lines)
-
-    class_names = []
-    for line in lines:
-        index = line.index(':')
-        class_names.append(line[index + 1:])
-
-    return class_names
+# def get_class_names(labels_filepath):
+#     with tf.gfile.Open(labels_filepath, 'rb') as f:
+#         lines = f.read().decode()
+#     lines = lines.split('\n')
+#     lines = filter(None, lines)
+#
+#     class_names = []
+#     for line in lines:
+#         index = line.index(':')
+#         class_names.append(line[index + 1:])
+#
+#     return class_names
 
 
 def create_step2_goods(data_dir, dataset_dir, step1_model_path):
@@ -71,7 +71,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     # Score is shown on the result image, together with the class label.
     detection_scores = graph_step1.get_tensor_by_name('detection_scores:0')
 
-    class_names = get_class_names(os.path.join(os.path.dirname(step1_model_path), dataset_utils.LABELS_FILENAME))
+    # class_names = get_class_names(os.path.join(os.path.dirname(step1_model_path), dataset_utils.LABELS_FILENAME))
     """返回所有图片文件路径"""
 
     augment_total = 0
@@ -79,8 +79,9 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(dirlist)):
         # 根据step1的classname确定进入step2的类别
-        if dirlist[i] not in class_names:
-            continue
+        # 不再需要，step1的检测应该可以泛化
+        # if dirlist[i] not in class_names:
+        #     continue
         class_dir = os.path.join(data_dir, dirlist[i])
         if os.path.isdir(class_dir):
             logger.info('solve class:{}'.format(dirlist[i]))

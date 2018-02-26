@@ -645,8 +645,6 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             # copy label
             shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_label_map.pbtxt'),
                         label_file_path)
-            # copy classify label
-            shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'labels.txt'), model_dir)
         return prefix
 
     def export_classify_graph(self, train_action, serializer):
