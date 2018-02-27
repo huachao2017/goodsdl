@@ -66,7 +66,6 @@ def main(_):
     cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
     print(cluster_filepath)
     cluster_settings = ClusterSettings(cluster_filepath)
-    print(cluster_settings.lines)
     traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
     print(traintype_to_class_names)
 
@@ -77,7 +76,7 @@ def main(_):
             class_names = traintype_to_class_names[traintype]
             for class_name in class_names:
                 source_dir = os.path.join(step2_dir, class_name)
-                shutil.copy(source_dir, output_dir)
+                shutil.copytree(source_dir, output_dir)
                 print('{}-->{}'.format(source_dir, output_dir))
 
 
