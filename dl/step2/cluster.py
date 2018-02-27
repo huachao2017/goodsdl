@@ -65,6 +65,7 @@ def main(_):
     cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
     cluster_settings = ClusterSettings(cluster_filepath)
     traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
+    print(traintype_to_class_names)
 
     for traintype in traintype_to_class_names:
         output_dir = os.path.join(step3_dir,str(traintype))
@@ -72,7 +73,9 @@ def main(_):
             tf.gfile.MakeDirs(output_dir)
             class_names = traintype_to_class_names[traintype]
             for class_name in class_names:
-                shutil.copy(os.path.join(step2_dir, class_name), output_dir)
+                source_dir = os.path.join(step2_dir, class_name)
+                shutil.copy(source_dir, output_dir)
+                print('{}-->{}'.format(source_dir, output_dir))
 
 
 if __name__ == '__main__':
