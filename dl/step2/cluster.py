@@ -1,4 +1,6 @@
 import tensorflow as tf
+import os
+import shutil
 
 class ClusterSettings:
     def __init__(self, cluster_filepath):
@@ -25,6 +27,15 @@ class ClusterSettings:
 
         return class_names_to_cluster_class_names
 
+    def get_traintype_to_class_names(self):
+        traintype_to_class_names = {}
+        for line in self.lines:
+            sep = line.split(':')
+            traintype = int(sep[0])
+            traintype_to_class_names[traintype] = self.get_class_names_from_traintype(traintype)
+
+        return traintype_to_class_names
+
     def get_class_names_from_traintype(self, traintype):
         class_names = []
         first = False
@@ -44,24 +55,26 @@ class ClusterSettings:
                 return sep[1]
 
 
-# def get_class_names_to_cluster_class_names(cluster_filepath):
-#     """
-#
-#     :param cluster_filepath:
-#     :return: class_names_to_class_name
-#     :example file content:
-#     111111111:222222222
-#     111111111:333333333
-#     class_names_to_class_name={'222222222':'111111111','333333333':'111111111'}
-#     """
-#     with tf.gfile.Open(cluster_filepath, 'rb') as f:
-#         lines = f.read().decode()
-#     lines = lines.split('\r\n') # TODO use windows to edit
-#     lines = filter(None, lines)
-#
-#     class_names_to_cluster_class_names = {}
-#     for line in lines:
-#         index = line.index(':')
-#         class_names_to_cluster_class_names[line[index + 1:]] = line[:index]
-#
-#     return class_names_to_cluster_class_names
+tf.app.flags.DEFINE_string(
+    'dataset_dir', '/home/src/goodsdl/media/dataset', 'The path of the dataset dir.')
+FLAGS = tf.app.flags.FLAGS
+
+def main(_):
+    step2_dir = os.path.join(FLAGS.dataset_dir, 'step2')
+    step3_dir = os.path.join(FLAGS.dataset_dir, 'step3')
+    cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
+    cluster_settings = ClusterSettings(cluster_filepath)
+    traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
+
+    for traintype in traintype_to_class_names:
+        output_dir = os.path.join(step3_dir,str(traintype))
+        if not tf.gfile.Exists(output_dir):
+            tf.gfile.MakeDirs(output_dir)
+            class_names = traintype_to_class_names[traintype]
+            for class_name in class_names:
+                shutil.copy(os.path.join(step2_dir, class_name), output_dir)
+
+
+if __name__ == '__main__':
+    tf.app.run()
+
