@@ -564,8 +564,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         class_names_to_ids, training_filenames, validation_filenames = convert_goods_step3.prepare_train(source_dataset_dir,
             train_logs_dir)
         # step3_model_name = 'inception_resnet_v2'
-        step3_model_name = 'nasnet_large'
-        batch_size = 8
+        step3_model_name = 'nasnet_mobile'
+        batch_size = 32
         # 训练
         command = 'nohup python3 {}/step3/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train3.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
@@ -575,7 +575,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             step3_model_name,
             1,
             batch_size,
-            int(len(training_filenames) * 200 / batch_size)  # 设定最大训练次数，每个样本进入网络200次
+            int(len(training_filenames) * 2000 / batch_size)  # 设定最大训练次数，每个样本进入网络2000次
         )
         logger.info(command)
         subprocess.call(command, shell=True)
