@@ -66,6 +66,7 @@ def main(_):
     cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
     print(cluster_filepath)
     cluster_settings = ClusterSettings(cluster_filepath)
+    print(cluster_settings.lines)
     traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
     print(traintype_to_class_names)
 
