@@ -32,7 +32,8 @@ class ClusterSettings:
         for line in self.lines:
             sep = line.split(':')
             traintype = int(sep[0])
-            traintype_to_class_names[traintype] = self.get_class_names_from_traintype(traintype)
+            if traintype not in traintype_to_class_names:
+                traintype_to_class_names[traintype] = self.get_class_names_from_traintype(traintype)
 
         return traintype_to_class_names
 
@@ -63,6 +64,7 @@ def main(_):
     step2_dir = os.path.join(FLAGS.dataset_dir, 'step2')
     step3_dir = os.path.join(FLAGS.dataset_dir, 'step3')
     cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
+    print(cluster_filepath)
     cluster_settings = ClusterSettings(cluster_filepath)
     traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
     print(traintype_to_class_names)
