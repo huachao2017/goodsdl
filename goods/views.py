@@ -474,7 +474,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             subprocess.call(command, shell=True)
         elif serializer.instance.action == 'T2':
             self.train_step2(serializer.instance)
-        elif serializer.instance.action == 'T3D':
+        elif serializer.instance.action == 'T3':
             self.train_step3(serializer.instance)
         elif serializer.instance.action == 'TC':
             self.train_only_step2(serializer.instance)
