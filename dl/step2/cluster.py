@@ -16,7 +16,7 @@ class ClusterSettings:
         with tf.gfile.Open(cluster_filepath, 'rb') as f:
             lines = f.read().decode()
         lines = lines.split('\r\n')  # TODO use windows to edit
-        self.lines = filter(None, lines)
+        self.lines = lines
 
     def get_class_names_to_cluster_class_names(self):
         # class_names_to_cluster_class_names={'222222222':'111111111','333333333':'111111111'}
