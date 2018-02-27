@@ -98,7 +98,7 @@ def main(_):
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
     tf.logging.set_verbosity(tf.logging.INFO)
     logger = logging.getLogger()
     logger.setLevel('INFO')
