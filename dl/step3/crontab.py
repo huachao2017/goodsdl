@@ -32,6 +32,8 @@ def _run_train(domain, traintype):
     return True
 
 def main(_):
+    logger = logging.getLogger()
+    logger.setLevel('INFO')
     train_interval_secs = FLAGS.train_interval_secs
     step2_dir = os.path.join(FLAGS.dataset_dir, 'step2')
     cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
