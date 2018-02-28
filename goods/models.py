@@ -56,7 +56,7 @@ def train_image_upload_source(instance,filename):
 
 def train_image_class_upload_source(instance,filename):
     now = datetime.datetime.now()
-    ret = '{}/data_class/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()),
+    ret = '{}/data_new/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()),
                                   filename)
     return ret
 

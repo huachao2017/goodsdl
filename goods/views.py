@@ -368,7 +368,7 @@ class TrainImageOnlyViewSet(DefaultMixin, viewsets.ModelViewSet):
         if 'deviceid' not in request.data:
             request.data['deviceid'] = get_client_ip(request)
         if 'traintype' not in request.data:
-            request.data['traintype'] = 0
+            request.data['traintype'] = 2
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -381,22 +381,49 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImageClass.objects.order_by('-id')
     serializer_class = TrainImageClassSerializer
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        a, b = os.path.splitext(instance.source.path)
-        dir = os.path.dirname(instance.source.path)
-        if os.path.isfile(instance.source.path):
-            os.remove(instance.source.path)
+    def create(self, request, *args, **kwargs):
+        # 兼容没有那么字段的请求
+        # if 'name' not in request.data :
+        #     request.data['name'] = request.data['upc']
+        if 'traintype' not in request.data:
+            request.data['traintype'] = 1
 
-        havefile = False
-        for i in os.listdir(dir):
-            havefile = True
-            break
-        if not havefile:
-            shutil.rmtree(dir)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
 
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
+            '-update_time')[:1]
+
+        if len(export1s) > 0:
+            detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
+            step1_min_score_thresh = .5
+            ret, _ = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+            # to data_new
+
+            if len(ret) == 1:
+                logger.info('create image xml:{}'.format(serializer.instance.source.path))
+
+                image_path = serializer.instance.source.path
+                image = im.open(image_path)
+                xml_path, _ = os.path.split(os.path.realpath(__file__))
+                xml_path = os.path.join(xml_path, 'template.xml')
+                tree = ET.parse(xml_path)
+                root = tree.getroot()
+                root.find('size').find('width').text = str(image.size[0])
+                root.find('size').find('height').text = str(image.size[1])
+                root.find('object').find('name').text = str(serializer.instance.upc)
+                for box in root.iter('bndbox'):
+                    # 改变xml中的坐标值
+                    box.find('xmin').text = str(ret[0].xmin)
+                    box.find('ymin').text = str(ret[0].ymin)
+                    box.find('xmax').text = str(ret[0].xmax)
+                    box.find('ymax').text = str(ret[0].ymax)
+                # 写入新的xml
+                a, b = os.path.splitext(serializer.instance.source.path)
+                tree.write(a + ".xml")
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
