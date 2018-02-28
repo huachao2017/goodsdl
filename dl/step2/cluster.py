@@ -16,7 +16,11 @@ class ClusterSettings:
         with tf.gfile.Open(cluster_filepath, 'rb') as f:
             lines = f.read().decode()
         lines = lines.split('\r\n')  # TODO use windows to edit
-        self.lines = lines
+        self.lines = []
+        for line in self.lines:
+            sep = line.split(':')
+            if len(sep) >= 3:
+                self.lines.append(line)
 
     def get_class_names_to_cluster_class_names(self):
         # class_names_to_cluster_class_names={'222222222':'111111111','333333333':'111111111'}
