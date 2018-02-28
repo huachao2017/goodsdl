@@ -17,7 +17,7 @@ class ClusterSettings:
             lines = f.read().decode()
         lines = lines.split('\r\n')  # TODO use windows to edit
         self.lines = []
-        for line in self.lines:
+        for line in lines:
             sep = line.split(':')
             if len(sep) >= 3:
                 self.lines.append(line)
