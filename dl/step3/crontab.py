@@ -33,7 +33,7 @@ def _run_train(domain, traintype):
     # print(req.full_url)
     with request.urlopen(req, data=train_data.encode('utf-8')) as f:
         print('Status:', f.status, f.reason)
-        if f.status != 200:
+        if f.status != 201:
             return False
 
     return True
