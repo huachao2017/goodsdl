@@ -7,12 +7,16 @@ import tensorflow as tf
 
 tf.app.flags.DEFINE_string(
     'domain', '192.168.1.173', 'The train server domain.')
+
 tf.app.flags.DEFINE_string(
     'dataset_dir', '/home/src/goodsdl/media/dataset', 'The path of the dataset dir.')
+
 tf.app.flags.DEFINE_integer(
     'begin_traintype', 1, 'The begin of the train type.')
+
 tf.app.flags.DEFINE_integer(
     'train_interval_secs', 600, 'train interval secs.')
+
 FLAGS = tf.app.flags.FLAGS
 
 
