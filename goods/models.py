@@ -125,6 +125,7 @@ class ExportAction(models.Model):
         (u'ANY', u'not specify'),
         (u'inception_resnet_v2', u'inception resnet V2'),
         (u'nasnet_large', u'nas large'),
+        (u'nasnet_mobile', u'nas mobile'),
     )
     model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
     param = models.CharField(max_length=500)
