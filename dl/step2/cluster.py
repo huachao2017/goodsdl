@@ -27,7 +27,7 @@ class ClusterSettings:
         class_names_to_cluster_class_names = {}
         for line in self.lines:
             sep = line.split(':')
-            class_names_to_cluster_class_names[sep[2]] = line[sep[1]]
+            class_names_to_cluster_class_names[sep[2]] = sep[1]
 
         return class_names_to_cluster_class_names
 
