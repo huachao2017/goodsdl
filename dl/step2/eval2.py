@@ -196,7 +196,6 @@ def main(_):
             restore_fn=_restore_latest_checkpoint,
             num_batches=dataset.num_samples,
             eval_interval_secs=600,
-            max_number_of_evaluations=dataset.num_samples,
             master=FLAGS.master,
             save_graph=True,
             save_graph_dir=(FLAGS.eval_dir))
