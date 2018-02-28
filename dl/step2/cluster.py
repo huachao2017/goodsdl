@@ -64,14 +64,10 @@ class ClusterSettings:
             if traintype == int(sep[0]):
                 return sep[1]
 
-
-tf.app.flags.DEFINE_string(
-    'dataset_dir', '/home/src/goodsdl/media/dataset', 'The path of the dataset dir.')
-FLAGS = tf.app.flags.FLAGS
-
-def main(_):
-    step2_dir = os.path.join(FLAGS.dataset_dir, 'step2')
-    step3_dir = os.path.join(FLAGS.dataset_dir, 'step3')
+if __name__ == '__main__':
+    dataset_dir = '/home/src/goodsdl/media/dataset'
+    step2_dir = os.path.join(dataset_dir, 'step2')
+    step3_dir = os.path.join(dataset_dir, 'step3')
     cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
     print(cluster_filepath)
     cluster_settings = ClusterSettings(cluster_filepath)
@@ -88,7 +84,4 @@ def main(_):
                 shutil.copytree(source_dir, os.path.join(output_dir,class_name))
                 print('{}-->{}'.format(source_dir, output_dir))
 
-
-if __name__ == '__main__':
-    tf.app.run()
 
