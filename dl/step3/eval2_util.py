@@ -362,6 +362,13 @@ def repeated_checkpoint_run(tensor_dict,
         number_of_evaluations >= max_number_of_evaluations):
       logging.info('Finished evaluation!')
       break
+
+    # train over then finished
+    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(summary_dir)).readline()
+    if train_ps == '':
+      logging.info('Finished evaluation!')
+      break
+
     time_to_next_eval = start + eval_interval_secs - time.time()
     if time_to_next_eval > 0:
       time.sleep(time_to_next_eval)
