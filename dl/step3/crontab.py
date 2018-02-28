@@ -1,18 +1,17 @@
 import os
 import time
 import logging
-from dl.step2 import cluster
 from urllib import request, parse
 import tensorflow as tf
 
 tf.app.flags.DEFINE_string(
     'domain', '192.168.1.173', 'The train server domain.')
 
-tf.app.flags.DEFINE_string(
-    'dataset_dir', '/home/src/goodsdl/media/dataset', 'The path of the dataset dir.')
-
 tf.app.flags.DEFINE_integer(
     'begin_traintype', 1, 'The begin of the train type.')
+
+tf.app.flags.DEFINE_integer(
+    'end_traintype', 32, 'The end of the train type.')
 
 tf.app.flags.DEFINE_integer(
     'train_interval_secs', 600, 'train interval secs.')
@@ -39,10 +38,7 @@ def main(_):
     logger = logging.getLogger()
     logger.setLevel('INFO')
     train_interval_secs = FLAGS.train_interval_secs
-    step2_dir = os.path.join(FLAGS.dataset_dir, 'step2')
-    cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
-    cluster_setting = cluster.ClusterSettings(cluster_filepath)
-    max_number_of_traintype = cluster_setting.get_max_traintype()
+    end_traintype = FLAGS.end_traintype
     cur_traintype = FLAGS.begin_traintype
     domain = FLAGS.domain
     while True:
@@ -57,7 +53,7 @@ def main(_):
                 break
             cur_traintype += 1
 
-        if cur_traintype > max_number_of_traintype:
+        if cur_traintype > end_traintype:
             logging.info('Finished all train!')
             break
         time_to_next_eval = start + train_interval_secs - time.time()
