@@ -51,10 +51,13 @@ class ProblemGoods(models.Model):
 
 def train_image_upload_source(instance,filename):
     now = datetime.datetime.now()
-    if instance.traintype == 0:
-        ret = '{}/data_new/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()), filename)
-    else:
-        ret = '{}/{}/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.traintype, instance.upc, str(now.time()), filename)
+    ret = '{}/data_new/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()), filename)
+    return ret
+
+def train_image_class_upload_source(instance,filename):
+    now = datetime.datetime.now()
+    ret = '{}/data_class/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()),
+                                  filename)
     return ret
 
 def train_image_only_upload_source(instance,filename):
@@ -83,7 +86,7 @@ class TrainImageOnly(models.Model):
 class TrainImageClass(models.Model):
     deviceid = models.CharField(max_length=20, default='')
     traintype = models.PositiveIntegerField(default=0)
-    source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
+    source = models.ImageField(max_length=200, upload_to=train_image_class_upload_source)
     upc = models.CharField(max_length=20)
     name = models.CharField(max_length=20, default='')
     create_time = models.DateTimeField('date created', auto_now_add=True)
