@@ -12,7 +12,7 @@ tf.app.flags.DEFINE_string(
 tf.app.flags.DEFINE_integer(
     'begin_traintype', 1, 'The begin of the train type.')
 tf.app.flags.DEFINE_integer(
-    'train_interval_secs', 60, 'train interval secs.')
+    'train_interval_secs', 600, 'train interval secs.')
 FLAGS = tf.app.flags.FLAGS
 
 
