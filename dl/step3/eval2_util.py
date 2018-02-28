@@ -364,7 +364,7 @@ def repeated_checkpoint_run(tensor_dict,
       break
 
     # train over then finished
-    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(summary_dir)).readline()
+    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
     if train_ps == '':
       logging.info('Finished evaluation!')
       break
