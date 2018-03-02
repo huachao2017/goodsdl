@@ -331,7 +331,7 @@ class ImageDetector:
 
         if len(step2_images) <= 0:
             time2 = time.time()
-            logger.info('detectV2: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
+            logger.info('detectV3: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
             return None, .0
         # 统一识别，用于加速
         step2_images_nps = np.array(step2_images)
@@ -356,7 +356,7 @@ class ImageDetector:
         ret = self.do_addition_logic_work(boxes_step1, scores_step1, labels_step2, scores_step2, image_instance, image_np, step2_min_score_thresh)
 
         time3 = time.time()
-        logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
+        logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
         return ret, time3-time0
 
     def do_addition_logic_work(self, boxes_step1, scores_step1, labels_step2, scores_step2, image_instance, image_np, step2_min_score_thresh):
