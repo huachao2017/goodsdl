@@ -334,36 +334,38 @@ class ImageDetector:
         probabilities = self.session_step2.run(
             self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
 
+        labels_step2 = []
+        scores_step2 = []
+        for i in range(len(boxes_step1)):
+            type_to_probability = probabilities[i]
+            sorted_inds = [j[0] for j in sorted(enumerate(-type_to_probability), key=lambda x: x[1])]
+
+            labels_step2.append(sorted_inds[0])
+            scores_step2.append(type_to_probability[sorted_inds[0]])
+            if scores_step2[i] < step2_min_score_thresh:
+                # add to database
+                self.log_problem_goods(i, image_instance, type_to_probability, sorted_inds)
+
+
         time2 = time.time()
 
-        ret = self.do_last_logic_work(boxes_step1, scores_step1, image_instance, image_np, probabilities, step2_min_score_thresh)
+        ret = self.do_addition_logic_work(boxes_step1, scores_step1, labels_step2, scores_step2, image_instance, image_np, step2_min_score_thresh)
 
         time3 = time.time()
         logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
         return ret, time3-time0
 
-    def do_last_logic_work(self, boxes_step1, scores_step1, image_instance, image_np, probabilities, step2_min_score_thresh):
+    def do_addition_logic_work(self, boxes_step1, scores_step1, labels_step2, scores_step2, image_instance, image_np, step2_min_score_thresh):
         ret = []
-        classes = []
-        scores_step2 = []
         for i in range(len(boxes_step1)):
-            classes.append(-1)
-            scores_step2.append(-1)
             ymin, xmin, ymax, xmax = boxes_step1[i]
-            type_to_probability = probabilities[i]
-            sorted_inds = [j[0] for j in sorted(enumerate(-type_to_probability), key=lambda x: x[1])]
 
-            classes[i] = sorted_inds[0]
-            scores_step2[i] = type_to_probability[sorted_inds[0]]
-            class_type = sorted_inds[0]
-            upc = self.labels_to_names[sorted_inds[0]]
-            if type_to_probability[sorted_inds[0]] < step2_min_score_thresh:
+            class_type = labels_step2[i]
+            upc = self.labels_to_names[class_type]
+            if scores_step2[i] < step2_min_score_thresh:
                 # 识别度不够
                 class_type = -1
                 upc = ''
-                # add to database
-                self.log_problem_goods(i, image_instance, type_to_probability, sorted_inds)
-
 
             ret.append({'class': class_type,
                         'score': scores_step1[i],
@@ -377,18 +379,16 @@ class ImageDetector:
             image_path = image_instance.source.path
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
-            time4_1 = time.time()
             visualize_boxes_and_labels_on_image_array(
                 image_np,
                 np.array(boxes_step1),
-                classes,
+                np.array(labels_step2),
                 scores_step1,
                 scores_step2,
                 self.labels_to_names,
                 use_normalized_coordinates=False,
                 step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=2)
-            time4_2 = time.time()
             output_image = Image.fromarray(image_np)
             output_image.save(output_image_path)
         return ret
