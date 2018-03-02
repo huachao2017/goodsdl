@@ -452,15 +452,11 @@ class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         logger.info('create action:{}'.format(serializer.instance.action))
         if serializer.instance.action == 'D2':
-            if serializer.instance.traintype == 0:
-                data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data')
-            else:
-                data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, str(serializer.instance.traintype))
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
             step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(export1s[0].pk),
                                             'frozen_inference_graph.pb')
-            create_goods_data.prepare_data(data_dir,
-                                       os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2'),
+            create_goods_data.prepare_data(os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2_new'),
+                                       os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2_new_augment'),
                                        step1_model_path)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

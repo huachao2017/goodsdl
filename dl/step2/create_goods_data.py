@@ -49,7 +49,7 @@ def rotate_image(src, angle, scale=1.):
 #     return class_names
 
 
-def create_step2_goods(data_dir, dataset_dir, step1_model_path):
+def create_step2_goods(data_dir, dataset_dir, step1_model_path, static_augment_ratio=0):
     graph_step1 = tf.Graph()
     with graph_step1.as_default():
         od_graph_def = tf.GraphDef()
@@ -125,19 +125,19 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path):
                         img = cv2.imread(image_path)
 
                         # augment small sample
-                        if len(filelist) < 3 * 6:
-                            augment_ratio = 5
-                        elif len(filelist) < 3 * 8:
-                            augment_ratio = 4
-                        elif len(filelist) < 3 * 10:
-                            augment_ratio = 3
-                        elif len(filelist) < 3 * 15:
-                            augment_ratio = 2
-                        else:
-                            augment_ratio = 1
+                        # if len(filelist) < 3 * 6:
+                        #     augment_ratio = 5
+                        # elif len(filelist) < 3 * 8:
+                        #     augment_ratio = 4
+                        # elif len(filelist) < 3 * 10:
+                        #     augment_ratio = 3
+                        # elif len(filelist) < 3 * 15:
+                        #     augment_ratio = 2
+                        # else:
+                        #     augment_ratio = 1
                         # 使图像旋转
-                        for k in range(6 * augment_ratio - 1):
-                            angle = 60 / augment_ratio + k * 60 / augment_ratio
+                        for k in range(7):
+                            angle = 45 + k * 45
                             output_image_path_augment = os.path.join(output_class_dir, "{}_{}_augment{}.jpg".format(
                                 os.path.split(example)[1], index, angle))
                             if tf.gfile.Exists(output_image_path_augment):
