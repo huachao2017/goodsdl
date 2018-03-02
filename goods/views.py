@@ -405,7 +405,10 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
             # to data_new
 
             if len(ret) > 1:
-                ymin, xmin, ymax, xmax = ret[0]
+                ymin = ret[0]['ymin']
+                xmin = ret[0]['xmin']
+                ymax = ret[0]['ymax']
+                xmax = ret[0]['xmax']
                 logger.info('create image xml:{}'.format(serializer.instance.source.path))
 
                 image_path = serializer.instance.source.path
