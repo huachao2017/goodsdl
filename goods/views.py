@@ -405,6 +405,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
             # to data_new
 
             if len(ret) == 1:
+                ymin, xmin, ymax, xmax = ret[0]
                 logger.info('create image xml:{}'.format(serializer.instance.source.path))
 
                 image_path = serializer.instance.source.path
@@ -418,13 +419,22 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 root.find('object').find('name').text = str(serializer.instance.upc)
                 for box in root.iter('bndbox'):
                     # 改变xml中的坐标值
-                    box.find('xmin').text = str(ret[0].xmin)
-                    box.find('ymin').text = str(ret[0].ymin)
-                    box.find('xmax').text = str(ret[0].xmax)
-                    box.find('ymax').text = str(ret[0].ymax)
+                    box.find('xmin').text = str(xmin)
+                    box.find('ymin').text = str(ymin)
+                    box.find('xmax').text = str(xmax)
+                    box.find('ymax').text = str(ymax)
                 # 写入新的xml
                 a, b = os.path.splitext(serializer.instance.source.path)
                 tree.write(a + ".xml")
+
+                # 生成step2图片
+                newimage = image.crop((xmin, ymin, xmax, ymax))
+                newimage_split = os.path.split(image_path)
+                new_image_path = os.path.join(settings.DATASET_DIR_NAME, 'step2', serializer.instance.upc, newimage_split[1])
+                newimage.save(new_image_path, 'JPEG')
+
+                # TODO 如果upc存在于step3中，自动转移到step3
+
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
