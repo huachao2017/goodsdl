@@ -180,6 +180,7 @@ class ImageDetector:
         # self.step1_label_path = os.path.join(self.step1_model_dir, 'goods_label_map.pbtxt')
 
         self.traintype_to_export3ids = traintype_to_export3ids
+        self.cluster_upcs = None
         self.counter = 0
 
     def load(self):
@@ -266,6 +267,9 @@ class ImageDetector:
             # label_map = label_map_util.load_labelmap(self.step1_label_path)
             # categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
             #                                                             use_display_name=True)
+
+            cluster_setting = cluster.ClusterSettings(os.path.join(self.step2_model_dir, 'cluster.txt'))
+            self.cluster_upc_to_traintype = cluster_setting.get_main_class_name_to_traintype()
             self.labels_to_names = step2_labels_to_names
             logger.info('end loading model...')
             # semaphore.release()
@@ -361,15 +365,26 @@ class ImageDetector:
             ymin, xmin, ymax, xmax = boxes_step1[i]
 
             class_type = labels_step2[i]
+            action = 0
             upc = self.labels_to_names[class_type]
             if scores_step2[i] < step2_min_score_thresh:
                 # 识别度不够
                 class_type = -1
                 upc = ''
 
+            if upc == 'bottled-drink-stand':
+                # 立姿水需要躺倒平放
+                class_type = -1
+                upc = ''
+                action = 2
+            elif upc in self.cluster_upc_to_traintype:
+                # TODO STEP 3
+                pass
+
             ret.append({'class': class_type,
                         'score': scores_step1[i],
                         'score2': scores_step2[i],
+                        'action': action,
                         'upc': upc,
                         'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
                         })

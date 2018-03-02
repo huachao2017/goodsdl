@@ -41,6 +41,17 @@ class ClusterSettings:
 
         return traintype_to_class_names
 
+    def get_main_class_name_to_traintype(self):
+        main_class_name_to_traintype = {}
+        for line in self.lines:
+            sep = line.split(':')
+            traintype = int(sep[0])
+            main_class_name = sep[1]
+            if main_class_name not in main_class_name_to_traintype:
+                main_class_name_to_traintype[main_class_name] = traintype
+
+        return main_class_name_to_traintype
+
     def get_max_traintype(self):
         lastline = self.lines[-1]
         sep = lastline.split(':')
