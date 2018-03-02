@@ -404,7 +404,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
             ret, _ = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
             # to data_new
 
-            if len(ret) == 1:
+            if len(ret) > 1:
                 ymin, xmin, ymax, xmax = ret[0]
                 logger.info('create image xml:{}'.format(serializer.instance.source.path))
 
