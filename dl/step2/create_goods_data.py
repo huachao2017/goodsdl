@@ -336,6 +336,8 @@ FLAGS = tf.app.flags.FLAGS
 def main(_):
     if not FLAGS.day_hour:
         raise ValueError('You must supply day and hour --day_hour')
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     logger = logging.getLogger()
     logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset'
