@@ -325,13 +325,9 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                                 xmin = int(xmin * im_width)
                                 ymax = int(ymax * im_height)
                                 xmax = int(xmax * im_width)
-                                if area == None:
-                                    if filter_area > (ymax-ymin)*(xmax-xmin):
-                                        area = (ymax-ymin)*(xmax-xmin)
-                                else:
-                                   if area < (ymax-ymin)*(xmax-xmin):
-                                       area = (ymax-ymin)*(xmax-xmin)
-                                       index = l
+                                if area < (ymax-ymin)*(xmax-xmin) and filter_area > (ymax-ymin)*(xmax-xmin):
+                                   area = (ymax-ymin)*(xmax-xmin)
+                                   index = l
 
                             if index >= 0:
                                 ymin, xmin, ymax, xmax = new_boxes[index]
