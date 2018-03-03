@@ -236,6 +236,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
         if os.path.isdir(class_dir):
             if dir_day_hour is not None:
                 cur_dir_day_hour = time.strftime('%d%H', time.localtime(os.path.getctime(class_dir)))
+                logging.info('solve class:{}_{}'.format(dirlist[i],cur_dir_day_hour))
                 if cur_dir_day_hour != dir_day_hour:
                     continue
             logging.info('solve class:{}'.format(dirlist[i]))
@@ -342,7 +343,7 @@ def main(_):
     step2_dir = os.path.join(dataset_dir, 'step2_new')
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model/58/','frozen_inference_graph.pb')
 
-    create_step2_goods_V2(source_dir, step2_dir, step1_model_path, FLAGS.day_hour)
+    create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
 
 if __name__ == '__main__':
     tf.app.run()
