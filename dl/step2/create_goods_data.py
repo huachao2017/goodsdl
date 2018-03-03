@@ -316,6 +316,8 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                             # logging.info("save image...")
                         else:
                             for l in range(len(new_boxes)):
+                                output_image_path_augment = os.path.join(output_class_dir, "{}_augment{}_{}.jpg".format(
+                                    os.path.split(example)[1], angle, l))
                                 ymin, xmin, ymax, xmax = new_boxes[l]
                                 ymin = int(ymin * im_height)
                                 xmin = int(xmin * im_width)
