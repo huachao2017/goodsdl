@@ -244,6 +244,9 @@ def get_names_to_labels(class_names, class_names_to_cluster_class_names):
     for class_name in class_names:
         if class_name not in class_names_to_cluster_class_names:
             new_class_names.append(class_name)
+        else:
+            if class_names_to_cluster_class_names[class_name] not in class_names:
+                raise ValueError(class_names_to_cluster_class_names[class_name] + 'is not exist.')
 
     # TODO 目前还没有支持创建新类
     return dict(zip(new_class_names, range(len(new_class_names))))
