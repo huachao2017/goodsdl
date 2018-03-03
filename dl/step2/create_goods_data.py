@@ -284,33 +284,64 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                         if boxes.shape[0] <= 0:
                             augment_total += 1
                             augment_total_error += 1
-                            logging.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
-                                output_image_path_augment, angle, 0, augment_total_error, augment_total))
+                            logging.error("image:{} ,rotate:{}, count:{}/{}.".format(
+                                output_image_path_augment, angle, augment_total_error, augment_total))
 
+                        new_boxes = []
                         for l in range(boxes.shape[0]):
-                            augment_total += 1
-                            if scores_step1[l] < 0.8:
-                                augment_total_error += 1
-                                logging.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
-                                    output_image_path_augment, angle, str(scores_step1[l]), augment_total_error, augment_total))
-                            else:
-                                ymin, xmin, ymax, xmax = boxes[l]
+                            if scores_step1[l] > 0.8:
+                                new_boxes.append(boxes[l])
+                        augment_total += 1
+                        if len(new_boxes) <= 0:
+                            augment_total_error += 1
+                            logging.error("image:{} ,rotate:{}, count:{}/{}.".format(
+                                output_image_path_augment, angle, augment_total_error,
+                                augment_total))
+                        elif len(new_boxes) == 1:
+                            ymin, xmin, ymax, xmax = new_boxes[0]
+                            ymin = int(ymin * im_height)
+                            xmin = int(xmin * im_width)
+                            ymax = int(ymax * im_height)
+                            xmax = int(xmax * im_width)
+
+                            # if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
+                            #     # 如果没有识别准确，不采用次旋转样本
+                            #     logging.warning('detect failed:{}'.format(output_image_path_augment))
+                            #     break
+
+                            # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
+                            augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
+                            # augment_newimage.save(output_image_path_augment, 'JPEG')
+                            cv2.imwrite(output_image_path_augment, augment_newimage)
+                            # logging.info("save image...")
+                        else:
+                            index = 0
+                            area = None
+                            for l in range(len(new_boxes)):
+                                # 取最小面积的识别物体
+                                ymin, xmin, ymax, xmax = new_boxes[0]
                                 ymin = int(ymin * im_height)
                                 xmin = int(xmin * im_width)
                                 ymax = int(ymax * im_height)
                                 xmax = int(xmax * im_width)
+                                if area == None:
+                                    area = (ymax-ymin)*(xmax-xmin)
+                                else:
+                                   if area > (ymax-ymin)*(xmax-xmin):
+                                       index = l
 
-                                # if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
-                                #     # 如果没有识别准确，不采用次旋转样本
-                                #     logging.warning('detect failed:{}'.format(output_image_path_augment))
-                                #     break
+                            ymin, xmin, ymax, xmax = new_boxes[index]
+                            ymin = int(ymin * im_height)
+                            xmin = int(xmin * im_width)
+                            ymax = int(ymax * im_height)
+                            xmax = int(xmax * im_width)
+                            # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
+                            augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
+                            # augment_newimage.save(output_image_path_augment, 'JPEG')
+                            cv2.imwrite(output_image_path_augment, augment_newimage)
+                            # logging.info("save image...")
 
-                                # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
-                                augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
-                                # augment_newimage.save(output_image_path_augment, 'JPEG')
-                                cv2.imwrite(output_image_path_augment, augment_newimage)
-                                # logging.info("save image...")
-                            break
+
     logging.info("augment complete: {}/{}".format(augment_total_error, augment_total))
     session_step1.close()
 
