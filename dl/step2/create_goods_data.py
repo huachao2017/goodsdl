@@ -11,9 +11,6 @@ import tensorflow as tf
 
 # from datasets import dataset_utils
 
-logger = logging.getLogger("dataset")
-
-
 def rotate_image(src, angle, scale=1.):
     w = src.shape[1]
     h = src.shape[0]
@@ -50,7 +47,7 @@ def rotate_image(src, angle, scale=1.):
 #     return class_names
 
 
-def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
+def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour=None):
     graph_step1 = tf.Graph()
     with graph_step1.as_default():
         od_graph_def = tf.GraphDef()
@@ -89,7 +86,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
                 cur_dir_day_hour = time.strftime('%d%H', time.localtime(os.path.getctime(class_dir)))
                 if cur_dir_day_hour != dir_day_hour:
                     continue
-            logger.info('solve class:{}'.format(dirlist[i]))
+            logging.info('solve class:{}'.format(dirlist[i]))
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
@@ -100,7 +97,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
                 example, ext = os.path.splitext(image_path)
                 xml_path = example + '.xml'
                 if ext == ".jpg" and os.path.isfile(xml_path):
-                    logger.info('solve image:{}'.format(image_path))
+                    logging.info('solve image:{}'.format(image_path))
                     image = im.open(image_path)
                     tree = ET.parse(xml_path)
                     root = tree.getroot()
@@ -119,7 +116,7 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
                                                          "{}_{}.jpg".format(os.path.split(example)[1], index))
                         if not tf.gfile.Exists(output_image_path):
                             newimage.save(output_image_path, 'JPEG')
-                            # logger.info('save image:{}'.format(output_image_path))
+                            # logging.info('save image:{}'.format(output_image_path))
 
                         img = cv2.imread(image_path)
 
@@ -142,9 +139,9 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
                             if tf.gfile.Exists(output_image_path_augment):
                                 # 文件存在不再重新生成，从而支持增量生成
                                 continue
-                            # logger.info("image:{} rotate {}.".format(output_image_path, angle))
+                            # logging.info("image:{} rotate {}.".format(output_image_path, angle))
                             rotated_img = rotate_image(img, angle)
-                            # logger.info("rotate image...")
+                            # logging.info("rotate image...")
                             # 写入图像
                             # tmp_image_path = os.path.join(output_tmp_dir,
                             #                               "{}_{}_{}.jpg".format(os.path.split(example)[1], index, k))
@@ -159,11 +156,11 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
                             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
                             image_np_expanded = np.expand_dims(image_np, axis=0)
                             # Actual detection.
-                            # logger.info("begin detect...")
+                            # logging.info("begin detect...")
                             (boxes, scores) = session_step1.run(
                                 [detection_boxes, detection_scores],
                                 feed_dict={image_tensor_step1: image_np_expanded})
-                            # logger.info("end detect...")
+                            # logging.info("end detect...")
                             # data solving
                             boxes = np.squeeze(boxes)
                             # classes = np.squeeze(classes).astype(np.int32)
@@ -171,14 +168,14 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
                             if boxes.shape[0] <= 0:
                                 augment_total += 1
                                 augment_total_error += 1
-                                logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                logging.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
                                     output_image_path, angle, str(scores_step1[l]), augment_total_error, augment_total))
 
                             for l in range(boxes.shape[0]):
                                 augment_total += 1
                                 if scores_step1[l] < 0.8:
                                     augment_total_error += 1
-                                    logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                    logging.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
                                         output_image_path, angle, str(scores_step1[l]), augment_total_error, augment_total))
                                 else:
                                     ymin, xmin, ymax, xmax = boxes[l]
@@ -189,20 +186,20 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
 
                                     # if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
                                     #     # 如果没有识别准确，不采用次旋转样本
-                                    #     logger.warning('detect failed:{}'.format(output_image_path_augment))
+                                    #     logging.warning('detect failed:{}'.format(output_image_path_augment))
                                     #     break
 
                                     # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
                                     augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
                                     # augment_newimage.save(output_image_path_augment, 'JPEG')
                                     cv2.imwrite(output_image_path_augment, augment_newimage)
-                                    # logger.info("save image...")
+                                    # logging.info("save image...")
                                 break
-    logger.info("augment complete: {}/{}".format(augment_total_error, augment_total))
+    logging.info("augment complete: {}/{}".format(augment_total_error, augment_total))
     session_step1.close()
 
 
-def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour):
+def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=None):
     graph_step1 = tf.Graph()
     with graph_step1.as_default():
         od_graph_def = tf.GraphDef()
@@ -241,7 +238,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour)
                 cur_dir_day_hour = time.strftime('%d%H', time.localtime(os.path.getctime(class_dir)))
                 if cur_dir_day_hour != dir_day_hour:
                     continue
-            logger.info('solve class:{}'.format(dirlist[i]))
+            logging.info('solve class:{}'.format(dirlist[i]))
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
@@ -252,7 +249,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour)
                 prefix = filelist[j].split('_')
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg" and prefix != 'visual':
-                    logger.info('solve image:{}'.format(image_path))
+                    logging.info('solve image:{}'.format(image_path))
                     img = cv2.imread(image_path)
                     for k in range(8):
                         angle = k * 45
@@ -261,7 +258,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour)
                         if tf.gfile.Exists(output_image_path_augment):
                             # 文件存在不再重新生成，从而支持增量生成
                             continue
-                        # logger.info("image:{} rotate {}.".format(output_image_path, angle))
+                        # logging.info("image:{} rotate {}.".format(output_image_path, angle))
                         if angle > 0:
                             rotated_img = rotate_image(img, angle)
                         else:
@@ -274,11 +271,11 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour)
                         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
                         image_np_expanded = np.expand_dims(image_np, axis=0)
                         # Actual detection.
-                        # logger.info("begin detect...")
+                        # logging.info("begin detect...")
                         (boxes, scores) = session_step1.run(
                             [detection_boxes, detection_scores],
                             feed_dict={image_tensor_step1: image_np_expanded})
-                        # logger.info("end detect...")
+                        # logging.info("end detect...")
                         # data solving
                         boxes = np.squeeze(boxes)
                         # classes = np.squeeze(classes).astype(np.int32)
@@ -286,14 +283,14 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour)
                         if boxes.shape[0] <= 0:
                             augment_total += 1
                             augment_total_error += 1
-                            logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
-                                output_image_path_augment, angle, str(scores_step1[l]), augment_total_error, augment_total))
+                            logging.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                output_image_path_augment, angle, 0, augment_total_error, augment_total))
 
                         for l in range(boxes.shape[0]):
                             augment_total += 1
                             if scores_step1[l] < 0.8:
                                 augment_total_error += 1
-                                logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                logging.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
                                     output_image_path_augment, angle, str(scores_step1[l]), augment_total_error, augment_total))
                             else:
                                 ymin, xmin, ymax, xmax = boxes[l]
@@ -304,16 +301,16 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour)
 
                                 # if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
                                 #     # 如果没有识别准确，不采用次旋转样本
-                                #     logger.warning('detect failed:{}'.format(output_image_path_augment))
+                                #     logging.warning('detect failed:{}'.format(output_image_path_augment))
                                 #     break
 
                                 # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
                                 augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
                                 # augment_newimage.save(output_image_path_augment, 'JPEG')
                                 cv2.imwrite(output_image_path_augment, augment_newimage)
-                                # logger.info("save image...")
+                                # logging.info("save image...")
                             break
-    logger.info("augment complete: {}/{}".format(augment_total_error, augment_total))
+    logging.info("augment complete: {}/{}".format(augment_total_error, augment_total))
     session_step1.close()
 
 def prepare_data(source_dir,dest_dir,step1_model_path):
@@ -338,6 +335,8 @@ FLAGS = tf.app.flags.FLAGS
 def main(_):
     if not FLAGS.day_hour:
         raise ValueError('You must supply day and hour --day_hour')
+    logger = logging.getLogger()
+    logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset'
     source_dir = os.path.join(dataset_dir, 'data_new')
     step2_dir = os.path.join(dataset_dir, 'step2_new')
