@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 
 from dl import imagedetection, imagedetectionV2, imagedetectionV2_1, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
-from dl.step2 import create_goods_data, convert_goods
+from dl.step2 import convert_goods
 from dl.step3 import convert_goods_step3
 from dl.only_step2 import create_goods_tf_record
 from .serializers import *
@@ -440,25 +440,6 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-
-class DatasetActionViewSet(DefaultMixin, viewsets.ModelViewSet):
-    queryset = DatasetAction.objects.order_by('-id')
-    serializer_class = DatasetActionSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        logger.info('create action:{}'.format(serializer.instance.action))
-        if serializer.instance.action == 'D2':
-            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
-            step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(export1s[0].pk),
-                                            'frozen_inference_graph.pb')
-            create_goods_data.prepare_data(os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2_new'),
-                                       os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2_new_augment'),
-                                       step1_model_path)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')
