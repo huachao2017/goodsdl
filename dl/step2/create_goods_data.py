@@ -247,7 +247,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
                 image_path = os.path.join(class_dir, filelist[j])
-                prefix = filelist[j].split('_')
+                prefix = filelist[j].split('_')[0]
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg" and prefix != 'visual':
                     logging.info('solve image:{}'.format(image_path))
@@ -259,7 +259,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                         if tf.gfile.Exists(output_image_path_augment):
                             # 文件存在不再重新生成，从而支持增量生成
                             continue
-                        # logging.info("image:{} rotate {}.".format(output_image_path, angle))
+                        logging.info("image:{} rotate {}.".format(output_image_path_augment, angle))
                         if angle > 0:
                             rotated_img = rotate_image(img, angle)
                         else:
