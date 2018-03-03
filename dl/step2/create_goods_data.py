@@ -289,7 +289,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
 
                         new_boxes = []
                         for l in range(boxes.shape[0]):
-                            if scores_step1[l] > 0.8:
+                            if scores_step1[l] > 0.7:
                                 new_boxes.append(boxes[l])
                         augment_total += 1
                         if len(new_boxes) <= 0:
