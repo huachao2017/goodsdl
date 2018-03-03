@@ -380,7 +380,7 @@ def main(_):
     logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset'
     source_dir = os.path.join(dataset_dir, 'data_new')
-    step2_dir = os.path.join(dataset_dir, 'step2_new')
+    step2_dir = os.path.join(dataset_dir, 'step2')
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model/58/','frozen_inference_graph.pb')
 
     create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
