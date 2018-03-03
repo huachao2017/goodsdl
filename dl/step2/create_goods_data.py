@@ -252,7 +252,11 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                 if ext == ".jpg" and prefix != 'visual':
                     logging.info('solve image:{}'.format(image_path))
                     img = cv2.imread(image_path)
-                    for k in range(8):
+
+                    augment_size = 8
+                    if dirlist[i] == 'ziptop-drink-stand' or dirlist[i] == 'bottled-drink-stand':
+                        augment_size = 1
+                    for k in range(augment_size):
                         angle = k * 45
                         output_image_path_augment = os.path.join(output_class_dir, "{}_augment{}.jpg".format(
                             os.path.split(example)[1], angle))

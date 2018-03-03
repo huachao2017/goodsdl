@@ -372,7 +372,7 @@ class ImageDetector:
                 class_type = -1
                 upc = ''
 
-            if upc == 'bottled-drink-stand':
+            if upc == 'bottled-drink-stand' or upc == 'ziptop-drink-stand':
                 # 立姿水需要躺倒平放
                 class_type = -1
                 upc = ''
