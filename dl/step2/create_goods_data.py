@@ -202,6 +202,120 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
     session_step1.close()
 
 
+def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour):
+    graph_step1 = tf.Graph()
+    with graph_step1.as_default():
+        od_graph_def = tf.GraphDef()
+        with tf.gfile.GFile(step1_model_path, 'rb') as fid:
+            serialized_graph = fid.read()
+            od_graph_def.ParseFromString(serialized_graph)
+            tf.import_graph_def(od_graph_def, name='')
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU50%的显存
+    session_step1 = tf.Session(graph=graph_step1, config=config)
+
+    # Definite input and output Tensors for detection_graph
+    image_tensor_step1 = graph_step1.get_tensor_by_name('image_tensor:0')
+    # Each box represents a part of the image where a particular object was detected.
+    detection_boxes = graph_step1.get_tensor_by_name('detection_boxes:0')
+    # Each score represent how level of confidence for each of the objects.
+    # Score is shown on the result image, together with the class label.
+    detection_scores = graph_step1.get_tensor_by_name('detection_scores:0')
+
+    # class_names = get_class_names(os.path.join(os.path.dirname(step1_model_path), dataset_utils.LABELS_FILENAME))
+    """返回所有图片文件路径"""
+
+    augment_total = 0
+    augment_total_error = 0
+    dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
+    for i in range(0, len(dirlist)):
+        # 根据step1的classname确定进入step2的类别
+        # 不再需要，step1的检测应该可以泛化
+        # if dirlist[i] not in class_names:
+        #     continue
+        class_dir = os.path.join(data_dir, dirlist[i])
+        if os.path.isdir(class_dir):
+            if dir_day_hour is not None:
+                cur_dir_day_hour = time.strftime('%d%H', time.localtime(os.path.getctime(class_dir)))
+                if cur_dir_day_hour != dir_day_hour:
+                    continue
+            logger.info('solve class:{}'.format(dirlist[i]))
+            output_class_dir = os.path.join(dataset_dir, dirlist[i])
+            if not tf.gfile.Exists(output_class_dir):
+                tf.gfile.MakeDirs(output_class_dir)
+
+            filelist = os.listdir(class_dir)
+            for j in range(0, len(filelist)):
+                image_path = os.path.join(class_dir, filelist[j])
+                prefix = filelist[j].split('_')
+                example, ext = os.path.splitext(image_path)
+                if ext == ".jpg" and prefix != 'visual':
+                    logger.info('solve image:{}'.format(image_path))
+                    img = cv2.imread(image_path)
+                    for k in range(8):
+                        angle = k * 45
+                        output_image_path_augment = os.path.join(output_class_dir, "{}_augment{}.jpg".format(
+                            os.path.split(example)[1], angle))
+                        if tf.gfile.Exists(output_image_path_augment):
+                            # 文件存在不再重新生成，从而支持增量生成
+                            continue
+                        # logger.info("image:{} rotate {}.".format(output_image_path, angle))
+                        if angle > 0:
+                            rotated_img = rotate_image(img, angle)
+                        else:
+                            rotated_img = img
+
+                        im_height = rotated_img.shape[0]
+                        im_width = rotated_img.shape[1]
+                        image_np = np.asarray(rotated_img).reshape(
+                            (im_height, im_width, 3)).astype(np.uint8)
+                        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+                        image_np_expanded = np.expand_dims(image_np, axis=0)
+                        # Actual detection.
+                        # logger.info("begin detect...")
+                        (boxes, scores) = session_step1.run(
+                            [detection_boxes, detection_scores],
+                            feed_dict={image_tensor_step1: image_np_expanded})
+                        # logger.info("end detect...")
+                        # data solving
+                        boxes = np.squeeze(boxes)
+                        # classes = np.squeeze(classes).astype(np.int32)
+                        scores_step1 = np.squeeze(scores)
+                        if boxes.shape[0] <= 0:
+                            augment_total += 1
+                            augment_total_error += 1
+                            logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                output_image_path_augment, angle, str(scores_step1[l]), augment_total_error, augment_total))
+
+                        for l in range(boxes.shape[0]):
+                            augment_total += 1
+                            if scores_step1[l] < 0.8:
+                                augment_total_error += 1
+                                logger.error("image:{} ,rotate:{}, thresh:{}, count:{}/{}.".format(
+                                    output_image_path_augment, angle, str(scores_step1[l]), augment_total_error, augment_total))
+                            else:
+                                ymin, xmin, ymax, xmax = boxes[l]
+                                ymin = int(ymin * im_height)
+                                xmin = int(xmin * im_width)
+                                ymax = int(ymax * im_height)
+                                xmax = int(xmax * im_width)
+
+                                # if ymax-ymin > im_height - 5 and xmax-xmin > im_width - 5:
+                                #     # 如果没有识别准确，不采用次旋转样本
+                                #     logger.warning('detect failed:{}'.format(output_image_path_augment))
+                                #     break
+
+                                # augment_newimage = augment_image.crop((xmin, ymin, xmax, ymax))
+                                augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
+                                # augment_newimage.save(output_image_path_augment, 'JPEG')
+                                cv2.imwrite(output_image_path_augment, augment_newimage)
+                                # logger.info("save image...")
+                            break
+    logger.info("augment complete: {}/{}".format(augment_total_error, augment_total))
+    session_step1.close()
+
 def prepare_data(source_dir,dest_dir,step1_model_path):
     """Runs the data augument.
 
@@ -229,7 +343,7 @@ def main(_):
     step2_dir = os.path.join(dataset_dir, 'step2_new')
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model/58/','frozen_inference_graph.pb')
 
-    create_step2_goods(source_dir, step2_dir, step1_model_path, FLAGS.day_hour)
+    create_step2_goods_V2(source_dir, step2_dir, step1_model_path, FLAGS.day_hour)
 
 if __name__ == '__main__':
     tf.app.run()
