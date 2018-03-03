@@ -404,7 +404,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
             ret, _ = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
             # to data_new
 
-            if len(ret) > 1:
+            if len(ret) >= 1:
                 ymin = ret[0]['ymin']
                 xmin = ret[0]['xmin']
                 ymax = ret[0]['ymax']
@@ -431,10 +431,10 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 tree.write(a + ".xml")
 
                 # 生成step2图片
-                newimage = image.crop((xmin, ymin, xmax, ymax))
-                newimage_split = os.path.split(image_path)
-                new_image_path = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2_new', serializer.instance.upc, newimage_split[1])
-                newimage.save(new_image_path, 'JPEG')
+                # newimage = image.crop((xmin, ymin, xmax, ymax))
+                # newimage_split = os.path.split(image_path)
+                # new_image_path = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2_new', serializer.instance.upc, newimage_split[1])
+                # newimage.save(new_image_path, 'JPEG')
 
                 # TODO 如果upc存在于step3中，自动转移到step3
 
