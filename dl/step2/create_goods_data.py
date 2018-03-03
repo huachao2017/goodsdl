@@ -289,7 +289,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
 
                         new_boxes = []
                         for l in range(boxes.shape[0]):
-                            if scores_step1[l] > 0.95:
+                            if scores_step1[l] > 0.8:
                                 new_boxes.append(boxes[l])
                         augment_total += 1
                         if len(new_boxes) <= 0:
@@ -315,10 +315,26 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                             cv2.imwrite(output_image_path_augment, augment_newimage)
                             # logging.info("save image...")
                         else:
+                            index = -1
+                            area = 0
+                            filter_area = im_height*im_width*.9
                             for l in range(len(new_boxes)):
-                                output_image_path_augment = os.path.join(output_class_dir, "{}_augment{}_{}.jpg".format(
-                                    os.path.split(example)[1], angle, l))
+                                # 取最大面积的识别物体
                                 ymin, xmin, ymax, xmax = new_boxes[l]
+                                ymin = int(ymin * im_height)
+                                xmin = int(xmin * im_width)
+                                ymax = int(ymax * im_height)
+                                xmax = int(xmax * im_width)
+                                if area == None:
+                                    if filter_area < (ymax-ymin)*(xmax-xmin):
+                                        area = (ymax-ymin)*(xmax-xmin)
+                                else:
+                                   if area < (ymax-ymin)*(xmax-xmin):
+                                       area = (ymax-ymin)*(xmax-xmin)
+                                       index = l
+
+                            if index >= 0:
+                                ymin, xmin, ymax, xmax = new_boxes[index]
                                 ymin = int(ymin * im_height)
                                 xmin = int(xmin * im_width)
                                 ymax = int(ymax * im_height)
@@ -328,7 +344,11 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                                 # augment_newimage.save(output_image_path_augment, 'JPEG')
                                 cv2.imwrite(output_image_path_augment, augment_newimage)
                                 # logging.info("save image...")
-
+                            else:
+                                augment_total_error += 1
+                                logging.error("image:{} ,rotate:{}, count:{}/{}.".format(
+                                    output_image_path_augment, angle, augment_total_error,
+                                    augment_total))
 
     logging.info("augment complete: {}/{}".format(augment_total_error, augment_total))
     session_step1.close()
