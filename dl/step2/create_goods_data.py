@@ -320,14 +320,11 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                             for l in range(len(new_boxes)):
                                 # 取最小面积的识别物体
                                 ymin, xmin, ymax, xmax = new_boxes[0]
-                                ymin = int(ymin * im_height)
-                                xmin = int(xmin * im_width)
-                                ymax = int(ymax * im_height)
-                                xmax = int(xmax * im_width)
                                 if area == None:
                                     area = (ymax-ymin)*(xmax-xmin)
                                 else:
                                    if area > (ymax-ymin)*(xmax-xmin):
+                                       area = (ymax-ymin)*(xmax-xmin)
                                        index = l
 
                             ymin, xmin, ymax, xmax = new_boxes[index]
