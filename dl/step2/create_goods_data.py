@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import cv2
 import math
+import time
 from PIL import Image as im
 import xml.etree.ElementTree as ET
 
@@ -49,7 +50,7 @@ def rotate_image(src, angle, scale=1.):
 #     return class_names
 
 
-def create_step2_goods(data_dir, dataset_dir, step1_model_path, static_augment_ratio=0):
+def create_step2_goods(data_dir, dataset_dir, step1_model_path, dir_day_hour):
     graph_step1 = tf.Graph()
     with graph_step1.as_default():
         od_graph_def = tf.GraphDef()
@@ -84,16 +85,14 @@ def create_step2_goods(data_dir, dataset_dir, step1_model_path, static_augment_r
         #     continue
         class_dir = os.path.join(data_dir, dirlist[i])
         if os.path.isdir(class_dir):
+            if dir_day_hour is not None:
+                cur_dir_day_hour = time.strftime('%d%H', time.localtime(os.path.getmtime(class_dir)))
+                if cur_dir_day_hour != dir_day_hour:
+                    continue
             logger.info('solve class:{}'.format(dirlist[i]))
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
-            # else:
-            #     continue
-
-            # output_tmp_dir = os.path.join(output_class_dir, 'tmp')
-            # if not tf.gfile.Exists(output_tmp_dir):
-            #     tf.gfile.MakeDirs(output_tmp_dir)
 
             filelist = os.listdir(class_dir)
             for j in range(0, len(filelist)):
@@ -217,3 +216,20 @@ def prepare_data(source_dir,dest_dir,step1_model_path):
     # _clean_up_temporary_files(dataset_dir)
     create_step2_goods(source_dir, dest_dir, step1_model_path)
 
+tf.app.flags.DEFINE_string(
+    'day_hour', None,
+    'day and hour')
+FLAGS = tf.app.flags.FLAGS
+
+def main(_):
+    if not FLAGS.day_hour:
+        raise ValueError('You must supply day and hour --day_hour')
+    dataset_dir = '/home/src/goodsdl/media/dataset'
+    source_dir = os.path.join(dataset_dir, 'data_new')
+    step2_dir = os.path.join(dataset_dir, 'step2_new')
+    step1_model_path = os.path.join('/home/src/goodsdl/dl/model/58/','frozen_inference_graph.pb')
+
+    create_step2_goods(source_dir, step2_dir, step1_model_path, FLAGS.day_hour)
+
+if __name__ == '__main__':
+    tf.app.run()
