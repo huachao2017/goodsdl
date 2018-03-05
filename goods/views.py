@@ -101,6 +101,16 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             min_score_thresh = .5
             ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
+        elif serializer.instance.deviceid == '275':
+
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+
+            if len(export1s) > 0:
+                detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, 59)
+                step1_min_score_thresh = .9
+                step2_min_score_thresh = .6
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,step2_min_score_thresh=step2_min_score_thresh)  # , compress=True)
+
         else:
             # 新训练测试区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
