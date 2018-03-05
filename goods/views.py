@@ -16,7 +16,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetection, imagedetectionV2, imagedetectionV2_1, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
+from dl import imagedetectionV3, imagedetection, imagedetectionV2, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.step3 import convert_goods_step3
@@ -109,7 +109,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 '-update_time')[:1]
 
             if len(export1s) > 0 and len(export2s) > 0:
-                detector = imagedetectionV2.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, export2s[0].model_name)
+                detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, step2_model_name = export2s[0].model_name)
                 step1_min_score_thresh = .9
                 step2_min_score_thresh = .6
 

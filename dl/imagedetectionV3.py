@@ -18,7 +18,7 @@ class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(export1id,export2id,traintype_to_export3ids, step2_model_name='nasnet_large'):
+    def get_static_detector(export1id,export2id,traintype_to_export3ids=None, step2_model_name='nasnet_large'):
         if step2_model_name not in step2_model_names:
             return None
         # step2_model_name : 'nasnet_large','inception_resnet_v2'
