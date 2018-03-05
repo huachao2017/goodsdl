@@ -32,6 +32,17 @@ http://testpay.damaijianshen.cn/payment/order-by-ai.json?deviceId=277&startTime=
     }],
 },
 
+获取训练样本数量：http://train.fastxbox.cn/api/getsamplecount?traintype=xx&deviceid=xxx&upc=xxx
+参数说明：
+traintype:0,step1；1,step2；2,直接上传图片
+deviceid:设备号
+upc:商品upc
+返回：
+{
+    "status": 200,                        -- 状态
+    "device_count": 20,                   -- 当前设备上传样本数量
+    "total_count": 20:                    -- 所有设备上传样本数量
+}
 
 训练仅上传图片接口：http://train.fastxbox.cn/api/trainimageonly
 入参：
