@@ -51,18 +51,18 @@ class ProblemGoods(models.Model):
 
 def train_image_upload_source(instance,filename):
     now = datetime.datetime.now()
-    ret = '{}/data_new/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()), filename)
+    ret = '{}/data_{}/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.deviceid, instance.upc, str(now.time()), filename)
     return ret
 
 def train_image_class_upload_source(instance,filename):
     now = datetime.datetime.now()
-    ret = '{}/data_new/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, str(now.time()),
+    ret = '{}/data_new_{}/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.deviceid, instance.upc, str(now.time()),
                                   filename)
     return ret
 
 def train_image_only_upload_source(instance,filename):
     now = datetime.datetime.now()
-    ret = '{}/data_raw/{}/{}_{}'.format(settings.DATASET_DIR_NAME, now.strftime('%Y%m%d'), str(now.time()), filename)
+    ret = '{}/data_raw_{}/{}/{}_{}'.format(settings.DATASET_DIR_NAME, instance.deviceid, now.strftime('%Y%m%d'), str(now.time()), filename)
     return ret
 
 class TrainImage(models.Model):
