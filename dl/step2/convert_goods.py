@@ -118,10 +118,12 @@ def _get_split_filenames_and_classes(dataset_dir):
             for c in range(5):
                 validation_indexes.append(random.randint(0, count - 1))
 
+            validation_count = 0
             for i in range(count):
                 if i in validation_indexes:
+                    validation_count += 1
                     validation_photo_filenames.append(local_filenames[i])
-                    if count < 20:# 样本太少的不减少训练样本
+                    if count < validation_count*20:# 样本太少的不减少训练样本
                         train_photo_filenames.append(local_filenames[i])
                 else:
                     train_photo_filenames.append(local_filenames[i])
