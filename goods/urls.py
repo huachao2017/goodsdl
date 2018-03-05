@@ -21,7 +21,6 @@ from . import views
 router = DefaultRouter()
 # router.register(r'image', views.ImageOldViewSet)
 router.register(r'imagenew', views.ImageViewSet)
-router.register(r'imageteststep2', views.ImageTestClassViewSet)
 router.register(r'imageclass', views.ImageClassViewSet)
 router.register(r'problemgoods', views.ProblemGoodsViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
@@ -34,5 +33,6 @@ router.register(r'rfidimagecompareaction', views.RfidImageCompareActionViewSet)
 router.register(r'transactionmetrix', views.TransactionMetrixViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
+    url(r'^getsamplecount', views.GetSampleCount.as_view()),
     url(r'^api/', include(router.urls))
 ]

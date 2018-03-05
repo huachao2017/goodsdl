@@ -30,7 +30,7 @@ logger = logging.getLogger("django")
 
 class Test(APIView):
     def get(self, request):
-
+        print(request.query_params)
         subprocess.call('nohup python3 /home/src/goodsdl/dl/step2/test.py  > /root/test.out 2>&1 &', shell=True)
         import sys
         path = sys.path
@@ -232,42 +232,6 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
-
-# Test for step2
-class ImageTestClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                        viewsets.GenericViewSet):
-    queryset = ImageClass.objects.order_by('-id')
-    serializer_class = ImageClassSerializer
-
-    def create(self, request, *args, **kwargs):
-        # logger.info('begin create:')
-        # 兼容没有那么字段的请求
-        if 'deviceid' not in request.data:
-            request.data['deviceid'] = get_client_ip(request)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
-            '-update_time')[:1]
-
-        if len(export2s) > 0:
-            detector = imageclassifyV1.ImageClassifyFactory.get_static_detector(export2s[0].pk)
-            min_score_thresh = .3
-            logger.info('begin classify:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
-
-            # 删除无用图片
-            os.remove(serializer.instance.source.path)
-            ImageClass.objects.get(pk=serializer.instance.pk).delete()
-            logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
-
-            # logger.info('end create')
-            # return Response({'Test':True})
-        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
-
-
 class ProblemGoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = ProblemGoods.objects.order_by('-id')
     serializer_class = ProblemGoodsSerializer
@@ -283,6 +247,28 @@ def get_client_ip(request):
         except:
             regip = ""
     return regip
+
+
+class GetSampleCount(APIView):
+    def get(self, request):
+        upc = request.query_params['upc']
+
+        ret = {}
+
+        dataset_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME)
+        dirlist = os.listdir(dataset_dir)
+        total_count = 0
+        for dirname in dirlist:
+            if dirname.startswith('data_new_'):
+                deviceid = dirname.split('_')[-1]
+                upc_dir = os.path.join(dataset_dir,dirname,upc)
+                count = int(os.popen('ll {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)).readline())
+                ret[deviceid] = count
+                total_count += count
+
+        ret['total_count'] = total_count
+
+        return Response(ret, status=status.HTTP_200_OK)
 
 
 class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
