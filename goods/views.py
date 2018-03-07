@@ -262,7 +262,7 @@ class GetSampleCount(APIView):
             if dirname.startswith('data_new_'):
                 deviceid = dirname.split('_')[-1]
                 upc_dir = os.path.join(dataset_dir,dirname,upc)
-                command = 'll {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)
+                command = 'ls {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)
                 logger.info(command)
                 count = int(os.popen(command).readline())
                 ret[deviceid] = count
