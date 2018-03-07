@@ -248,6 +248,12 @@ def get_client_ip(request):
             regip = ""
     return regip
 
+def wrap_ret(ret):
+    wrap_ret = {
+        'status': 200,
+        'message': '成功',
+        'attachment': ret,
+    }
 
 class GetSampleCount(APIView):
     def get(self, request):
@@ -270,7 +276,7 @@ class GetSampleCount(APIView):
 
         ret['total'] = total_count
 
-        return Response(ret, status=status.HTTP_200_OK)
+        return Response(wrap_ret(ret), status=status.HTTP_200_OK)
 
 
 class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
