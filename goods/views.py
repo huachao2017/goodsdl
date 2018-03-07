@@ -268,7 +268,7 @@ class GetSampleCount(APIView):
                 ret[deviceid] = count
                 total_count += count
 
-        ret['total_count'] = total_count
+        ret['total'] = total_count
 
         return Response(ret, status=status.HTTP_200_OK)
 
