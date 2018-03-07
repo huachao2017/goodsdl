@@ -249,11 +249,12 @@ def get_client_ip(request):
     return regip
 
 def wrap_ret(ret):
-    wrap_ret = {
+    standard_ret = {
         'status': 200,
         'message': '成功',
         'attachment': ret,
     }
+    return standard_ret
 
 class GetSampleCount(APIView):
     def get(self, request):
@@ -269,7 +270,7 @@ class GetSampleCount(APIView):
                 deviceid = dirname.split('_')[-1]
                 upc_dir = os.path.join(dataset_dir,dirname,upc)
                 command = 'ls {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)
-                logger.info(command)
+                # logger.info(command)
                 count = int(os.popen(command).readline())
                 ret[deviceid] = count
                 total_count += count
