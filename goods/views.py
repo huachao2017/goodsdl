@@ -262,7 +262,9 @@ class GetSampleCount(APIView):
             if dirname.startswith('data_new_'):
                 deviceid = dirname.split('_')[-1]
                 upc_dir = os.path.join(dataset_dir,dirname,upc)
-                count = int(os.popen('ll {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)).readline())
+                command = 'll {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)
+                logger.info(command)
+                count = int(os.popen(command).readline())
                 ret[deviceid] = count
                 total_count += count
 
@@ -426,13 +428,14 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 a, b = os.path.splitext(serializer.instance.source.path)
                 tree.write(a + ".xml")
 
-                # 生成step2图片
+                # # 生成step2图片
+                # upc_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2', serializer.instance.upc)
+                # if not tf.gfile.Exists(upc_dir):
+                #     tf.gfile.MakeDirs(upc_dir)
                 # newimage = image.crop((xmin, ymin, xmax, ymax))
                 # newimage_split = os.path.split(image_path)
-                # new_image_path = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2_new', serializer.instance.upc, newimage_split[1])
+                # new_image_path = os.path.join(upc_dir, newimage_split[1])
                 # newimage.save(new_image_path, 'JPEG')
-
-                # TODO 如果upc存在于step3中，自动转移到step3
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
