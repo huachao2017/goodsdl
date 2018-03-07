@@ -33,6 +33,6 @@ router.register(r'rfidimagecompareaction', views.RfidImageCompareActionViewSet)
 router.register(r'transactionmetrix', views.TransactionMetrixViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
-    url(r'^getsamplecount', views.GetSampleCount.as_view()),
+    url(r'^api/getsamplecount', views.GetSampleCount.as_view()),
     url(r'^api/', include(router.urls))
 ]
