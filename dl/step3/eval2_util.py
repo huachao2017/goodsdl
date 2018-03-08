@@ -335,6 +335,7 @@ def repeated_checkpoint_run(tensor_dict,
 
   last_evaluated_model_path = None
   number_of_evaluations = 0
+  standard_cnt = 0
   while True:
     start = time.time()
     logging.info('Starting evaluation at ' + time.strftime(
@@ -356,17 +357,34 @@ def repeated_checkpoint_run(tensor_dict,
                                                   master, save_graph,
                                                   save_graph_dir)
       write_metrics(metrics, global_step, summary_dir)
+
+      standard = True
+      for key in sorted(metrics):
+          if not np.isnan(metrics[key]) and float(metrics[key]) < .99:
+              standard = False
+
+      if standard:
+        standard_cnt += 1
+
     number_of_evaluations += 1
+
+    if standard_cnt >= 5:
+      train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
+      if train_ps != '':
+        pid = int(train_ps.split()[1])
+        os.system('kill -s 9 {}'.format(str(pid)))
+      logging.info('Finished evaluation: stardard count >= 5 and kill train process')
+      break
 
     if (max_number_of_evaluations and
         number_of_evaluations >= max_number_of_evaluations):
-      logging.info('Finished evaluation!')
+      logging.info('Finished evaluation: to max_number_of_evaluations.')
       break
 
     # train over then finished
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
     if train_ps == '':
-      logging.info('Finished evaluation!')
+      logging.info('Finished evaluation: train process was killed.')
       break
 
     time_to_next_eval = start + eval_interval_secs - time.time()
