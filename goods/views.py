@@ -588,6 +588,10 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             str(actionlog.traintype))
         class_names_to_ids, training_filenames, validation_filenames = convert_goods_step3.prepare_train(source_dataset_dir,
             train_logs_dir)
+
+        if class_names_to_ids is None:
+            logger.error('class_names_to_ids is None!')
+            return
         # step3_model_name = 'inception_resnet_v2'
         step3_model_name = 'nasnet_mobile'
         batch_size = 64
@@ -600,7 +604,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             step3_model_name,
             1,
             batch_size,
-            int(len(training_filenames) * 5000 / batch_size)  # 设定最大训练次数，每个样本进入网络5000次
+            int(len(training_filenames) * 2000 / batch_size)  # 设定最大训练次数，每个样本进入网络2000次
         )
         logger.info(command)
         subprocess.call(command, shell=True)

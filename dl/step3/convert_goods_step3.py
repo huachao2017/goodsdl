@@ -242,25 +242,28 @@ def prepare_train(dataset_dir, output_dir):
         tf.gfile.MakeDirs(output_dir)
 
     training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
-    names_to_labels = dict(zip(class_names, range(len(class_names))))
 
-    # Divide into train and test:
-    random.seed(_RANDOM_SEED)
-    random.shuffle(training_filenames)
-    # training_filenames = photo_filenames[_NUM_VALIDATION:]
-    # validation_filenames = photo_filenames[:_NUM_VALIDATION]
+    names_to_labels = None
+    if len(class_names) > 1:
+        names_to_labels = dict(zip(class_names, range(len(class_names))))
 
-    # First, convert the training and validation sets.
-    _convert_dataset('train', training_filenames, names_to_labels,
-                     output_dir)
-    _convert_dataset('validation', validation_filenames, names_to_labels,
-                     output_dir)
+        # Divide into train and test:
+        random.seed(_RANDOM_SEED)
+        random.shuffle(training_filenames)
+        # training_filenames = photo_filenames[_NUM_VALIDATION:]
+        # validation_filenames = photo_filenames[:_NUM_VALIDATION]
 
-    # Finally, write the labels file:
-    labels_to_names = dict(zip(range(len(class_names)), class_names))
-    dataset_utils.write_label_file(labels_to_names, output_dir)
+        # First, convert the training and validation sets.
+        _convert_dataset('train', training_filenames, names_to_labels,
+                         output_dir)
+        _convert_dataset('validation', validation_filenames, names_to_labels,
+                         output_dir)
 
-    logger.info('Finished converting the goods dataset!')
+        # Finally, write the labels file:
+        labels_to_names = dict(zip(range(len(class_names)), class_names))
+        dataset_utils.write_label_file(labels_to_names, output_dir)
+
+        logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
 
 if __name__ == '__main__':

@@ -3,15 +3,16 @@ import time
 import logging
 from urllib import request, parse
 import tensorflow as tf
+from dl.step2.cluster import ClusterSettings
 
 tf.app.flags.DEFINE_string(
-    'domain', '192.168.1.173', 'The train server domain.')
+    'domain', '192.168.1.170', 'The train server domain.')
 
 tf.app.flags.DEFINE_integer(
-    'begin_traintype', 1, 'The begin of the train type.')
+    'begin_traintype', 0, 'The begin of the train type.')
 
 tf.app.flags.DEFINE_integer(
-    'end_traintype', 32, 'The end of the train type.')
+    'end_traintype', 0, 'The end of the train type.')
 
 tf.app.flags.DEFINE_integer(
     'train_interval_secs', 600, 'train interval secs.')
@@ -42,8 +43,14 @@ def main(_):
     logger = logging.getLogger()
     logger.setLevel('INFO')
     train_interval_secs = FLAGS.train_interval_secs
+
+    cluster_settings = ClusterSettings('/home/src/goodsdl/media/dataset/step2/cluster.txt')
     end_traintype = FLAGS.end_traintype
     cur_traintype = FLAGS.begin_traintype
+    if end_traintype == 0:
+        end_traintype = cluster_settings.get_max_traintype()
+    if cur_traintype == 0:
+        cur_traintype = 1
     domain = FLAGS.domain
     while True:
         start = time.time()
