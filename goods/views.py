@@ -596,7 +596,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         step3_model_name = 'nasnet_mobile'
         batch_size = 64
         # 训练
-        command = 'nohup python3 {}/step3/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train3.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step3/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train3-{}.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
@@ -604,19 +604,21 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             step3_model_name,
             1,
             batch_size,
-            int(len(training_filenames) * 10000 / batch_size)  # 设定最大训练次数，每个样本进入网络10000次
+            int(len(training_filenames) * 10000 / batch_size),  # 设定最大训练次数，每个样本进入网络10000次
+            str(actionlog.traintype)
         )
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step3/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval3.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step3/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval3-{}.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             source_dataset_dir,
             train_logs_dir,
             os.path.join(train_logs_dir, 'eval_log'),
             len(validation_filenames),
-            step3_model_name
+            step3_model_name,
+            str(actionlog.traintype)
         )
         logger.info(command)
         subprocess.call(command, shell=True)
