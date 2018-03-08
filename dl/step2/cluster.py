@@ -92,7 +92,8 @@ if __name__ == '__main__':
             class_names = traintype_to_class_names[traintype]
             for class_name in class_names:
                 source_dir = os.path.join(step2_dir, class_name)
-                shutil.copytree(source_dir, os.path.join(output_dir,class_name))
-                print('{}-->{}'.format(source_dir, output_dir))
+                if os.path.isdir(source_dir):
+                    shutil.copytree(source_dir, os.path.join(output_dir,class_name))
+                    print('{}-->{}'.format(source_dir, output_dir))
 
 
