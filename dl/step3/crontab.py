@@ -8,6 +8,9 @@ from dl.step2.cluster import ClusterSettings
 tf.app.flags.DEFINE_string(
     'domain', '192.168.1.170', 'The train server domain.')
 
+tf.app.flags.DEFINE_string(
+    'dataset_dir', '/home/src/goodsdl/media/dataset', 'The dataset dir.')
+
 tf.app.flags.DEFINE_integer(
     'begin_traintype', 0, 'The begin of the train type.')
 
@@ -44,7 +47,8 @@ def main(_):
     logger.setLevel('INFO')
     train_interval_secs = FLAGS.train_interval_secs
 
-    cluster_settings = ClusterSettings('/home/src/goodsdl/media/dataset/step2/cluster.txt')
+    dataset_dir = FLAGS.dataset_dir
+    cluster_settings = ClusterSettings(os.path.join(dataset_dir,'step2/cluster.txt'))
     end_traintype = FLAGS.end_traintype
     cur_traintype = FLAGS.begin_traintype
     if end_traintype == 0:
@@ -58,6 +62,14 @@ def main(_):
             '%Y-%m-%d-%H:%M:%S', time.gmtime()))
         train_ps = os.popen('ps -ef | grep train.py | grep -v grep').readline()
         if train_ps == '':
+            # 检查目录
+            for i in range(10):
+                step3_dataset_dir = os.path.join(dataset_dir, 'step3', str(cur_traintype))
+                if len(os.listdir(step3_dataset_dir)) <= 1: # 必须大于两类才能分类
+                    cur_traintype += 1
+                else:
+                    break
+
             logging.info('Starting train--{} at '.format(str(cur_traintype)) + time.strftime(
                 '%Y-%m-%d-%H:%M:%S', time.gmtime()))
             if not _run_train(domain, cur_traintype):
