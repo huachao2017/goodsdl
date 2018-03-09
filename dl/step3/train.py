@@ -25,6 +25,7 @@ from nets import nets_factory
 from preprocessing import inception_preprocessing
 import os
 from dl.step2 import dataset as step2_ds
+import GPUtil as GPU
 
 slim = tf.contrib.slim
 
@@ -383,9 +384,13 @@ def main(_):
     if not FLAGS.dataset_dir:
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
+    gpus = GPU.getAvailable(order='memory', limit=1)
+    if len(gpus) > 0:
+        raise ValueError('No available gpu, please check system')
+
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpus[0])
     tf.logging.set_verbosity(tf.logging.INFO)
     with tf.Graph().as_default():
         #######################
