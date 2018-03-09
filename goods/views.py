@@ -608,7 +608,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step3/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval3-{}.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step3/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval3-{}.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             source_dataset_dir,
@@ -680,7 +680,11 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         logger.info('export train:{}'.format(serializer.instance.train_action.pk))
+        if serializer.instance.model_name == '':
+            serializer.instance.model_name = serializer.instance.train_action.model_name
+            serializer.instance.save()
 
+        prefix = None
         if serializer.instance.train_action.action == 'T1':
             prefix = self.export_detection_graph(serializer.instance.train_action, serializer)
 

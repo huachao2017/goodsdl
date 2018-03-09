@@ -9,6 +9,8 @@ import tensorflow as tf
 from preprocessing import inception_preprocessing
 
 from dl.step2.utils import visualization_utils as vis_utils
+from urllib import request, parse
+import socket
 
 slim = tf.contrib.slim
 
@@ -263,6 +265,32 @@ def _run_checkpoint_once(tensor_dict,
   sess.close()
   return (global_step, all_evaluator_metrics)
 
+def get_host_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+
+    return ip
+
+def _run_export(domain, trainid):
+    if domain is None:
+        domain = get_host_ip()
+    train_data = parse.urlencode([
+        ('train_action', trainid),
+        ('model_name', ''),
+    ])
+    req = request.Request('http://{}/api/exportaction/'.format(domain))
+    req.add_header('Origin', 'http://{}/api/'.format(domain))
+    req.add_header('User-Agent',
+                   'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25')
+    # print(req.full_url)
+    with request.urlopen(req, data=train_data.encode('utf-8')) as f:
+        print('_run_export status:', f.status, f.reason)
+        if f.status != 201:
+            raise ValueError('export error')
 
 # TODO: Add tests.
 def repeated_checkpoint_run(tensor_dict,
@@ -277,7 +305,8 @@ def repeated_checkpoint_run(tensor_dict,
                             max_number_of_evaluations=None,
                             master='',
                             save_graph=False,
-                            save_graph_dir=''):
+                            save_graph_dir='',
+                            export_domain=None):
   """Periodically evaluates desired tensors using checkpoint_dirs or restore_fn.
 
   This function repeatedly loads a checkpoint and evaluates a desired
@@ -375,7 +404,7 @@ def repeated_checkpoint_run(tensor_dict,
         os.system('kill -s 9 {}'.format(str(pid)))
       logging.info('Finished evaluation: stardard count >= 3 and kill train process')
 
-      # TODO 调用export
+      _run_export(export_domain,int(os.path.split(checkpoint_dirs[0])[-1]))
       break
 
     if (max_number_of_evaluations and

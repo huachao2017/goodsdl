@@ -89,6 +89,9 @@ tf.app.flags.DEFINE_float(
 tf.app.flags.DEFINE_integer(
     'eval_image_size', None, 'Eval image size')
 
+tf.app.flags.DEFINE_string(
+    'export_domain', None, 'The domain of the export server')
+
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -198,7 +201,8 @@ def main(_):
             eval_interval_secs=600,
             master=FLAGS.master,
             save_graph=True,
-            save_graph_dir=(FLAGS.eval_dir))
+            save_graph_dir=(FLAGS.eval_dir),
+            export_domain=FLAGS.export_domain)
 
 if __name__ == '__main__':
     tf.app.run()
