@@ -173,8 +173,8 @@ class Step1CNN:
 
     def load(self, config):
         logger.info('begin loading step1 model: {}'.format(self.model_path))
-        self.graph_step1 = tf.Graph()
-        with self.graph_step1.as_default():
+        self._graph = tf.Graph()
+        with self._graph.as_default():
             od_graph_def = tf.GraphDef()
             with tf.gfile.GFile(self.model_path, 'rb') as fid:
                 serialized_graph = fid.read()
