@@ -505,6 +505,7 @@ class ImageDetector:
                 #
                 #     if step3_score > step2_min_score_thresh:
                 #         upc = labels_to_names[step3_class_type]
+                #         TODO add upc 判断action
 
             ret.append({'class': class_type,
                         'score': scores_step1[i],
