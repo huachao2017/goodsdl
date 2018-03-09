@@ -374,6 +374,8 @@ def repeated_checkpoint_run(tensor_dict,
         pid = int(train_ps.split()[1])
         os.system('kill -s 9 {}'.format(str(pid)))
       logging.info('Finished evaluation: stardard count >= 3 and kill train process')
+
+      # TODO 调用export
       break
 
     if (max_number_of_evaluations and

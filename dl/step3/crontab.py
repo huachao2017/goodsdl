@@ -27,6 +27,7 @@ def _run_train(domain, traintype):
     train_data = parse.urlencode([
         ('action', 'T3'),
         ('traintype', traintype),
+        ('model_name', 'nasnet_mobile'),
         ('is_fineture', False),
         ('desc', 'step3 -- '+str(traintype)),
     ])

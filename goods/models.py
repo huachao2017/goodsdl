@@ -114,8 +114,15 @@ class TrainAction(models.Model):
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
     traintype = models.PositiveIntegerField(default=0) # use for step3
     is_fineture = models.BooleanField(default=True)
+    MODEL_CHOICES = (
+        (u'ANY', u'not specify'),
+        (u'inception_resnet_v2', u'inception resnet V2'),
+        (u'nasnet_large', u'nas large'),
+        (u'nasnet_mobile', u'nas mobile'),
+    )
+    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
     desc = models.CharField(max_length=500,null=True)
-    param = models.CharField(max_length=500)
+    param = models.CharField(max_length=500,null=True)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
     def __str__(self):

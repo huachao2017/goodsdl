@@ -474,8 +474,6 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
                                                                      str(serializer.instance.pk),
                                                                      is_fineture=serializer.instance.is_fineture,
                                                                      additional_data_dir=additional_data_dir)
-            serializer.instance.param = str(label_map_dict)
-            serializer.instance.save()
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
@@ -550,7 +548,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(source_dataset_dir,
             train_logs_dir)
         # step2_model_name = 'inception_resnet_v2'
-        step2_model_name = 'nasnet_large'
+        # step2_model_name = 'nasnet_large'
         batch_size = 8
         # 训练
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
@@ -558,7 +556,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             train_logs_dir,
             train_logs_dir,
             len(training_filenames),
-            step2_model_name,
+            actionlog.model_name,
             1,
             batch_size,
             int(len(training_filenames) * 200 / batch_size)  # 设定最大训练次数，每个样本进入网络200次
@@ -573,7 +571,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             train_logs_dir,
             os.path.join(train_logs_dir, 'eval_log'),
             len(validation_filenames),
-            step2_model_name
+            actionlog.model_name,
         )
         logger.info(command)
         subprocess.call(command, shell=True)
@@ -593,7 +591,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             logger.error('class_names_to_ids is None!')
             return
         # step3_model_name = 'inception_resnet_v2'
-        step3_model_name = 'nasnet_mobile'
+        # step3_model_name = 'nasnet_mobile'
         batch_size = 64
         # 训练
         command = 'nohup python3 {}/step3/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train3-{}.out 2>&1 &'.format(
@@ -601,7 +599,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             train_logs_dir,
             train_logs_dir,
             len(training_filenames),
-            step3_model_name,
+            actionlog.model_name,
             1,
             batch_size,
             int(len(training_filenames) * 10000 / batch_size),  # 设定最大训练次数，每个样本进入网络10000次
@@ -617,7 +615,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             train_logs_dir,
             os.path.join(train_logs_dir, 'eval_log'),
             len(validation_filenames),
-            step3_model_name,
+            actionlog.model_name,
             str(actionlog.traintype)
         )
         logger.info(command)

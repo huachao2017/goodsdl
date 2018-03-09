@@ -72,7 +72,7 @@ class TrainActionSerializer(serializers.ModelSerializer):
     stop_train_actions = StopTrainActionSerializer(many=True, read_only=True)
     class Meta:
         model = TrainAction
-        fields = ('pk', 'action', 'traintype', 'is_fineture', 'desc', 'param', 'export_actions', 'stop_train_actions', 'create_time', 'update_time')
+        fields = ('pk', 'action', 'traintype', 'is_fineture', 'model_name', 'desc', 'param', 'export_actions', 'stop_train_actions', 'create_time', 'update_time')
         read_only_fields = ( 'param', 'create_time', 'update_time',)
 
 class RfidImageCompareActionSerializer(serializers.ModelSerializer):
