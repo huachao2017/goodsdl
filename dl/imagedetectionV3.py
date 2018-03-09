@@ -18,14 +18,14 @@ class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(export1id,export2id,traintype_to_export3ids=None, step2_model_name='nasnet_large'):
+    def get_static_detector(export1id,export2id, export3_arr=None, step2_model_name='nasnet_large'):
         if step2_model_name not in step2_model_names:
             return None
         # step2_model_name : 'nasnet_large','inception_resnet_v2'
 
         key = '{}_{}'.format(str(export1id),str(export2id))
         if key not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,traintype_to_export3ids,step2_model_name)
+            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,export3_arr,step2_model_name)
         return ImageDetectorFactory._detector[key]
 
 
@@ -287,20 +287,104 @@ class Step2CNN:
         return probabilities
 
 class Step3CNN:
-    def __init__(self, traintype_to_export3ids):
-        self.traintype_to_export3ids = traintype_to_export3ids
+    def __init__(self, model_dir,export3_arr):
+        self.model_dir = model_dir
+        self.export3_arr = sorted(export3_arr, key=lambda x:(x.update_time,), reverse=True)
 
-    def load(self, config):
-        pass
+        self.labels_to_names_dic = {}
+        self._session_dic = {}
+        self._input_image_tensor_dic = {}
+        self._detection_classes_dic = {}
+
+        self._load_dic = {}
+
+
+    def load(self, config, traintype,export3):
+        labels_to_names = None
+        session = None
+        input_image_tensor = None
+        detection_classes = None
+        if traintype not in self._session_dic:
+            if traintype in self._load_dic and self._load_dic[traintype]:
+                return None,None,None,None
+            self._load_dic[traintype] = True
+
+            traintype_modeldir = os.path.join(self.model_dir, str(export3.pk))
+            checkpoint = tf.train.latest_checkpoint(traintype_modeldir)
+            logger.info('begin loading step3 model: {}-{}'.format(traintype, checkpoint))
+            labels_to_names = get_labels_to_names(os.path.join(traintype_modeldir, 'labels.txt'))
+
+            network_fn = nets_factory.get_network_fn(
+                export3.model_name,
+                num_classes=len(labels_to_names),
+                is_training=False)
+            image_size = network_fn.default_image_size
+
+            _graph = tf.Graph()
+            with _graph.as_default():
+                input_image_path = tf.placeholder(dtype=tf.string, name='input_image')
+                image_string = tf.read_file(input_image_path)
+                image = tf.image.decode_jpeg(image_string, channels=3, name='image_tensor')
+                image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+                image = tf.expand_dims(image, 0)
+                images = tf.image.resize_bilinear(image, [image_size, image_size], align_corners=False)
+                images = tf.subtract(images, 0.5)
+                images = tf.multiply(images, 2.0)
+                logits, _ = network_fn(images)
+                probabilities = tf.nn.softmax(logits, name='detection_classes')
+                variables_to_restore = tf.global_variables()
+                saver = tf.train.Saver(variables_to_restore)
+                session = tf.Session(config=config)
+                saver.restore(session, checkpoint)
+                logger.info('end loading step3 graph...')
+
+            input_image_tensor = _graph.get_tensor_by_name('input_image:0')
+            detection_classes = _graph.get_tensor_by_name('detection_classes:0')
+
+            self.labels_to_names_dic[traintype] = labels_to_names
+            self._session_dic[traintype] = session
+            self._input_image_tensor_dic[traintype] = input_image_tensor
+            self._detection_classes_dic[traintype] = detection_classes
+            self._load_dic[traintype] = False
+        else:
+            labels_to_names = self.labels_to_names_dic[traintype]
+            session = self._session_dic[traintype]
+            input_image_tensor = self._input_image_tensor_dic[traintype]
+            detection_classes = self._detection_classes_dic[traintype]
+
+        return labels_to_names, session, input_image_tensor, detection_classes
+
+    def detect(self, config, image_path, traintype):
+        cur_export3 = None
+        for export3 in self.export3_arr:
+            if export3.train_action.traintype == traintype:
+                cur_export3 = export3
+                break
+
+        if export3 is None:
+            return None,None
+
+        labels_to_names, session, input_image_tensor, detection_classes = self.load(config,traintype,cur_export3)
+
+        if session is None:
+            return None,None
+
+        probabilities = session.run(
+            detection_classes, feed_dict={input_image_tensor: image_path})
+        return probabilities, labels_to_names
+
 
 class ImageDetector:
-    def __init__(self, export1id, export2id, traintype_to_export3ids, step2_model_name):
+    def __init__(self, export1id, export2id, export3_arr, step2_model_name):
         file_path, _ = os.path.split(os.path.realpath(__file__))
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(export1id)))
         self.step2_cnn = Step2CNN(os.path.join(file_path, 'model', str(export2id)),step2_model_name)
+        self.step3_cnn = Step3CNN(os.path.join(file_path, 'model'), export3_arr)
 
-        self.cluster_upcs = None
         self.counter = 0
+        self.config = tf.ConfigProto()
+        self.config.gpu_options.allow_growth = True
+
 
     def load(self):
         if self.counter > 0:
@@ -309,10 +393,8 @@ class ImageDetector:
             return
         self.counter = self.counter + 1
         if not self.step2_cnn.is_load():
-            config = tf.ConfigProto()
-            config.gpu_options.allow_growth = True
-            self.step1_cnn.load(config)
-            self.step2_cnn.load(config)
+            self.step1_cnn.load(self.config)
+            self.step2_cnn.load(self.config)
 
     def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
         if not self.step2_cnn.is_load():
@@ -351,6 +433,7 @@ class ImageDetector:
         boxes_step1 = []
         scores_step1 = []
         step2_images = []
+        step2_image_paths = []
         for i in range(boxes.shape[0]):
             if scores[i] > step1_min_score_thresh:
                 # sub_time0 = time.time()
@@ -362,6 +445,7 @@ class ImageDetector:
                 # 生成新的图片
                 newimage_split = os.path.split(image_path)
                 new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
+                step2_image_paths.append(new_image_path)
                 newimage.save(new_image_path, 'JPEG')
                 step2_images.append(self.step2_cnn.pre_detect(new_image_path))
 
@@ -386,13 +470,13 @@ class ImageDetector:
 
         time2 = time.time()
 
-        ret = self.do_addition_logic_work(boxes_step1, scores_step1, labels_step2, scores_step2, image_instance, image_np, step2_min_score_thresh)
+        ret = self.do_addition_logic_work(boxes_step1, scores_step1, labels_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
 
         time3 = time.time()
         logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
         return ret, time3-time0
 
-    def do_addition_logic_work(self, boxes_step1, scores_step1, labels_step2, scores_step2, image_instance, image_np, step2_min_score_thresh):
+    def do_addition_logic_work(self, boxes_step1, scores_step1, labels_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh):
         ret = []
         for i in range(len(boxes_step1)):
             ymin, xmin, ymax, xmax = boxes_step1[i]
@@ -411,8 +495,16 @@ class ImageDetector:
                 upc = ''
                 action = 2
             elif upc in self.step2_cnn.cluster_upc_to_traintype:
-                # TODO STEP 3
                 pass
+                # TODO need test
+                # probabilities, labels_to_names = self.step3_cnn.detect(self.config,step2_image_paths[i],self.step2_cnn.cluster_upc_to_traintype[upc])
+                # if labels_to_names is not None:
+                #     sorted_inds = [j[0] for j in sorted(enumerate(-probabilities[0]), key=lambda x: x[1])]
+                #     step3_class_type = sorted_inds[0]
+                #     step3_score = probabilities[sorted_inds[0]]
+                #
+                #     if step3_score > step2_min_score_thresh:
+                #         upc = labels_to_names[step3_class_type]
 
             ret.append({'class': class_type,
                         'score': scores_step1[i],
@@ -424,6 +516,7 @@ class ImageDetector:
 
         # visualization
         if len(ret) > 0:
+            # TODO need add step3
             image_path = image_instance.source.path
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])

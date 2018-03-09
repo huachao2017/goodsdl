@@ -117,9 +117,11 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 '-update_time')[:1]
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
+            export3s = ExportAction.objects.filter(train_action__action='T3').filter(checkpoint_prefix__gt=0).order_by(
+                '-update_time')
 
             if len(export1s) > 0 and len(export2s) > 0:
-                detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, step2_model_name = export2s[0].model_name)
+                detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, export3s, step2_model_name = export2s[0].model_name)
                 step1_min_score_thresh = .9
                 step2_min_score_thresh = .6
 
