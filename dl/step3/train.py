@@ -385,7 +385,7 @@ def main(_):
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
     gpus = GPU.getAvailable(order='memory', limit=1)
-    if len(gpus) > 0:
+    if len(gpus) == 0:
         raise ValueError('No available gpu, please check system')
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
