@@ -592,7 +592,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             return
         # step3_model_name = 'inception_resnet_v2'
         # step3_model_name = 'nasnet_mobile'
-        batch_size = 64
+        batch_size = 64 if actionlog.model_name=='nasnet_mobile' else 8
         # 训练
         command = 'nohup python3 {}/step3/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train3-{}.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
