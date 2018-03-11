@@ -4,6 +4,7 @@ import logging
 from urllib import request, parse
 import tensorflow as tf
 from dl.step2.cluster import ClusterSettings
+import GPUtil as GPU
 
 tf.app.flags.DEFINE_string(
     'domain', '192.168.1.170', 'The train server domain.')
@@ -61,8 +62,10 @@ def main(_):
         start = time.time()
         logging.info('Starting monitor at ' + time.strftime(
             '%Y-%m-%d-%H:%M:%S', time.gmtime()))
-        train_ps = os.popen('ps -ef | grep train.py | grep -v grep').readline()
-        if train_ps == '':
+
+        # TODO 需要远程查询所有空闲gpu
+        gpus = GPU.getAvailable(order='memory', limit=1)
+        if len(gpus) > 0:
             # 检查目录
             for i in range(10):
                 step3_dataset_dir = os.path.join(dataset_dir, 'step3', str(cur_traintype))
