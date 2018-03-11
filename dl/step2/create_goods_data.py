@@ -236,8 +236,8 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
         if os.path.isdir(class_dir):
             if dir_day_hour is not None:
                 cur_dir_day_hour = time.strftime('%d%H', time.localtime(os.path.getmtime(class_dir)))
-                logging.info('solve class:{}_{}'.format(dirlist[i],cur_dir_day_hour))
                 if cur_dir_day_hour != dir_day_hour:
+                    logging.info('skip class:{}({})'.format(dirlist[i], cur_dir_day_hour))
                     continue
             logging.info('solve class:{}'.format(dirlist[i]))
             output_class_dir = os.path.join(dataset_dir, dirlist[i])
