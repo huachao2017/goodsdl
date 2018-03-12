@@ -19,7 +19,7 @@ class ImageDetectorFactory_os3:
         # model_name : 'nasnet_large','inception_resnet_v2'
 
         if export2id not in ImageDetectorFactory_os3._detector:
-            ImageDetectorFactory_os3._detector[export2id] = ImageDetectorFactory_os3(export2id, export3_arr, step2_model_name)
+            ImageDetectorFactory_os3._detector[export2id] = ImageDetector_os3(export2id, export3_arr, step2_model_name)
         return ImageDetectorFactory_os3._detector[export2id]
 
 class ImageDetector_os3:
