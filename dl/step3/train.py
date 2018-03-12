@@ -146,7 +146,7 @@ tf.app.flags.DEFINE_float(
     'learning_rate_decay_factor', 0.98, 'Learning rate decay factor.')
 
 tf.app.flags.DEFINE_float(
-    'num_epochs_per_decay', 20.0,
+    'num_epochs_per_decay', 50.0,
     'Number of epochs after which learning rate decays.')
 
 tf.app.flags.DEFINE_bool(
