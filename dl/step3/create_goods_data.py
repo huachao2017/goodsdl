@@ -3,7 +3,7 @@ from dl.step2.cluster import ClusterSettings
 import tensorflow as tf
 import shutil
 
-tf.app.flags.DEFINE_int(
+tf.app.flags.DEFINE_integer(
     'traintype', 0,
     'point traintype to create, if 0 then create all')
 FLAGS = tf.app.flags.FLAGS
@@ -29,6 +29,9 @@ def main(_):
             for class_name in class_names:
                 source_dir = os.path.join(step2_dir, class_name)
                 if os.path.isdir(source_dir):
+                    if os.path.isdir(os.path.join(output_dir,class_name)):
+                        # 防止重复目录拷贝，可以增量使用
+                        continue
                     shutil.copytree(source_dir, os.path.join(output_dir,class_name))
                     print('{}-->{}'.format(source_dir, output_dir))
 
