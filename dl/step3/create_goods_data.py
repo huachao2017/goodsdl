@@ -31,6 +31,7 @@ def main(_):
                 if os.path.isdir(source_dir):
                     if os.path.isdir(os.path.join(output_dir,class_name)):
                         # 防止重复目录拷贝，可以增量使用
+                        print('folder exist: {}'.format(os.path.join(output_dir,class_name)))
                         continue
                     shutil.copytree(source_dir, os.path.join(output_dir,class_name))
                     print('{}-->{}'.format(source_dir, output_dir))
