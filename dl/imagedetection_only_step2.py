@@ -1,7 +1,4 @@
 import tensorflow as tf
-from tensorflow.contrib import slim
-from nets import inception
-from preprocessing import inception_preprocessing
 import os
 import numpy as np
 import logging
@@ -9,7 +6,7 @@ import time
 from dl.step2_cnn import Step2CNN
 
 logger = logging.getLogger("detect")
-model_names = ['inception_resnet_v2','nasnet_large']
+step2_model_names = ['inception_resnet_v2','nasnet_large']
 
 
 class ImageDetectorFactory_os2:
@@ -17,7 +14,7 @@ class ImageDetectorFactory_os2:
 
     @staticmethod
     def get_static_detector(exportid, model_name='nasnet_large'):
-        if model_name not in model_names:
+        if model_name not in step2_model_names:
             return None
         # model_name : 'nasnet_large','inception_resnet_v2'
 

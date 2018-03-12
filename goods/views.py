@@ -18,7 +18,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
+from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2, imagedetection_only_step3
 # from dl.old import imagedetection
 from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
@@ -68,7 +68,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         aiinterval = .0
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == 'os1':
-            # 手动测试:
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
             if len(export1s)>0:
@@ -76,13 +75,23 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 step1_min_score_thresh = .5
                 ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
         elif serializer.instance.deviceid == 'os2':
-            # 手动测试:
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(
                 checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
             if len(export2s) > 0:
                 detector = imagedetection_only_step2.ImageDetectorFactory_os2.get_static_detector(
                     export2s[0].pk,export2s[0].model_name)
+                ret, aiinterval = detector.detect(serializer.instance)
+            return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+        elif serializer.instance.deviceid == 'os2':
+            export2s = ExportAction.objects.filter(train_action__action='T2').filter(
+                checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+            export3s = ExportAction.objects.filter(train_action__action='T3').filter(checkpoint_prefix__gt=0).order_by(
+                '-update_time')
+
+            if len(export2s) > 0:
+                detector = imagedetection_only_step3.ImageDetectorFactory_os3.get_static_detector(
+                    export2s[0].pk, export3s, export2s[0].model_name)
                 ret, aiinterval = detector.detect(serializer.instance)
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
         # elif serializer.instance.deviceid == 't2_1': # or serializer.instance.deviceid == '275':
