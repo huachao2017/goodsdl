@@ -3,12 +3,14 @@ import logging
 import os
 import shutil
 import subprocess
+import time
+import urllib.request
 import xml.etree.ElementTree as ET
 
 import numpy as np
+import tensorflow as tf
 from PIL import Image as im
 from django.conf import settings
-from django.db.models import Q
 from object_detection.utils import visualization_utils as vis_util
 from rest_framework import mixins
 from rest_framework import status
@@ -16,15 +18,13 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetectionV3, imagedetection, imagedetectionV2, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
+from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2
+# from dl.old import imagedetection
+from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.step3 import convert_goods_step3
-from dl.only_step2 import create_goods_tf_record
 from .serializers import *
-import tensorflow as tf
-import urllib.request
-import time
 
 logger = logging.getLogger("django")
 
@@ -95,11 +95,11 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         #         logger.info(
         #             'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         #         ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
-        elif serializer.instance.deviceid == 'nnn':
-            # 使用10类成熟识别，随时转换
-            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-            min_score_thresh = .5
-            ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
+        # elif serializer.instance.deviceid == 'nnn':
+        #     # 使用10类成熟识别，随时转换
+        #     detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+        #     min_score_thresh = .5
+        #     ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
         elif serializer.instance.deviceid == '275':
 
