@@ -1,6 +1,4 @@
 import tensorflow as tf
-import os
-import shutil
 
 class ClusterSettings:
     def __init__(self, cluster_filepath):
@@ -74,26 +72,5 @@ class ClusterSettings:
             sep = line.split(':')
             if traintype == int(sep[0]):
                 return sep[1]
-
-if __name__ == '__main__':
-    dataset_dir = '/home/src/goodsdl/media/dataset'
-    step2_dir = os.path.join(dataset_dir, 'step2')
-    step3_dir = os.path.join(dataset_dir, 'step3')
-    cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
-    print(cluster_filepath)
-    cluster_settings = ClusterSettings(cluster_filepath)
-    traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
-    print(traintype_to_class_names)
-
-    for traintype in traintype_to_class_names:
-        output_dir = os.path.join(step3_dir,str(traintype))
-        if not tf.gfile.Exists(output_dir):
-            tf.gfile.MakeDirs(output_dir)
-            class_names = traintype_to_class_names[traintype]
-            for class_name in class_names:
-                source_dir = os.path.join(step2_dir, class_name)
-                if os.path.isdir(source_dir):
-                    shutil.copytree(source_dir, os.path.join(output_dir,class_name))
-                    print('{}-->{}'.format(source_dir, output_dir))
 
 
