@@ -12,6 +12,7 @@ class Step1CNN:
         self.model_path = os.path.join(self.model_dir, 'frozen_inference_graph.pb')
         self._graph = None
         self._session = None
+        self._isload = False
 
     def load(self, config):
         logger.info('begin loading step1 model: {}'.format(self.model_path))
@@ -35,6 +36,10 @@ class Step1CNN:
         # Each score represent how level of confidence for each of the objects.
         # Score is shown on the result image, together with the class label.
         self._detection_scores = self._graph.get_tensor_by_name('detection_scores:0')
+        self._isload = True
+
+    def is_load(self):
+        return self._isload
 
     def detect(self,image_np):
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
