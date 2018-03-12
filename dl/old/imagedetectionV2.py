@@ -6,24 +6,30 @@ import os
 from PIL import Image
 import numpy as np
 from object_detection.utils import label_map_util
-from .step2 import dataset
+from dl.step2 import dataset
 from object_detection.utils import visualization_utils as vis_util
 import logging
 import time
 from goods.models import ProblemGoods
-from edge.contour_detect import find_contour
+from nets import nets_factory
 
 logger = logging.getLogger("detect")
+
+step2_model_names = ['inception_resnet_v2','nasnet_large']
 
 
 class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(export2id):
-        key = export2id
+    def get_static_detector(export1id,export2id, step2_model_name='inception_resnet_v2'):
+        if step2_model_name not in step2_model_names:
+            return None
+        # step2_model_name : 'nasnet_large','inception_resnet_v2'
+
+        key = '{}_{}'.format(str(export1id),str(export2id))
         if key not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[key] = ImageDetector(export2id)
+            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,step2_model_name)
         return ImageDetectorFactory._detector[key]
 
 
@@ -163,13 +169,19 @@ def get_step2_labels_to_names(labels_filepath):
     return labels_to_names
 
 class ImageDetector:
-    def __init__(self, export2id):
+    def __init__(self, export1id, export2id, step2_model_name):
+        self.graph_step1 = None
+        self.session_step1 = None
         self.graph_step2 = None
         self.session_step2 = None
         self.labels_to_names = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
+        self.step1_model_dir = os.path.join(self.file_path, 'model', str(export1id))
         self.step2_model_dir = os.path.join(self.file_path, 'model', str(export2id))
+        self.step2_model_name = step2_model_name
+        self.step1_model_path = os.path.join(self.step1_model_dir, 'frozen_inference_graph.pb')
+        # self.step1_label_path = os.path.join(self.step1_model_dir, 'goods_label_map.pbtxt')
         self.counter = 0
 
     def load(self):
@@ -179,13 +191,41 @@ class ImageDetector:
             return
         self.counter = self.counter + 1
         if self.labels_to_names is None:
+            logger.info('begin loading step1 model: {}'.format(self.step1_model_path))
+            self.graph_step1 = tf.Graph()
+            with self.graph_step1.as_default():
+                od_graph_def = tf.GraphDef()
+                with tf.gfile.GFile(self.step1_model_path, 'rb') as fid:
+                    serialized_graph = fid.read()
+                    od_graph_def.ParseFromString(serialized_graph)
+                    tf.import_graph_def(od_graph_def, name='')
+
+            logger.info('end loading step1 graph...')
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
+            # config.gpu_options.per_process_gpu_memory_fraction = 0.5  # 占用GPU50%的显存
+            self.session_step1 = tf.Session(graph=self.graph_step1, config=config)
+
+            # Definite input and output Tensors for detection_graph
+            self.image_tensor_step1 = self.graph_step1.get_tensor_by_name('image_tensor:0')
+            # Each box represents a part of the image where a particular object was detected.
+            self.detection_boxes = self.graph_step1.get_tensor_by_name('detection_boxes:0')
+            # Each score represent how level of confidence for each of the objects.
+            # Score is shown on the result image, together with the class label.
+            self.detection_scores = self.graph_step1.get_tensor_by_name('detection_scores:0')
+            # self.detection_classes = self.graph_step1.get_tensor_by_name('detection_classes:0')
 
             step2_checkpoint = tf.train.latest_checkpoint(self.step2_model_dir)
             logger.info('begin loading step2 model: {}'.format(step2_checkpoint))
             step2_labels_to_names = get_step2_labels_to_names(os.path.join(self.step2_model_dir, 'labels.txt'))
-            image_size = inception.inception_resnet_v2.default_image_size
+            ####################
+            # Select step2 model #
+            ####################
+            network_fn = nets_factory.get_network_fn(
+                self.step2_model_name,
+                num_classes=len(step2_labels_to_names),
+                is_training=False)
+            image_size = network_fn.default_image_size
 
             self.pre_graph_step2 = tf.Graph()
             with self.pre_graph_step2.as_default():
@@ -206,22 +246,18 @@ class ImageDetector:
                 images = tf.placeholder(dtype=tf.float32, shape=[None, image_size, image_size, 3], name='input_tensor')
 
                 # Create the model, use the default arg scope to configure the batch norm parameters.
-                with slim.arg_scope(inception.inception_resnet_v2_arg_scope()):
-                    logits, _ = inception.inception_resnet_v2(images,
-                                                              num_classes=len(step2_labels_to_names),
-                                                              is_training=False)
+                logits, _ = network_fn(images)
                 probabilities = tf.nn.softmax(logits, name='detection_classes')
 
-                init_fn = slim.assign_from_checkpoint_fn(
-                    step2_checkpoint,
-                    slim.get_model_variables('InceptionResnetV2'))
+                variables_to_restore = tf.global_variables()
+                saver = tf.train.Saver(variables_to_restore)
 
                 logger.info('end loading step2 graph...')
 
                 config = tf.ConfigProto()
                 config.gpu_options.allow_growth = True
                 self.session_step2 = tf.Session(config=config)
-                init_fn(self.session_step2)
+                saver.restore(self.session_step2, step2_checkpoint)
 
             self.input_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('input_image:0')
             self.output_image_tensor_step2 = self.pre_graph_step2.get_tensor_by_name('output_image:0')
@@ -236,36 +272,47 @@ class ImageDetector:
             logger.info('end loading model...')
             # semaphore.release()
 
-    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
+    def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5, area=None):
         if self.labels_to_names is None:
             self.load()
             if self.labels_to_names is None:
                 logger.warning('loading model failed')
                 return None
 
-        # import time
-        # time0 = time.time()
+        import time
+        time0 = time.time()
 
         image_path = image_instance.source.path
         image = Image.open(image_path)
-        # FIXME 需要标定
-        cv_image, boxes, scores_step1 = find_contour(image_path,area=(69,86,901,516))
-        im_width = cv_image.shape[1]
-        im_height = cv_image.shape[0]
-        image_np = np.array(image.getdata()).reshape(
-            (im_height, im_width, 3)).astype(np.uint8)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
 
-        # cv 坐标需要处理成tf
-        tmp = boxes[:, 0].copy()
-        boxes[:, 0] = boxes[:, 1]
-        boxes[:, 1] = tmp
-        tmp = boxes[:, 2].copy()
-        boxes[:, 2] = boxes[:, 3]
-        boxes[:, 3] = tmp
+        # 移除非工作台干扰
+        if area:
+            image = image.crop((area[0], area[1], area[2], area[3]))
 
-        # if image_instance.deviceid == '275':
-        #     time1 = time.time() - time0
-        #     time0 = time.time()
+        # the array based representation of the image will be used later in order to prepare the
+        # result image with boxes and labels on it.
+        image_np = np.array(image)
+        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+        image_np_expanded = np.expand_dims(image_np, axis=0)
+        # Actual detection.
+        (boxes, scores) = self.session_step1.run(
+            [self.detection_boxes, self.detection_scores],
+            feed_dict={self.image_tensor_step1: image_np_expanded})
+
+        # data solving
+        boxes = np.squeeze(boxes)
+        # classes = np.squeeze(classes).astype(np.int32)
+        scores_step1 = np.squeeze(scores)
+
+        time1 = time.time()
+
+        boxes[:,0] = boxes[:,0]*image.size[1]
+        boxes[:,1] = boxes[:,1]*image.size[0]
+        boxes[:,2] = boxes[:,2]*image.size[1]
+        boxes[:,3] = boxes[:,3]*image.size[0]
+        boxes = np.array(boxes,dtype=np.int)
 
         step2_images = []
         # sub_time_param = ''
@@ -273,10 +320,6 @@ class ImageDetector:
             if scores_step1[i] > step1_min_score_thresh:
                 # sub_time0 = time.time()
                 ymin, xmin, ymax, xmax = boxes[i]
-                # ymin = int(ymin * im_height)
-                # xmin = int(xmin * im_width)
-                # ymax = int(ymax * im_height)
-                # xmax = int(xmax * im_width)
 
                 newimage = image.crop((xmin, ymin, xmax, ymax))
                 # 生成新的图片
@@ -298,11 +341,15 @@ class ImageDetector:
         #                            total=time2)
 
         if len(step2_images) <= 0:
-            return None
+            time2 = time.time()
+            logger.info('detectV2: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
+            return None, .0
         # 统一识别，用于加速
         step2_images_nps = np.array(step2_images)
         probabilities = self.session_step2.run(
             self.detection_classes, feed_dict={self.input_images_tensor_step2: step2_images_nps})
+
+        time2 = time.time()
 
         # if image_instance.deviceid == '275':
         #     time3 = time.time() - time0
@@ -322,10 +369,6 @@ class ImageDetector:
             if scores_step1[i] > step1_min_score_thresh:
                 index = index + 1
                 ymin, xmin, ymax, xmax = boxes[i]
-                # ymin = int(ymin * im_height)
-                # xmin = int(xmin * im_width)
-                # ymax = int(ymax * im_height)
-                # xmax = int(xmax * im_width)
                 # newimage = np.array(newimage, dtype=np.float32)
                 # logger.info(newimage.shape)
                 # probabilities = self.session_step2.run(
@@ -366,17 +409,30 @@ class ImageDetector:
                                                 score_3=probabilities[index][sorted_inds[3]],
                                                 score_4=probabilities[index][sorted_inds[4]],
                                                 )
+
+                if area:
+                    fix_xmin = xmin + area[0]
+                    fix_ymin = ymin + area[1]
+                    fix_xmax = xmax + area[0]
+                    fix_ymax = ymax + area[1]
+                else:
+                    fix_xmin = xmin
+                    fix_ymin = ymin
+                    fix_xmax = xmax
+                    fix_ymax = ymax
+
                 ret.append({'class': class_type,
                             'score': scores_step1[i],
                             'score2': scores_step2[i],
                             'upc': upc,
-                            'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
+                            'xmin': fix_xmin, 'ymin': fix_ymin, 'xmax': fix_xmax, 'ymax': fix_ymax
                             })
 
         # visualization
         if len(ret) > 0:
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+            time4_1 = time.time()
             visualize_boxes_and_labels_on_image_array(
                 image_np,
                 boxes,
@@ -385,10 +441,13 @@ class ImageDetector:
                 scores_step2,
                 self.labels_to_names,
                 use_normalized_coordinates=False,
+                step1_min_score_thresh=step1_min_score_thresh,
                 step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=2)
+            time4_2 = time.time()
             output_image = Image.fromarray(image_np)
-            output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
             output_image.save(output_image_path)
 
-        return ret
+        time3 = time.time()
+        logger.info('detectV2: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
+        return ret, time3-time0
