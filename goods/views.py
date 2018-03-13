@@ -805,7 +805,7 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        domain = 'testpay.damaijianshen.cn'
+        domain = 'admin.fastxbox.cn'
         startTime = int(time.mktime(serializer.instance.startTime.timetuple()) * 1000)
         endTime = int(time.mktime(serializer.instance.endTime.timetuple()) * 1000)
         deviceid = serializer.instance.deviceid

@@ -1,6 +1,6 @@
 调用外部接口
 1、获取指定时间订单
-http://testpay.damaijianshen.cn/payment/order-by-ai.json?deviceId=277&startTime=&endTime=
+http://admin.fastxbox.cn(内网：testpay.damaijianshen.cn)/payment/order-by-ai.json?deviceId=277&startTime=&endTime=
 返回：
 {
     "status": 200,                        -- 状态
