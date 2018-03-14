@@ -150,7 +150,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                   step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
 
             if ret is None:
-                logger.error('detection happen some problem!')
+                logger.error('detection model is not ready')
                 Image.objects.get(pk=serializer.instance.pk).delete()
                 return Response([], status=status.HTTP_201_CREATED, headers=headers)
 

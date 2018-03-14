@@ -3,6 +3,8 @@ import cv2
 # import imutils
 from skimage.measure import compare_ssim
 import time
+import logging
+logger = logging.getLogger("detect")
 
 def compare_same(img_path1,img_path2, score_thresh=.9):
     score, image1, image2, diff, thresh = _compare(img_path1,img_path2)
@@ -24,6 +26,7 @@ def compare_same(img_path1,img_path2, score_thresh=.9):
             if area > max_area / 100:  # 面积较大视为变化
                 return False
 
+        logger.info('SSIM: %.5f, %d' %(score, len(cnts)))
         return True
 
 def _compare(img_path1, img_path2, debug = False):
