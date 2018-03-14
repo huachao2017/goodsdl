@@ -1,6 +1,18 @@
 import tensorflow as tf
 from object_detection.utils import visualization_utils as vis_util
 
+def get_host_ip():
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+
+    return ip
+
+
 def get_labels_to_names(labels_filepath):
     with tf.gfile.Open(labels_filepath, 'rb') as f:
         lines = f.read().decode()

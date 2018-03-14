@@ -5,9 +5,10 @@ from urllib import request, parse
 import tensorflow as tf
 from dl.step2.cluster import ClusterSettings
 import GPUtil as GPU
+from dl.util import get_host_ip
 
 tf.app.flags.DEFINE_string(
-    'domain', '192.168.1.170', 'The train server domain.')
+    'domain', None, 'The train server domain.')
 
 tf.app.flags.DEFINE_string(
     'dataset_dir', '/home/src/goodsdl/media/dataset', 'The dataset dir.')
@@ -58,6 +59,11 @@ def main(_):
     if cur_traintype == 0:
         cur_traintype = 1
     domain = FLAGS.domain
+    if domain is None:
+        domain = get_host_ip()
+
+    logging.info('crontab start at {} '.format(domain))
+
     while True:
         start = time.time()
         logging.info('Starting monitor at ' + time.strftime(
