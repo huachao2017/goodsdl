@@ -56,7 +56,7 @@ class ImageDetector:
             self.load()
             if not self.step2_cnn.is_load():
                 logger.warning('loading model failed')
-                return None
+                return None, .0
 
         import time
         time0 = time.time()
