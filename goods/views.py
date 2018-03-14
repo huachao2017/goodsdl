@@ -151,6 +151,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             if ret is None:
                 logger.error('detection happen some problem!')
+                Image.objects.get(pk=serializer.instance.pk).delete()
                 return Response([], status=status.HTTP_201_CREATED, headers=headers)
 
             ret_reborn = []

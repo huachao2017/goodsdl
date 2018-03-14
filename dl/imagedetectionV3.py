@@ -107,7 +107,7 @@ class ImageDetector:
         if len(step2_images) <= 0:
             time2 = time.time()
             logger.info('detectV3: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
-            return None, .0
+            return [], time2-time0
 
         probabilities = self.step2_cnn.detect(step2_images)
 
