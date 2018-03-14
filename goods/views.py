@@ -124,7 +124,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 shutil.move(serializer.instance.source.path, tmp_dir)
                 Image.objects.get(pk=serializer.instance.pk).delete()
                 ret_reborn = json.loads(last_image.ret)
-                logger.info('duplicate detect:{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
+                logger.info('duplicate detect:{},{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
 
                 # 检测重复直接返回
                 return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
