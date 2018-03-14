@@ -51,12 +51,10 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
     def create(self, request, *args, **kwargs):
         # logger.info('begin create:')
         # 兼容没有那么字段的请求
-        if 'deviceid' not in request.data:
-            request.data['deviceid'] = get_client_ip(request)
         if 'lastinterval' not in request.data:
             request.data['lastinterval'] = 0.0
 
-        if request.data['deviceid'] in ['353','nnn']:
+        if request.data['deviceid'] in ['nnn', ]:
             logger.info('{} forbidden'.format(request.data['deviceid']))
             return Response([], status=status.HTTP_403_FORBIDDEN)
         logger.info('begin detect:{}'.format(request.data['deviceid']))
@@ -65,7 +63,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        aiinterval = .0
         # 暂时性分解Detect，需要一个处理type编码
         if serializer.instance.deviceid == 'os1':
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
@@ -74,6 +71,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
                 step1_min_score_thresh = .5
                 ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+                return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
         elif serializer.instance.deviceid == 'os2':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(
                 checkpoint_prefix__gt=0).order_by('-update_time')[:1]
@@ -83,7 +81,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     export2s[0].pk,export2s[0].model_name)
                 ret, aiinterval = detector.detect(serializer.instance)
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
-        elif serializer.instance.deviceid == 'os2':
+        elif serializer.instance.deviceid == 'os3':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(
                 checkpoint_prefix__gt=0).order_by('-update_time')[:1]
             export3s = ExportAction.objects.filter(train_action__action='T3').filter(checkpoint_prefix__gt=0).order_by(
@@ -94,34 +92,10 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     export2s[0].pk, export3s, export2s[0].model_name)
                 ret, aiinterval = detector.detect(serializer.instance)
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
-        # elif serializer.instance.deviceid == 't2_1': # or serializer.instance.deviceid == '275':
-        #     export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
-        #         '-update_time')[:1]
-        #
-        #     if len(export2s) > 0:
-        #         detector = imagedetectionV2_1.ImageDetectorFactory.get_static_detector(export2s[0].pk)
-        #         step2_min_score_thresh = .6
-        #         logger.info(
-        #             'begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-        #         ret = detector.detect(serializer.instance, step2_min_score_thresh=step2_min_score_thresh)
-        # elif serializer.instance.deviceid == 'nnn':
-        #     # 使用10类成熟识别，随时转换
-        #     detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-        #     min_score_thresh = .5
-        #     ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
-
-        elif serializer.instance.deviceid == '275':
-
-            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
-
-            if len(export1s) > 0:
-                detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, 59)
-                step1_min_score_thresh = .9
-                step2_min_score_thresh = .6
-                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,step2_min_score_thresh=step2_min_score_thresh)  # , compress=True)
 
         else:
-            # 新训练测试区
+            aiinterval = .0
+            # 正式应用区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
@@ -138,61 +112,52 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                       step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
 
 
-        if ret is None or len(ret) <= 0:
-            tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
-            if not tf.gfile.Exists(tmp_dir):
-                tf.gfile.MakeDirs(tmp_dir)
-
-            # 移动无检测图片
-            shutil.move(serializer.instance.source.path, tmp_dir)
-            Image.objects.get(pk=serializer.instance.pk).delete()
-        else:
-            ret_reborn = []
-            index = 0
-            class_index_dict = {}
-            for goods in ret:
-                # 兼容上一个版本
-                if 'action' not in goods:
-                    goods['action'] = .0
-                Goods.objects.create(image_id=serializer.instance.pk,
-                                     class_type=goods['class'],
-                                     score1=goods['score'],
-                                     score2=goods['score2'],
-                                     upc=goods['upc'],
-                                     xmin=goods['xmin'],
-                                     ymin=goods['ymin'],
-                                     xmax=goods['xmax'],
-                                     ymax=goods['ymax'],
-                                     )
-                if goods['class'] in class_index_dict:
-                    ret_reborn[class_index_dict[goods['class']]]['box'].append({
-                        'score': goods['score'],
-                        'score2': goods['score2'],
-                        'action': goods['action'],
-                        'xmin': goods['xmin'],
-                        'ymin': goods['ymin'],
-                        'xmax': goods['xmax'],
-                        'ymax': goods['ymax'],
-                    })
-                else:
-                    box = []
-                    box.append({
-                        'score': goods['score'],
-                        'score2': goods['score2'],
-                        'action': goods['action'],
-                        'xmin': goods['xmin'],
-                        'ymin': goods['ymin'],
-                        'xmax': goods['xmax'],
-                        'ymax': goods['ymax'],
-                    })
-                    ret_reborn.append({
-                        'class': goods['class'],
-                        'upc': goods['upc'],
-                        'box': box
-                    })
-                    class_index_dict[goods['class']] = index
-                    index = index + 1
-            ret = ret_reborn
+        ret_reborn = []
+        index = 0
+        class_index_dict = {}
+        for goods in ret:
+            # 兼容上一个版本
+            if 'action' not in goods:
+                goods['action'] = .0
+            Goods.objects.create(image_id=serializer.instance.pk,
+                                 class_type=goods['class'],
+                                 score1=goods['score'],
+                                 score2=goods['score2'],
+                                 upc=goods['upc'],
+                                 xmin=goods['xmin'],
+                                 ymin=goods['ymin'],
+                                 xmax=goods['xmax'],
+                                 ymax=goods['ymax'],
+                                 )
+            if goods['class'] in class_index_dict:
+                ret_reborn[class_index_dict[goods['class']]]['box'].append({
+                    'score': goods['score'],
+                    'score2': goods['score2'],
+                    'action': goods['action'],
+                    'xmin': goods['xmin'],
+                    'ymin': goods['ymin'],
+                    'xmax': goods['xmax'],
+                    'ymax': goods['ymax'],
+                })
+            else:
+                box = []
+                box.append({
+                    'score': goods['score'],
+                    'score2': goods['score2'],
+                    'action': goods['action'],
+                    'xmin': goods['xmin'],
+                    'ymin': goods['ymin'],
+                    'xmax': goods['xmax'],
+                    'ymax': goods['ymax'],
+                })
+                ret_reborn.append({
+                    'class': goods['class'],
+                    'upc': goods['upc'],
+                    'box': box
+                })
+                class_index_dict[goods['class']] = index
+                index = index + 1
+        ret = ret_reborn
 
         # 保存ai计算时间
         if aiinterval > .0:
@@ -202,7 +167,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # logger.info('end create')
         # return Response({'Test':True})
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
-
 
 class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                         viewsets.GenericViewSet):
