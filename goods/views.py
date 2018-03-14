@@ -44,6 +44,17 @@ class DefaultMixin:
     max_paginate_by = 100
 
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
+
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
@@ -191,7 +202,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 保存ai本次返回和计算时间
             serializer.instance.aiinterval = aiinterval
             logger.info(ret_reborn)
-            serializer.instance.ret = json.dumps(ret_reborn)
+            serializer.instance.ret = json.dumps(ret_reborn, cls=NumpyEncoder)
             serializer.instance.save()
             logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
             # logger.info('end create')
