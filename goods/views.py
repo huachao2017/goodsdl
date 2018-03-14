@@ -25,6 +25,7 @@ from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.step3 import convert_goods_step3
 from .serializers import *
+import json
 
 logger = logging.getLogger("django")
 
@@ -94,6 +95,29 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
         else:
+            last_images = Image.objects.filter(deviceid=serializer.instance.deviceid).filter(pk__lt=serializer.instance.pk).order_by('-create_time')[:5]
+
+            last_image = None
+            for one_image in last_images:
+                if one_image.ret != '':
+                    last_image = one_image
+                    break
+
+            from tracking.tracking import compare_same
+            if last_image is not None and compare_same(serializer.instance.source.path, last_image.source.path):
+                tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
+                if not tf.gfile.Exists(tmp_dir):
+                    tf.gfile.MakeDirs(tmp_dir)
+
+                # 移动检测重复图片
+                shutil.move(serializer.instance.source.path, tmp_dir)
+                Image.objects.get(pk=serializer.instance.pk).delete()
+                ret_reborn = json.loads(last_image.ret)
+                logger.info('duplicate detect:{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
+
+                # 检测重复直接返回
+                return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
+
             aiinterval = .0
             # 正式应用区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
@@ -112,61 +136,60 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                       step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
 
 
-        ret_reborn = []
-        index = 0
-        class_index_dict = {}
-        for goods in ret:
-            # 兼容上一个版本
-            if 'action' not in goods:
-                goods['action'] = .0
-            Goods.objects.create(image_id=serializer.instance.pk,
-                                 class_type=goods['class'],
-                                 score1=goods['score'],
-                                 score2=goods['score2'],
-                                 upc=goods['upc'],
-                                 xmin=goods['xmin'],
-                                 ymin=goods['ymin'],
-                                 xmax=goods['xmax'],
-                                 ymax=goods['ymax'],
-                                 )
-            if goods['class'] in class_index_dict:
-                ret_reborn[class_index_dict[goods['class']]]['box'].append({
-                    'score': goods['score'],
-                    'score2': goods['score2'],
-                    'action': goods['action'],
-                    'xmin': goods['xmin'],
-                    'ymin': goods['ymin'],
-                    'xmax': goods['xmax'],
-                    'ymax': goods['ymax'],
-                })
-            else:
-                box = []
-                box.append({
-                    'score': goods['score'],
-                    'score2': goods['score2'],
-                    'action': goods['action'],
-                    'xmin': goods['xmin'],
-                    'ymin': goods['ymin'],
-                    'xmax': goods['xmax'],
-                    'ymax': goods['ymax'],
-                })
-                ret_reborn.append({
-                    'class': goods['class'],
-                    'upc': goods['upc'],
-                    'box': box
-                })
-                class_index_dict[goods['class']] = index
-                index = index + 1
-        ret = ret_reborn
+            ret_reborn = []
+            index = 0
+            class_index_dict = {}
+            for goods in ret:
+                # 兼容上一个版本
+                if 'action' not in goods:
+                    goods['action'] = 0
+                Goods.objects.create(image_id=serializer.instance.pk,
+                                     class_type=goods['class'],
+                                     score1=goods['score'],
+                                     score2=goods['score2'],
+                                     upc=goods['upc'],
+                                     xmin=goods['xmin'],
+                                     ymin=goods['ymin'],
+                                     xmax=goods['xmax'],
+                                     ymax=goods['ymax'],
+                                     )
+                if goods['class'] in class_index_dict:
+                    ret_reborn[class_index_dict[goods['class']]]['box'].append({
+                        'score': goods['score'],
+                        'score2': goods['score2'],
+                        'action': goods['action'],
+                        'xmin': goods['xmin'],
+                        'ymin': goods['ymin'],
+                        'xmax': goods['xmax'],
+                        'ymax': goods['ymax'],
+                    })
+                else:
+                    box = []
+                    box.append({
+                        'score': goods['score'],
+                        'score2': goods['score2'],
+                        'action': goods['action'],
+                        'xmin': goods['xmin'],
+                        'ymin': goods['ymin'],
+                        'xmax': goods['xmax'],
+                        'ymax': goods['ymax'],
+                    })
+                    ret_reborn.append({
+                        'class': goods['class'],
+                        'upc': goods['upc'],
+                        'box': box
+                    })
+                    class_index_dict[goods['class']] = index
+                    index = index + 1
 
-        # 保存ai计算时间
-        if aiinterval > .0:
+            # 保存ai本次返回和计算时间
             serializer.instance.aiinterval = aiinterval
+            serializer.instance.ret = json.dumps(ret_reborn)
             serializer.instance.save()
-        logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret) if ret is not None else 0)))
-        # logger.info('end create')
-        # return Response({'Test':True})
-        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+            logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
+            # logger.info('end create')
+            # return Response({'Test':True})
+            return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
 
 class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                         viewsets.GenericViewSet):
@@ -782,7 +805,6 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
             'http://{}/payment/order-by-ai.json?deviceId={}&startTime={}&endTime={}'.format(domain, deviceid, startTime,
                                                                                             endTime))
         html = response.read()
-        import json
         rfid_ret = json.loads(html)
         print(rfid_ret)
         if rfid_ret['status'] == 200:

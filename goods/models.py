@@ -8,6 +8,7 @@ def image_upload_source(instance,filename):
 
 class Image(models.Model):
     deviceid = models.CharField(max_length=20, default='0',db_index=True)
+    ret = models.CharField(max_length=500, default='')
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
     aiinterval = models.FloatField(default=0.0)
     lastinterval = models.FloatField(default=0.0)
