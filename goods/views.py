@@ -202,7 +202,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             # 保存ai本次返回和计算时间
             serializer.instance.aiinterval = aiinterval
-            logger.info(ret_reborn)
             serializer.instance.ret = json.dumps(ret_reborn, cls=NumpyEncoder)
             serializer.instance.save()
             logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
