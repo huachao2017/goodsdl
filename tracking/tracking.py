@@ -6,9 +6,12 @@ import time
 import logging
 logger = logging.getLogger("detect")
 
-def compare_same(img_path1,img_path2, score_thresh=.9):
+def compare_same(img_path1,img_path2, score_thresh_1=.95, score_thresh_2=.9):
     score, image1, image2, diff, thresh = _compare(img_path1,img_path2)
-    if score < score_thresh:
+    if score > score_thresh_1:
+        logger.info('SSIM: %.5f' %(score))
+        return True
+    if score < score_thresh_2:
         return False
     else:
         max_area = image1.shape[0] * image1.shape[1]
@@ -56,8 +59,8 @@ def _compare(img_path1, img_path2, debug = False):
     return score, image1, image2, diff, thresh
 
 if __name__ == "__main__":
-    score,image1,image2,diff,thresh = _compare('images/1.jpg',
-                                               'images/2.jpg',
+    score,image1,image2,diff,thresh = _compare('images/8.jpg',
+                                               'images/9.jpg',
                                                debug=True,
                                                )
     # show the output images
