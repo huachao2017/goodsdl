@@ -685,6 +685,14 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(instance.pk))
+        if os.path.isdir(train_logs_dir):
+            shutil.rmtree(train_logs_dir)
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = ExportAction.objects.order_by('-id')
