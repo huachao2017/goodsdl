@@ -280,7 +280,7 @@ def _run_export(domain, trainid):
         domain = get_host_ip()
     train_data = parse.urlencode([
         ('train_action', trainid),
-        ('model_name', ''),
+        ('model_name', 'nasnet_mobile'),
     ])
     req = request.Request('http://{}/api/exportaction/'.format(domain))
     req.add_header('Origin', 'http://{}/api/'.format(domain))
