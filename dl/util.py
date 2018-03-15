@@ -26,6 +26,18 @@ def get_labels_to_names(labels_filepath):
 
     return labels_to_names
 
+def get_names_to_labels(labels_filepath):
+    with tf.gfile.Open(labels_filepath, 'rb') as f:
+        lines = f.read().decode()
+    lines = lines.split('\n')
+    lines = filter(None, lines)
+
+    names_to_labels = {}
+    for line in lines:
+        index = line.index(':')
+        names_to_labels[int(line[index + 1:])] = line[:index]
+
+    return names_to_labels
 
 def visualize_boxes_and_labels_on_image_array_V2(image,
                                                  boxes,

@@ -555,19 +555,24 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         subprocess.call(command, shell=True)
 
     def train_step2(self, actionlog):
+        if actionlog.is_fineture:
+            self.train_step2_with_fineture(actionlog)
+            return
+
         # 训练准备
         train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
         source_dataset_dir = os.path.join(
             settings.MEDIA_ROOT,
             settings.DATASET_DIR_NAME,
             'step2')
+
         class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(source_dataset_dir,
             train_logs_dir)
         # step2_model_name = 'inception_resnet_v2'
         # step2_model_name = 'nasnet_large'
         batch_size = 8
         # 训练
-        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={}  > /root/train2.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train2.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
@@ -580,7 +585,55 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}  > /root/eval2.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            source_dataset_dir,
+            train_logs_dir,
+            os.path.join(train_logs_dir, 'eval_log'),
+            len(validation_filenames),
+            actionlog.model_name,
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+
+    def train_step2_with_fineture(self, actionlog):
+        # 训练准备
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+        source_dataset_dir = os.path.join(
+            settings.MEDIA_ROOT,
+            settings.DATASET_DIR_NAME,
+            'step2')
+
+        # 获取step2最后导出的网络
+        export2s = ExportAction.objects.filter(train_action__action='T2').filter(
+            checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+        checkpoint_path = os.path.join(settings.BASE_DIR, 'dl/model', str(export2s[0].pk))
+        fineture_label_path = os.path.join(checkpoint_path, 'label.txt')
+
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train_with_fineture(source_dataset_dir,
+            train_logs_dir, fineture_label_path)
+        # step2_model_name = 'inception_resnet_v2'
+        # step2_model_name = 'nasnet_large'
+        batch_size = 8
+        # 训练
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} ' \
+                  '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer  > /root/train2.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            len(training_filenames),
+            actionlog.model_name,
+            1,
+            batch_size,
+            int(len(training_filenames) * 200 / batch_size),  # 设定最大训练次数，每个样本进入网络200次
+            checkpoint_path,
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+        # 评估
+        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} ' \
+                  ' > /root/eval2.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             source_dataset_dir,

@@ -22,6 +22,7 @@ import io
 import math
 import shutil
 from dl.step2 import cluster
+from dl import util
 
 import tensorflow as tf
 
@@ -224,6 +225,75 @@ def _convert_dataset(split_name, filenames, names_to_labels, class_names_to_clus
     # print('generate tfrecord:{}'.format(output_filename))
     logger.info('generate tfrecord:{}'.format(output_filename))
 
+def _convert_dataset_with_fineture(split_name, filenames, names_to_labels, fineture_names_to_labels, class_names_to_cluster_class_names, output_dir):
+    """Converts the given filenames to a TFRecord dataset.
+
+    Args:
+      split_name: The name of the dataset, either 'train' or 'validation'.
+      filenames: A list of absolute paths to png or jpg images.
+      names_to_labels: A dictionary from class names (strings) to ids
+        (integers).
+      fineture_names_to_labels: A dictionary from class names (strings) to ids
+        (integers) for fineture.
+      output_dir: The directory where the converted tfrecord are stored.
+    """
+    assert split_name in ['train', 'validation']
+
+    num_per_shard = int(math.ceil(len(filenames) / float(len(names_to_labels))))
+
+    output_filename = _get_tfrecord_filename(
+        output_dir, split_name)
+    if tf.gfile.Exists(output_filename):
+        tf.gfile.Remove(output_filename)
+    writer = tf.python_io.TFRecordWriter(output_filename)
+
+    names_to_count = {}
+    for name in names_to_labels:
+        names_to_count[name] = 0
+
+    new_filenames = []
+    for shard_id in range(len(names_to_labels)):
+        start_ndx = shard_id * num_per_shard
+        end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
+        for i in range(start_ndx, end_ndx):
+            # logger.info('\r>> Converting image %d/%d shard %d' % (
+            #     i + 1, len(filenames), shard_id))
+
+            name = os.path.basename(os.path.dirname(filenames[i]))
+            # 使用聚类的类别
+            if name in class_names_to_cluster_class_names:
+                name = class_names_to_cluster_class_names[name]
+                # TODO 目前允许最多2层级联聚类
+                if name in class_names_to_cluster_class_names:
+                    name = class_names_to_cluster_class_names[name]
+            label = names_to_labels[name]
+
+            if name in fineture_names_to_labels:
+                # 原样本每类保留5个
+                if names_to_count[name] >= 5:
+                    continue
+
+            names_to_count[name] += 1
+            new_filenames.append(filenames[i])
+
+            print('{}:{}'.format(filenames[i],label))
+
+            # Read the filename:
+            with tf.gfile.GFile(filenames[i], 'rb') as fid:
+                encoded_jpg = fid.read()
+            encoded_jpg_io = io.BytesIO(encoded_jpg)
+            image = im.open(encoded_jpg_io)
+            width, height = image.size
+
+            example = dataset_utils.image_to_tfexample(
+                encoded_jpg, b'jpg', height, width, label)
+            writer.write(example.SerializeToString())
+    writer.close()
+    # print('generate tfrecord:{}'.format(output_filename))
+    logger.info('generate tfrecord:{}'.format(output_filename))
+
+    return new_filenames
+
 
 def _clean_up_temporary_files(dataset_dir):
     if tf.gfile.Exists(dataset_dir):
@@ -305,6 +375,49 @@ def prepare_train(dataset_dir, output_dir):
 
     logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
+
+def prepare_train_with_fineture(dataset_dir, output_dir, fineture_label_path):
+    """Runs the conversion operation.
+
+    Args:
+      dataset_dir: The source directory where the step2 dataset is stored.
+      output_dir: tfrecord will be stored.
+      fineture_label_path: the label to fineture model .
+    """
+
+    if not tf.gfile.Exists(output_dir):
+        tf.gfile.MakeDirs(output_dir)
+
+    training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
+
+    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, 'cluster.txt'))
+    class_names_to_cluster_class_names = cluster_settings.get_class_names_to_cluster_class_names()
+    logger.info(class_names_to_cluster_class_names)
+    names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
+
+    fineture_names_to_labels = util.get_names_to_labels(fineture_label_path)
+
+    # Divide into train and test:
+    random.seed(_RANDOM_SEED)
+    random.shuffle(training_filenames)
+    # training_filenames = photo_filenames[_NUM_VALIDATION:]
+    # validation_filenames = photo_filenames[:_NUM_VALIDATION]
+
+    # First, convert the training and validation sets.
+    training_filenames = _convert_dataset_with_fineture('train', training_filenames, names_to_labels, fineture_names_to_labels, class_names_to_cluster_class_names,
+                     output_dir)
+    _convert_dataset('validation', validation_filenames, names_to_labels,class_names_to_cluster_class_names,
+                     output_dir)
+
+    # Second, write the labels file:
+    labels_to_names = get_labels_to_names(class_names,class_names_to_cluster_class_names)
+    dataset_utils.write_label_file(labels_to_names, output_dir)
+    # Finally, copy the cluster file:
+    shutil.copy(os.path.join(dataset_dir, 'cluster.txt'), output_dir)
+
+    logger.info('Finished converting the goods dataset!')
+    return names_to_labels, training_filenames, validation_filenames
+
 
 if __name__ == '__main__':
     dataset_dir = '/home/src/goodsdl/media/dataset/step2'
