@@ -39,6 +39,9 @@ def _compare(img_path1, img_path2, debug = False):
     image1 = cv2.pyrDown(image1)
     image2 = cv2.pyrDown(image2)
 
+    if image1.shape[0] != image2.shape[0] or image1.shape[1] != image2.shape[1]:
+        return .0, image1, image2, None, None
+
     # convert the images to grayscale
     gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
@@ -59,8 +62,8 @@ def _compare(img_path1, img_path2, debug = False):
     return score, image1, image2, diff, thresh
 
 if __name__ == "__main__":
-    score,image1,image2,diff,thresh = _compare('images/8.jpg',
-                                               'images/9.jpg',
+    score,image1,image2,diff,thresh = _compare('images/1.jpg',
+                                               'images/2.jpg',
                                                debug=True,
                                                )
     # show the output images
