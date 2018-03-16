@@ -209,7 +209,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # return Response({'Test':True})
             return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
 
-class ImageViewSet(DefaultMixin, viewsets.ModelViewSet):
+class ImageReportViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = ImageReport.objects.order_by('-id')
     serializer_class = ImageReportSerializer
 
