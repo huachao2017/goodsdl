@@ -151,6 +151,14 @@ lastinterval float                            -- 秒数，保留两位小数的
     }
 ]
 
+检测图片上报错误接口：http://ai.fastxbox.cn/api/imagereport
+入参：
+source  file
+filename string
+deviceid  string
+返回201：
+
+
 原检测图片接口：http://ai.fastxbox.cn/api/image
 入参：
 source  file

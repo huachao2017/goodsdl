@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction
+from .models import Image, ImageReport, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,6 +18,12 @@ class ImageSerializer(serializers.ModelSerializer):
         model = Image
         fields = ('pk', 'deviceid', 'ret', 'source', 'image_goods', 'image_problem_goods', 'lastinterval', 'aiinterval', 'create_time')
         read_only_fields = ('ret', 'aiinterval', 'create_time',)
+
+class ImageReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageReport
+        fields = ('pk', 'deviceid','source', 'create_time')
+        read_only_fields = ('create_time',)
 
 class GoodsClassSerializer(serializers.ModelSerializer):
     class Meta:
