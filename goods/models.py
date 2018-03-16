@@ -8,7 +8,7 @@ def image_upload_source(instance,filename):
 
 def image_report_upload_source(instance,filename):
     now = datetime.datetime.now()
-    return '{}/report/{}/{}_{}'.format(settings.DETECT_DIR_NAME, instance.deviceid, str(now.strftime('%Y%m%d%H%M%S')), filename)
+    return '{}/report/{}/{}_{}'.format(settings.DETECT_DIR_NAME, instance.deviceid, str(now.strftime('%Y%m_%d%H_%M%S')), filename)
 
 class Image(models.Model):
     deviceid = models.CharField(max_length=20, default='0',db_index=True)
