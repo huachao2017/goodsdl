@@ -1,11 +1,13 @@
 import os
-import time
+import time, datetime
 import logging
 from urllib import request, parse
 import tensorflow as tf
 from dl.step2.cluster import ClusterSettings
 import GPUtil as GPU
 from dl.util import get_host_ip
+import django
+from goods.models import ExportAction
 
 tf.app.flags.DEFINE_string(
     'domain', None, 'The train server domain.')
@@ -48,6 +50,9 @@ def _run_train(domain, traintype):
 def main(_):
     logger = logging.getLogger()
     logger.setLevel('INFO')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+    django.setup()
+
     train_interval_secs = FLAGS.train_interval_secs
 
     dataset_dir = FLAGS.dataset_dir
@@ -67,12 +72,12 @@ def main(_):
     while True:
         start = time.time()
         logging.info('Starting monitor at ' + time.strftime(
-            '%Y-%m-%d-%H:%M:%S', time.gmtime()))
+            '%Y-%m-%d-%H:%M:%S', time.localtime()))
 
         # TODO 需要远程查询所有空闲gpu
         gpus = GPU.getAvailable(order='memory', limit=1)
         if len(gpus) > 0:
-            # 检查目录
+            # 检查目录样本是否符合
             for i in range(10):
                 step3_dataset_dir = os.path.join(dataset_dir, 'step3', str(cur_traintype))
                 if len(os.listdir(step3_dataset_dir)) <= 1: # 必须大于两类才能分类
@@ -80,10 +85,21 @@ def main(_):
                 else:
                     break
 
-            logging.info('Starting train--{} at '.format(str(cur_traintype)) + time.strftime(
-                '%Y-%m-%d-%H:%M:%S', time.gmtime()))
-            if not _run_train(domain, cur_traintype):
-                break
+            # 检查是否已经训练，并且训练后没有新增样本
+            do_run = True
+            exports = ExportAction.objects.filter(train_action__action='T3').filter(train_action__traintype=cur_traintype).order_by('-update_time')[:1]
+            if len(exports)>0:
+                step3_dataset_dir = os.path.join(dataset_dir, 'step3', str(cur_traintype))
+                filetime = datetime.datetime.fromtimestamp((os.path.getmtime(step3_dataset_dir)))
+                if filetime < exports[0].update_time:
+                    logging.info('Skip train--{} because has trained in '.format(str(cur_traintype)) + time.strftime('%Y-%m-%d-%H:%M:%S', exports[0].update_time.timetuple()))
+                    do_run = False
+
+            if do_run:
+                logging.info('Starting train--{} at '.format(str(cur_traintype)) + time.strftime(
+                    '%Y-%m-%d-%H:%M:%S', time.localtime()))
+                if not _run_train(domain, cur_traintype):
+                    break
             cur_traintype += 1
 
         if cur_traintype > end_traintype:
