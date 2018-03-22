@@ -345,6 +345,7 @@ def _get_init_fn():
         for exclusion in exclusions:
             if var.op.name.startswith(exclusion):
                 excluded = True
+                tf.logging.warn('ignore variable: %s' % (var.op.name))
                 break
         if not excluded:
             variables_to_restore.append(var)
