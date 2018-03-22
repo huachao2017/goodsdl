@@ -97,9 +97,13 @@ class ImageDetector:
                 scores_step1.append(scores[i])
 
                 newimage = image.crop((xmin, ymin, xmax, ymax))
+
                 # 生成新的图片
                 newimage_split = os.path.split(image_path)
-                new_image_path = os.path.join(newimage_split[0], "{}_{}".format(i, newimage_split[1]))
+                single_image_dir = os.path.join(newimage_split[0], 'single')
+                if not tf.gfile.Exists(single_image_dir):
+                    tf.gfile.MakeDirs(single_image_dir)
+                new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
                 step2_image_paths.append(new_image_path)
                 newimage.save(new_image_path, 'JPEG')
                 step2_images.append(self.step2_cnn.pre_detect(new_image_path))
