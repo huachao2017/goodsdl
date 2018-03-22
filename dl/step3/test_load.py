@@ -1,12 +1,9 @@
 import os
 import tensorflow as tf
-import logging
 from nets import nets_factory
 import time
 
 def main(_):
-    logger = logging.getLogger()
-    logger.setLevel('INFO')
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -16,7 +13,7 @@ def main(_):
     model_dir = '/home/src/goodsdl/dl/model'
     traintype_modeldir = os.path.join(model_dir, str(67))
     checkpoint = tf.train.latest_checkpoint(traintype_modeldir)
-    logging.info('begin loading step3 model: {}-{}'.format(7, checkpoint))
+    tf.logging.info('begin loading step3 model: {}-{}'.format(7, checkpoint))
 
     network_fn = nets_factory.get_network_fn(
         'nasnet_mobile',
@@ -48,7 +45,7 @@ def main(_):
         saver.restore(session, checkpoint)
         time3 = time.time()
 
-    logging.info('end loading: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
+        tf.logging.info('end loading: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
 
 if __name__ == '__main__':
     tf.app.run()
