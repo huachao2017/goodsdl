@@ -35,7 +35,7 @@ def get_names_to_labels(labels_filepath):
     names_to_labels = {}
     for line in lines:
         index = line.index(':')
-        names_to_labels[int(line[index + 1:])] = line[:index]
+        names_to_labels[line[index + 1:]] = int(line[:index])
 
     return names_to_labels
 
