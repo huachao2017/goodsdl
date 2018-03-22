@@ -7,6 +7,7 @@ def main(_):
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    tf.logging.set_verbosity('INFO')
 
     time0 = time.time()
 
