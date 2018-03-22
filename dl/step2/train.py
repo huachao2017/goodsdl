@@ -338,8 +338,6 @@ def _get_init_fn():
         exclusions = [scope.strip()
                       for scope in FLAGS.checkpoint_exclude_scopes.split(',')]
 
-    tf.logging.info(exclusions)
-
     # TODO(sguada) variables.filter_variables()
     variables_to_restore = []
     for var in slim.get_model_variables():
@@ -350,6 +348,8 @@ def _get_init_fn():
                 break
         if not excluded:
             variables_to_restore.append(var)
+
+    tf.logging.info(variables_to_restore)
 
     if tf.gfile.IsDirectory(FLAGS.checkpoint_path):
         checkpoint_path = tf.train.latest_checkpoint(FLAGS.checkpoint_path)
