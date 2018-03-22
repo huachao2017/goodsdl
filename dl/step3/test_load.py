@@ -47,6 +47,7 @@ def main(_):
         time3 = time.time()
 
         tf.logging.info('end loading: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
+    time.sleep(60)
 
 if __name__ == '__main__':
     tf.app.run()
