@@ -358,7 +358,6 @@ def _get_init_fn():
 
     tf.logging.info('Fine-tuning from %s' % checkpoint_path)
 
-    tf.logging.info('FLAGS.ignore_missing_vars: ' + FLAGS.ignore_missing_vars)
     return slim.assign_from_checkpoint_fn(
         checkpoint_path,
         variables_to_restore,
