@@ -141,6 +141,7 @@ class ImageDetector:
             ymin, xmin, ymax, xmax = boxes_step1[i]
 
             class_type = labels_step2[i]
+            score2 = scores_step2[i]
             action = 0
             upc = self.step2_cnn.labels_to_names[class_type]
             if scores_step2[i] < step2_min_score_thresh:
@@ -154,21 +155,25 @@ class ImageDetector:
                 upc = ''
                 action = 2
             elif upc in self.step2_cnn.cluster_upc_to_traintype:
-                pass
-                # TODO need test
-                # probabilities, labels_to_names = self.step3_cnn.detect(self.config,step2_image_paths[i],self.step2_cnn.cluster_upc_to_traintype[upc])
-                # if labels_to_names is not None:
-                #     sorted_inds = [j[0] for j in sorted(enumerate(-probabilities[0]), key=lambda x: x[1])]
-                #     step3_class_type = sorted_inds[0]
-                #     step3_score = probabilities[sorted_inds[0]]
-                #
-                #     if step3_score > step2_min_score_thresh:
-                #         upc = labels_to_names[step3_class_type]
-                #         TODO add upc 判断action
+                traintype = self.step2_cnn.cluster_upc_to_traintype[upc]
+                probabilities, step3_labels_to_names = self.step3_cnn.detect(self.config, step2_image_paths[i], traintype)
+                if step3_labels_to_names is not None:
+                    sorted_inds = [j[0] for j in sorted(enumerate(-probabilities[0]), key=lambda x: x[1])]
+                    step3_class_type = sorted_inds[0]
+                    score2 = probabilities[sorted_inds[0]]
+
+                    if step3_labels_to_names[step3_class_type][:6] == 'action':
+                        try:
+                            action = int(step3_labels_to_names[step3_class_type][6:])
+                        except ValueError:
+                            action = 3
+                    else:
+                        upc = step3_labels_to_names[step3_class_type]
+                    logger.info('step3: %d, %s, %d' % (traintype, upc, action))
 
             ret.append({'class': class_type,
                         'score': scores_step1[i],
-                        'score2': scores_step2[i],
+                        'score2': score2,
                         'action': action,
                         'upc': upc,
                         'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
