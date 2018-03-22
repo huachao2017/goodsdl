@@ -338,10 +338,11 @@ def _get_init_fn():
         exclusions = [scope.strip()
                       for scope in FLAGS.checkpoint_exclude_scopes.split(',')]
 
+    tf.logging.info(exclusions)
+
     # TODO(sguada) variables.filter_variables()
     variables_to_restore = []
     for var in slim.get_model_variables():
-        tf.logging.info('ignore variable: %s' % (var.op.name))
         excluded = False
         for exclusion in exclusions:
             if var.op.name.startswith(exclusion):
