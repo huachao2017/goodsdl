@@ -613,7 +613,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         export2s = ExportAction.objects.filter(train_action__action='T2').filter(
             checkpoint_prefix__gt=0).order_by('-update_time')[:1]
         checkpoint_path = os.path.join(settings.BASE_DIR, 'dl/model', str(export2s[0].pk))
-        fineture_label_path = os.path.join(checkpoint_path, 'label.txt')
+        fineture_label_path = os.path.join(checkpoint_path, 'labels.txt')
 
         class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train_with_fineture(source_dataset_dir,
             train_logs_dir, fineture_label_path)
