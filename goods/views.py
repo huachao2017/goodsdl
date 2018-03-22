@@ -584,7 +584,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             actionlog.model_name,
             1,
             batch_size,
-            int(len(training_filenames) * 200 / batch_size)  # 设定最大训练次数，每个样本进入网络200次
+            int(len(training_filenames) * 100 / batch_size)  # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
         )
         logger.info(command)
         subprocess.call(command, shell=True)
@@ -630,7 +630,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             actionlog.model_name,
             1,
             batch_size,
-            int(len(training_filenames) * 200 / batch_size),  # 设定最大训练次数，每个样本进入网络200次
+            int(len(training_filenames) * 100 / batch_size),  # 设定最大训练次数，每个样本进入网络100次，目前不清楚funiture的过拟合情况
             checkpoint_path,
         )
         logger.info(command)
