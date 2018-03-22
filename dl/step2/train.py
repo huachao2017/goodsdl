@@ -341,11 +341,11 @@ def _get_init_fn():
     # TODO(sguada) variables.filter_variables()
     variables_to_restore = []
     for var in slim.get_model_variables():
+        tf.logging.info('ignore variable: %s' % (var.op.name))
         excluded = False
         for exclusion in exclusions:
             if var.op.name.startswith(exclusion):
                 excluded = True
-                tf.logging.warn('ignore variable: %s' % (var.op.name))
                 break
         if not excluded:
             variables_to_restore.append(var)
