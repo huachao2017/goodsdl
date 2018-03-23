@@ -2,30 +2,29 @@ import os
 import tensorflow as tf
 from nets import nets_factory
 import time
+from dl.util import get_labels_to_names
+import GPUtil as GPU
 
-def main(_):
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+django.setup()
+from goods.models import ExportAction
 
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    tf.logging.set_verbosity('INFO')
-
+def load_one(config, model_dir, export):
     time0 = time.time()
 
-    model_dir = '/home/src/goodsdl/dl/model'
-    traintype_modeldir = os.path.join(model_dir, str(67))
+    traintype_modeldir = os.path.join(model_dir, str(export.pk))
     checkpoint = tf.train.latest_checkpoint(traintype_modeldir)
-    tf.logging.info('begin loading step3 model: {}-{}'.format(7, checkpoint))
+    tf.logging.info('begin loading step3 model: {}-{}'.format(export.train_action.traintype, checkpoint))
+    labels_to_names = get_labels_to_names(os.path.join(traintype_modeldir, 'labels.txt'))
 
     network_fn = nets_factory.get_network_fn(
-        'nasnet_mobile',
-        num_classes=2,
+        export.model_name,
+        num_classes=len(labels_to_names),
         is_training=False)
     image_size = network_fn.default_image_size
 
     time1 = time.time()
-
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
 
     _graph = tf.Graph()
     with _graph.as_default():
@@ -47,7 +46,31 @@ def main(_):
         time3 = time.time()
 
         tf.logging.info('end loading: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
-    time.sleep(60)
+        return session
+
+def load_all():
+    model_dir = '/home/src/goodsdl/dl/model'
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+
+    traintype_to_session = {}
+    export3s = ExportAction.objects.filter(train_action__action='T3').filter(checkpoint_prefix__gt=0).order_by(
+        '-update_time')
+
+    for export in export3s:
+        traintype = export.train_action.traintype
+        if traintype not in traintype_to_session:
+            session = load_one(config, model_dir, export)
+            traintype_to_session[traintype] = session
+
+    GPU.showUtilization()
+
+def main(_):
+
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    tf.logging.set_verbosity('INFO')
+    load_all()
 
 if __name__ == '__main__':
     tf.app.run()
