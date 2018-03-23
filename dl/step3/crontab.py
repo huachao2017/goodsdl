@@ -73,6 +73,9 @@ def main(_):
         start = time.time()
         logging.info('Starting monitor at ' + time.strftime(
             '%Y-%m-%d-%H:%M:%S', time.localtime()))
+        if cur_traintype > end_traintype:
+            logging.info('Finished all train!')
+            break
 
         # TODO 需要远程查询所有空闲gpu
         gpus = GPU.getAvailable(order='memory', limit=1)
@@ -81,7 +84,7 @@ def main(_):
             for i in range(10):
                 step3_dataset_dir = os.path.join(dataset_dir, 'step3', str(cur_traintype))
                 if not os.path.isdir(step3_dataset_dir):
-                    break
+                    cur_traintype += 1
                 if len(os.listdir(step3_dataset_dir)) <= 1: # 必须大于两类才能分类
                     cur_traintype += 1
                 else:
