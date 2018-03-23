@@ -2,6 +2,8 @@ import os
 import tensorflow as tf
 from nets import nets_factory
 import time
+from dl.step1_cnn import Step1CNN
+from dl.step2_cnn import Step2CNN
 from dl.util import get_labels_to_names
 import GPUtil as GPU
 
@@ -10,7 +12,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
 from goods.models import ExportAction
 
-def load_one(config, model_dir, export):
+def load_step3_one(config, model_dir, export):
     time0 = time.time()
 
     traintype_modeldir = os.path.join(model_dir, str(export.pk))
@@ -53,17 +55,37 @@ def load_all():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
+    time0 = time.time()
     traintype_to_session = {}
+
+    export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
+        '-update_time')[:1]
+    step1_cnn = Step1CNN(os.path.join(model_dir, str(export1s[0].pk)))
+    step1_cnn.load(config)
+    traintype_to_session[0] = step1_cnn._session
+    GPU.showUtilization(True)
+    time1 = time.time()
+
+    export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
+        '-update_time')[:1]
+    step2_cnn = Step2CNN(os.path.join(model_dir, str(export2s[0].pk)), export2s[0].model_name)
+    step2_cnn.load(config)
+    traintype_to_session[0] = step2_cnn._session
+    GPU.showUtilization(True)
+    time2 = time.time()
+
     export3s = ExportAction.objects.filter(train_action__action='T3').filter(checkpoint_prefix__gt=0).order_by(
         '-update_time')
 
     for export in export3s:
         traintype = export.train_action.traintype
         if traintype not in traintype_to_session:
-            session = load_one(config, model_dir, export)
+            session = load_step3_one(config, model_dir, export)
             traintype_to_session[traintype] = session
+            GPU.showUtilization(True)
 
-    GPU.showUtilization()
+    time3 = time.time()
+    tf.logging.info('loading finish: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
 
 def main(_):
 
