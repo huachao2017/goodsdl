@@ -7,6 +7,8 @@ from dl.step2.cluster import ClusterSettings
 import GPUtil as GPU
 from dl.util import get_host_ip
 import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+django.setup()
 from goods.models import ExportAction
 
 tf.app.flags.DEFINE_string(
@@ -50,8 +52,6 @@ def _run_train(domain, traintype):
 def main(_):
     logger = logging.getLogger()
     logger.setLevel('INFO')
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
-    django.setup()
 
     train_interval_secs = FLAGS.train_interval_secs
 
