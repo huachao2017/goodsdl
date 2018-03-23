@@ -50,13 +50,11 @@ def load_step3_one(config, model_dir, export):
         tf.logging.info('end loading: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
         return session
 
-def load_all():
-    model_dir = '/home/src/goodsdl/dl/model'
+def load_all(model_dir, traintype_to_session):
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
     time0 = time.time()
-    traintype_to_session = {}
 
     export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
         '-update_time')[:1]
@@ -92,7 +90,20 @@ def main(_):
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     tf.logging.set_verbosity('INFO')
-    load_all()
+    traintype_to_session = {}
+    model_dir = '/home/src/goodsdl/dl/model'
+    load_all(model_dir, traintype_to_session)
+
+    time0 = time.time()
+    image_path = '/home/src/goodsdl/images/test_1.jpg'
+    test_traintype = 7
+    if test_traintype in traintype_to_session:
+        probabilities = traintype_to_session[test_traintype].run(
+            traintype_to_session[test_traintype].graph.get_tensor_by_name('detection_classes:0'),
+            feed_dict={traintype_to_session[test_traintype].graph.get_tensor_by_name('input_image:0'): image_path}
+        )
+    time1 = time.time()
+    tf.logging.info('test image: %.2f' % (time1 - time0))
 
 if __name__ == '__main__':
     tf.app.run()
