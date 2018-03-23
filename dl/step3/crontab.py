@@ -85,7 +85,7 @@ def main(_):
                 step3_dataset_dir = os.path.join(dataset_dir, 'step3', str(cur_traintype))
                 if not os.path.isdir(step3_dataset_dir):
                     cur_traintype += 1
-                if len(os.listdir(step3_dataset_dir)) <= 1: # 必须大于两类才能分类
+                elif len(os.listdir(step3_dataset_dir)) <= 1: # 必须大于两类才能分类
                     cur_traintype += 1
                 else:
                     break
