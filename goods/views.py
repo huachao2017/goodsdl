@@ -622,7 +622,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         batch_size = 8
         # 训练
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} ' \
-                  '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer,aux_11/aux_logits/FC > /root/train2.out 2>&1 &'.format(
+                  '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer,aux_11/aux_logits/FC --trainable_scopes=final_layer,aux_11/aux_logits/FC > /root/train2.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
