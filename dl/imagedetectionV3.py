@@ -160,7 +160,7 @@ class ImageDetector:
                 if step3_labels_to_names is not None:
                     sorted_inds = [j[0] for j in sorted(enumerate(-probabilities[0]), key=lambda x: x[1])]
                     step3_class_type = sorted_inds[0]
-                    score2 = probabilities[sorted_inds[0]]
+                    score2 = probabilities[0][sorted_inds[0]]
 
                     if step3_labels_to_names[step3_class_type][:6] == 'action':
                         try:
