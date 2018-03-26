@@ -497,6 +497,10 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         logger.info('create action:{}'.format(serializer.instance.action))
 
+        # 兼容没有字段的请求
+        if 'serial' not in request.data:
+            request.data['serial'] = ''
+
         if serializer.instance.action == 'T1':
             # 杀死原来的train
             # os.system('ps -ef | grep train.py | grep -v grep | cut -c 9-15 | xargs kill -s 9')
