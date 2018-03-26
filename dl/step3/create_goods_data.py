@@ -1,5 +1,6 @@
 import os
 from dl.step2.cluster import ClusterSettings
+from dl import common
 import tensorflow as tf
 import shutil
 
@@ -13,9 +14,9 @@ FLAGS = tf.app.flags.FLAGS
 
 def main(_):
     dataset_dir = '/home/src/goodsdl/media/dataset'
-    step2_dir = os.path.join(dataset_dir, 'step2' if FLAGS.dir_serial=='' else 'step2_'+FLAGS.dir_serial)
-    step3_dir = os.path.join(dataset_dir, 'step3' if FLAGS.dir_serial=='' else 'step3_'+FLAGS.dir_serial)
-    cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
+    step2_dir = os.path.join(dataset_dir, common.STEP2_PREFIX if FLAGS.dir_serial=='' else common.STEP2_PREFIX+'_'+FLAGS.dir_serial)
+    step3_dir = os.path.join(dataset_dir, common.STEP3_PREFIX if FLAGS.dir_serial=='' else common.STEP3_PREFIX+'_'+FLAGS.dir_serial)
+    cluster_filepath = os.path.join(step2_dir, common.CLUSTER_FILE_NAME)
     print(cluster_filepath)
     cluster_settings = ClusterSettings(cluster_filepath)
     traintype_to_class_names = cluster_settings.get_traintype_to_class_names()

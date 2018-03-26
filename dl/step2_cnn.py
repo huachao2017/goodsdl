@@ -5,6 +5,7 @@ import logging
 from dl.step2 import cluster
 from dl.util import get_labels_to_names
 from nets import nets_factory
+from dl import common
 
 logger = logging.getLogger("detect")
 
@@ -69,7 +70,7 @@ class Step2CNN:
         self._detection_classes = self._graph.get_tensor_by_name('detection_classes:0')
 
 
-        cluster_setting = cluster.ClusterSettings(os.path.join(self.model_dir, 'cluster.txt'))
+        cluster_setting = cluster.ClusterSettings(os.path.join(self.model_dir, common.CLUSTER_FILE_NAME))
         self.cluster_upc_to_traintype = cluster_setting.get_main_class_name_to_traintype()
 
         logger.info('end loading model...')

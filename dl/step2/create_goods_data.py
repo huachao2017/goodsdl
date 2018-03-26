@@ -6,6 +6,7 @@ import math
 import time
 from PIL import Image as im
 import xml.etree.ElementTree as ET
+from dl import common
 
 import tensorflow as tf
 
@@ -390,7 +391,7 @@ def main(_):
     logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset'
     source_dir = os.path.join(dataset_dir, 'data_new_{}'.format(FLAGS.source_dir_serial))
-    step2_dir = os.path.join(dataset_dir, 'step2' if FLAGS.dest_dir_serial=='' else 'step2_'+FLAGS.dest_dir_serial)
+    step2_dir = os.path.join(dataset_dir, common.STEP2_PREFIX if FLAGS.dest_dir_serial=='' else common.STEP2_PREFIX+'_'+FLAGS.dest_dir_serial)
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model/58/','frozen_inference_graph.pb')
 
     create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)

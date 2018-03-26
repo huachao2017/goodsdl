@@ -24,6 +24,7 @@ from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.step3 import convert_goods_step3
+from dl import common
 from .serializers import *
 import json
 
@@ -591,7 +592,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         source_dataset_dir = os.path.join(
             settings.MEDIA_ROOT,
             settings.DATASET_DIR_NAME,
-            'step2' if actionlog.serial=='' else 'step2_'+str(actionlog.serial))
+            common.STEP2_PREFIX if actionlog.serial=='' else common.STEP2_PREFIX+'_'+str(actionlog.serial))
 
         class_names_to_ids, training_filenames, validation_filenames = convert_goods.prepare_train(source_dataset_dir,
             train_logs_dir)
@@ -630,7 +631,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         source_dataset_dir = os.path.join(
             settings.MEDIA_ROOT,
             settings.DATASET_DIR_NAME,
-            'step2')
+            common.STEP2_PREFIX if actionlog.serial=='' else common.STEP2_PREFIX+'_'+str(actionlog.serial))
 
         # 获取step2最后导出的网络
         export2s = ExportAction.objects.filter(train_action__action='T2').filter(
@@ -678,7 +679,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         source_dataset_dir = os.path.join(
             settings.MEDIA_ROOT,
             settings.DATASET_DIR_NAME,
-            'step3',
+            common.STEP3_PREFIX if actionlog.serial == '' else common.STEP3_PREFIX + '_' + str(actionlog.serial),
             str(actionlog.traintype))
         class_names_to_ids, training_filenames, validation_filenames = convert_goods_step3.prepare_train(source_dataset_dir,
             train_logs_dir)
@@ -857,7 +858,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
             if train_action.action == 'T2':
                 # copy cluster
-                shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'cluster.txt'), model_dir)
+                shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), common.CLUSTER_FILE_NAME), model_dir)
             # reboot django
             # os.utime(os.path.join(settings.BASE_DIR, 'main', 'settings.py'), None)
         return prefix

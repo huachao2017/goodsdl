@@ -23,6 +23,7 @@ import math
 import shutil
 from dl.step2 import cluster
 from dl import util
+from dl import common
 
 import tensorflow as tf
 
@@ -350,7 +351,7 @@ def prepare_train(dataset_dir, output_dir):
 
     training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
 
-    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, 'cluster.txt'))
+    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, common.CLUSTER_FILE_NAME))
     class_names_to_cluster_class_names = cluster_settings.get_class_names_to_cluster_class_names()
     logger.info(class_names_to_cluster_class_names)
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
@@ -371,7 +372,7 @@ def prepare_train(dataset_dir, output_dir):
     labels_to_names = get_labels_to_names(class_names,class_names_to_cluster_class_names)
     dataset_utils.write_label_file(labels_to_names, output_dir)
     # Finally, copy the cluster file:
-    shutil.copy(os.path.join(dataset_dir, 'cluster.txt'), output_dir)
+    shutil.copy(os.path.join(dataset_dir, common.CLUSTER_FILE_NAME), output_dir)
 
     logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
@@ -390,7 +391,7 @@ def prepare_train_with_fineture(dataset_dir, output_dir, fineture_label_path):
 
     training_filenames, validation_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
 
-    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, 'cluster.txt'))
+    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, common.CLUSTER_FILE_NAME))
     class_names_to_cluster_class_names = cluster_settings.get_class_names_to_cluster_class_names()
     logger.info(class_names_to_cluster_class_names)
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
@@ -413,7 +414,7 @@ def prepare_train_with_fineture(dataset_dir, output_dir, fineture_label_path):
     labels_to_names = get_labels_to_names(class_names,class_names_to_cluster_class_names)
     dataset_utils.write_label_file(labels_to_names, output_dir)
     # Finally, copy the cluster file:
-    shutil.copy(os.path.join(dataset_dir, 'cluster.txt'), output_dir)
+    shutil.copy(os.path.join(dataset_dir, common.CLUSTER_FILE_NAME), output_dir)
 
     logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
@@ -423,7 +424,7 @@ if __name__ == '__main__':
     dataset_dir = '/home/src/goodsdl/media/dataset/step2'
     output_dir = '/home/src/goodsdl/train/51'
     test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
-    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, 'cluster.txt'))
+    cluster_settings = cluster.ClusterSettings(os.path.join(dataset_dir, common.CLUSTER_FILE_NAME))
     class_names_to_cluster_class_names = cluster_settings.get_class_names_to_cluster_class_names()
     names_to_labels = get_names_to_labels(class_names, class_names_to_cluster_class_names)
 

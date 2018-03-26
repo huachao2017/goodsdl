@@ -4,6 +4,7 @@ import logging
 from urllib import request, parse
 import tensorflow as tf
 from dl.step2.cluster import ClusterSettings
+from dl import common
 import GPUtil as GPU
 from dl.util import get_host_ip
 import django
@@ -62,7 +63,7 @@ def main(_):
     serial_postfix = '' if FLAGS.dir_serial == '' else '_'+FLAGS.dir_serial
 
     dataset_dir = FLAGS.dataset_dir
-    cluster_settings = ClusterSettings(os.path.join(dataset_dir,'step2{}/cluster.txt'.format(serial_postfix)))
+    cluster_settings = ClusterSettings(os.path.join(dataset_dir, common.STEP2_PREFIX+serial_postfix, common.CLUSTER_FILE_NAME))
     end_traintype = FLAGS.end_traintype
     cur_traintype = FLAGS.begin_traintype
     if end_traintype == 0:
@@ -89,7 +90,7 @@ def main(_):
         if len(gpus) > 0:
             # 检查目录样本是否符合
             for i in range(10):
-                step3_dataset_dir = os.path.join(dataset_dir, 'step3'+serial_postfix, str(cur_traintype))
+                step3_dataset_dir = os.path.join(dataset_dir, common.STEP3_PREFIX+serial_postfix, str(cur_traintype))
                 if not os.path.isdir(step3_dataset_dir):
                     cur_traintype += 1
                 elif len(os.listdir(step3_dataset_dir)) <= 1: # 必须大于两类才能分类
@@ -100,7 +101,7 @@ def main(_):
             # 检查是否已经训练，并且训练后没有新增样本
             exports = ExportAction.objects.filter(train_action__action='T3').filter(train_action__traintype=cur_traintype).order_by('-update_time')[:1]
             if len(exports)>0:
-                step3_dataset_dir = os.path.join(dataset_dir, 'step3'+serial_postfix, str(cur_traintype))
+                step3_dataset_dir = os.path.join(dataset_dir, common.STEP3_PREFIX+serial_postfix, str(cur_traintype))
                 filetime = datetime.datetime.fromtimestamp((os.path.getmtime(step3_dataset_dir)))
                 if filetime < exports[0].update_time:
                     logging.info('Skip train--{} because has trained in '.format(str(cur_traintype)) + time.strftime('%Y-%m-%d-%H:%M:%S', exports[0].update_time.timetuple()))
