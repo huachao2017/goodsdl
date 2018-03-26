@@ -371,11 +371,11 @@ tf.app.flags.DEFINE_string(
     'day_hour', None,
     'day and hour')
 tf.app.flags.DEFINE_string(
-    'source_dir', 'data_new_290',
-    'source dir')
+    'source_dir_serial', '290',
+    'source dir serial')
 tf.app.flags.DEFINE_string(
-    'dest_dir', 'step2',
-    'dest dir')
+    'dest_dir_serial', '',
+    'dest dir serial')
 tf.app.flags.DEFINE_string(
     'device', "0",
     'device id')
@@ -389,8 +389,8 @@ def main(_):
     logger = logging.getLogger()
     logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset'
-    source_dir = os.path.join(dataset_dir, FLAGS.source_dir)
-    step2_dir = os.path.join(dataset_dir, FLAGS.dest_dir)
+    source_dir = os.path.join(dataset_dir, 'data_new_{}'.format(FLAGS.source_dir_serial))
+    step2_dir = os.path.join(dataset_dir, 'step2' if FLAGS.dest_dir_serial=='' else 'step2_'+FLAGS.dest_dir_serial)
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model/58/','frozen_inference_graph.pb')
 
     create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
