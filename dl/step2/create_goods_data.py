@@ -374,20 +374,23 @@ tf.app.flags.DEFINE_string(
     'source_dir', 'data_new_290',
     'source dir')
 tf.app.flags.DEFINE_string(
+    'dest_dir', 'step2',
+    'dest dir')
+tf.app.flags.DEFINE_string(
     'device', "0",
     'device id')
 FLAGS = tf.app.flags.FLAGS
 
 def main(_):
-    if not FLAGS.day_hour:
-        raise ValueError('You must supply day and hour --day_hour')
+    # if not FLAGS.day_hour:
+    #     raise ValueError('You must supply day and hour --day_hour')
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = FLAGS.device
     logger = logging.getLogger()
     logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset'
     source_dir = os.path.join(dataset_dir, FLAGS.source_dir)
-    step2_dir = os.path.join(dataset_dir, 'step2')
+    step2_dir = os.path.join(dataset_dir, FLAGS.dest_dir)
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model/58/','frozen_inference_graph.pb')
 
     create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
