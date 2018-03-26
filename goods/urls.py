@@ -20,6 +20,7 @@ from . import views
 
 router = DefaultRouter()
 # router.register(r'image', views.ImageOldViewSet)
+router.register(r'imagetest', views.ImageTestViewSet)
 router.register(r'imagenew', views.ImageViewSet)
 router.register(r'imagereport', views.ImageReportViewSet)
 router.register(r'imageclass', views.ImageClassViewSet)

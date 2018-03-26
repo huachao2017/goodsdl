@@ -55,7 +55,7 @@ class NumpyEncoder(json.JSONEncoder):
         else:
             return super(NumpyEncoder, self).default(obj)
 
-class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+class ImageTestViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
     serializer_class = ImageSerializer
@@ -66,9 +66,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         if 'lastinterval' not in request.data:
             request.data['lastinterval'] = 0.0
 
-        if request.data['deviceid'] in ['nnn', ]:
-            logger.info('{} forbidden'.format(request.data['deviceid']))
-            return Response([], status=status.HTTP_403_FORBIDDEN)
         logger.info('begin detect:{}'.format(request.data['deviceid']))
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -105,6 +102,28 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 ret, aiinterval = detector.detect(serializer.instance)
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
+class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
+    queryset = Image.objects.order_by('-id')
+    serializer_class = ImageSerializer
+
+    def create(self, request, *args, **kwargs):
+        # logger.info('begin create:')
+        # 兼容没有那么字段的请求
+        if 'lastinterval' not in request.data:
+            request.data['lastinterval'] = 0.0
+
+        if request.data['deviceid'] in ['nnn', ]:
+            logger.info('{} forbidden'.format(request.data['deviceid']))
+            return Response([], status=status.HTTP_403_FORBIDDEN)
+        logger.info('begin detect:{}'.format(request.data['deviceid']))
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        if serializer.instance.deviceid == 'nnn':
+            pass
         else:
             last_images = Image.objects.filter(deviceid=serializer.instance.deviceid).filter(pk__lt=serializer.instance.pk).order_by('-create_time')[:5]
 
