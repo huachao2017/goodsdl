@@ -275,12 +275,13 @@ def get_host_ip():
 
     return ip
 
-def _run_export(domain, trainid):
+def _run_export(domain, trainid, precision):
     if domain is None:
         domain = get_host_ip()
     train_data = parse.urlencode([
         ('train_action', trainid),
         ('model_name', 'nasnet_mobile'),
+        ('precision', precision),
     ])
     req = request.Request('http://{}/api/exportaction/'.format(domain))
     req.add_header('Origin', 'http://{}/api/'.format(domain))
@@ -370,6 +371,7 @@ def repeated_checkpoint_run(tensor_dict,
     logging.info('Starting evaluation at ' + time.strftime(
         '%Y-%m-%d-%H:%M:%S', time.gmtime()))
     model_path = tf.train.latest_checkpoint(checkpoint_dirs[0])
+    last_precision = .0
     if not model_path:
       logging.info('No model found in %s. Will try again in %d seconds',
                    checkpoint_dirs[0], eval_interval_secs)
@@ -386,6 +388,7 @@ def repeated_checkpoint_run(tensor_dict,
                                                   master, save_graph,
                                                   save_graph_dir)
       write_metrics(metrics, global_step, summary_dir)
+      last_precision = metrics['PASCAL/Precision/mAP'] # FIXME hard code key
 
       standard = True
       for key in sorted(metrics):
@@ -404,7 +407,7 @@ def repeated_checkpoint_run(tensor_dict,
         os.system('kill -s 9 {}'.format(str(pid)))
       logging.info('Finished evaluation: stardard count >= 3 and kill train process')
 
-      _run_export(export_domain,int(os.path.split(checkpoint_dirs[0])[-1]))
+      _run_export(export_domain,int(os.path.split(checkpoint_dirs[0])[-1]), last_precision)
       break
 
     if (max_number_of_evaluations and
@@ -415,6 +418,7 @@ def repeated_checkpoint_run(tensor_dict,
     # train over then finished
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
     if train_ps == '':
+      _run_export(export_domain,int(os.path.split(checkpoint_dirs[0])[-1]), last_precision)
       logging.info('Finished evaluation: train process was killed.')
       break
 

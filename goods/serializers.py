@@ -64,8 +64,8 @@ class DatasetActionSerializer(serializers.ModelSerializer):
 class ExportActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportAction
-        fields = ('pk', 'train_action', 'model_name', 'checkpoint_prefix', 'param', 'create_time', 'update_time')
-        read_only_fields = ( 'checkpoint_prefix', 'param', 'create_time', 'update_time')
+        fields = ('pk', 'train_action', 'model_name', 'checkpoint_prefix', 'precision', 'create_time', 'update_time')
+        read_only_fields = ( 'checkpoint_prefix', 'create_time', 'update_time')
 
 class StopTrainActionSerializer(serializers.ModelSerializer):
     class Meta:

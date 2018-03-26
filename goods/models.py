@@ -148,7 +148,7 @@ class ExportAction(models.Model):
         (u'nasnet_mobile', u'nas mobile'),
     )
     model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
-    param = models.CharField(max_length=500)
+    precision = models.FloatField(default=.0)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
 
