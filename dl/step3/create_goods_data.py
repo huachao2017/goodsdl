@@ -6,12 +6,15 @@ import shutil
 tf.app.flags.DEFINE_integer(
     'traintype', 0,
     'point traintype to create, if 0 then create all')
+tf.app.flags.DEFINE_string(
+    'dir_serial', '',
+    'dir serial')
 FLAGS = tf.app.flags.FLAGS
 
 def main(_):
     dataset_dir = '/home/src/goodsdl/media/dataset'
-    step2_dir = os.path.join(dataset_dir, 'step2')
-    step3_dir = os.path.join(dataset_dir, 'step3')
+    step2_dir = os.path.join(dataset_dir, 'step2' if FLAGS.dir_serial=='' else 'step2_'+FLAGS.dir_serial)
+    step3_dir = os.path.join(dataset_dir, 'step3' if FLAGS.dir_serial=='' else 'step3_'+FLAGS.dir_serial)
     cluster_filepath = os.path.join(step2_dir, 'cluster.txt')
     print(cluster_filepath)
     cluster_settings = ClusterSettings(cluster_filepath)

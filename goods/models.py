@@ -122,6 +122,7 @@ class TrainAction(models.Model):
         (u'TC', u'Train Only Step 2'),
     )
     action = models.CharField(max_length=2, choices=ACTION_CHOICES)
+    serial = models.CharField(max_length=10, default='') # use for step2/3, point to project
     traintype = models.PositiveIntegerField(default=0) # use for step3
     is_fineture = models.BooleanField(default=True)
     MODEL_CHOICES = (
