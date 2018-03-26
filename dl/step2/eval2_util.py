@@ -127,7 +127,7 @@ def visualize_detection_results(result_dict,
       export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
       if not tf.gfile.Exists(export_dir):
           tf.gfile.MakeDirs(export_dir)
-      export_path = os.path.join(export_dir, 'export-{}-{}.png'.format(global_step, tag))
+      export_path = os.path.join(export_dir, '{}-{}-{}-{}.png'.format(global_step, labels_to_names[groundtruth_class_label], labels_to_names[detection_class_label], int(100 * detection_score)))
       vis_utils.save_image_array_as_png(image, export_path)
   # if groundtruth_class_label != detection_class_label:
   #     # 单独记录错误识别图片
