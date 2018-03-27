@@ -209,7 +209,7 @@ def update_config_file(train_dir,
                        train_name,
                        num_classes,
                        num_steps=200000,
-                       is_fineture=False,
+                       fine_tune_checkpoint_dir=None,
                        eval_num=100):
     file_path, _ = os.path.split(os.path.realpath(__file__))
     config_template_file_path = os.path.join(file_path, 'faster_rcnn_nas_goods.config.template')
@@ -221,9 +221,9 @@ def update_config_file(train_dir,
         output = re.sub('# num_steps: \d+', 'num_steps: '+str(num_steps), output)
         output = re.sub('num_visualizations: \d+', 'num_visualizations: '+str(eval_num), output)
         output = re.sub('num_examples: \d+', 'num_examples: '+str(eval_num), output)
-        if is_fineture:
-            # FIXME need restore some new checkpoint
-            output = re.sub('fine_tune_checkpoint: ""', 'fine_tune_checkpoint:"'+train_dir+'/model.ckpt"', output)
+        if fine_tune_checkpoint_dir is not None:
+            # restore from tensorflow model or pre train model
+            output = re.sub('fine_tune_checkpoint: ""', 'fine_tune_checkpoint:"'+fine_tune_checkpoint_dir+'/model.ckpt"', output)
         output = re.sub('PATH_TO_BE_CONFIGURED_TRAIN', os.path.join(train_dir, train_name), output)
     with open(output_filename, 'w') as file:
         file.write(output)
@@ -258,7 +258,7 @@ def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
                     addition_examples.append(example)
     return examples, addition_examples, {'1':1},sorted(class_names)
 
-def prepare_train(data_dir, train_dir, train_name, is_fineture=False, additional_data_dir=None):
+def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, local_fineture, additional_data_dir=None):
     normal_examples_list, addition_examples, label_map_dict, class_names = read_examples_list_and_label_map_and_classnames(data_dir,additional_data_dir)
     logger.info(label_map_dict)
 
@@ -291,8 +291,11 @@ def prepare_train(data_dir, train_dir, train_name, is_fineture=False, additional
     from datasets import dataset_utils
     dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
-    # 设定每张照片训练20次
-    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=len(train_examples)*100, is_fineture=is_fineture, eval_num=len(val_examples))
+    # 设定每张照片训练100次
+    per_pic_train_counts = 100
+    if local_fineture:
+        per_pic_train_counts = 20
+    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=len(train_examples)*per_pic_train_counts, fine_tune_checkpoint_dir=fine_tune_checkpoint_dir, eval_num=len(val_examples))
     return label_map_dict
 
 def prepare_rawdata_update_train(data_dir, train_dir, train_name):

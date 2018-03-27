@@ -514,19 +514,30 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
                 additional_data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data_raw')
             else:
                 data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, str(serializer.instance.traintype))
+
+            fine_tune_checkpoint_dir = settings.TRAIN_ROOT
+            if serializer.instance.is_fineture:
+                export1s = ExportAction.objects.filter(train_action__action='T1').filter(
+                    checkpoint_prefix__gt=0).order_by(
+                    '-update_time')[:1]
+                if len(export1s)>0:
+                    fine_tune_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(export1s[0].pk))
+
             label_map_dict = create_onegoods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
                                                                      str(serializer.instance.pk),
-                                                                     is_fineture=serializer.instance.is_fineture,
+                                                                     fine_tune_checkpoint_dir,
+                                                                     serializer.instance.is_fineture,
                                                                      additional_data_dir=additional_data_dir)
 
             train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
 
             # 训练
             # --num_clones=2 同步修改config中的batch_size=2
-            command = 'nohup python3 {}/step1/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={}  > /root/train1.out 2>&1 &'.format(
+            command = 'nohup python3 {}/step1/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={} --local_fineture={}  > /root/train1.out 2>&1 &'.format(
                 os.path.join(settings.BASE_DIR, 'dl'),
                 train_logs_dir,
                 train_logs_dir,
+                serializer.instance.is_fineture,
             )
             logger.info(command)
             subprocess.call(command, shell=True)
