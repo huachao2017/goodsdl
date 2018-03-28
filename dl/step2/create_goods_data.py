@@ -396,7 +396,7 @@ def main(_):
     dataset_dir = '/home/src/goodsdl/media/dataset'
     source_dir = os.path.join(dataset_dir, 'data_new_{}'.format(FLAGS.source_dir_serial))
     step2_dir = os.path.join(dataset_dir, common.STEP2_PREFIX if FLAGS.dest_dir_serial=='' else common.STEP2_PREFIX+'_'+FLAGS.dest_dir_serial)
-    export2s = ExportAction.objects.filter(train_action__action='T2').order_by('-update_time')[:1]
+    export2s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model', str(export2s[0].pk), 'frozen_inference_graph.pb')
 
     create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
