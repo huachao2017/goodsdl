@@ -153,10 +153,17 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 正式应用区
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
-            export2s = ExportAction.objects.filter(train_action__action='T2').filter(checkpoint_prefix__gt=0).order_by(
-                '-update_time')[:1]
-            export3s = ExportAction.objects.filter(train_action__action='T3').filter(checkpoint_prefix__gt=0).order_by(
-                '-update_time')
+
+            if serializer.instance.deviceid == '275':
+                export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='275').filter(checkpoint_prefix__gt=0).order_by(
+                    '-update_time')[:1]
+                export3s = ExportAction.objects.filter(train_action__action='T3').filter(train_action__serial='275').filter(checkpoint_prefix__gt=0).order_by(
+                    '-update_time')
+            else:
+                export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
+                    '-update_time')[:1]
+                export3s = ExportAction.objects.filter(train_action__action='T3').filter(train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
+                    '-update_time')
 
             if len(export1s) == 0 or len(export2s) == 0:
                 logger.error('not found detection model!')
