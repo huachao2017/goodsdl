@@ -376,7 +376,7 @@ tf.app.flags.DEFINE_string(
     'day_hour', None,
     'day and hour')
 tf.app.flags.DEFINE_string(
-    'source_dir_serial', '290',
+    'source_dir_serial', '',
     'source dir serial')
 tf.app.flags.DEFINE_string(
     'dest_dir_serial', '',
