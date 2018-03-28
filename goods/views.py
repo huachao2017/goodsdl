@@ -319,7 +319,11 @@ class GetSampleCount(APIView):
                 command = 'ls {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)
                 # logger.info(command)
                 count = int(os.popen(command).readline())
-                ret[deviceid] = count
+                if count > 0:
+                    ret[deviceid] = count
+                    total_count += count
+            elif dirname == 'data_new':
+                ret['official'] = count
                 total_count += count
 
         ret['total'] = total_count
