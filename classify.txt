@@ -1,14 +1,13 @@
-1. cylinder_cone：普通圆锥（方便面，大果粒、纸杯咖啡）
-2. cylinder_normal：普通圆柱（桶装薯片、桶装西点、听装水）
-3. cylinder_special：圆柱异形（火腿肠、伞）
-4. cylinder_special_open：圆柱开口异形（瓶装水）
+1. cylinder_stand：圆面站立（有信息的商品站立：方便面）
+2. cylinder_hardbox：圆柱硬盒（听装水）
+3. cylinder_softbox：圆柱软盒（桶装薯片、桶装西点、伞、大果粒、纸杯咖啡）
+4. cylinder_bottled：圆柱开口异形（瓶装水）
 5. rectangle_hardbox：矩形硬盒（盒装奶，盒装饼干，盒装设备）
-6. rectangle_softbox：矩形软盒（卫生巾，某些点心，边缘有锯齿等）
-7. rectangle_special：矩形异形（袋装薯片，塑料纸包装面包蛋糕）
-8. rectangle_special_open：矩形开口异形（塑料包装面包）
-9. special：异形（某些话梅）
-10. spherical：球形
-11. stand_rectangle_special：异形矩形站立（站立无信息的）
-12. stand_round_bottled：瓶装水站立
-13. stand_round_zipped：听装水站立
-14. stand_round_other：圆形其他站立（圆柱或圆锥站立无信息的）
+6. rectangle_softbox：矩形软盒（卫生巾，某些点心，可一边或两边有扎边等）
+7. rectangle_thinedge：矩形边缘薄细（中间厚两边薄，瓜子、开心果等）
+8. rectangle_special：矩形异形（袋装薯片，塑料纸包装面包蛋糕、某些圆形异性也放在这里：如话梅）
+9. bottled_drink_stand：瓶装水站立
+10. ziptop_drink_stand：听装水站立
+-----暂时没有-----
+11. stand_rectangle_thinedge：细边缘矩形站立（站立无信息的）
+12. slender：长条（某些饼干、火腿肠）
