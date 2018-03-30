@@ -614,7 +614,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         source_dataset_dir = os.path.join(
             settings.MEDIA_ROOT,
             settings.DATASET_DIR_NAME,
-            common.STEP2_PREFIX if actionlog.serial=='' else common.STEP20_PREFIX+'_'+str(actionlog.serial))
+            common.STEP20_PREFIX if actionlog.serial=='' else common.STEP20_PREFIX+'_'+str(actionlog.serial))
 
         class_names_to_ids, training_filenames, validation_filenames = convert_goods_step20.prepare_train(source_dataset_dir,
             train_logs_dir)
