@@ -92,6 +92,15 @@ class ImageTestViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
                     export2s[0].pk,export2s[0].model_name)
                 ret, aiinterval = detector.detect(serializer.instance)
             return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+        elif serializer.instance.deviceid == 'os20':
+            export20s = ExportAction.objects.filter(train_action__action='T20').filter(
+                checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+
+            if len(export20s) > 0:
+                detector = imagedetection_only_step2.ImageDetectorFactory_os2.get_static_detector(
+                    export20s[0].pk, export20s[0].model_name)
+                ret, aiinterval = detector.detect(serializer.instance)
+            return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
         elif serializer.instance.deviceid == 'os3':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(
                 checkpoint_prefix__gt=0).order_by('-update_time')[:1]
@@ -155,11 +164,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
 
-            if serializer.instance.deviceid == 'nnn': # 其他项目测试
-                export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='275').filter(checkpoint_prefix__gt=0).order_by(
-                    '-update_time')[:1]
-                export3s = ExportAction.objects.filter(train_action__action='T3').filter(train_action__serial='275').filter(checkpoint_prefix__gt=0).order_by(
-                    '-update_time')
+            if serializer.instance.deviceid == '275': # 测试step20
+                export20s = ExportAction.objects.filter(train_action__action='T20').filter(
+                    checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+
+                if len(export20s) > 0:
+                    detector = imagedetection_only_step20.ImageDetectorFactory_os20.get_static_detector(
+                        export20s[0].pk, export20s[0].model_name)
+                    ret, aiinterval = detector.detect(serializer.instance)
             else:
                 export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
                     '-update_time')[:1]
