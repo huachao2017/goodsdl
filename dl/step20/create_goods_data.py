@@ -30,14 +30,14 @@ def create_step20_goods(source_dir, output_dir):
                 image_path = os.path.join(class_dir, filelist[j])
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg":
-                    logging.info('copy image:{}'.format(image_path))
                     output_image_path = os.path.join(output_class_dir, filelist[j])
                     if tf.gfile.Exists(output_image_path):
                         # 文件存在不再重新生成，从而支持增量生成
                         continue
+                    logging.info('copy image:{}'.format(image_path))
                     tf.gfile.Copy(image_path,output_image_path)
 
-    tf.gfile.Copy(os.path.join(source_dir, common.CLUSTER_FILE_NAME), os.path.join(output_dir, common.CLUSTER_FILE_NAME))
+    tf.gfile.Copy(os.path.join(source_dir, common.CLUSTER_FILE_NAME), os.path.join(output_dir, common.CLUSTER_FILE_NAME), True)
     logging.info("step20 copy complete")
 
 tf.app.flags.DEFINE_string(
