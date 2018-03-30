@@ -18,7 +18,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2, imagedetection_only_step3
+from dl import imagedetectionV3, imagedetectionV4, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2, imagedetection_only_step3
 # from dl.old import imagedetection
 from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
@@ -165,29 +165,36 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 '-update_time')[:1]
 
             if serializer.instance.deviceid == '275': # 测试step20
-                export20s = ExportAction.objects.filter(train_action__action='T20').filter(
+                export20s = ExportAction.objects.filter(train_action__action='T20').filter(train_action__serial='').filter(
                     checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
-                if len(export20s) > 0:
-                    detector = imagedetection_only_step20.ImageDetectorFactory_os20.get_static_detector(
-                        export20s[0].pk, export20s[0].model_name)
-                    ret, aiinterval = detector.detect(serializer.instance)
+                if len(export20s) == 0:
+                    logger.error('not found detection model!')
+                    return Response([], status=status.HTTP_201_CREATED, headers=headers)
+                detector = imagedetectionV4.ImageDetectorFactory.get_static_detector(export1s[0].pk, export20s[0].pk,
+                                                                                     step2_model_name=export20s[0].model_name)
+                step1_min_score_thresh = .9
+                step2_min_score_thresh = .6
+
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                                  step2_min_score_thresh=step2_min_score_thresh)  # , compress=True)
+
             else:
                 export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
                     '-update_time')[:1]
                 export3s = ExportAction.objects.filter(train_action__action='T3').filter(train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
                     '-update_time')
 
-            if len(export1s) == 0 or len(export2s) == 0:
-                logger.error('not found detection model!')
-                return Response([], status=status.HTTP_201_CREATED, headers=headers)
+                if len(export1s) == 0 or len(export2s) == 0:
+                    logger.error('not found detection model!')
+                    return Response([], status=status.HTTP_201_CREATED, headers=headers)
 
-            detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, export3s, step2_model_name = export2s[0].model_name)
-            step1_min_score_thresh = .9
-            step2_min_score_thresh = .6
+                detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk, export3s, step2_model_name = export2s[0].model_name)
+                step1_min_score_thresh = .9
+                step2_min_score_thresh = .6
 
-            ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                  step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                      step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
 
             if ret is None:
                 logger.error('detection model is not ready')
