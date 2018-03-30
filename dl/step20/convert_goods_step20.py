@@ -82,7 +82,7 @@ def _get_split_filenames_and_classes(dataset_dir):
             sub_directory = os.path.join(directory, sub_directory_name)
             local_filenames = []
             for filename in os.listdir(sub_directory):
-                path = os.path.join(directory, filename)
+                path = os.path.join(sub_directory, filename)
                 if os.path.isfile(path):
                     local_filenames.append(path)
 
