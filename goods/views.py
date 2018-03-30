@@ -155,7 +155,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
 
-            if serializer.instance.deviceid == '275':
+            if serializer.instance.deviceid == 'nnn': # 其他项目测试
                 export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='275').filter(checkpoint_prefix__gt=0).order_by(
                     '-update_time')[:1]
                 export3s = ExportAction.objects.filter(train_action__action='T3').filter(train_action__serial='275').filter(checkpoint_prefix__gt=0).order_by(
