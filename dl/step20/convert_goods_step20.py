@@ -203,4 +203,9 @@ def prepare_train(dataset_dir, output_dir):
     return names_to_labels, training_filenames, validation_filenames
 
 if __name__ == '__main__':
-    pass
+    dataset_dir = '/home/src/goodsdl/media/dataset/step20'
+    train_photo_filenames, validation_photo_filenames, class_names = _get_split_filenames_and_classes(dataset_dir)
+
+    print(class_names)
+    print(len(train_photo_filenames))
+    print(len(validation_photo_filenames))
