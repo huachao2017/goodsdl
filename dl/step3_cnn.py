@@ -82,7 +82,7 @@ class Step3CNN:
                 cur_export3 = export3
                 break
 
-        if export3 is None:
+        if cur_export3 is None:
             return None,None
 
         labels_to_names, session, input_image_tensor, detection_classes = self.load(config,traintype,cur_export3)
