@@ -118,13 +118,14 @@ class TrainAction(models.Model):
     ACTION_CHOICES = (
         (u'T1', u'Train Step 1'),
         (u'T20', u'Train Step 2_0'),
+        (u'T30', u'Train Step 3_n'),
         (u'T2', u'Train Step 2'),
         (u'T3', u'Train Step 3'),
-        (u'TC', u'Train Only Step 2'),
     )
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
     serial = models.CharField(max_length=10, default='') # use for step2/3, point to project
     traintype = models.PositiveIntegerField(default=0) # use for step3
+    dataset_dir = models.CharField(max_length=150, default='')
     is_fineture = models.BooleanField(default=True)
     MODEL_CHOICES = (
         (u'ANY', u'not specify'),
