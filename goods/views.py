@@ -523,6 +523,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     serializer_class = TrainActionSerializer
 
     def create(self, request, *args, **kwargs):
+        if 'dataset_dir' not in request.data:
+            request.data['dataset_dir'] = ''
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
