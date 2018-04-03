@@ -523,17 +523,14 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     serializer_class = TrainActionSerializer
 
     def create(self, request, *args, **kwargs):
-        if 'dataset_dir' not in request.data:
-            request.data['dataset_dir'] = ''
+        # 兼容没有字段的请求
+        # if 'dataset_dir' not in request.data:
+        #     request.data['dataset_dir'] = ''
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         logger.info('create action:{}'.format(serializer.instance.action))
-
-        # 兼容没有字段的请求
-        if 'serial' not in request.data:
-            request.data['serial'] = ''
 
         if serializer.instance.action == 'T1':
             # 杀死原来的train
