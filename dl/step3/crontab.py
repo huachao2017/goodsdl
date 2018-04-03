@@ -9,6 +9,8 @@ import GPUtil as GPU
 from dl.util import get_host_ip
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+django.setup()
+from goods.models import ExportAction
 
 tf.app.flags.DEFINE_string(
     'domain', None, 'The train server domain.')
@@ -77,6 +79,8 @@ def main(_):
 
     while True:
         start = time.time()
+        # FOR avoid "MySQL server has gone away"
+        ExportAction.objects.filter(train_action__action='T3').order_by('-update_time')[:1]
         logging.info('Starting monitor at ' + time.strftime(
             '%Y-%m-%d-%H:%M:%S', time.localtime()))
         if cur_traintype > end_traintype:
@@ -97,8 +101,6 @@ def main(_):
                     break
 
             # 检查是否已经训练，并且训练后没有新增样本
-            django.setup()
-            from goods.models import ExportAction
             exports = ExportAction.objects.filter(train_action__action='T3').filter(train_action__traintype=cur_traintype).order_by('-update_time')[:1]
             if len(exports)>0:
                 step3_dataset_dir = os.path.join(dataset_dir, common.STEP3_PREFIX+serial_postfix, str(cur_traintype))
