@@ -306,7 +306,7 @@ def _run_cluster(task, precision, labels_to_names):
     """
     logging.info('begin cluster:{}'.format(task.pk))
 
-    # 3.3.1
+    # 3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     use_steps = []
     db_steps = ClusterEvalStep.object.filter(train_task_id=task.pk).order_by('-checkpoint_step')
     for step in db_steps:
@@ -355,11 +355,32 @@ def _run_cluster(task, precision, labels_to_names):
             )
 
 
-    # 3.3.2
+    # 3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
+    sample_scores = ClusterSampleScore.objects.filter(train_task_id=task.pk)
+    upc_scores = {}
+    for sample_score in sample_scores:
+        if sample_score.upc_1 in upc_scores:
+            if sample_score.upc_2 in upc_scores[sample_score.upc_1]:
+                if upc_scores[sample_score.upc_1][sample_score.upc_2]<sample_score.score:
+                    upc_scores[sample_score.upc_1][sample_score.upc_2] = sample_score.score
+            else:
+                upc_scores[sample_score.upc_1][sample_score.upc_2] = sample_score.score
+        else:
+            upc_scores[sample_score.upc_1] = {sample_score.upc_2:sample_score.score}
 
-    # 3.3.3
+    for upc_1 in upc_scores:
+        for upc_2 in upc_scores[upc_1]:
+            ClusterUpcScore.objects.create(
+                train_task_id=task.pk,
+                upc_1=upc_1,
+                upc_2=upc_2,
+                score=upc_scores[upc_1][upc_2]
+            )
 
-    # 3.3.4
+
+    # 3.3.3、聚类：设定50%为阀值进行聚类连接，记录到cluster_structure表中，修改目录存储结构，创建子训练任务
+
+    # 3.3.4、收尾：终止训练进程，当前task设为0未开始，新建一个拷贝的task，重启次数+1，修订分类总数，map清零。
 
 
 def _run_export(domain, task, precision):
