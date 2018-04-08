@@ -122,7 +122,7 @@ class ClusterStructureSerializer(serializers.ModelSerializer):
 class ClusterEvalDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClusterEvalData
-        fields = ('pk', 'train_task', 'checkpoint_step', 'sample_serial', 'groundtruth_label', 'groundtruth_upc', 'detection_label', 'detection_upc', 'score')
+        fields = ('pk', 'train_task', 'checkpoint_step', 'sample_serial', 'groundtruth_label', 'detection_label', 'score')
 
 class ClusterSampleScoreSerializer(serializers.ModelSerializer):
     class Meta:

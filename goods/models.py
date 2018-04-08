@@ -206,9 +206,7 @@ class ClusterEvalData(models.Model):
     checkpoint_step = models.IntegerField(default=0)
     sample_serial = models.IntegerField(default=0, db_index=True)
     groundtruth_label = models.IntegerField(default=0)
-    groundtruth_upc = models.CharField(max_length=20)
     detection_label = models.IntegerField(default=0)
-    detection_upc = models.CharField(max_length=20)
     score = models.FloatField(default=0.0)
 
 class ClusterSampleScore(models.Model):
