@@ -114,6 +114,13 @@ class DatasetAction(models.Model):
     def __str__(self):
         return '{}:{}:{}'.format(self.action, self.pk, self.desc)
 
+MODEL_CHOICES = (
+    (u'ANY', u'not specify'),
+    (u'inception_resnet_v2', u'inception resnet V2'),
+    (u'nasnet_large', u'nas large'),
+    (u'nasnet_mobile', u'nas mobile'),
+)
+
 class TrainAction(models.Model):
     ACTION_CHOICES = (
         (u'T1', u'Train Step 1'),
@@ -127,12 +134,6 @@ class TrainAction(models.Model):
     traintype = models.PositiveIntegerField(default=0) # use for step3
     dataset_dir = models.CharField(max_length=150, default='')
     is_fineture = models.BooleanField(default=True)
-    MODEL_CHOICES = (
-        (u'ANY', u'not specify'),
-        (u'inception_resnet_v2', u'inception resnet V2'),
-        (u'nasnet_large', u'nas large'),
-        (u'nasnet_mobile', u'nas mobile'),
-    )
     model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
     desc = models.CharField(max_length=500,null=True)
     param = models.CharField(max_length=500,null=True)
@@ -144,12 +145,6 @@ class TrainAction(models.Model):
 class ExportAction(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="export_actions",on_delete=models.CASCADE)
     checkpoint_prefix = models.PositiveIntegerField(default=0)
-    MODEL_CHOICES = (
-        (u'ANY', u'not specify'),
-        (u'inception_resnet_v2', u'inception resnet V2'),
-        (u'nasnet_large', u'nas large'),
-        (u'nasnet_mobile', u'nas mobile'),
-    )
     model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
     precision = models.FloatField(default=.0)
     create_time = models.DateTimeField('date created', auto_now_add=True)
@@ -181,3 +176,49 @@ class TransactionMetrix(models.Model):
     only_rfid_upc_num = models.PositiveIntegerField(default=0)
     only_image_upc_num = models.PositiveIntegerField(default=0)
 
+class TrainTask(models.Model):
+    dataset_dir = models.CharField(max_length=150, default='')
+    STATE_CHOICES = (
+        (0, u'not start'),
+        (1, u'doing'),
+        (2, u'complete'),
+        (3, u'stop'),
+    )
+    state = models.IntegerField(choices=STATE_CHOICES, default=0)
+    restart_cnt = models.IntegerField(0)
+    category_cnt = models.IntegerField(0)
+    sample_cnt = models.IntegerField(0)
+    step_cnt = models.IntegerField(0)
+    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
+    m_ap = models.FloatField(default=0.0)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
+
+class ClusterStructure(models.Model):
+    upc = models.CharField(max_length=20)
+    f_id = models.IntegerField(default=0, db_index=True)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
+
+class ClusterEvalData(models.Model):
+    train_task = models.ForeignKey(TrainTask,related_name="train_task_evals",on_delete=models.CASCADE)
+    checkpoint_step = models.IntegerField(default=0)
+    sample_serial = models.IntegerField(default=0, db_index=True)
+    groundtruth_label = models.IntegerField()
+    groundtruth_upc = models.CharField(max_length=20)
+    detection_label = models.IntegerField()
+    detection_upc = models.CharField(max_length=20)
+    score = models.FloatField(default=0.0)
+
+class ClusterSampleScore(models.Model):
+    train_task = models.ForeignKey(TrainTask,related_name="train_task_samples",on_delete=models.CASCADE)
+    sample_serial = models.IntegerField(default=0, db_index=True)
+    upc_1 = models.CharField(max_length=20)
+    upc_2 = models.CharField(max_length=20)
+    score = models.FloatField(default=0.0)
+
+class ClusterUpcScore(models.Model):
+    train_task = models.ForeignKey(TrainTask,related_name="train_task_upcs",on_delete=models.CASCADE)
+    upc_1 = models.CharField(max_length=20)
+    upc_2 = models.CharField(max_length=20)
+    score = models.FloatField(default=0.0)

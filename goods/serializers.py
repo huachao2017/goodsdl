@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Image, ImageReport, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, TrainAction, ExportAction, StopTrainAction, RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction
+from .models import Image, ImageReport, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, TrainAction, ExportAction, StopTrainAction, \
+    RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction, TrainTask, ClusterStructure, ClusterEvalData, ClusterSampleScore, ClusterUpcScore
 
 class GoodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -105,3 +106,30 @@ class TransactionMetrixSerializer(serializers.ModelSerializer):
         model = TransactionMetrix
         fields = ('pk', 'rfid_transaction', 'same_upc_num', 'only_rfid_upc_num', 'only_image_upc_num')
         read_only_fields = ( 'rfid_transaction', 'same_upc_num', 'only_rfid_upc_num', 'only_image_upc_num')
+
+class TrainTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrainTask
+        fields = ('pk', 'state', 'restart_cnt', 'category_cnt', 'sample_cnt', 'step_cnt', 'model_name', 'm_ap')
+        read_only_fields = ('create_time', 'update_time')
+
+class ClusterStructureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClusterStructure
+        fields = ('pk', 'upc', 'f_id')
+        read_only_fields = ('create_time', 'update_time')
+
+class ClusterEvalDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClusterEvalData
+        fields = ('pk', 'train_task', 'checkpoint_step', 'sample_serial', 'groundtruth_label', 'groundtruth_upc', 'detection_label', 'detection_upc', 'score')
+
+class ClusterSampleScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClusterSampleScore
+        fields = ('pk', 'train_task', 'sample_serial', 'upc_1', 'upc_2', 'score')
+
+class ClusterUpcScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClusterUpcScore
+        fields = ('pk', 'train_task', 'upc_1', 'upc_2', 'score')
