@@ -23,6 +23,7 @@ from dl import imagedetectionV3, imagedetectionV4, imageclassifyV1, imagedetecti
 from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step20 import convert_goods_step20
+from dl.step30 import convert_goods_step30
 from dl.step2 import convert_goods
 from dl.step3 import convert_goods_step3
 from dl import common
@@ -582,6 +583,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             subprocess.call(command, shell=True)
         elif serializer.instance.action == 'T20':
             self.train_step20(serializer.instance)
+        elif serializer.instance.action == 'T30':
+            self.train_step30(serializer.instance)
         elif serializer.instance.action == 'T2':
             self.train_step2(serializer.instance)
         elif serializer.instance.action == 'T3':
@@ -646,6 +649,66 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         train_steps = int(len(training_filenames) * 100 / batch_size) # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
         if train_steps < 20000:
             train_steps = 20000 # 小样本需要增加训练次数
+        # 训练
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train20.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            len(training_filenames),
+            actionlog.model_name,
+            1,
+            batch_size,
+            train_steps
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+        # 评估
+        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            source_dataset_dir,
+            train_logs_dir,
+            os.path.join(train_logs_dir, 'eval_log'),
+            len(validation_filenames),
+            actionlog.model_name,
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+
+    def train_step30(self, actionlog):
+        # TODO 需要实现fineture
+        # 训练准备
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+        source_dataset_dir = actionlog.dataset_dir
+
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods_step30.prepare_train(source_dataset_dir,
+            train_logs_dir)
+
+        # 更新actionlog.model_name
+        if len(training_filenames) > 1000:
+            actionlog.model_name = 'nasnet_large'
+        else:
+            actionlog.model_name = 'nasnet_mobile'
+        actionlog.save()
+
+        if actionlog.model_name == 'nasnet_large':
+            batch_size = 8
+        else:
+            batch_size = 64
+
+        train_steps = int(len(training_filenames) * 100 / batch_size) # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
+        if train_steps < 20000:
+            train_steps = 20000 # 小样本需要增加训练次数
+
+        # 更新TrainTask
+        tasks = TrainTask.objects.filter(state=0).filter(dataset_dir=source_dataset_dir).order_by('-restart_cnt')[:1]
+        task = tasks[0]
+        task.category_cnt = len(class_names_to_ids)
+        task.sample_cnt = len(training_filenames)
+        task.step_cnt = train_steps
+        task.model_name = actionlog.model_name
+        task.save()
+
         # 训练
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train20.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
@@ -852,6 +915,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         elif serializer.instance.action == 'T20':
             self.train_step20(serializer.instance)
+        elif serializer.instance.action == 'T30':
+            self.train_step30(serializer.instance)
         elif serializer.instance.action == 'T2':
             self.train_step2(serializer.instance)
         elif serializer.instance.action == 'T3':
