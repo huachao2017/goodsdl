@@ -201,6 +201,10 @@ class ClusterStructure(models.Model):
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
 
+class ClusterEvalStep(models.Model):
+    train_task = models.ForeignKey(TrainTask,related_name="train_task_evalsteps",on_delete=models.CASCADE)
+    checkpoint_step = models.IntegerField(default=0)
+
 class ClusterEvalData(models.Model):
     train_task = models.ForeignKey(TrainTask,related_name="train_task_evals",on_delete=models.CASCADE)
     checkpoint_step = models.IntegerField(default=0)
