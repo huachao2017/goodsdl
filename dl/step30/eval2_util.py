@@ -12,9 +12,10 @@ from dl.step2.utils import visualization_utils as vis_utils
 from urllib import request, parse
 import socket
 import django
+from django.db.models import Q
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
-from goods.models import TrainTask, ClusterEvalData
+from goods.models import TrainTask, ClusterStructure, ClusterEvalData, ClusterEvalStep, ClusterSampleScore, ClusterUpcScore
 
 slim = tf.contrib.slim
 
@@ -123,22 +124,24 @@ def visualize_detection_results(task,
               if os.path.isfile(detection_sample_image_path):
                   break
       # @huac add for record in database
-      ClusterEvalData.objects.create(
-          train_task_id=task.pk,
-          checkpoint_step=global_step,
-          sample_serial=tag,
-          groundtruth_label=groundtruth_class_label,
-          detection_label=detection_class_label,
-          score=detection_score
-      )
-      vis_utils.visualize_false_on_image_array(
-          image,
-          detection_class_label,
-          detection_score,
-          groundtruth_class_label,
-          labels_to_names,
-          detection_sample_image_path=detection_sample_image_path
-      )
+      steps = ClusterEvalStep.object.filter(train_task_id=task.pk).filter(checkpoint_step=global_step)[:1]
+      if len(steps)>0: # 不重复存入同一个global_step的数据
+          ClusterEvalData.objects.create(
+              train_task_id=task.pk,
+              checkpoint_step=global_step,
+              sample_serial=tag,
+              groundtruth_label=groundtruth_class_label,
+              detection_label=detection_class_label,
+              score=detection_score
+          )
+          vis_utils.visualize_false_on_image_array(
+              image,
+              detection_class_label,
+              detection_score,
+              groundtruth_class_label,
+              labels_to_names,
+              detection_sample_image_path=detection_sample_image_path
+          )
 
       export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
       if not tf.gfile.Exists(export_dir):
@@ -290,7 +293,7 @@ def get_host_ip():
 
     return ip
 
-def _run_cluster(task, precision):
+def _run_cluster(task, precision, labels_to_names):
     """
     3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
@@ -301,7 +304,62 @@ def _run_cluster(task, precision):
     :param precision:
     :return:
     """
-    pass
+    logging.info('begin cluster:{}'.format(task.pk))
+
+    # 3.3.1
+    use_steps = []
+    db_steps = ClusterEvalStep.object.filter(train_task_id=task.pk).order_by('-checkpoint_step')
+    for step in db_steps:
+        if step in use_steps:
+            continue
+        use_steps.append(step)
+        if len(use_steps)==3:
+            break
+
+    sample_scores = {}
+    # tag:step:{groundtruth_label:nn,detection_label:nn,score:ff}
+    eval_datas = ClusterEvalData.objects.filter(train_task_id=task.pk).filter(Q(checkpoint_step=use_steps[0]) | Q(checkpoint_step=use_steps[1]) | Q(checkpoint_step=use_steps[2]) )
+    for eval_data in eval_datas:
+        if eval_data.sample_serial not in sample_scores:
+            sample_scores[eval_data.sample_serial] = {}
+        sample_scores[eval_data.sample_serial][eval_data.checkpoint_step] = {
+            'groundtruth_label':eval_data.groundtruth_label,
+            'detection_label': eval_data.detection_label,
+            'score': eval_data.score,
+        }
+
+    for sample_serial in sample_scores:
+        one_sample = sample_scores[sample_serial]
+        detections = {}
+        for checkpoint_step in one_sample:
+            weight = 0.0
+            if checkpoint_step == use_steps[0]:
+                weight = .6
+            elif checkpoint_step == use_steps[1]:
+                weight = .3
+            elif checkpoint_step == use_steps[2]:
+                weight = .1
+
+            if one_sample[checkpoint_step]['detection_label'] in detections:
+                detections[one_sample[checkpoint_step]['detection_label']] = detections[one_sample[checkpoint_step]['detection_label']] + weight*one_sample[checkpoint_step]['score']
+            else:
+                detections[one_sample[checkpoint_step]['detection_label']] = weight*one_sample[checkpoint_step]['score']
+
+        for detection in detections:
+            ClusterSampleScore.objects.create(
+                train_task_id=task.pk,
+                sample_serial=sample_serial,
+                upc_1=labels_to_names[one_sample['groundtruth_label']],
+                upc_2=labels_to_names[detection],
+                score=detections[detection]
+            )
+
+
+    # 3.3.2
+
+    # 3.3.3
+
+    # 3.3.4
 
 
 def _run_export(domain, task, precision):
@@ -332,6 +390,7 @@ def _run_export(domain, task, precision):
 
 # TODO: Add tests.
 def repeated_checkpoint_run(train_task_id,
+                            labels_to_names,
                             tensor_dict,
                             summary_dir,
                             evaluators,
@@ -405,6 +464,8 @@ def repeated_checkpoint_run(train_task_id,
   last_evaluated_model_path = None
   number_of_evaluations = 0
   standard_cnt = 0
+
+  last_3_global_step = {0:0,1:0,2:0}
   while True:
     task = TrainTask.objects.get(pk=train_task_id)
     start = time.time()
@@ -429,6 +490,11 @@ def repeated_checkpoint_run(train_task_id,
                                                   save_graph_dir)
       write_metrics(metrics, global_step, summary_dir)
       last_precision = metrics['PASCAL/Precision/mAP'] # FIXME hard code key
+      # @huac add eval step
+      ClusterEvalStep.objects.create(
+          train_task_id=task.pk,
+          checkpoint_step=global_step,
+      )
 
       standard = True
       for key in sorted(metrics):
@@ -443,13 +509,13 @@ def repeated_checkpoint_run(train_task_id,
     if global_step>10000:
       if global_step>int(task.step_cnt/3) and global_step<=int(task.step_cnt/2):
         if last_precision < 0.95 and task.restart_cnt==0:
-          _run_cluster(task,last_precision)
+          _run_cluster(task,last_precision,labels_to_names)
       elif global_step>int(task.step_cnt/2) and global_step<=int(task.step_cnt*4/5):
         if last_precision < 0.98 and task.restart_cnt==1:
-          _run_cluster(task,last_precision)
+          _run_cluster(task,last_precision,labels_to_names)
       elif global_step>int(task.step_cnt4/5):
         if last_precision < 0.995 and task.restart_cnt==2:
-          _run_cluster(task,last_precision)
+          _run_cluster(task,last_precision,labels_to_names)
 
     if standard_cnt >= 3:
       train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()

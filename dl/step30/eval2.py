@@ -197,6 +197,7 @@ def main(_):
 
         metrics = eval2_util.repeated_checkpoint_run(
             train_task_id=FLAGS.train_task_id,
+            labels_to_names=dataset.labels_to_names,
             tensor_dict=tensor_dict,
             summary_dir=FLAGS.eval_dir,
             evaluators=[classify_evaluation.PascalClassifyEvaluator(
