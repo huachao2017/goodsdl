@@ -33,6 +33,11 @@ router.register(r'exportaction', views.ExportActionViewSet)
 router.register(r'stoptrainaction', views.StopTrainActionViewSet)
 router.register(r'rfidimagecompareaction', views.RfidImageCompareActionViewSet)
 router.register(r'transactionmetrix', views.TransactionMetrixViewSet)
+router.register(r'traintask', views.TrainTaskViewSet)
+router.register(r'clusterstructure', views.ClusterStructureViewSet)
+router.register(r'clusterevaldata', views.ClusterEvalDataViewSet)
+router.register(r'clustersamplescore', views.ClusterSampleScoreViewSet)
+router.register(r'clusterupcscore', views.ClusterUpcScoreViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
     url(r'^api/getsamplecount', views.GetSampleCount.as_view()),

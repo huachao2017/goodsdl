@@ -1071,3 +1071,23 @@ class RfidImageCompareActionViewSet(DefaultMixin, mixins.CreateModelMixin, mixin
 class TransactionMetrixViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = TransactionMetrix.objects.order_by('-id')
     serializer_class = TransactionMetrixSerializer
+
+class TrainTaskViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = TrainTask.objects.order_by('-id')
+    serializer_class = TrainTaskSerializer
+
+class ClusterStructureViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = ClusterStructure.objects.order_by('-id')
+    serializer_class = ClusterStructureSerializer
+
+class ClusterEvalDataViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = ClusterEvalData.objects.order_by('-id')
+    serializer_class = ClusterEvalDataSerializer
+
+class ClusterSampleScoreViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = ClusterSampleScore.objects.order_by('-id')
+    serializer_class = ClusterSampleScoreSerializer
+
+class ClusterUpcScoreViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = ClusterUpcScore.objects.order_by('-id')
+    serializer_class = ClusterUpcScoreSerializer
