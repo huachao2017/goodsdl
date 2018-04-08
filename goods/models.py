@@ -177,6 +177,7 @@ class TransactionMetrix(models.Model):
     only_image_upc_num = models.PositiveIntegerField(default=0)
 
 class TrainTask(models.Model):
+    train_id = models.IntegerField(default=0, db_index=True)
     dataset_dir = models.CharField(max_length=150, default='')
     STATE_CHOICES = (
         (0, u'not start'),

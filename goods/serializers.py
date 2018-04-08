@@ -110,7 +110,7 @@ class TransactionMetrixSerializer(serializers.ModelSerializer):
 class TrainTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainTask
-        fields = ('pk', 'state', 'restart_cnt', 'category_cnt', 'sample_cnt', 'step_cnt', 'model_name', 'm_ap')
+        fields = ('pk', 'train_id', 'dataset_dir', 'state', 'restart_cnt', 'category_cnt', 'sample_cnt', 'step_cnt', 'model_name', 'm_ap')
         read_only_fields = ('create_time', 'update_time')
 
 class ClusterStructureSerializer(serializers.ModelSerializer):
