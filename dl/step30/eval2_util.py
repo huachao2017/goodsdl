@@ -370,15 +370,23 @@ def _run_cluster(task, precision, labels_to_names):
 
     for upc_1 in upc_scores:
         for upc_2 in upc_scores[upc_1]:
-            ClusterUpcScore.objects.create(
-                train_task_id=task.pk,
-                upc_1=upc_1,
-                upc_2=upc_2,
-                score=upc_scores[upc_1][upc_2]
-            )
+            # 防止重复
+            duplicate = ClusterUpcScore.objects.filter(train_task_id=task.pk).filter(upc_1=upc_2).filter(upc_2=upc_1)[:1]
+            if len(duplicate) > 0:
+                if duplicate[0].score < upc_scores[upc_1][upc_2]:
+                    duplicate[0].score = upc_scores[upc_1][upc_2]
+                    duplicate[0].save()
+            else:
+                ClusterUpcScore.objects.create(
+                    train_task_id=task.pk,
+                    upc_1=upc_1,
+                    upc_2=upc_2,
+                    score=upc_scores[upc_1][upc_2]
+                )
 
 
     # 3.3.3、聚类：设定50%为阀值进行聚类连接，记录到cluster_structure表中，修改目录存储结构，创建子训练任务
+    upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
 
     # 3.3.4、收尾：终止训练进程，当前task设为0未开始，新建一个拷贝的task，重启次数+1，修订分类总数，map清零。
 
