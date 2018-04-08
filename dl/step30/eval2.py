@@ -26,10 +26,13 @@ import tensorflow as tf
 from nets import nets_factory
 
 from dl.step2 import dataset as step2_ds
-from dl.step3 import eval2_util
+from dl.step30 import eval2_util
 from dl.step2.utils import classify_evaluation
 
 slim = tf.contrib.slim
+
+tf.app.flags.DEFINE_integer(
+    'train_task_id', None, 'The train task id.')
 
 tf.app.flags.DEFINE_integer(
     'batch_size', 50, 'The number of samples in each batch.')
@@ -97,6 +100,9 @@ FLAGS = tf.app.flags.FLAGS
 
 
 def main(_):
+    if not FLAGS.train_task_id:
+        raise ValueError('You must supply train_task_id --train_task_id')
+
     if not FLAGS.dataset_dir:
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
@@ -137,7 +143,7 @@ def main(_):
             network_fn,
             create_input_dict_fn=create_input_dict_fn)
 
-        def _process_batch(tensor_dict, sess, batch_index, counters):
+        def _process_batch(task, tensor_dict, sess, batch_index, counters):
             """Evaluates tensors in tensor_dict, visualizing the first K examples.
 
             This function calls sess.run on tensor_dict, evaluating the original_image
@@ -171,6 +177,7 @@ def main(_):
             if batch_index < 10000: # TODO
                 tag = 'image-{}-{}'.format(result_dict['label'], batch_index)
                 eval2_util.visualize_detection_results(
+                    task,
                     result_dict,
                     tag,
                     global_step,
@@ -189,6 +196,7 @@ def main(_):
             saver.restore(sess, latest_checkpoint)
 
         metrics = eval2_util.repeated_checkpoint_run(
+            train_task_id=FLAGS.train_task_id,
             tensor_dict=tensor_dict,
             summary_dir=FLAGS.eval_dir,
             evaluators=[classify_evaluation.PascalClassifyEvaluator(

@@ -724,7 +724,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --train_task_id={} --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
+            task.pk,
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             source_dataset_dir,

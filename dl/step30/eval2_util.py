@@ -13,6 +13,8 @@ from urllib import request, parse
 import socket
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+django.setup()
+from goods.models import TrainTask, ClusterEvalData
 
 slim = tf.contrib.slim
 
@@ -65,7 +67,8 @@ def write_metrics(metrics, global_step, summary_dir):
   logging.info('Metrics written to tf summary.')
 
 
-def visualize_detection_results(result_dict,
+def visualize_detection_results(task,
+                                result_dict,
                                 tag,
                                 global_step,
                                 labels_to_names,
@@ -119,6 +122,15 @@ def visualize_detection_results(result_dict,
               detection_sample_image_path = os.path.join(detection_image_dir,image_name)
               if os.path.isfile(detection_sample_image_path):
                   break
+      # @huac add for record in database
+      ClusterEvalData.objects.create(
+          train_task_id=task.pk,
+          checkpoint_step=global_step,
+          sample_serial=tag,
+          groundtruth_label=groundtruth_class_label,
+          detection_label=detection_class_label,
+          score=detection_score
+      )
       vis_utils.visualize_false_on_image_array(
           image,
           detection_class_label,
@@ -155,7 +167,8 @@ def visualize_detection_results(result_dict,
   logging.debug('Detection visualizations written to summary with tag %s.', tag)
 
 
-def _run_checkpoint_once(tensor_dict,
+def _run_checkpoint_once(task,
+                         tensor_dict,
                          evaluators=None,
                          batch_processor=None,
                          checkpoint_dirs=None,
@@ -246,7 +259,7 @@ def _run_checkpoint_once(tensor_dict,
             counters['skipped'] += 1
             result_dict = {}
         else:
-          result_dict = batch_processor(tensor_dict, sess, batch, counters)
+          result_dict = batch_processor(task, tensor_dict, sess, batch, counters)
         for evaluator in evaluators:
           evaluator.add_single_detected_image_info(detections_dict=result_dict)
       logging.info('Running eval batches done.')
@@ -277,13 +290,27 @@ def get_host_ip():
 
     return ip
 
-def _run_export(domain, step30_dataset_dir, precision):
+def _run_cluster(task, precision):
+    """
+    3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
+    3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
+    3.3.3、聚类：设定50%为阀值进行聚类连接，记录到cluster_structure表中，修改目录存储结构，创建子训练任务
+    3.3.4、收尾：终止训练进程，当前task设为0未开始，新建一个拷贝的task，重启次数+1，修订分类总数，map清零。
+
+    :param task:
+    :param precision:
+    :return:
+    """
+    pass
+
+
+def _run_export(domain, task, precision):
     if domain is None:
         domain = get_host_ip()
     django.setup()
     from goods.models import TrainAction
     train = TrainAction.objects.filter(action='T30').filter(
-        dataset_dir=step30_dataset_dir).order_by('-update_time')[:1]
+        dataset_dir=task.dataset_dir).order_by('-update_time')[:1]
     train_data = parse.urlencode([
         ('train_action', train.pk),
         ('model_name', train.model_name),
@@ -298,9 +325,14 @@ def _run_export(domain, step30_dataset_dir, precision):
         print('_run_export status:', f.status, f.reason)
         if f.status != 201:
             raise ValueError('export error')
+        else:
+            task.state = 2
+            task.m_ap = precision
+            task.save()
 
 # TODO: Add tests.
-def repeated_checkpoint_run(tensor_dict,
+def repeated_checkpoint_run(train_task_id,
+                            tensor_dict,
                             summary_dir,
                             evaluators,
                             batch_processor=None,
@@ -362,6 +394,7 @@ def repeated_checkpoint_run(tensor_dict,
     ValueError: if max_num_of_evaluations is not None or a positive number.
     ValueError: if checkpoint_dirs doesn't have at least one element.
   """
+
   if max_number_of_evaluations and max_number_of_evaluations <= 0:
     raise ValueError(
         '`number_of_steps` must be either None or a positive number.')
@@ -373,6 +406,7 @@ def repeated_checkpoint_run(tensor_dict,
   number_of_evaluations = 0
   standard_cnt = 0
   while True:
+    task = TrainTask.objects.get(pk=train_task_id)
     start = time.time()
     logging.info('Starting evaluation at ' + time.strftime(
         '%Y-%m-%d-%H:%M:%S', time.gmtime()))
@@ -386,7 +420,7 @@ def repeated_checkpoint_run(tensor_dict,
                    'seconds', eval_interval_secs)
     else:
       last_evaluated_model_path = model_path
-      global_step, metrics = _run_checkpoint_once(tensor_dict, evaluators,
+      global_step, metrics = _run_checkpoint_once(task, tensor_dict, evaluators,
                                                   batch_processor,
                                                   checkpoint_dirs,
                                                   variables_to_restore,
@@ -406,6 +440,17 @@ def repeated_checkpoint_run(tensor_dict,
 
     number_of_evaluations += 1
 
+    if global_step>10000:
+      if global_step>int(task.step_cnt/3) and global_step<=int(task.step_cnt/2):
+        if last_precision < 0.95 and task.restart_cnt==0:
+          _run_cluster(task,last_precision)
+      elif global_step>int(task.step_cnt/2) and global_step<=int(task.step_cnt*4/5):
+        if last_precision < 0.98 and task.restart_cnt==1:
+          _run_cluster(task,last_precision)
+      elif global_step>int(task.step_cnt4/5):
+        if last_precision < 0.995 and task.restart_cnt==2:
+          _run_cluster(task,last_precision)
+
     if standard_cnt >= 3:
       train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
       if train_ps != '':
@@ -413,7 +458,7 @@ def repeated_checkpoint_run(tensor_dict,
         os.system('kill -s 9 {}'.format(str(pid)))
       logging.info('Finished evaluation: stardard count >= 3 and kill train process')
 
-      _run_export(export_domain,os.path.dirname(checkpoint_dirs[0]), last_precision)
+      _run_export(export_domain, task, last_precision)
       break
 
     if (max_number_of_evaluations and
@@ -424,7 +469,7 @@ def repeated_checkpoint_run(tensor_dict,
     # train over then finished
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
     if train_ps == '':
-      _run_export(export_domain,int(os.path.split(checkpoint_dirs[0])[-1]), last_precision)
+      _run_export(export_domain, task, last_precision)
       logging.info('Finished evaluation: train process was killed.')
       break
 
