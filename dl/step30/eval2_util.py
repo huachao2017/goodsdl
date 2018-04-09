@@ -435,7 +435,7 @@ def _run_cluster(task, precision, labels_to_names):
         for upc in solved_cluster[father]:
             c_structure = ClusterStructure.objects.filter(upc=upc).order_by('id')[:1]
             c_structure[0].f_upc = f_structure[0].upc
-            c_structure[0].save
+            c_structure[0].save()
 
     # 3.3.4、收尾：终止训练进程，当前task设为0未开始，新建一个拷贝的task，重启次数+1，修订分类总数，map清零。
 
