@@ -16,7 +16,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     """
     3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
-    3.3.3、聚类：设定50%为阀值进行聚类连接，记录到cluster_structure表中，修改目录存储结构
+    3.3.3、聚类：设定50%为阀值进行聚类连接，判断是否聚类后分类数限制，修改目录存储结构，记录到cluster_structure表中
     3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个拷贝的task，重启次数+1，map清零。
 
     :param task:
@@ -153,16 +153,18 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     for f_upc in sorted_cluster:
         solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster, solved_keys)
 
-    # 3.3.3.2、记录到cluster_structure表中，重启问题，原cluster会进一步收拢，
+    # 3.3.3.2、判断是否聚类后分类数限制，然后退出
     # FIXME 收拢到只有一类，需要处理为继续训练，直到最少分类超过8。这次处理需要删除本次训练的cluster_sample_score和cluster_upc_score
-    for father in solved_cluster:
-        f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
-        for upc in solved_cluster[father]:
-            c_structure = ClusterStructure.objects.filter(upc=upc).order_by('id')[:1]
-            c_structure[0].f_upc = f_structure[0].upc
-            c_structure[0].save()
 
-    # 3.3.3.3、修改目录存储结构 FIXME 重启问题，目录结构调整方案
+    # 3.3.3.3、修改目录存储结构 重启问题，目录结构调整方案分为拷贝目录和拷贝子目录
+    def move_file(upc,src_dir,dest_dir):
+        f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
+        if len(f_structure)>0:
+            for one_move_dir in os.listdir(src_dir):
+                shutil.move(os.path.join(src_dir,one_move_dir), dest_dir)
+        else:
+            shutil.move(src_dir, dest_dir)
+
     tmp_dir = os.path.join(task.dataset_dir, 'tmp')
     if not tf.gfile.Exists(tmp_dir):
         tf.gfile.MakeDirs(tmp_dir)
@@ -171,12 +173,19 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         father_tmp_dir = os.path.join(tmp_dir,father)
         shutil.move(father_dir,tmp_dir)
         tf.gfile.MakeDirs(father_dir)
-        shutil.move(father_tmp_dir,father_dir)
+        move_file(father, father_tmp_dir, father_dir)
         for upc in solved_cluster[father]:
             upc_dir = os.path.join(task.dataset_dir,upc)
-            shutil.move(upc_dir,father_dir)
+            move_file(upc, upc_dir, father_dir)
     os.remove(tmp_dir)
 
+    # 3.3.3.4、记录到cluster_structure表中，重启问题，原cluster会进一步收拢，
+    for father in solved_cluster:
+        f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
+        for upc in solved_cluster[father]:
+            c_structure = ClusterStructure.objects.filter(upc=upc).order_by('id')[:1]
+            c_structure[0].f_upc = f_structure[0].upc
+            c_structure[0].save()
 
     # 3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个拷贝的task，重启次数+1，map清零。
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
