@@ -399,13 +399,13 @@ def repeated_checkpoint_run(train_task_id,
     if global_step>10000:
       if global_step>int(task.step_cnt/3) and global_step<=int(task.step_cnt/2):
         if last_precision < 0.95 and task.restart_cnt==0:
-          cluster._run_cluster(task,last_precision,labels_to_names)
+          cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
       elif global_step>int(task.step_cnt/2) and global_step<=int(task.step_cnt*4/5):
         if last_precision < 0.98 and task.restart_cnt==1:
-            cluster._run_cluster(task,last_precision,labels_to_names)
+            cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
       elif global_step>int(task.step_cnt4/5):
         if last_precision < 0.995 and task.restart_cnt==2:
-            cluster._run_cluster(task,last_precision,labels_to_names)
+            cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
 
     if standard_cnt >= 3:
       train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
