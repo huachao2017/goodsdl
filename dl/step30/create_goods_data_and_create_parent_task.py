@@ -6,17 +6,27 @@ import shutil
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
-from goods.models import TrainTask
+from goods.models import TrainTask,ClusterStructure
 
 tf.app.flags.DEFINE_string(
     'dir_serial', '',
     'dir serial')
 FLAGS = tf.app.flags.FLAGS
 
-def create_one_task(dataset_dir):
+def create_one_task(upc_name,dataset_dir):
     TrainTask.objects.create(
         dataset_dir=dataset_dir,
     )
+    father_cluster = ClusterStructure.objects.create(
+        upc=upc_name
+    )
+
+    for upc in os.listdir(dataset_dir):
+        if os.path.isdir(os.path.join(dataset_dir,upc)):
+            ClusterStructure.objects.create(
+                upc=upc,
+                f_upc=father_cluster.upc,
+            )
 
 def main(_):
     dataset_dir = '/home/src/goodsdl/media/dataset'
@@ -28,10 +38,10 @@ def main(_):
     # print(traintype_to_class_names)
     shutil.copytree(step20_dir,step30_dir)
 
-    for name in os.listdir(step30_dir):
-        dataset_dir = os.path.join(step30_dir, name)
+    for upc_name in os.listdir(step30_dir):
+        dataset_dir = os.path.join(step30_dir, upc_name)
         if os.path.isdir(dataset_dir):
-            create_one_task(dataset_dir)
+            create_one_task(upc_name, dataset_dir)
 
 if __name__ == '__main__':
     tf.app.run()

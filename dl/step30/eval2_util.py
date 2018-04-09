@@ -385,8 +385,57 @@ def _run_cluster(task, precision, labels_to_names):
                 )
 
 
-    # 3.3.3、聚类：设定50%为阀值进行聚类连接，记录到cluster_structure表中，修改目录存储结构，创建子训练任务
+    # 3.3.3.1、聚类：设定50%为阀值进行聚类连接
     upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
+    source_clusters = {} # {A:[B,C,D],B:[C,E],C:[F],E:[F],G:[A,H]}
+    for upc_score in upc_scores:
+        if upc_score.score < 0.5:
+            continue
+        if upc_score.upc_1 in source_clusters:
+            if upc_score.upc_2 in source_clusters[upc_score.upc_1]:
+                continue
+            else:
+                source_clusters[upc_score.upc_1].append(upc_score.upc_2)
+        else:
+            source_clusters[upc_score.upc_1] = [upc_score.upc_1]
+
+    sorted_cluster = {} # {A:[B,C,D,G,H],B:[C,E],C:[F],E:[F]}
+    for key in source_clusters:
+        ones = [key]
+        for one in source_clusters[key]:
+            ones.append(one)
+        sorted_ones = sorted(ones)
+        f_upc = sorted_ones[0]
+        sorted_ones.remove(f_upc)
+        if f_upc in sorted_cluster:
+            for one in sorted_ones:
+                if one not in sorted_cluster[f_upc]:
+                    sorted_cluster[f_upc].append(one)
+        else:
+            sorted_cluster[f_upc] = sorted_ones
+
+    def inner_find(f_upc,sorted_cluster):
+        ones = sorted_cluster[f_upc]
+        ret = ones.copy()
+        for one in ones:
+            finds = inner_find(one,sorted_cluster)
+            for find_one in finds:
+                if find_one not in ret:
+                    ret.append(find_one)
+
+        return ret
+
+    solved_cluster = {} # {A:[B,C,D,E,F,G,H]}
+    for f_upc in sorted_cluster:
+        solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster)
+
+    # 3.3.3.2、记录到cluster_structure表中，修改目录存储结构，创建子训练任务
+    for father in solved_cluster:
+        f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
+        for upc in solved_cluster[father]:
+            c_structure = ClusterStructure.objects.filter(upc=upc).order_by('id')[:1]
+            c_structure[0].f_upc = f_structure[0].upc
+            c_structure[0].save
 
     # 3.3.4、收尾：终止训练进程，当前task设为0未开始，新建一个拷贝的task，重启次数+1，修订分类总数，map清零。
 
