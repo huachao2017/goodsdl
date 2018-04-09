@@ -3,12 +3,13 @@ import time
 import os
 from urllib import request, parse
 import socket
-
+import shutil
 import django
 from django.db.models import Q
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
 from goods.models import TrainAction, TrainTask, ClusterStructure, ClusterEvalData, ClusterEvalStep, ClusterSampleScore, ClusterUpcScore
+import tensorflow as tf
 
 
 def _run_cluster(task, precision, labels_to_names):
@@ -157,8 +158,27 @@ def _run_cluster(task, precision, labels_to_names):
             c_structure[0].f_upc = f_structure[0].upc
             c_structure[0].save()
 
-    # 3.3.3.3、修改目录存储结构，创建子训练任务
+    # 3.3.3.3、修改目录存储结构
+    tmp_dir = os.path.join(task.dataset_dir, 'tmp')
+    if not tf.gfile.Exists(tmp_dir):
+        tf.gfile.MakeDirs(tmp_dir)
+    for father in solved_cluster:
+        father_dir = os.path.join(task.dataset_dir,father)
+        father_tmp_dir = os.path.join(tmp_dir,father)
+        shutil.move(father_dir,tmp_dir)
+        tf.gfile.MakeDirs(father_dir)
+        shutil.move(father_tmp_dir,father_dir)
+        for upc in solved_cluster[father]:
+            upc_dir = os.path.join(task.dataset_dir,upc)
+            shutil.move(upc_dir,father_dir)
+    os.remove(tmp_dir)
 
+    # 3.3.3.4、创建子训练任务
+    for father in solved_cluster:
+        father_dir = os.path.join(task.dataset_dir,father)
+        TrainTask.objects.create(
+            dataset_dir=father_dir,
+        )
 
     # 3.3.4、收尾：终止训练进程，当前task设为0未开始，新建一个拷贝的task，重启次数+1，修订分类总数，map清零。
 
