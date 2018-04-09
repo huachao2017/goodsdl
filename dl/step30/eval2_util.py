@@ -388,7 +388,7 @@ def repeated_checkpoint_run(train_task_id,
 
       standard = True
       for key in sorted(metrics):
-          if not np.isnan(metrics[key]) and float(metrics[key]) < .99:
+          if not np.isnan(metrics[key]) and float(metrics[key]) < .998:
               standard = False
 
       if standard:
@@ -396,15 +396,15 @@ def repeated_checkpoint_run(train_task_id,
 
     number_of_evaluations += 1
 
-    if global_step>10000:
+    if global_step>10000 and last_precision < 0.95:
       if global_step>int(task.step_cnt/3) and global_step<=int(task.step_cnt/2):
-        if last_precision < 0.95 and task.restart_cnt==0:
+        if task.restart_cnt==0:
           cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
       elif global_step>int(task.step_cnt/2) and global_step<=int(task.step_cnt*4/5):
-        if last_precision < 0.98 and task.restart_cnt==1:
+        if task.restart_cnt==1:
             cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
       elif global_step>int(task.step_cnt4/5):
-        if last_precision < 0.995 and task.restart_cnt==2:
+        if task.restart_cnt==2:
             cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
 
     if standard_cnt >= 3:
@@ -425,7 +425,7 @@ def repeated_checkpoint_run(train_task_id,
     # train over then finished
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(checkpoint_dirs[0])).readline()
     if train_ps == '':
-      cluster._run_export(export_domain, task, last_precision)
+      # cluster._run_export(export_domain, task, last_precision)
       logging.info('Finished evaluation: train process was killed.')
       break
 

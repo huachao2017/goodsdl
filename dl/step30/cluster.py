@@ -17,10 +17,12 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
     3.3.3、聚类：设定50%为阀值进行聚类连接，判断是否聚类后分类数限制，修改目录存储结构，记录到cluster_structure表中
-    3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个拷贝的task，重启次数+1，map清零。
+    3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。
 
     :param task:
     :param precision:
+    :param labels_to_names:
+    :param train_dir:
     :return:
     """
     logging.info('begin cluster:{}'.format(task.pk))
@@ -154,7 +156,16 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster, solved_keys)
 
     # 3.3.3.2、判断是否聚类后分类数限制，然后退出
-    # FIXME 收拢到只有一类，需要处理为继续训练，直到最少分类超过8。这次处理需要删除本次训练的cluster_sample_score和cluster_upc_score
+    # 分类小于8，需要处理为继续训练。继续训练需要删除本次训练的cluster_sample_score和cluster_upc_score
+    cur_category_cnt = task.category_cnt
+    for f_upc in solved_cluster:
+        cur_category_cnt = cur_category_cnt - len(solved_cluster[f_upc])
+
+    if cur_category_cnt < 8:
+        task.restart_cnt = task.restart_cnt+1
+        task.m_ap = precision
+        task.save()
+        return
 
     # 3.3.3.3、修改目录存储结构 重启问题，目录结构调整方案分为拷贝目录和拷贝子目录
     def move_file(upc,src_dir,dest_dir):
@@ -187,7 +198,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             c_structure[0].f_upc = f_structure[0].upc
             c_structure[0].save()
 
-    # 3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个拷贝的task，重启次数+1，map清零。
+    # 3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
     if train_ps != '':
         pid = int(train_ps.split()[1])
@@ -199,7 +210,6 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
 
     TrainTask.objects.create(
         dataset_dir=task.dataset_dir,
-        restart_cnt=task.restart_cnt+1,
     )
 
 
