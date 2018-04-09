@@ -396,7 +396,7 @@ def repeated_checkpoint_run(train_task_id,
 
     number_of_evaluations += 1
 
-    if global_step>10000 and last_precision < 0.95:
+    if global_step>10000 and last_precision < 0.95 and task.category_cnt>=8:
       if global_step>int(task.step_cnt/3) and global_step<=int(task.step_cnt/2):
         if task.restart_cnt==0:
           cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
