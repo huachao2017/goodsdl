@@ -196,8 +196,8 @@ class TrainTask(models.Model):
     update_time = models.DateTimeField('date updated', auto_now=True)
 
 class ClusterStructure(models.Model):
-    upc = models.CharField(max_length=20)
-    f_id = models.IntegerField(default=0, db_index=True)
+    upc = models.CharField(max_length=20, db_index=True)
+    f_upc = models.CharField(max_length=20, default='', db_index=True)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
 
