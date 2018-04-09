@@ -84,6 +84,19 @@ def _get_filenames_and_classes(dataset_dir):
 
     return photo_filenames, sorted(class_names)
 
+def get_recursive_filenames(directory,upc_to_filenames):
+    for name in os.listdir(directory):
+        path = os.path.join(directory, name)
+        if os.path.isdir(path):
+            get_recursive_filenames(path,upc_to_filenames)
+        else:
+            upc = os.path.basename(os.path.dirname(path))
+            if upc in upc_to_filenames:
+                upc_to_filenames[upc].append(path)
+            else:
+                upc_to_filenames[upc] = [path]
+
+
 def _get_split_filenames_and_classes(dataset_dir):
     """Returns a list of filenames and inferred class names.
 
@@ -95,23 +108,18 @@ def _get_split_filenames_and_classes(dataset_dir):
       A list of image file paths, relative to `dataset_dir` and the list of
       subdirectories, representing class names.
     """
-    directories = []
     class_names = []
     for dir_name in os.listdir(dataset_dir):
         path = os.path.join(dataset_dir, dir_name)
         if os.path.isdir(path):
-            directories.append(path)
             class_names.append(dir_name)
 
+    upc_to_filenames = {}
+    get_recursive_filenames(dataset_dir,upc_to_filenames)
     train_photo_filenames = []
     validation_photo_filenames = []
-    for directory in directories:
-        local_filenames = []
-        for filename in os.listdir(directory):
-            path = os.path.join(directory, filename)
-            if os.path.isfile(path):
-                local_filenames.append(path)
-
+    for upc in upc_to_filenames:
+        local_filenames = upc_to_filenames[upc]
         count = len(local_filenames)
         if count>0:
             validation_indexes = []
