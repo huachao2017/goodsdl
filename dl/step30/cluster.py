@@ -16,7 +16,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     """
     3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
-    3.3.3、聚类：设定50%为阀值进行聚类连接，记录到cluster_structure表中，修改目录存储结构，创建子训练任务
+    3.3.3、聚类：设定50%为阀值进行聚类连接，记录到cluster_structure表中，修改目录存储结构
     3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个拷贝的task，重启次数+1，map清零。
 
     :param task:
@@ -108,7 +108,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
 
     # 3.3.3.1、聚类：设定50%为阀值进行聚类连接
     upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
-    source_clusters = {}  # {A:[B,C,D],B:[C,E],C:[F],E:[F],G:[A,H]}
+    source_clusters = {}  # {A:[B,C,D],B:[C,E],C:[F],E:[F],G:[A,H],M:[O,N]}
     for upc_score in upc_scores:
         if upc_score.score < 0.5:
             continue
@@ -120,7 +120,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         else:
             source_clusters[upc_score.upc_1] = [upc_score.upc_1]
 
-    sorted_cluster = {}  # {A:[B,C,D,G,H],B:[C,E],C:[F],E:[F]}
+    sorted_cluster = {}  # {A:[B,C,D,G,H],B:[C,E],C:[F],E:[F],M:[N,O]}
     for key in source_clusters:
         ones = [key]
         for one in source_clusters[key]:
@@ -148,12 +148,13 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
 
         return ret
 
-    solved_cluster = {}  # {A:[B,C,D,E,F,G,H]}
+    solved_cluster = {}  # {A:[B,C,D,E,F,G,H],M:[N,O]}
     solved_keys = []
     for f_upc in sorted_cluster:
         solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster, solved_keys)
 
-    # 3.3.3.2、记录到cluster_structure表中 FIXME 重启问题，原cluster怎么调整
+    # 3.3.3.2、记录到cluster_structure表中，重启问题，原cluster会进一步收拢，
+    # FIXME 收拢到只有一类，需要处理为继续训练，直到最少分类超过8。这次处理需要删除本次训练的cluster_sample_score和cluster_upc_score
     for father in solved_cluster:
         f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
         for upc in solved_cluster[father]:
@@ -161,7 +162,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             c_structure[0].f_upc = f_structure[0].upc
             c_structure[0].save()
 
-    # 3.3.3.3、修改目录存储结构 FIXME 重启问题，目录结构怎么恢复
+    # 3.3.3.3、修改目录存储结构 FIXME 重启问题，目录结构调整方案
     tmp_dir = os.path.join(task.dataset_dir, 'tmp')
     if not tf.gfile.Exists(tmp_dir):
         tf.gfile.MakeDirs(tmp_dir)
@@ -176,12 +177,6 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             shutil.move(upc_dir,father_dir)
     os.remove(tmp_dir)
 
-    # 3.3.3.4、创建子训练任务
-    for father in solved_cluster:
-        father_dir = os.path.join(task.dataset_dir,father)
-        TrainTask.objects.create(
-            dataset_dir=father_dir,
-        )
 
     # 3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个拷贝的task，重启次数+1，map清零。
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
@@ -235,4 +230,12 @@ def _run_export(domain, task, precision):
             task.state = 2
             task.m_ap = precision
             task.save()
-
+            # 训练完成，创建子训练任务
+            for f_upc in os.listdir(task.dataset_dir):
+                father_dir = os.path.join(task.dataset_dir,f_upc)
+                if os.path.isdir(father_dir):
+                    children = ClusterStructure.objects.filter(f_upc=f_upc)
+                    if len(children) >= 2:
+                        TrainTask.objects.create(
+                            dataset_dir=father_dir,
+                        )
