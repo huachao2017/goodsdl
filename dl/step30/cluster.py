@@ -135,20 +135,23 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         else:
             sorted_cluster[f_upc] = sorted_ones
 
-    def inner_find(f_upc, sorted_cluster):
+    def inner_find(f_upc, sorted_cluster, solved_keys):
+        solved_keys.append(f_upc)
         ones = sorted_cluster[f_upc]
         ret = ones.copy()
         for one in ones:
-            finds = inner_find(one, sorted_cluster)
-            for find_one in finds:
-                if find_one not in ret:
-                    ret.append(find_one)
+            if one in sorted_cluster:
+                finds = inner_find(one, sorted_cluster, solved_keys)
+                for find_one in finds:
+                    if find_one not in ret:
+                        ret.append(find_one)
 
         return ret
 
     solved_cluster = {}  # {A:[B,C,D,E,F,G,H]}
+    solved_keys = []
     for f_upc in sorted_cluster:
-        solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster)
+        solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster, solved_keys)
 
     # 3.3.3.2、记录到cluster_structure表中 FIXME 重启问题，原cluster怎么调整
     for father in solved_cluster:
