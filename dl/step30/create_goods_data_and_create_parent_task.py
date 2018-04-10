@@ -39,6 +39,7 @@ def main(_):
     # traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
     # print(traintype_to_class_names)
     shutil.copytree(step20_dir,step30_dir)
+    ret = os.popen('chmod 777 -R {}'.format(step30_dir)).readline()
 
     for upc_name in os.listdir(step30_dir):
         dataset_dir = os.path.join(step30_dir, upc_name)
