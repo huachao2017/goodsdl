@@ -37,7 +37,6 @@ def create_step20_goods(source_dir, output_dir):
                     logging.info('copy image:{}'.format(image_path))
                     tf.gfile.Copy(image_path,output_image_path)
 
-    tf.gfile.Copy(os.path.join(source_dir, common.CLUSTER_FILE_NAME), os.path.join(output_dir, common.CLUSTER_FILE_NAME), True)
     logging.info("step20 copy complete")
 
 tf.app.flags.DEFINE_string(

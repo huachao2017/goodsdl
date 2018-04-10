@@ -961,7 +961,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if serializer.instance.train_action.action == 'T1':
             prefix = self.export_detection_graph(serializer.instance.train_action, serializer)
 
-        elif serializer.instance.train_action.action == 'T2' or serializer.instance.train_action.action == 'T3':
+        elif serializer.instance.train_action.action in ['T2','T3','T20','T30']:
             prefix = self.export_classify_graph(serializer.instance.train_action, serializer)
 
         elif serializer.instance.train_action.action == 'TC':

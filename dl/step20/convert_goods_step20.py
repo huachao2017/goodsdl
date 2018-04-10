@@ -196,8 +196,6 @@ def prepare_train(dataset_dir, output_dir):
     # Second, write the labels file:
     labels_to_names = dict(zip(range(len(class_names)), class_names))
     dataset_utils.write_label_file(labels_to_names, output_dir)
-    # Finally, copy the cluster file:
-    shutil.copy(os.path.join(dataset_dir, common.CLUSTER_FILE_NAME), output_dir)
 
     logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
