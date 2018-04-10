@@ -1,4 +1,4 @@
-version:6
+version:7
 (1)cylinder_stand：圆面站立（有信息的商品站立：方便面，某些化妆品）
 (2)cylinder_hardbox：圆柱硬盒（听装水）
 (3)cylinder_softbox：圆柱软盒（桶装薯片、桶装西点、伞、大果粒、纸杯咖啡）
@@ -6,7 +6,6 @@ version:6
 (5)rectangle_normal：矩形普通（）
 (6)rectangle_thinedge：矩形边缘薄细（瓜子、开心果，中间厚两边薄，至少三边除底部都有扎边）
 (7)rectangle_special：矩形异形（袋装薯片，塑料纸包装面包蛋糕、某些圆形异形也放在这里：如话梅）
-(8)bottled_drink_stand：瓶装水站立
-(9)lack_info_stand：缺乏信息商品站立（听装水，咖啡杯，奶茶杯等，无法区分的站立样本）
+(8)lack_info_stand：缺乏信息商品站立（瓶装水，听装水，咖啡杯，奶茶杯等，无法区分的站立样本）
 -----暂时没有样本-----
-(10)rectangle_thinedge_stand：细边缘矩形站立（如瓜子、某些糖，底部厚可站立的）
+(9)rectangle_thinedge_stand：细边缘矩形站立（如瓜子、某些糖，底部厚可站立的）
