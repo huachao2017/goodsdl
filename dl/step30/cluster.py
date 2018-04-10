@@ -29,7 +29,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
 
     # 3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     use_steps = []
-    db_steps = ClusterEvalStep.object.filter(train_task_id=task.pk).order_by('-checkpoint_step')
+    db_steps = ClusterEvalStep.objects.filter(train_task_id=task.pk).order_by('-checkpoint_step')
     for step in db_steps:
         if step in use_steps:
             continue
