@@ -392,6 +392,8 @@ def main(_):
     # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpus[0])
     tf.logging.set_verbosity(tf.logging.INFO)
+
+    tf.logging.info('use device: '+ str(gpus[0]))
     with tf.Graph().as_default():
         #######################
         # Config model_deploy #
