@@ -25,9 +25,10 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     :param train_dir:
     :return:
     """
-    logging.info('begin cluster:{}'.format(task.pk))
+    print('begin cluster:{}'.format(task.pk))
 
     # 3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
+    print('3.3.1')
     use_steps = []
     db_steps = ClusterEvalStep.objects.filter(train_task_id=task.pk).order_by('-checkpoint_step')
     for step in db_steps:
@@ -36,6 +37,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         use_steps.append(step.checkpoint_step)
         if len(use_steps) == 3:
             break
+
+    print(use_steps)
 
     sample_scores = {}
     # tag:step:{groundtruth_label:nn,detection_label:nn,score:ff}
@@ -49,6 +52,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             'detection_label': eval_data.detection_label,
             'score': eval_data.score,
         }
+
+    print(sample_scores)
 
     for sample_serial in sample_scores:
         one_sample = sample_scores[sample_serial]
@@ -73,12 +78,13 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             ClusterSampleScore.objects.create(
                 train_task_id=task.pk,
                 sample_serial=sample_serial,
-                upc_1=labels_to_names[one_sample['groundtruth_label']],
+                upc_1=labels_to_names[one_sample[use_steps[0]]['groundtruth_label']],
                 upc_2=labels_to_names[detection],
                 score=detections[detection]
             )
 
     # 3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
+    print('3.3.2')
     sample_scores = ClusterSampleScore.objects.filter(train_task_id=task.pk)
     upc_scores = {}
     for sample_score in sample_scores:
@@ -109,6 +115,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                 )
 
     # 3.3.3.1、聚类：设定50%为阀值进行聚类连接
+    print('3.3.3.1')
     upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
     source_clusters = {}  # {A:[B,C,D],B:[C,E],C:[F],E:[F],G:[A,H],M:[O,N]}
     for upc_score in upc_scores:
@@ -121,6 +128,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                 source_clusters[upc_score.upc_1].append(upc_score.upc_2)
         else:
             source_clusters[upc_score.upc_1] = [upc_score.upc_1]
+
+    print(source_clusters)
 
     sorted_cluster = {}  # {A:[B,C,D,G,H],B:[C,E],C:[F],E:[F],M:[N,O]}
     for key in source_clusters:
@@ -136,6 +145,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                     sorted_cluster[f_upc].append(one)
         else:
             sorted_cluster[f_upc] = sorted_ones
+
+    print(sorted_cluster)
 
     def inner_find(f_upc, sorted_cluster, solved_keys):
         solved_keys.append(f_upc)
@@ -155,19 +166,24 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     for f_upc in sorted_cluster:
         solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster, solved_keys)
 
+    print(solved_cluster)
+
     # 3.3.3.2、判断是否聚类后分类数限制，然后退出
     # 分类小于8，需要处理为继续训练。继续训练需要删除本次训练的cluster_sample_score和cluster_upc_score
+    print('3.3.3.2')
     cur_category_cnt = task.category_cnt
     for f_upc in solved_cluster:
         cur_category_cnt = cur_category_cnt - len(solved_cluster[f_upc])
 
     if cur_category_cnt < 8 and cur_category_cnt/task.category_cnt < .05:
+        print('exit for cur_category_cnt:{}/{}'.format(cur_category_cnt, task.category_cnt))
         task.restart_cnt = task.restart_cnt+1
         task.m_ap = precision
         task.save()
         return
 
     # 3.3.3.3、修改目录存储结构 重启问题，目录结构调整方案分为拷贝目录和拷贝子目录
+    print('3.3.3.3')
     def move_file(upc,src_dir,dest_dir):
         f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
         if len(f_structure)>0:
@@ -191,6 +207,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     os.remove(tmp_dir)
 
     # 3.3.3.4、记录到cluster_structure表中，重启问题，原cluster会进一步收拢，
+    print('3.3.3.4')
     for father in solved_cluster:
         f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
         for upc in solved_cluster[father]:
@@ -199,6 +216,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             c_structure[0].save()
 
     # 3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。
+    print('3.3.4')
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
     if train_ps != '':
         pid = int(train_ps.split()[1])
@@ -212,8 +230,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         dataset_dir=task.dataset_dir,
     )
 
-
-    logging.info('Finished cluster: {}'.format(task.dataset_dir))
+    print('Finished cluster: {}'.format(task.dataset_dir))
 
 def get_host_ip():
     try:
