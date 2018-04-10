@@ -650,7 +650,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if train_steps < 20000:
             train_steps = 20000 # 小样本需要增加训练次数
         # 训练
-        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train20.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step20/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train20.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
@@ -663,7 +663,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step20/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             source_dataset_dir,
@@ -714,7 +714,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         task.save()
 
         # 训练
-        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train30-{}.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step30/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train30-{}.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
@@ -728,7 +728,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --train_task_id={} --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval30-{}.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step30/eval2.py --dataset_split_name=validation --train_task_id={} --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval30-{}.out 2>&1 &'.format(
             task.pk,
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
