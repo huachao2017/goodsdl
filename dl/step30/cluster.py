@@ -31,7 +31,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     use_steps = []
     db_steps = ClusterEvalStep.objects.filter(train_task_id=task.pk).order_by('-checkpoint_step')
     for step in db_steps:
-        if step in use_steps:
+        if step.checkpoint_step in use_steps:
             continue
         use_steps.append(step.checkpoint_step)
         if len(use_steps) == 3:
