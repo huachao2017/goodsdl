@@ -47,6 +47,7 @@ def _run_train(domain, serial, task):
             return False
         else:
             # 更新状态
+            task = TrainTask.objects.get(pk=task.pk)
             task.state = 1
             task.save()
 
