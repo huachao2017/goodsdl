@@ -108,6 +108,7 @@ def visualize_detection_results(task,
   detection_scores = np.squeeze(detection_scores,0)
   detection_class_label = np.argpartition(-detection_scores, 1)[0]
   detection_score = detection_scores[detection_class_label]
+  print(type(detection_score))
 
   # Plot groundtruth underneath detections
   if groundtruth_class_label != detection_class_label:
