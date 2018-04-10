@@ -58,7 +58,9 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     for sample_serial in sample_scores:
         one_sample = sample_scores[sample_serial]
         detections = {}
+        groundtruth_label = -1
         for checkpoint_step in one_sample:
+            groundtruth_label = one_sample[checkpoint_step]['groundtruth_label']
             weight = 0.0
             if checkpoint_step == use_steps[0]:
                 weight = .6
@@ -78,7 +80,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             ClusterSampleScore.objects.create(
                 train_task_id=task.pk,
                 sample_serial=sample_serial,
-                upc_1=labels_to_names[one_sample[use_steps[0]]['groundtruth_label']],
+                upc_1=labels_to_names[groundtruth_label],
                 upc_2=labels_to_names[detection],
                 score=detections[detection]
             )
