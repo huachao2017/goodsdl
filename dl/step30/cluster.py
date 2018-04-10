@@ -14,7 +14,7 @@ import tensorflow as tf
 
 def _run_cluster(task, precision, labels_to_names, train_dir):
     """
-    3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
+    3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按50%，30%，20%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
     3.3.3、聚类：设定50%为阀值进行聚类连接，判断是否聚类后分类数限制，修改目录存储结构，记录到cluster_structure表中
     3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。
@@ -63,11 +63,11 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             groundtruth_label = one_sample[checkpoint_step]['groundtruth_label']
             weight = 0.0
             if checkpoint_step == use_steps[0]:
-                weight = .6
+                weight = .5
             elif checkpoint_step == use_steps[1]:
                 weight = .3
             elif checkpoint_step == use_steps[2]:
-                weight = .1
+                weight = .2
 
             if one_sample[checkpoint_step]['detection_label'] in detections:
                 detections[one_sample[checkpoint_step]['detection_label']] = detections[one_sample[checkpoint_step][
