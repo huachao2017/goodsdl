@@ -633,5 +633,12 @@ def main(_):
             sync_optimizer=optimizer if FLAGS.sync_replicas else None)
 
 if __name__ == '__main__':
-    tf.app.run()
+    try:
+        tf.app.run()
+    except:
+        # 训练出现错误则杀掉任务进程
+        crontab_ps = os.popen('ps -ef | grep crontab.py | grep -v grep').readline()
+        if crontab_ps != '':
+            pid = int(crontab_ps.split()[1])
+            os.system('kill -s 9 {}'.format(str(pid)))
 
