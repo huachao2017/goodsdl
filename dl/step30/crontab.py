@@ -34,6 +34,7 @@ def _run_train(domain, serial, task):
         ('dataset_dir', task.dataset_dir),
         ('model_name', task.model_name),
         ('is_fineture', False),
+        ('desc', 'T30 - {}'.format(task.pk)),
     ])
     req = request.Request('http://{}/api/trainaction/'.format(domain))
     req.add_header('Origin', 'http://{}/api/'.format(domain))

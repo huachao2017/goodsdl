@@ -684,6 +684,9 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         class_names_to_ids, training_filenames, validation_filenames = convert_goods_step30.prepare_train(source_dataset_dir,
             train_logs_dir)
 
+        logger.info('train step30:{}'.format(source_dataset_dir))
+        logger.info(class_names_to_ids)
+        logger.info('sample count:{},{}'.format(len(training_filenames),len(validation_filenames)))
         # 更新actionlog.model_name
         if len(training_filenames) > 1000:
             actionlog.model_name = 'nasnet_large'
