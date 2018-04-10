@@ -120,7 +120,7 @@ def visualize_detection_results(task,
                   break
       # @huac add for record in database
       steps = ClusterEvalStep.objects.filter(train_task_id=task.pk).filter(checkpoint_step=global_step)[:1]
-      if len(steps)>0: # 不重复存入同一个global_step的数据
+      if len(steps)==0: # 不重复存入同一个global_step的数据
           ClusterEvalData.objects.create(
               train_task_id=task.pk,
               checkpoint_step=global_step,
