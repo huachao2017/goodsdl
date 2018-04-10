@@ -65,7 +65,7 @@ def write_metrics(metrics, global_step, summary_dir):
 
 def visualize_detection_results(task,
                                 result_dict,
-                                tag,
+                                batch_index,
                                 global_step,
                                 labels_to_names,
                                 summary_dir='',
@@ -87,7 +87,7 @@ def visualize_detection_results(task,
         'label': int value
       Detections are assumed to be provided in decreasing order of score and for
       display, and we assume that scores are probabilities between 0 and 1.
-    tag: tensorboard tag (string) to associate with image.
+    batch_index: sample serial to associate with image.
     global_step: global step at which the visualization are generated.
     labels_to_names: a dict
     summary_dir: the output directory to which the image summaries are written.
@@ -108,7 +108,7 @@ def visualize_detection_results(task,
   detection_scores = np.squeeze(detection_scores,0)
   detection_class_label = np.argpartition(-detection_scores, 1)[0]
   detection_score = detection_scores[detection_class_label]
-  print(type(detection_score))
+  # print(type(detection_score))
 
   # Plot groundtruth underneath detections
   if groundtruth_class_label != detection_class_label:
@@ -125,7 +125,7 @@ def visualize_detection_results(task,
           ClusterEvalData.objects.create(
               train_task_id=task.pk,
               checkpoint_step=global_step,
-              sample_serial=tag,
+              sample_serial=batch_index,
               groundtruth_label=groundtruth_class_label,
               detection_label=detection_class_label,
               score=detection_score
