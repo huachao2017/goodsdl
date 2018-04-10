@@ -63,7 +63,7 @@ def write_metrics(metrics, global_step, summary_dir):
   logging.info('Metrics written to tf summary.')
 
 
-def visualize_detection_results(task,
+def record_false_detection_results(task,
                                 result_dict,
                                 batch_index,
                                 global_step,
@@ -139,11 +139,11 @@ def visualize_detection_results(task,
               detection_sample_image_path=detection_sample_image_path
           )
 
-      export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
-      if not tf.gfile.Exists(export_dir):
-          tf.gfile.MakeDirs(export_dir)
-      export_path = os.path.join(export_dir, '{}-{}-{}-{}.png'.format(global_step, labels_to_names[groundtruth_class_label], labels_to_names[detection_class_label], int(100 * detection_score)))
-      vis_utils.save_image_array_as_png(image, export_path)
+          export_dir = os.path.join(summary_dir, str(groundtruth_class_label))
+          if not tf.gfile.Exists(export_dir):
+              tf.gfile.MakeDirs(export_dir)
+          export_path = os.path.join(export_dir, '{}-{}-{}-{}.png'.format(global_step, labels_to_names[groundtruth_class_label], labels_to_names[detection_class_label], int(100 * detection_score)))
+          vis_utils.save_image_array_as_png(image, export_path)
   # if groundtruth_class_label != detection_class_label:
   #     # 单独记录错误识别图片
   #     false_export_path = os.path.join(summary_dir, 'false')
@@ -163,7 +163,7 @@ def visualize_detection_results(task,
   # summary_writer.add_summary(summary, global_step)
   # summary_writer.close()
 
-  logging.debug('Detection visualizations written to summary with tag %s.', tag)
+  # logging.debug('Detection visualizations written to summary with tag %s.', tag)
 
 
 def _run_checkpoint_once(task,

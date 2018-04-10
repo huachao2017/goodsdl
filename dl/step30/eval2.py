@@ -176,7 +176,7 @@ def main(_):
             global_step = tf.train.global_step(sess, tf.train.get_global_step())
             if batch_index < 10000: # TODO
                 # tag = 'image-{}-{}'.format(result_dict['label'], batch_index)
-                eval2_util.visualize_detection_results(
+                eval2_util.record_false_detection_results(
                     task,
                     result_dict,
                     batch_index,
