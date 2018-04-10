@@ -161,7 +161,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     for f_upc in solved_cluster:
         cur_category_cnt = cur_category_cnt - len(solved_cluster[f_upc])
 
-    if cur_category_cnt < 8 and cur_category_cnt/task.category_cnt < .5:
+    if cur_category_cnt < 8 and cur_category_cnt/task.category_cnt < .05:
         task.restart_cnt = task.restart_cnt+1
         task.m_ap = precision
         task.save()
