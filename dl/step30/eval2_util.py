@@ -401,10 +401,10 @@ def repeated_checkpoint_run(train_task_id,
         if task.restart_cnt==0:
           cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
       elif global_step>int(task.step_cnt/2) and global_step<=int(task.step_cnt*4/5):
-        if task.restart_cnt==1:
+        if task.restart_cnt<=1:
             cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
       elif global_step>int(task.step_cnt4/5):
-        if task.restart_cnt==2:
+        if task.restart_cnt<=2:
             cluster._run_cluster(task,last_precision,labels_to_names,checkpoint_dirs[0])
 
     if standard_cnt >= 3:
