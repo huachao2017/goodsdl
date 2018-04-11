@@ -186,6 +186,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     for f_upc in solved_cluster:
         cur_category_cnt = cur_category_cnt - len(solved_cluster[f_upc])
 
+    print('category_cnt:{}/{}'.format(cur_category_cnt, task.category_cnt))
     if cur_category_cnt < 8 and cur_category_cnt/task.category_cnt < .05:
         print('exit for cur_category_cnt:{}/{}'.format(cur_category_cnt, task.category_cnt))
         task.restart_cnt = task.restart_cnt+1
@@ -195,8 +196,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
 
     # 3.3.3.3、修改目录存储结构 重启问题，目录结构调整方案分为拷贝目录和拷贝子目录
     print('3.3.3.3')
-    def move_file(upc,src_dir,dest_dir):
-        f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
+    def move_file(f_upc,src_dir,dest_dir):
+        f_structure = ClusterStructure.objects.filter(f_upc=f_upc).order_by('id')[:1]
         if len(f_structure)>0:
             for one_move_dir in os.listdir(src_dir):
                 shutil.move(os.path.join(src_dir,one_move_dir), dest_dir)
@@ -215,7 +216,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         for upc in solved_cluster[father]:
             upc_dir = os.path.join(task.dataset_dir,upc)
             move_file(upc, upc_dir, father_dir)
-    os.remove(tmp_dir)
+    os.rmdir(tmp_dir)
 
     # 3.3.3.4、记录到cluster_structure表中，重启问题，原cluster会进一步收拢，
     print('3.3.3.4')
