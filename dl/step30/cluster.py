@@ -16,7 +16,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     """
     3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按50%，30%，20%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
     3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
-    3.3.3、聚类：设定50%为阀值进行聚类连接，判断是否聚类后分类数限制，修改目录存储结构，记录到cluster_structure表中
+    3.3.3、聚类：设定45%为阀值进行聚类连接，判断是否聚类后分类数限制，修改目录存储结构，记录到cluster_structure表中
     3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。
 
     :param task:
@@ -116,27 +116,28 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                     score=upc_scores[upc_1][upc_2]
                 )
 
-    # 3.3.3.1、聚类：设定50%为阀值进行聚类连接
+    # 3.3.3.1、聚类：设定45%为阀值进行聚类连接
     print('3.3.3.1')
     upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
-    source_clusters = {}  # {A:[B,C,D],B:[C,E],C:[F],E:[F],G:[A,H],M:[O,N]}
+    source_cluster = {}  # {A:[B,C,D],B:[C,E],C:[F],E:[F],G:[A,H],M:[O,N]}
     for upc_score in upc_scores:
-        if upc_score.score < 0.5:
+        if upc_score.score < 0.45:
             continue
-        if upc_score.upc_1 in source_clusters:
-            if upc_score.upc_2 in source_clusters[upc_score.upc_1]:
+        if upc_score.upc_1 in source_cluster:
+            if upc_score.upc_2 in source_cluster[upc_score.upc_1]:
                 continue
             else:
-                source_clusters[upc_score.upc_1].append(upc_score.upc_2)
+                source_cluster[upc_score.upc_1].append(upc_score.upc_2)
         else:
-            source_clusters[upc_score.upc_1] = [upc_score.upc_1]
+            source_cluster[upc_score.upc_1] = [upc_score.upc_1]
 
-    print(source_clusters)
+    print('source_cluster:')
+    print(source_cluster)
 
     sorted_cluster = {}  # {A:[B,C,D,G,H],B:[C,E],C:[F],E:[F],M:[N,O]}
-    for key in source_clusters:
+    for key in source_cluster:
         ones = [key]
-        for one in source_clusters[key]:
+        for one in source_cluster[key]:
             ones.append(one)
         sorted_ones = sorted(ones)
         f_upc = sorted_ones[0]
@@ -148,6 +149,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         else:
             sorted_cluster[f_upc] = sorted_ones
 
+    print('sorted_cluster:')
     print(sorted_cluster)
 
     def inner_find(f_upc, sorted_cluster, solved_keys):
@@ -168,6 +170,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     for f_upc in sorted_cluster:
         solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster, solved_keys)
 
+    print('solved_cluster:')
     print(solved_cluster)
 
     # 3.3.3.2、判断是否聚类后分类数限制，然后退出
