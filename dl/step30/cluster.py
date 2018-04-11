@@ -109,6 +109,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                     duplicate[0].score = upc_scores[upc_1][upc_2]
                     duplicate[0].save()
             else:
+                if upc_1 == upc_2:
+                    raise ValueError('error: cluster with same upc: {}'.format(upc_1))
                 ClusterUpcScore.objects.create(
                     train_task_id=task.pk,
                     upc_1=upc_1,
