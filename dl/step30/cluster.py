@@ -125,56 +125,83 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     # 3.3.3.1、聚类：设定45%为阀值进行聚类连接
     print('3.3.3.1')
     upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
-    source_cluster = {}  # {A:[B,C,D],B:[C,E],C:[F],E:[F],G:[A,H],M:[O,N]}
+    source_cluster = []  # [['A','B'],['A','D'],['B','E'],['C','D'],['E','F'],['G','A'],['N','M']]
     for upc_score in upc_scores:
         if upc_score.score < 0.45:
             continue
-        if upc_score.upc_1 in source_cluster:
-            if upc_score.upc_2 in source_cluster[upc_score.upc_1]:
-                continue
-            else:
-                source_cluster[upc_score.upc_1].append(upc_score.upc_2)
-        else:
-            source_cluster[upc_score.upc_1] = [upc_score.upc_2]
+        source_cluster.append([upc_score.upc_1,upc_score.upc_2])
 
     print('source_cluster:')
     print(source_cluster)
 
-    sorted_cluster = {}  # {A:[B,C,D,G,H],B:[C,E],C:[F],E:[F],M:[N,O]}
-    for key in source_cluster:
-        ones = [key]
-        for one in source_cluster[key]:
-            ones.append(one)
-        sorted_ones = sorted(ones)
-        f_upc = sorted_ones[0]
-        sorted_ones.remove(f_upc)
-        if f_upc in sorted_cluster:
-            for one in sorted_ones:
-                if one not in sorted_cluster[f_upc]:
-                    sorted_cluster[f_upc].append(one)
-        else:
-            sorted_cluster[f_upc] = sorted_ones
+    upc_to_lines = {}  # {A:[0,1,5],B:[0,2],C:[3],D:[1,3],E:[2,4],F:[4],G:[5],N:[6],M:[6]}
+    for i in range(len(source_cluster)):
+        for j in range(2):
+            if source_cluster[i][j] in upc_to_lines:
+                upc_to_lines[source_cluster[i][j]].append(i)
+            else:
+                upc_to_lines[source_cluster[i][j]] = [i]
 
-    print('sorted_cluster:')
-    print(sorted_cluster)
+    print('upc_to_lines:')
+    print(upc_to_lines)
 
-    def inner_find(f_upc, sorted_cluster, solved_keys):
-        solved_keys.append(f_upc)
-        ones = sorted_cluster[f_upc]
-        ret = ones.copy()
-        for one in ones:
-            if one in sorted_cluster:
-                finds = inner_find(one, sorted_cluster, solved_keys)
-                for find_one in finds:
-                    if find_one not in ret:
-                        ret.append(find_one)
+    solved_line_to_upc = {}
+    solved_upc_to_lines = {}  # {A:[0,1,2,3,4,5],N:[6]}
+    for upc in upc_to_lines:
+        unsolved_lines = []
+        cluster_upcs = []
+        for line in upc_to_lines[upc]:
+            if line in solved_line_to_upc:
+                cluster_upc = solved_line_to_upc[line]
+                if cluster_upc not in cluster_upcs:
+                    cluster_upcs.append(cluster_upc)
+                if line not in solved_upc_to_lines[cluster_upc]:
+                    solved_upc_to_lines[cluster_upc].append(line)
+            else:
+                unsolved_lines.append(line)
 
-        return ret
+        if len(cluster_upcs) > 1: #需要处理多个聚类
+            cluster_upcs = sorted(cluster_upcs)
+            main_upc = cluster_upc[0]
+            for cluster_upc in cluster_upcs:
+                if cluster_upc != main_upc:
+                    for line in solved_upc_to_lines[cluster_upc]:
+                        if line not in solved_upc_to_lines[main_upc]:
+                            solved_upc_to_lines[main_upc].append(line)
+                        solved_line_to_upc[line] = main_upc
+                    solved_upc_to_lines.pop(cluster_upc)
+            cluster_upcs = [main_upc]
+        for line in unsolved_lines:
+            if len(cluster_upcs) == 0: # 不聚类
+                solved_line_to_upc[line] = upc
+                if upc not in solved_upc_to_lines:
+                    solved_upc_to_lines[upc] = [line]
+                else:
+                    if line not in solved_upc_to_lines[upc]:
+                        solved_upc_to_lines[upc].append(line)
+            elif len(cluster_upcs) == 1: # 聚到指定的类
+                if line not in solved_upc_to_lines[cluster_upcs[0]]:
+                    solved_upc_to_lines[cluster_upcs[0]].append(line)
+                solved_line_to_upc[line] = cluster_upcs[0]
 
-    solved_cluster = {}  # {A:[B,C,D,E,F,G,H],M:[N,O]}
-    solved_keys = []
-    for f_upc in sorted_cluster:
-        solved_cluster[f_upc] = inner_find(f_upc, sorted_cluster, solved_keys)
+    print('solved_upc_to_lines:')
+    print(solved_upc_to_lines)
+    print('solved_line_to_upc:')
+    print(solved_line_to_upc)
+
+    solved_cluster = {}  # {'A': ['B', 'C', 'D', 'G', 'H', 'E', 'F'], 'M': ['N']}
+
+    for key in solved_upc_to_lines:
+        one_cluster = []
+        for line in solved_upc_to_lines[key]:
+            for upc in source_cluster[line]:
+                if upc not in one_cluster:
+                    one_cluster.append(upc)
+
+        one_cluster = sorted(one_cluster)
+        main_upc = one_cluster[0]
+        one_cluster.remove(main_upc)
+        solved_cluster[main_upc] = one_cluster
 
     print('solved_cluster:')
     print(solved_cluster)
