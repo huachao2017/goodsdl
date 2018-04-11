@@ -163,6 +163,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         if len(cluster_upcs) > 1: #需要处理多个聚类
             cluster_upcs = sorted(cluster_upcs)
             main_upc = cluster_upc[0]
+            if main_upc not in solved_upc_to_lines:
+                solved_upc_to_lines[main_upc] = []
             for cluster_upc in cluster_upcs:
                 if cluster_upc != main_upc:
                     for line in solved_upc_to_lines[cluster_upc]:
