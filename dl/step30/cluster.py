@@ -219,12 +219,20 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     os.rmdir(tmp_dir)
 
     # 3.3.3.4、记录到cluster_structure表中，重启问题，原cluster会进一步收拢，
+    # 每个结构在创建的时候已经建设
     print('3.3.3.4')
     for father in solved_cluster:
-        f_structure = ClusterStructure.objects.filter(upc=father).order_by('id')[:1]
         for upc in solved_cluster[father]:
+            # 上次训练已经有聚类 TODO 训练必须从上往下训练
+            last_f_structures = ClusterStructure.objects.filter(f_upc=upc).order_by('id')
+            if len(last_f_structures)>0:
+                for last_child_structure in last_f_structures:
+                    last_child_structure[0].f_upc = father
+                    last_child_structure.save()
+
+            # 修改自己
             c_structure = ClusterStructure.objects.filter(upc=upc).order_by('id')[:1]
-            c_structure[0].f_upc = f_structure[0].upc
+            c_structure[0].f_upc = father
             c_structure[0].save()
 
     # 3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。
