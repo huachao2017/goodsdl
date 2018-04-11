@@ -38,6 +38,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         if len(use_steps) == 3:
             break
 
+    print('use_steps:')
     print(use_steps)
 
     sample_scores = {}
@@ -53,8 +54,11 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             'score': eval_data.score,
         }
 
+    print('sample_scores:')
     print(sample_scores)
 
+    ClusterSampleScore.objects.filter(train_task_id=task.pk).delete()
+    ClusterUpcScore.objects.filter(train_task_id=task.pk).delete()
     for sample_serial in sample_scores:
         one_sample = sample_scores[sample_serial]
         detections = {}
