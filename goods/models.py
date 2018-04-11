@@ -200,6 +200,7 @@ class ClusterStructure(models.Model):
     f_upc = models.CharField(max_length=20, default='', db_index=True)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
+    update_train_task_id = models.IntegerField(default=0)
 
 class ClusterEvalStep(models.Model):
     train_task = models.ForeignKey(TrainTask,related_name="train_task_evalsteps",on_delete=models.CASCADE)

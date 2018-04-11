@@ -227,12 +227,14 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             last_f_structures = ClusterStructure.objects.filter(f_upc=upc).order_by('id')
             if len(last_f_structures)>0:
                 for last_child_structure in last_f_structures:
-                    last_child_structure[0].f_upc = father
+                    last_child_structure.f_upc = father
+                    last_child_structure.update_train_task_id = task.pk
                     last_child_structure.save()
 
             # 修改自己
             c_structure = ClusterStructure.objects.filter(upc=upc).order_by('id')[:1]
             c_structure[0].f_upc = father
+            c_structure[0].update_train_task_id = task.pk
             c_structure[0].save()
 
     # 3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。

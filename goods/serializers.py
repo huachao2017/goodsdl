@@ -116,7 +116,7 @@ class TrainTaskSerializer(serializers.ModelSerializer):
 class ClusterStructureSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClusterStructure
-        fields = ('pk', 'upc', 'f_upc')
+        fields = ('pk', 'upc', 'f_upc', 'create_time', 'update_time', 'update_train_task_id')
         read_only_fields = ('create_time', 'update_time')
 
 class ClusterEvalDataSerializer(serializers.ModelSerializer):
