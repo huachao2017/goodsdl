@@ -129,7 +129,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             else:
                 source_cluster[upc_score.upc_1].append(upc_score.upc_2)
         else:
-            source_cluster[upc_score.upc_1] = [upc_score.upc_1]
+            source_cluster[upc_score.upc_1] = [upc_score.upc_2]
 
     print('source_cluster:')
     print(source_cluster)
