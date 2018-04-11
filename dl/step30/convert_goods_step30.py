@@ -136,52 +136,13 @@ def _get_split_filenames_and_classes(dataset_dir):
 
     return train_photo_filenames, validation_photo_filenames, sorted(class_names)
 
-def _get_test_filenames_and_classes(dataset_dir):
-    """Returns a list of filenames and inferred class names.
-
-    Args:
-      dataset_dir: A directory containing a set of subdirectories representing
-        class names. Each subdirectory should contain PNG or JPG encoded images.
-
-    Returns:
-      A list of image file paths, relative to `dataset_dir` and the list of
-      subdirectories, representing class names.
-    """
-    directories = []
-    class_names = []
-    for dir_name in os.listdir(dataset_dir):
-        path = os.path.join(dataset_dir, dir_name)
-        if os.path.isdir(path):
-            directories.append(path)
-            class_names.append(dir_name)
-
-    validation_photo_filenames = []
-    for directory in directories:
-        local_filenames = []
-        for filename in os.listdir(directory):
-            path = os.path.join(directory, filename)
-            if os.path.isfile(path):
-                local_filenames.append(path)
-
-        count = len(local_filenames)
-        if count>0:
-            validation_indexes = []
-            for c in range(5):
-                validation_indexes.append(random.randint(0, count-1))
-
-            for i in range(count):
-                if i in validation_indexes:
-                    validation_photo_filenames.append(local_filenames[i])
-
-    return validation_photo_filenames, sorted(class_names)
-
 def _get_tfrecord_filename(output_dir, split_name):
     output_filename = 'goods_recogonize_%s.tfrecord' % (
         split_name)
     return os.path.join(output_dir, output_filename)
 
 
-def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
+def _convert_dataset(split_name, filenames, names_to_labels, output_dir, source_dataset_dir):
     """Converts the given filenames to a TFRecord dataset.
 
     Args:
@@ -214,7 +175,19 @@ def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
             image = im.open(encoded_jpg_io)
             width, height = image.size
 
-            name = os.path.basename(os.path.dirname(filenames[i]))
+            # changed by @huac
+            # 可能存在多层目录
+            relative_path = filenames[i].replace(source_dataset_dir,'')
+            dirs = relative_path.split('/')
+            name = None
+            for dir in dirs:
+                if len(dir)>0:
+                    name = dir
+                    break
+            if name is None:
+                raise ValueError('filename is error: {}'.format(filenames[i]))
+            # name = os.path.basename(os.path.dirname(relative_path))
+
             label = names_to_labels[name]
             print('{}:{}'.format(filenames[i],label))
             example = dataset_utils.image_to_tfexample(
@@ -263,9 +236,9 @@ def prepare_train(dataset_dir, output_dir):
 
         # First, convert the training and validation sets.
         _convert_dataset('train', training_filenames, names_to_labels,
-                         output_dir)
+                         output_dir, dataset_dir)
         _convert_dataset('validation', validation_filenames, names_to_labels,
-                         output_dir)
+                         output_dir, dataset_dir)
 
         # Finally, write the labels file:
         labels_to_names = dict(zip(range(len(class_names)), class_names))
@@ -273,20 +246,3 @@ def prepare_train(dataset_dir, output_dir):
 
         logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
-
-if __name__ == '__main__':
-    dataset_dir = '/home/src/goodsdl/media/dataset/step20/rectangle_softbox'
-    output_dir = '/home/src/goodsdl/train/51'
-    test_photo_filenames, class_names = _get_test_filenames_and_classes(dataset_dir)
-    names_to_labels = dict(zip(class_names, range(len(class_names))))
-
-    # Divide into train and test:
-    validation_filenames = test_photo_filenames
-    # validation_filenames = validation_filenames[:10]
-
-    # First, convert the training and validation sets.
-    _convert_dataset('validation', validation_filenames, names_to_labels,
-                     output_dir)
-    print(len(validation_filenames))
-    labels_to_names = dict(zip(range(len(class_names)), class_names))
-    print(labels_to_names)
