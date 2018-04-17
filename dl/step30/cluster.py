@@ -122,11 +122,11 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
 
     # 3.3.3.1、聚类：设定1为阀值进行聚类连接
     print('3.3.3.1')
-    upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
+    upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk).filter(score__gte=1.0)
+    print('upc_scores:')
+    print(upc_scores)
     source_cluster = []  # [['A','B'],['A','D'],['B','E'],['C','D'],['E','F'],['G','A'],['N','M']]
     for upc_score in upc_scores:
-        if upc_score.score < 1:
-            continue
         source_cluster.append([upc_score.upc_1,upc_score.upc_2])
 
     print('source_cluster:')
