@@ -1144,7 +1144,7 @@ class TransactionMetrixViewSet(DefaultMixin, mixins.ListModelMixin, mixins.Retri
     queryset = TransactionMetrix.objects.order_by('-id')
     serializer_class = TransactionMetrixSerializer
 
-class TrainTaskViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class TrainTaskViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainTask.objects.order_by('-id')
     serializer_class = TrainTaskSerializer
 
