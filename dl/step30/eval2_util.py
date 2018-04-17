@@ -115,10 +115,21 @@ def record_false_detection_results(task,
       detection_sample_image_path = None
       if source_dataset_dir:
           detection_image_dir=os.path.join(source_dataset_dir, labels_to_names[detection_class_label])
-          for image_name in os.listdir(detection_image_dir):
-              detection_sample_image_path = os.path.join(detection_image_dir,image_name)
-              if os.path.isfile(detection_sample_image_path):
+          tmp_path = None
+          for name in os.listdir(detection_image_dir):
+              tmp_path = os.path.join(detection_image_dir,name)
+              if os.path.isfile(tmp_path):
+                  detection_sample_image_path = tmp_path
                   break
+          # 仅处理两层目录
+          if detection_sample_image_path is None:
+              if tmp_path is not None:
+                  for name in os.listdir(tmp_path):
+                      tmp2 = os.path.join(tmp_path, name)
+                      if os.path.isfile(tmp2):
+                          detection_sample_image_path = tmp2
+                          break
+
       # @huac add for record in database
       steps = ClusterEvalStep.objects.filter(train_task_id=task.pk).filter(checkpoint_step=global_step)[:1]
       if len(steps)==0: # 不重复存入同一个global_step的数据
