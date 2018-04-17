@@ -14,9 +14,9 @@ import tensorflow as tf
 
 def _run_cluster(task, precision, labels_to_names, train_dir):
     """
-    3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按50%，30%，20%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
-    3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
-    3.3.3、聚类：设定45%为阀值进行聚类连接，判断是否聚类后分类数限制，修改目录存储结构，记录到cluster_structure表中
+    3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按40%，30%，30%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
+    3.3.2、聚类打分算法：取A->B或B->A单样本加和值作为聚类结果
+    3.3.3、聚类：设定1为阀值进行聚类连接，判断是否聚类后分类数限制，修改目录存储结构，记录到cluster_structure表中
     3.3.4、收尾：终止训练进程，当前task设为3终止，新建一个同dataset_dir的task，重新训练。
 
     :param task:
@@ -67,11 +67,11 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             groundtruth_label = one_sample[checkpoint_step]['groundtruth_label']
             weight = 0.0
             if checkpoint_step == use_steps[0]:
-                weight = .5
+                weight = .4
             elif checkpoint_step == use_steps[1]:
                 weight = .3
             elif checkpoint_step == use_steps[2]:
-                weight = .2
+                weight = .3
 
             if one_sample[checkpoint_step]['detection_label'] in detections:
                 detections[one_sample[checkpoint_step]['detection_label']] = detections[one_sample[checkpoint_step][
@@ -89,15 +89,14 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                 score=detections[detection]
             )
 
-    # 3.3.2、聚类打分算法：取A->B或B->A单样本最高值作为聚类结果
+    # 3.3.2、聚类打分算法：取A->B或B->A单样本加和值作为聚类结果
     print('3.3.2')
     sample_scores = ClusterSampleScore.objects.filter(train_task_id=task.pk)
     upc_scores = {}
     for sample_score in sample_scores:
         if sample_score.upc_1 in upc_scores:
             if sample_score.upc_2 in upc_scores[sample_score.upc_1]:
-                if upc_scores[sample_score.upc_1][sample_score.upc_2] < sample_score.score:
-                    upc_scores[sample_score.upc_1][sample_score.upc_2] = sample_score.score
+                upc_scores[sample_score.upc_1][sample_score.upc_2] += sample_score.score
             else:
                 upc_scores[sample_score.upc_1][sample_score.upc_2] = sample_score.score
         else:
@@ -109,9 +108,8 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             duplicate = ClusterUpcScore.objects.filter(train_task_id=task.pk).filter(upc_1=upc_2).filter(upc_2=upc_1)[
                         :1]
             if len(duplicate) > 0:
-                if duplicate[0].score < upc_scores[upc_1][upc_2]:
-                    duplicate[0].score = upc_scores[upc_1][upc_2]
-                    duplicate[0].save()
+                duplicate[0].score += upc_scores[upc_1][upc_2]
+                duplicate[0].save()
             else:
                 if upc_1 == upc_2:
                     raise ValueError('error: cluster with same upc: {}'.format(upc_1))
@@ -122,12 +120,12 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                     score=upc_scores[upc_1][upc_2]
                 )
 
-    # 3.3.3.1、聚类：设定45%为阀值进行聚类连接
+    # 3.3.3.1、聚类：设定1为阀值进行聚类连接
     print('3.3.3.1')
     upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk)
     source_cluster = []  # [['A','B'],['A','D'],['B','E'],['C','D'],['E','F'],['G','A'],['N','M']]
     for upc_score in upc_scores:
-        if upc_score.score < 0.45:
+        if upc_score.score < 1:
             continue
         source_cluster.append([upc_score.upc_1,upc_score.upc_2])
 
