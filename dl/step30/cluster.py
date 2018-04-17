@@ -27,7 +27,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
     """
     print('begin cluster:{}'.format(task.pk))
 
-    # 3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。（TODO：这部分可以根据map和category_ap的数据自学习）
+    # 3.3.1、计算单样本聚类打分，算法：最近3次checkpoint的score，按60%，30%，10%，加权平均。
     print('3.3.1')
     use_steps = []
     db_steps = ClusterEvalStep.objects.filter(train_task_id=task.pk).order_by('-checkpoint_step')
@@ -89,14 +89,14 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                 score=detections[detection]
             )
 
-    # 3.3.2、聚类打分算法：取A->B或B->A单样本加和值作为聚类结果
+    # 3.3.2、聚类打分算法：取A->B或B->A单样本score加和值作为聚类结果，出现第二个score*2，出现互相指向，score*4
     print('3.3.2')
     sample_scores = ClusterSampleScore.objects.filter(train_task_id=task.pk)
     upc_scores = {}
     for sample_score in sample_scores:
         if sample_score.upc_1 in upc_scores:
             if sample_score.upc_2 in upc_scores[sample_score.upc_1]:
-                upc_scores[sample_score.upc_1][sample_score.upc_2] += sample_score.score
+                upc_scores[sample_score.upc_1][sample_score.upc_2] += sample_score.score*2
             else:
                 upc_scores[sample_score.upc_1][sample_score.upc_2] = sample_score.score
         else:
@@ -108,7 +108,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
             duplicate = ClusterUpcScore.objects.filter(train_task_id=task.pk).filter(upc_1=upc_2).filter(upc_2=upc_1)[
                         :1]
             if len(duplicate) > 0:
-                duplicate[0].score += upc_scores[upc_1][upc_2]
+                duplicate[0].score += upc_scores[upc_1][upc_2]*4
                 duplicate[0].save()
             else:
                 if upc_1 == upc_2:
@@ -120,7 +120,7 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
                     score=upc_scores[upc_1][upc_2]
                 )
 
-    # 3.3.3.1、聚类：设定1为阀值进行聚类连接
+    # 3.3.3.1、聚类：设定1为阀值进行聚类连接（TODO：阈值需要根据map和category_cnt等数据自学习）
     print('3.3.3.1')
     upc_scores = ClusterUpcScore.objects.filter(train_task_id=task.pk).filter(score__gte=1.0)
     print('upc_scores:')
