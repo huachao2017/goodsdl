@@ -6,7 +6,7 @@ import shutil
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
-from goods.models import TrainTask,ClusterStructure
+from goods.models import TrainTask,ClusterStructure,ClusterEvalStep,ClusterEvalData,ClusterSampleScore,ClusterUpcScore
 
 tf.app.flags.DEFINE_string(
     'dir_serial', '',
@@ -41,6 +41,12 @@ def main(_):
     shutil.copytree(step20_dir,step30_dir)
     ret = os.popen('chmod 777 -R {}'.format(step30_dir)).readline()
 
+    TrainTask.objects.delete()
+    ClusterStructure.objects.delete()
+    ClusterEvalStep.objects.delete()
+    ClusterEvalData.objects.delete()
+    ClusterSampleScore.objects.delete()
+    ClusterUpcScore.objects.delete()
     for upc_name in os.listdir(step30_dir):
         dataset_dir = os.path.join(step30_dir, upc_name)
         if os.path.isdir(dataset_dir):
