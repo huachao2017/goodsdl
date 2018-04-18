@@ -41,12 +41,12 @@ def main(_):
     shutil.copytree(step20_dir,step30_dir)
     ret = os.popen('chmod 777 -R {}'.format(step30_dir)).readline()
 
-    TrainTask.objects.delete()
-    ClusterStructure.objects.delete()
-    ClusterEvalStep.objects.delete()
-    ClusterEvalData.objects.delete()
-    ClusterSampleScore.objects.delete()
-    ClusterUpcScore.objects.delete()
+    TrainTask.objects.all().delete()
+    ClusterStructure.objects.all().delete()
+    ClusterEvalStep.objects.all().delete()
+    ClusterEvalData.objects.all().delete()
+    ClusterSampleScore.objects.all().delete()
+    ClusterUpcScore.objects.all().delete()
     for upc_name in os.listdir(step30_dir):
         dataset_dir = os.path.join(step30_dir, upc_name)
         if os.path.isdir(dataset_dir):
