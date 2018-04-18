@@ -700,8 +700,13 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             batch_size = 64
 
         train_steps = int(len(training_filenames) * 100 / batch_size) # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
-        if train_steps < 20000:
-            train_steps = 20000 # 小样本需要增加训练次数
+        if actionlog.model_name == 'nasnet_large':
+            if train_steps < 80000:
+                train_steps = 80000 # 小样本需要增加训练次数
+        else:
+            if train_steps < 30000:
+                train_steps = 30000 # 小样本需要增加训练次数
+
 
         # 更新TrainTask
         tasks = TrainTask.objects.filter(state=0).filter(dataset_dir=source_dataset_dir).order_by('-restart_cnt')[:1]
