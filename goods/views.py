@@ -709,7 +709,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
 
         # 更新TrainTask
-        tasks = TrainTask.objects.filter(state=0).filter(dataset_dir=source_dataset_dir).order_by('-restart_cnt')[:1]
+        tasks = TrainTask.objects.filter(state=0).filter(dataset_dir=source_dataset_dir).order_by('-cluster_cnt')[:1]
         task = tasks[0]
         task.train_id = actionlog.pk
         task.category_cnt = len(class_names_to_ids)
