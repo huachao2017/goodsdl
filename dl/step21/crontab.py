@@ -33,7 +33,7 @@ def _run_train(domain, serial, traintype,dataset_dir):
         ('serial', serial),
         ('traintype', traintype),
         ('dataset_dir', dataset_dir),
-        ('model_name', 'ANY'),
+        ('model_name', 'nasnet_large'),
         ('is_fineture', False),
     ])
     req = request.Request('http://{}/api/trainaction/'.format(domain))
