@@ -1145,11 +1145,11 @@ class TransactionMetrixViewSet(DefaultMixin, mixins.ListModelMixin, mixins.Retri
     serializer_class = TransactionMetrixSerializer
 
 class TrainTaskViewSet(DefaultMixin, viewsets.ModelViewSet):
-    queryset = TrainTask.objects.order_by('-id')
+    queryset = TrainTask.objects.order_by('-update_time')
     serializer_class = TrainTaskSerializer
 
 class ClusterStructureViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    queryset = ClusterStructure.objects.order_by('-id')
+    queryset = ClusterStructure.objects.order_by('-update_time')
     serializer_class = ClusterStructureSerializer
 
 class ClusterEvalDataViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
