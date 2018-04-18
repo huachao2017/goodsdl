@@ -682,7 +682,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         # 训练准备
         train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
         source_dataset_dir = actionlog.dataset_dir
-        class_names_to_ids, training_filenames, validation_filenames = convert_goods_step20.prepare_train(source_dataset_dir,
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods_step3.prepare_train(source_dataset_dir,
             train_logs_dir)
         # step2_model_name = 'inception_resnet_v2'
         # step2_model_name = 'nasnet_large'
