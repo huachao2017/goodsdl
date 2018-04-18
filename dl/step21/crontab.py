@@ -87,6 +87,7 @@ def main(_):
             # 检查目录样本是否符合
             for i in range(10):
                 step21_dataset_dir = os.path.join(dataset_dir, common.STEP2_PREFIX+serial_postfix, labels_to_names[cur_traintype])
+                logging.info(step21_dataset_dir)
                 if not os.path.isdir(step21_dataset_dir):
                     cur_traintype += 1
                 elif len(os.listdir(step21_dataset_dir)) <= 1: # 必须大于两类才能分类
