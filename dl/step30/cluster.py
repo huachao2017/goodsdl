@@ -214,9 +214,9 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
         cur_category_cnt = cur_category_cnt - len(solved_cluster[f_upc])
 
     print('category_cnt:{}/{}'.format(cur_category_cnt, task.category_cnt))
-    if cur_category_cnt < 8 and cur_category_cnt/task.category_cnt < .05:
+    if cur_category_cnt < 8 and cur_category_cnt/task.category_cnt < .5:
         print('exit for cur_category_cnt:{}/{}'.format(cur_category_cnt, task.category_cnt))
-        task.restart_cnt = task.restart_cnt+1
+        task.cluster_cnt = task.cluster_cnt+1
         task.m_ap = precision
         task.save()
         return

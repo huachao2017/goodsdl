@@ -186,7 +186,7 @@ class TrainTask(models.Model):
         (3, u'stop'),
     )
     state = models.IntegerField(choices=STATE_CHOICES, default=0)
-    restart_cnt = models.IntegerField(default=0)
+    cluster_cnt = models.IntegerField(default=0)
     category_cnt = models.IntegerField(default=0)
     sample_cnt = models.IntegerField(default=0)
     step_cnt = models.IntegerField(default=0)
