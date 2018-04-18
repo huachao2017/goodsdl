@@ -223,27 +223,31 @@ def _run_cluster(task, precision, labels_to_names, train_dir):
 
     # 3.3.3.3、修改目录存储结构 重启问题，目录结构调整方案分为拷贝目录和拷贝子目录
     print('3.3.3.3')
-    def move_file(f_upc,src_dir,dest_dir):
-        f_structure = ClusterStructure.objects.filter(f_upc=f_upc).order_by('id')[:1]
-        if len(f_structure)>0:
+    def inner_move_father_files(source_upc, father_dir):
+        source_structure = ClusterStructure.objects.filter(f_upc=source_upc).order_by('id')[:1]
+        if len(source_structure) == 0:
+            inner_father_path = os.path.join(father_dir,source_upc)
+            os.mkdir(inner_father_path)
+            for file_name in os.listdir(father_dir):
+                file_path = os.path.join(father_dir, file_name)
+                if os.path.isfile(file_path):
+                    shutil.move(file_path, inner_father_path)
+
+    def inner_move_child_files(source_upc, src_dir, dest_dir):
+        source_structure = ClusterStructure.objects.filter(f_upc=source_upc).order_by('id')[:1]
+        if len(source_structure)>0:
             for one_move_dir in os.listdir(src_dir):
                 shutil.move(os.path.join(src_dir,one_move_dir), dest_dir)
+            os.rmdir(src_dir)
         else:
             shutil.move(src_dir, dest_dir)
 
-    tmp_dir = os.path.join(task.dataset_dir, 'tmp')
-    if not tf.gfile.Exists(tmp_dir):
-        tf.gfile.MakeDirs(tmp_dir)
     for father in solved_cluster:
         father_dir = os.path.join(task.dataset_dir,father)
-        father_tmp_dir = os.path.join(tmp_dir,father)
-        shutil.move(father_dir,tmp_dir)
-        tf.gfile.MakeDirs(father_dir)
-        move_file(father, father_tmp_dir, father_dir)
+        inner_move_father_files(father, father_dir)
         for upc in solved_cluster[father]:
             upc_dir = os.path.join(task.dataset_dir,upc)
-            move_file(upc, upc_dir, father_dir)
-    os.rmdir(tmp_dir)
+            inner_move_child_files(upc, upc_dir, father_dir)
 
     # 3.3.3.4、记录到cluster_structure表中，重启问题，原cluster会进一步收拢，
     # 每个结构在创建的时候已经建设
