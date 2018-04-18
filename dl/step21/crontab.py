@@ -61,7 +61,8 @@ def main(_):
     export20s = ExportAction.objects.filter(train_action__action='T20').order_by('-update_time')[:1]
     export20 = export20s[0]
     labels_to_names = get_labels_to_names(os.path.join('/home/src/goodsdl/dl/model', str(export20.pk), 'labels.txt'))
-    end_traintype = len(labels_to_names)
+    print(labels_to_names)
+    end_traintype = len(labels_to_names) - 1
     cur_traintype = 0
     domain = FLAGS.domain
     if domain is None:
@@ -85,7 +86,7 @@ def main(_):
         if len(gpus) > 1:
             # 检查目录样本是否符合
             for i in range(10):
-                step21_dataset_dir = os.path.join(dataset_dir, common.STEP2_PREFIX+serial_postfix, str(cur_traintype))
+                step21_dataset_dir = os.path.join(dataset_dir, common.STEP2_PREFIX+serial_postfix, os.path.join(dataset_dir,labels_to_names[cur_traintype]))
                 if not os.path.isdir(step21_dataset_dir):
                     cur_traintype += 1
                 elif len(os.listdir(step21_dataset_dir)) <= 1: # 必须大于两类才能分类
@@ -96,7 +97,7 @@ def main(_):
             # 检查是否已经训练，并且训练后没有新增样本
             exports = ExportAction.objects.filter(train_action__action='T21').filter(train_action__traintype=cur_traintype).order_by('-update_time')[:1]
             if len(exports)>0:
-                step21_dataset_dir = os.path.join(dataset_dir, common.STEP2_PREFIX+serial_postfix, str(cur_traintype))
+                step21_dataset_dir = os.path.join(dataset_dir, common.STEP2_PREFIX+serial_postfix, os.path.join(dataset_dir,labels_to_names[cur_traintype]))
                 filetime = datetime.datetime.fromtimestamp((os.path.getmtime(step21_dataset_dir)))
                 if filetime < exports[0].update_time:
                     logging.info('Skip train--{} because has trained in '.format(str(cur_traintype)) + time.strftime('%Y-%m-%d-%H:%M:%S', exports[0].update_time.timetuple()))
