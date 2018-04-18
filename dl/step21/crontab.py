@@ -81,7 +81,7 @@ def main(_):
             break
 
         # TODO 需要远程查询所有空闲gpu
-        gpus = GPU.getAvailable(order='memory', limit=1)
+        gpus = GPU.getAvailable(order='memory', limit=2)
         if len(gpus) > 1:
             # 检查目录样本是否符合
             for i in range(10):
