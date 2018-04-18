@@ -125,6 +125,7 @@ class TrainAction(models.Model):
     ACTION_CHOICES = (
         (u'T1', u'Train Step 1'),
         (u'T20', u'Train Step 2_0'),
+        (u'T21', u'Train Step 2_1'),
         (u'T30', u'Train Step 3_n'),
         (u'T2', u'Train Step 2'),
         (u'T3', u'Train Step 3'),
