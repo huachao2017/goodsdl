@@ -18,6 +18,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from dl.old import imagedetection
 from dl import imagedetectionV3, imagedetectionV4, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2, imagedetection_only_step3
 # from dl.old import imagedetection
 from dl.only_step2 import create_goods_tf_record
@@ -162,25 +163,17 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             aiinterval = .0
             # 正式应用区
-            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
-                '-update_time')[:1]
 
-            if serializer.instance.deviceid == '275': # 测试step20
-                export20s = ExportAction.objects.filter(train_action__action='T20').filter(train_action__serial='').filter(
-                    checkpoint_prefix__gt=0).order_by('-update_time')[:1]
-
-                if len(export20s) == 0:
-                    logger.error('not found detection model!')
-                    return Response([], status=status.HTTP_201_CREATED, headers=headers)
-                detector = imagedetectionV4.ImageDetectorFactory.get_static_detector(export1s[0].pk, export20s[0].pk,
-                                                                                     step2_model_name=export20s[0].model_name)
-                step1_min_score_thresh = .9
-                step2_min_score_thresh = .6
-
-                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                                  step2_min_score_thresh=step2_min_score_thresh)  # , compress=True)
+            if serializer.instance.deviceid == '275': # 10类的演示
+                detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+                min_score_thresh = .5
+                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
             else:
+                export1s = ExportAction.objects.filter(train_action__action='T1').filter(
+                    checkpoint_prefix__gt=0).order_by(
+                    '-update_time')[:1]
                 export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
                     '-update_time')[:1]
                 export3s = ExportAction.objects.filter(train_action__action='T3').filter(train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
@@ -209,6 +202,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 # 兼容上一个版本
                 if 'action' not in goods:
                     goods['action'] = 0
+                if 'score2' not in goods:
+                    goods['score2'] = 0
                 Goods.objects.create(image_id=serializer.instance.pk,
                                      class_type=goods['class'],
                                      score1=goods['score'],
