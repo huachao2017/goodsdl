@@ -4,15 +4,51 @@
 Uses SURF to match two images.
 Based on the sample code from opencv:
   samples/python2/find_obj.py
-USAGE
-  find_obj.py <image1> <image2>
 '''
 
 import numpy
 import cv2
+import os
 
 import sys
 import time
+
+class Matcher:
+    def __init__(self):
+        self.path_to_baseline_keypoint = {}
+        self.detector = cv2.xfeatures2d.SURF_create(400, 5, 5)
+        self.matcher = cv2.BFMatcher(cv2.NORM_L2)
+
+    def add_baseline_image(self, image_path):
+        image = cv2.imread(image_path)
+        kp, desc = self.detector.detectAndCompute(image, None)
+
+        upc = os.path.basename(os.path.dirname(image_path))
+        file_name = os.path.basename(image_path)
+        key = upc + '_' + file_name.split('_')[0]
+        self.path_to_baseline_keypoint[key] = (kp, desc)
+
+    def match_images(self,image_path, debug = False):
+        image = cv2.imread(image_path)
+        kp, desc = self.detector.detectAndCompute(image, None)
+
+        time0 = time.time()
+        match_info = {}
+        for key in self.path_to_baseline_keypoint:
+            (b_kp,b_desc) = self.path_to_baseline_keypoint[key]
+            raw_matches = self.matcher.knnMatch(desc, trainDescriptors=b_desc, k=2)  # 2
+            kp_pairs = filter_matches(kp, b_kp, raw_matches)
+            if len(kp_pairs) >= 4:
+                mkp1, mkp2 = zip(*kp_pairs)
+                p1 = numpy.float32([kp.pt for kp in mkp1])
+                p2 = numpy.float32([kp.pt for kp in mkp2])
+                H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
+                if numpy.sum(status) >= 10:
+                    match_info[key] = numpy.sum(status)
+        time1 = time.time()
+        if debug:
+            print('MATCH: %.2f' %(time1-time0))
+            print(match_info)
 
 
 ###############################################################################
@@ -27,12 +63,16 @@ def match_images(img1, img2, debug = False):
 
     kp1, desc1 = detector.detectAndCompute(img1, None)
     kp2, desc2 = detector.detectAndCompute(img2, None)
-    # print 'img1 - %d features, img2 - %d features' % (len(kp1), len(kp2))
+    if debug:
+        print('img1 - %d features, img2 - %d features' % (len(kp1), len(kp2)))
+        print(kp1)
+        print(desc1)
 
     time1 = time.time()
     raw_matches = matcher.knnMatch(desc1, trainDescriptors=desc2, k=2)  # 2
     time2 = time.time()
     kp_pairs = filter_matches(kp1, kp2, raw_matches)
+    print(kp_pairs)
     time3 = time.time()
     if debug:
         print('MATCH: %.2f, %.2f, %.2f, %.2f' %(time3-time0,time1-time0,time2-time1,time3-time2))
@@ -119,11 +159,20 @@ def draw_matches(window_name, kp_pairs, img1, img2):
 # Test Main
 ###############################################################################
 
+def test_class():
+    matcher = Matcher()
+    for i in range(8):
+        matcher.add_baseline_image('images/%d.jpg' % (i+1))
+    match_info = matcher.match_images('images/9.jpg',debug=True)
+
 if __name__ == '__main__':
     """Test code: Uses the two specified"""
 
+    test_class()
+    sys.exit(0)
+
     fn1 = 'images/7.jpg'
-    fn2 = 'images/8.jpg'
+    fn2 = 'images/9.jpg'
 
     img1 = cv2.imread(fn1)
     img2 = cv2.imread(fn2)
