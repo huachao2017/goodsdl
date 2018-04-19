@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import os
 import shutil
@@ -18,18 +19,17 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dl.old import imagedetection
-from dl import imagedetectionV3, imagedetectionV4, imageclassifyV1, imagedetection_only_step1, imagedetection_only_step2, imagedetection_only_step3
+from dl import common
+from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, \
+    imagedetection_only_step2, imagedetection_only_step3, imagedetection
 # from dl.old import imagedetection
 from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
-from dl.step20 import convert_goods_step20
-from dl.step30 import convert_goods_step30
 from dl.step2 import convert_goods
+from dl.step20 import convert_goods_step20
 from dl.step3 import convert_goods_step3
-from dl import common
+from dl.step30 import convert_goods_step30
 from .serializers import *
-import json
 
 logger = logging.getLogger("django")
 
