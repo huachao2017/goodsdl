@@ -62,7 +62,7 @@ def solves_one_image(image_path,
             os.path.split(os.path.splitext(image_path)[0])[1], angle))
         if tf.gfile.Exists(output_image_path_augment):
             # 文件存在不再重新生成，从而支持增量生成
-            continue
+            break
         logging.info("image:{} rotate {}.".format(output_image_path_augment, angle))
         if angle > 0:
             rotated_img = rotate_image(img, angle)
