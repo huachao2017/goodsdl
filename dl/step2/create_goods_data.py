@@ -39,15 +39,6 @@ def rotate_image(src, angle, scale=1.):
                           borderValue=(160, 160, 160)) # 桌面样本背景色
 
 
-def init_match(image_path):
-    matcher = Matcher()
-    matcher.add_baseline_image(image_path)
-    return matcher
-
-def match_image(matcher, output_image_path_augment):
-    key,cnt = matcher.match_images(output_image_path_augment)
-    return key != None
-
 def solves_one_image(image_path,
                      class_name,
                      output_class_dir,
@@ -115,9 +106,10 @@ def solves_one_image(image_path,
             augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
             cv2.imwrite(output_image_path_augment, augment_newimage)
             if angle == 0:
-                matcher = init_match(output_image_path_augment)
+                matcher = Matcher()
+                matcher.add_baseline_image(output_image_path_augment)
             else:
-                if not match_image(matcher, output_image_path_augment):
+                if not matcher.match_image(output_image_path_augment):
                     os.remove(output_image_path_augment)
                     augment_total_error += 1
                     logging.error("match error! image:{} ,rotate:{}.".format(image_path, angle))
@@ -147,9 +139,10 @@ def solves_one_image(image_path,
                 augment_newimage = rotated_img[ymin:ymax, xmin:xmax]
                 cv2.imwrite(output_image_path_augment, augment_newimage)
                 if angle == 0:
-                    matcher = init_match(output_image_path_augment)
+                    matcher = Matcher()
+                    matcher.add_baseline_image(output_image_path_augment)
                 else:
-                    if not match_image(matcher, output_image_path_augment):
+                    if not matcher.match_image(output_image_path_augment):
                         os.remove(output_image_path_augment)
                         augment_total_error += 1
                         logging.error("match error! image:{} ,rotate:{}.".format(image_path, angle))
@@ -160,7 +153,7 @@ def solves_one_image(image_path,
                     break
 
 
-def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=None):
+def create_step2_goods_V2(data_dir, output_dir, step1_model_path, dir_day_hour=None):
     graph_step1 = tf.Graph()
     with graph_step1.as_default():
         od_graph_def = tf.GraphDef()
@@ -203,7 +196,7 @@ def create_step2_goods_V2(data_dir, dataset_dir, step1_model_path, dir_day_hour=
                     logging.info('skip class:{}({})'.format(class_name, cur_dir_day_hour))
                     continue
             logging.info('solve class:{}'.format(class_name))
-            output_class_dir = os.path.join(dataset_dir, class_name)
+            output_class_dir = os.path.join(output_dir, class_name)
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
 
@@ -253,8 +246,8 @@ def main(_):
     dataset_dir = '/home/src/goodsdl/media/dataset'
     source_dir = os.path.join(dataset_dir, 'data_new{}'.format(FLAGS.source_dir_serial if FLAGS.source_dir_serial=='' else '_'+FLAGS.source_dir_serial))
     step2_dir = os.path.join(dataset_dir, common.STEP2_PREFIX if FLAGS.dest_dir_serial=='' else common.STEP2_PREFIX+'_'+FLAGS.dest_dir_serial)
-    export2s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
-    step1_model_path = os.path.join('/home/src/goodsdl/dl/model', str(export2s[0].pk), 'frozen_inference_graph.pb')
+    export1s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
+    step1_model_path = os.path.join('/home/src/goodsdl/dl/model', str(export1s[0].pk), 'frozen_inference_graph.pb')
 
     create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
 

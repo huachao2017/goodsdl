@@ -9,7 +9,8 @@ Example:
     matcher = Matcher()
     for i in range(8):
         matcher.add_baseline_image(%imagepath%)
-    match_key, cnt = matcher.match_images(%imagepath%)
+    match_key, cnt = matcher.match_image_info(%imagepath%)
+    is_match = matcher.match_image(%imagepath%)
 
 '''
 
@@ -50,7 +51,7 @@ class Matcher:
         key = upc + '_' + file_name.split('_')[0]
         self.path_to_baseline_keypoint[key] = (kp, desc)
 
-    def match_images(self,image_path, match_points_cnt=10, debug=False):
+    def match_image_info(self, image_path, match_points_cnt=10, debug=False):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
 
@@ -72,6 +73,11 @@ class Matcher:
             return None,0
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         return sorted_match_info[0]
+
+    def match_image(self, image_path, match_points_cnt=10, debug=False):
+        key, cnt = self.match_image_info(image_path,match_points_cnt=match_points_cnt,debug=debug)
+        return key != None
+
 
 ###############################################################################
 # Image Matching For Diplaying
@@ -172,7 +178,7 @@ def test_class():
     for i in range(8):
         matcher.add_baseline_image('images/%d.jpg' % (i+1))
     time2 = time.time()
-    match_key, cnt = matcher.match_images('images/9.jpg',debug=True)
+    match_key, cnt = matcher.match_image_info('images/9.jpg', debug=True)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
