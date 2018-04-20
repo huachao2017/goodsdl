@@ -251,7 +251,7 @@ def main(_):
     logger = logging.getLogger()
     logger.setLevel('INFO')
     dataset_dir = '/home/src/goodsdl/media/dataset'
-    source_dir = os.path.join(dataset_dir, 'data_new_{}'.format(FLAGS.source_dir_serial))
+    source_dir = os.path.join(dataset_dir, 'data_new{}'.format(FLAGS.source_dir_serial if FLAGS.source_dir_serial=='' else '_'+FLAGS.source_dir_serial))
     step2_dir = os.path.join(dataset_dir, common.STEP2_PREFIX if FLAGS.dest_dir_serial=='' else common.STEP2_PREFIX+'_'+FLAGS.dest_dir_serial)
     export2s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
     step1_model_path = os.path.join('/home/src/goodsdl/dl/model', str(export2s[0].pk), 'frozen_inference_graph.pb')
