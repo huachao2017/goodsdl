@@ -194,24 +194,13 @@ def test_1():
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
 
-def test_2():
+def test_2(image1,image2):
     time0 = time.time()
     matcher = Matcher()
     time1 = time.time()
-    matcher.add_baseline_image('images/t_1.jpg')
+    matcher.add_baseline_image(image1)
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info('images/t_2.jpg')
-    time3 = time.time()
-    print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
-    print(match_key, cnt)
-
-def test_3():
-    time0 = time.time()
-    matcher = Matcher()
-    time1 = time.time()
-    matcher.add_baseline_image('images/t_1.jpg')
-    time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info('images/a.jpg')
+    match_key, cnt = matcher.match_image_best_one_info(image2)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -222,11 +211,10 @@ if __name__ == '__main__':
     # test_1()
     # sys.exit(0)
 
-    test_3()
-    sys.exit(0)
 
-    # fn1 = 'images/t_1.jpg'
-    # fn2 = 'images/t_2.jpg'
+    fn1 = 'images/14.jpg'
+    fn2 = 'images/15.jpg'
+    test_2(fn1, fn2)
 
     img1 = cv2.imread(fn1)
     img2 = cv2.imread(fn2)
