@@ -58,8 +58,8 @@ class Matcher:
         match_info = {}
         for key in self.path_to_baseline_keypoint:
             (b_kp,b_desc) = self.path_to_baseline_keypoint[key]
-            raw_matches = self.matcher.knnMatch(desc, trainDescriptors=b_desc, k=2)  # 2
-            kp_pairs = _filter_matches(kp, b_kp, raw_matches)
+            raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
+            kp_pairs = _filter_matches(b_kp, kp, raw_matches)
             if len(kp_pairs) >= 4:
                 mkp1, mkp2 = zip(*kp_pairs)
                 p1 = numpy.float32([kp.pt for kp in mkp1])
@@ -171,7 +171,7 @@ def draw_matches(window_name, kp_pairs, img1, img2):
 # Test Main
 ###############################################################################
 
-def test_class():
+def test_1():
     time0 = time.time()
     matcher = Matcher()
     time1 = time.time()
@@ -183,14 +183,28 @@ def test_class():
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
 
+def test_2():
+    time0 = time.time()
+    matcher = Matcher()
+    time1 = time.time()
+    matcher.add_baseline_image('images/t_1.jpg')
+    time2 = time.time()
+    match_key, cnt = matcher.match_image_info('images/t_3.jpg', debug=True)
+    time3 = time.time()
+    print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
+    print(match_key, cnt)
+
 if __name__ == '__main__':
     """Test code: Uses the two specified"""
 
-    test_class()
-    sys.exit(0)
+    # test_1()
+    # sys.exit(0)
 
-    fn1 = 'images/7.jpg'
-    fn2 = 'images/9.jpg'
+    # test_2()
+    # sys.exit(0)
+
+    fn1 = 'images/t_1.jpg'
+    fn2 = 'images/t_2.jpg'
 
     img1 = cv2.imread(fn1)
     img2 = cv2.imread(fn2)
