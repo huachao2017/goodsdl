@@ -38,7 +38,7 @@ def _filter_matches(kp1, kp2, matches, ratio=0.75):
 
 class Matcher:
     def __init__(self):
-        self.path_to_baseline_keypoint = {}
+        self.path_to_baseline_info = {}
         self.detector = cv2.xfeatures2d.SURF_create(400, 5, 5)
         self.matcher = cv2.BFMatcher(cv2.NORM_L2)
 
@@ -49,15 +49,18 @@ class Matcher:
         upc = os.path.basename(os.path.dirname(image_path))
         file_name = os.path.basename(image_path)
         key = upc + '_' + file_name.split('_')[0]
-        self.path_to_baseline_keypoint[key] = (kp, desc)
+        self.path_to_baseline_info[key] = (kp, desc,image.shape[0], image.shape[1])
 
-    def match_image_info(self, image_path, match_points_cnt=10, debug=False):
+    def match_image_info(self, image_path, solve_size=True, match_points_cnt=5, debug=False):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
 
         match_info = {}
-        for key in self.path_to_baseline_keypoint:
-            (b_kp,b_desc) = self.path_to_baseline_keypoint[key]
+        for key in self.path_to_baseline_info:
+            (b_kp,b_desc, shape0, shape1) = self.path_to_baseline_info[key]
+            if solve_size:# 图片长宽都超出两倍
+                if (shape0*2<image.shape[0] and shape1*2<image.shape[1]) or (shape0>image.shape[0]*2 and shape1>image.shape[1]*2):
+                    continue
             raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
             kp_pairs = _filter_matches(b_kp, kp, raw_matches)
             if len(kp_pairs) >= 4:
@@ -74,8 +77,8 @@ class Matcher:
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         return sorted_match_info[0]
 
-    def match_image(self, image_path, match_points_cnt=10, debug=False):
-        key, cnt = self.match_image_info(image_path,match_points_cnt=match_points_cnt,debug=debug)
+    def match_one_image(self, image_path, solve_size=True, match_points_cnt=5, debug=False):
+        key, cnt = self.match_image_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt,debug=debug)
         return key != None
 
 
@@ -189,7 +192,7 @@ def test_2():
     time1 = time.time()
     matcher.add_baseline_image('images/t_1.jpg')
     time2 = time.time()
-    match_key, cnt = matcher.match_image_info('images/t_3.jpg', debug=True)
+    match_key, cnt = matcher.match_image_info('images/t_2.jpg', debug=True)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -200,11 +203,11 @@ if __name__ == '__main__':
     # test_1()
     # sys.exit(0)
 
-    # test_2()
-    # sys.exit(0)
+    test_2()
+    sys.exit(0)
 
-    fn1 = 'images/t_1.jpg'
-    fn2 = 'images/t_2.jpg'
+    # fn1 = 'images/t_1.jpg'
+    # fn2 = 'images/t_2.jpg'
 
     img1 = cv2.imread(fn1)
     img2 = cv2.imread(fn2)
