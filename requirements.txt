@@ -4,3 +4,4 @@ djangorestframework
 opencv_python
 mysqlclient
 gputil
+opencv-contrib-python
