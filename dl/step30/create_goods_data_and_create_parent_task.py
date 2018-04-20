@@ -22,8 +22,6 @@ def create_one_task(upc_name,dataset_dir):
     )
 
     for upc in os.listdir(dataset_dir):
-        if upc == 'lack_info_stand':
-            continue
         if os.path.isdir(os.path.join(dataset_dir,upc)):
             ClusterStructure.objects.create(
                 upc=upc,
@@ -48,6 +46,8 @@ def main(_):
     ClusterSampleScore.objects.all().delete()
     ClusterUpcScore.objects.all().delete()
     for upc_name in os.listdir(step30_dir):
+        if upc_name == 'lack_info_stand':
+            continue
         dataset_dir = os.path.join(step30_dir, upc_name)
         if os.path.isdir(dataset_dir):
             create_one_task(upc_name, dataset_dir)
