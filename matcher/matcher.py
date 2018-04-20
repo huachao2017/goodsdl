@@ -45,6 +45,9 @@ class Matcher:
     def add_baseline_image(self, image_path):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
+        if len(kp) == 0:
+            print('error: no key point to base image:{}'.format(image_path))
+            return
 
         upc = os.path.basename(os.path.dirname(image_path))
         file_name = os.path.basename(image_path)
@@ -54,8 +57,11 @@ class Matcher:
     def match_image_all_info(self, image_path, solve_size=True, match_points_cnt=5):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
-
         match_info = {}
+        if len(kp) == 0:
+            print('warn: no key point to match image:{}'.format(image_path))
+            return match_info
+
         for key in self.path_to_baseline_info:
             (b_kp,b_desc, shape0, shape1) = self.path_to_baseline_info[key]
             if solve_size:# 图片长宽都超出两倍
@@ -73,16 +79,11 @@ class Matcher:
         return match_info
 
     def match_image_best_one_info(self, image_path, solve_size=True, match_points_cnt=5):
-        try:
-            match_info = self.match_image_all_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
-            if len(match_info) == 0:
-                return None,0
-            sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
-        except Exception as e:
-            print(e)
+        match_info = self.match_image_all_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
+        if len(match_info) == 0:
             return None,0
-        else:
-            return sorted_match_info[0]
+        sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
+        return sorted_match_info[0]
 
     def match_one_image(self, image_path, solve_size=True, match_points_cnt=5):
         key, cnt = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
@@ -188,7 +189,7 @@ def test_1():
     for i in range(8):
         matcher.add_baseline_image('images/%d.jpg' % (i+1))
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info('images/9.jpg', debug=True)
+    match_key, cnt = matcher.match_image_best_one_info('images/9.jpg')
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -199,7 +200,18 @@ def test_2():
     time1 = time.time()
     matcher.add_baseline_image('images/t_1.jpg')
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info('images/t_2.jpg', debug=True)
+    match_key, cnt = matcher.match_image_best_one_info('images/t_2.jpg')
+    time3 = time.time()
+    print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
+    print(match_key, cnt)
+
+def test_3():
+    time0 = time.time()
+    matcher = Matcher()
+    time1 = time.time()
+    matcher.add_baseline_image('images/t_1.jpg')
+    time2 = time.time()
+    match_key, cnt = matcher.match_image_best_one_info('images/a.jpg')
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -210,7 +222,7 @@ if __name__ == '__main__':
     # test_1()
     # sys.exit(0)
 
-    test_2()
+    test_3()
     sys.exit(0)
 
     # fn1 = 'images/t_1.jpg'
