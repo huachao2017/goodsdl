@@ -86,7 +86,7 @@ class Matcher:
                             center = numpy.int32(numpy.sum(corners, 0) / len(corners))
                             if abs(center[0]-image.shape[1]/2)/image.shape[1] < 0.05 and abs(center[1]-image.shape[0]/2)/image.shape[0] < 0.05:
                                 is_center = True
-                            print(center[1],center[0],image.shape[0]/2,image.shape[1]/2, is_center)
+                            # print(center[1],center[0],image.shape[0]/2,image.shape[1]/2, is_center)
                     match_info[key] = (numpy.sum(status), is_center)
         return match_info
 
