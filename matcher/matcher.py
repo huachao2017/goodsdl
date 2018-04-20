@@ -54,7 +54,7 @@ class Matcher:
         key = upc + '_' + file_name.split('_')[0]
         self.path_to_baseline_info[key] = (kp, desc,image.shape[0], image.shape[1])
 
-    def match_image_all_info(self, image_path, solve_size=True, match_points_cnt=5):
+    def match_image_all_info(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         match_info = {}
@@ -75,18 +75,33 @@ class Matcher:
                 p2 = numpy.float32([kp.pt for kp in mkp2])
                 H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
                 if numpy.sum(status) >= match_points_cnt:
-                    match_info[key] = numpy.sum(status)
+                    # 判断匹配中心是否为图片中心
+                    is_center = None
+                    if solve_center:
+                        is_center = False
+                        if H is not None:
+                            corners = numpy.float32([[0, 0], [shape1, 0], [shape1, shape0], [0, shape0]])
+                            corners = numpy.int32(
+                                cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
+                            center = numpy.int32(numpy.sum(corners, 0) / len(corners))
+                            if abs(center[0]-image.shape[1]/2)/image.shape[1] < 0.05 and abs(center[1]-image.shape[0]/2)/image.shape[0] < 0.05:
+                                is_center = True
+                            print(center[1],center[0],image.shape[0]/2,image.shape[1]/2, is_center)
+                    match_info[key] = (numpy.sum(status), is_center)
         return match_info
 
-    def match_image_best_one_info(self, image_path, solve_size=True, match_points_cnt=5):
-        match_info = self.match_image_all_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
+    def match_image_best_one_info(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
+        match_info = self.match_image_all_info(image_path, solve_center=solve_center, solve_size=solve_size, match_points_cnt=match_points_cnt)
         if len(match_info) == 0:
             return None,0
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         return sorted_match_info[0]
 
-    def match_one_image(self, image_path, solve_size=True, match_points_cnt=5):
-        key, cnt = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
+    def match_one_image(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
+        key, cnt, is_center = self.match_image_best_one_info(image_path, solve_center=solve_center, solve_size=solve_size, match_points_cnt=match_points_cnt)
+        if solve_center:
+            if not is_center:
+                return False
         return key != None
 
 
@@ -104,14 +119,11 @@ def match_images(img1, img2, debug = False):
     kp2, desc2 = detector.detectAndCompute(img2, None)
     if debug:
         print('img1 - %d features, img2 - %d features' % (len(kp1), len(kp2)))
-        print(kp1)
-        print(desc1)
 
     time1 = time.time()
     raw_matches = matcher.knnMatch(desc1, trainDescriptors=desc2, k=2)  # 2
     time2 = time.time()
     kp_pairs = _filter_matches(kp1, kp2, raw_matches)
-    print(kp_pairs)
     time3 = time.time()
     if debug:
         print('MATCH: %.2f, %.2f, %.2f, %.2f' %(time3-time0,time1-time0,time2-time1,time3-time2))
@@ -129,6 +141,13 @@ def explore_match(win, img1, img2, kp_pairs, status=None, H=None):
         corners = numpy.float32([[0, 0], [w1, 0], [w1, h1], [0, h1]])
         corners = numpy.int32(cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2) + (w1, 0))
         cv2.polylines(vis, [corners], True, (255, 255, 255))
+        center = numpy.int32(numpy.sum(corners,0)/len(corners))
+        # print(center)
+        col = (255,0,0)
+        r = 2
+        thickness = 3
+        cv2.line(vis, (center[0] - r, center[1] - r), (center[0] + r, center[1] + r), col, thickness)
+        cv2.line(vis, (center[0] - r, center[1] + r), (center[0] + r, center[1] - r), col, thickness)
 
     if status is None:
         status = numpy.ones(len(kp_pairs), numpy.bool_)
