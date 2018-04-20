@@ -109,7 +109,7 @@ def solves_one_image(image_path,
                 matcher = Matcher()
                 matcher.add_baseline_image(output_image_path_augment)
             else:
-                if not matcher.match_one_image(output_image_path_augment):
+                if not matcher.is_find_match(output_image_path_augment, solve_center=True):
                     os.remove(output_image_path_augment)
                     augment_total_error += 1
                     logging.error("match error! image:{} ,rotate:{}.".format(image_path, angle))
@@ -142,7 +142,7 @@ def solves_one_image(image_path,
                     matcher = Matcher()
                     matcher.add_baseline_image(output_image_path_augment)
                 else:
-                    if not matcher.match_one_image(output_image_path_augment):
+                    if not matcher.is_find_match(output_image_path_augment, solve_center=True):
                         os.remove(output_image_path_augment)
                         augment_total_error += 1
                         logging.error("match error! image:{} ,rotate:{}.".format(image_path, angle))

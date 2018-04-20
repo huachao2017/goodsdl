@@ -97,7 +97,7 @@ class Matcher:
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         return sorted_match_info[0]
 
-    def match_one_image(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
+    def is_find_match(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
         key, cnt, is_center = self.match_image_best_one_info(image_path, solve_center=solve_center, solve_size=solve_size, match_points_cnt=match_points_cnt)
         if solve_center:
             if not is_center:
