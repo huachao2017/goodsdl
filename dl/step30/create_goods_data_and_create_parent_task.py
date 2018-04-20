@@ -37,7 +37,7 @@ def main(_):
     # traintype_to_class_names = cluster_settings.get_traintype_to_class_names()
     # print(traintype_to_class_names)
     if os.path.isdir(step30_dir):
-        os.rmdir(step30_dir)
+        shutil.rmtree(step30_dir)
 
     shutil.copytree(step20_dir,step30_dir)
     ret = os.popen('chmod 777 -R {}'.format(step30_dir)).readline()
