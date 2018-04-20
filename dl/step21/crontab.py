@@ -24,6 +24,9 @@ tf.app.flags.DEFINE_string(
 tf.app.flags.DEFINE_integer(
     'train_interval_secs', 60, 'train interval secs.')
 
+tf.app.flags.DEFINE_integer(
+    'start_traintype', 0, 'start train type.')
+
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -63,7 +66,7 @@ def main(_):
     labels_to_names = get_labels_to_names(os.path.join('/home/src/goodsdl/dl/model', str(export20.pk), 'labels.txt'))
     print(labels_to_names)
     end_traintype = len(labels_to_names) - 1
-    cur_traintype = 0
+    cur_traintype = FLAGS.start_traintype
     domain = FLAGS.domain
     if domain is None:
         domain = get_host_ip()
@@ -74,9 +77,9 @@ def main(_):
     while True:
         start = time.time()
         # FOR avoid "MySQL server has gone away"
-        ExportAction.objects.filter(train_action__action='T21').order_by('-update_time')[:1]
+        exports = ExportAction.objects.filter(train_action__action='T21').order_by('-update_time')
         logging.info('Starting monitor at ' + time.strftime(
-            '%Y-%m-%d-%H:%M:%S', time.localtime()))
+            '%Y-%m-%d-%H:%M:%S', time.localtime()) + ', complete {}'.format(len(exports)))
         if cur_traintype > end_traintype:
             logging.info('Finished all train!')
             break
