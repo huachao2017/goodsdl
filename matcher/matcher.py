@@ -81,16 +81,16 @@ class Matcher:
                             corners = numpy.float32([[0, 0], [shape1, 0], [shape1, shape0], [0, shape0]])
                             corners = numpy.int32(
                                 cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
-                            area = cv2.contourArea(corners)
+                            # area = cv2.contourArea(corners)
                             x = corners[:, 0]
                             y = corners[:, 1]
                             # print(numpy.min(x),numpy.min(y),numpy.max(x),numpy.max(y))
                             # print(image.shape[1],image.shape[0])
                             # print(area,image.shape[1]*image.shape[0])
 
-                            # 面积接近或者四个顶点都靠近边缘，则认为是正确匹配
-                            if (image.shape[1]*image.shape[0]-area)/(image.shape[1]*image.shape[0])<0.5 or\
-                                    (abs(numpy.min(x)) < image.shape[1]/5 and abs(numpy.min(y)) < image.shape[0]/5 and abs(numpy.max(x)-image.shape[1]) < image.shape[1]/5 and abs(numpy.max(y)-image.shape[0]) < image.shape[0]/5):
+                            # 面积接近或者（不再需要）
+                            # 四个顶点都靠近边缘，则认为是正确匹配
+                            if numpy.min(x) < image.shape[1]/5 and numpy.min(y) < image.shape[0]/5 and image.shape[1]-numpy.max(x) < image.shape[1]/5 and image.shape[0]-numpy.max(y) < image.shape[0]/5:
                                 match_info[key] = numpy.sum(status)
                     else:
                         match_info[key] = numpy.sum(status)
@@ -234,8 +234,8 @@ if __name__ == '__main__':
     # sys.exit(0)
 
 
-    fn1 = 'images/16.jpg'
-    fn2 = 'images/17.jpg'
+    fn1 = 'images/7.jpg'
+    fn2 = 'images/9.jpg'
     test_2(fn1, fn2)
 
     img1 = cv2.imread(fn1)
