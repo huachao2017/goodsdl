@@ -54,7 +54,7 @@ class Matcher:
         key = upc + '_' + file_name.split('_')[0]
         self.path_to_baseline_info[key] = (kp, desc,image.shape[0], image.shape[1])
 
-    def match_image_all_info(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
+    def match_image_all_info(self, image_path, solve_size=True, match_points_cnt=5):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         match_info = {}
@@ -76,32 +76,35 @@ class Matcher:
                 H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
                 if numpy.sum(status) >= match_points_cnt:
                     # 判断匹配中心是否为图片中心
-                    is_center = None
-                    if solve_center:
-                        is_center = False
+                    if solve_size:
                         if H is not None:
                             corners = numpy.float32([[0, 0], [shape1, 0], [shape1, shape0], [0, shape0]])
                             corners = numpy.int32(
                                 cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
-                            center = numpy.int32(numpy.sum(corners, 0) / len(corners))
-                            if abs(center[0]-image.shape[1]/2)/image.shape[1] < 0.05 and abs(center[1]-image.shape[0]/2)/image.shape[0] < 0.05:
-                                is_center = True
-                            # print(center[1],center[0],image.shape[0]/2,image.shape[1]/2, is_center)
-                    match_info[key] = (numpy.sum(status), is_center)
+                            area = cv2.contourArea(corners)
+                            x = corners[:, 0]
+                            y = corners[:, 1]
+                            # print(numpy.min(x),numpy.min(y),numpy.max(x),numpy.max(y))
+                            # print(image.shape[1],image.shape[0])
+                            # print(area,image.shape[1]*image.shape[0])
+
+                            # 面积接近或者四个顶点都靠近边缘，则认为是正确匹配
+                            if (image.shape[1]*image.shape[0]-area)/(image.shape[1]*image.shape[0])<0.5 or\
+                                    (abs(numpy.min(x)) < image.shape[1]/5 and abs(numpy.min(y)) < image.shape[0]/5 and abs(numpy.max(x)-image.shape[1]) < image.shape[1]/5 and abs(numpy.max(y)-image.shape[0]) < image.shape[0]/5):
+                                match_info[key] = numpy.sum(status)
+                    else:
+                        match_info[key] = numpy.sum(status)
         return match_info
 
-    def match_image_best_one_info(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
-        match_info = self.match_image_all_info(image_path, solve_center=solve_center, solve_size=solve_size, match_points_cnt=match_points_cnt)
+    def match_image_best_one_info(self, image_path, solve_size=True, match_points_cnt=5):
+        match_info = self.match_image_all_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
         if len(match_info) == 0:
-            return None,(0,None)
+            return None,0
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         return sorted_match_info[0]
 
-    def is_find_match(self, image_path, solve_center=False, solve_size=True, match_points_cnt=5):
-        key, (cnt, is_center) = self.match_image_best_one_info(image_path, solve_center=solve_center, solve_size=solve_size, match_points_cnt=match_points_cnt)
-        if solve_center:
-            if not is_center:
-                return False
+    def is_find_match(self, image_path, solve_size=True, match_points_cnt=5):
+        key, (cnt, is_center) = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
         return key != None
 
 
@@ -231,8 +234,8 @@ if __name__ == '__main__':
     # sys.exit(0)
 
 
-    fn1 = 'images/14.jpg'
-    fn2 = 'images/15.jpg'
+    fn1 = 'images/16.jpg'
+    fn2 = 'images/17.jpg'
     test_2(fn1, fn2)
 
     img1 = cv2.imread(fn1)
