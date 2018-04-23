@@ -104,7 +104,7 @@ class Matcher:
         return sorted_match_info[0]
 
     def is_find_match(self, image_path, solve_size=True, match_points_cnt=5):
-        key, (cnt, is_center) = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
+        key, cnt = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
         return key != None
 
 
