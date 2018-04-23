@@ -101,6 +101,12 @@ class TrainImageClass(models.Model):
     name = models.CharField(max_length=20, default='')
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
+class SampleImageClass(models.Model):
+    source = models.ImageField(max_length=200)
+    upc = models.CharField(max_length=20, db_index=True)
+    name = models.CharField(max_length=20, default='')
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
 class DatasetAction(models.Model):
     ACTION_CHOICES = (
         (u'D2', u'Dataset Step 2'),

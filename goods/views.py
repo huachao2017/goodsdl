@@ -451,6 +451,10 @@ class TrainImageOnlyViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+class SampleImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = SampleImageClass.objects.order_by('-id')
+    serializer_class = SampleImageClassSerializer
+
 class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImageClass.objects.order_by('-id')
     serializer_class = TrainImageClassSerializer
@@ -512,7 +516,6 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 # newimage.save(new_image_path, 'JPEG')
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
 
 class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')
