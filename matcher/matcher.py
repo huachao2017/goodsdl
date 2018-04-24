@@ -105,8 +105,8 @@ class Matcher:
             self.match_visual(visual_path, sorted_match_info[0][1][0],sorted_match_info[0][1][1],sorted_match_info[0][1][2],sorted_match_info[0][1][3],sorted_match_info[0][1][4])
         return sorted_match_info[0][0],numpy.sum(sorted_match_info[0][1][3])
 
-    def is_find_match(self, image_path, solve_size=True, match_points_cnt=5):
-        key, cnt = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
+    def is_find_match(self, image_path, solve_size=True, match_points_cnt=5, visual=True):
+        key, cnt = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt, visual=visual)
         return key != None
 
     def match_visual(self, visual_path, img1, img2, kp_pairs, status=None, H=None):
