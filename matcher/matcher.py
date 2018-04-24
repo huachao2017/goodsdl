@@ -45,7 +45,7 @@ class Matcher:
             self.upc_to_cnt[upc] += 1
         else:
             self.upc_to_cnt[upc] = 1
-        key = self.upc_to_cnt[upc]
+        key = upc + '_'+ str(self.upc_to_cnt[upc])
         self.path_to_baseline_info[key] = (kp, desc,image)
 
     def match_image_all_info(self, image_path, solve_size=True, match_points_cnt=5):
