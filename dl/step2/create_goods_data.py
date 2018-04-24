@@ -46,9 +46,9 @@ def solves_one_image(image_path,
                      image_tensor_step1,
                      detection_boxes,
                      detection_scores,
-                     augment_total,
-                     augment_total_error
                      ):
+    augment_total = 0
+    augment_total_error = 0
     img = cv2.imread(image_path)
 
     augment_size = 8
@@ -151,7 +151,7 @@ def solves_one_image(image_path,
                 logging.error("not detected error! image:{} ,rotate:{}.".format(output_image_path_augment, angle))
                 if angle == 0:
                     break
-
+    return augment_total, augment_total_error
 
 def create_step2_goods_V2(data_dir, output_dir, step1_model_path, dir_day_hour=None):
     graph_step1 = tf.Graph()
@@ -207,17 +207,17 @@ def create_step2_goods_V2(data_dir, output_dir, step1_model_path, dir_day_hour=N
                 example, ext = os.path.splitext(image_path)
                 if ext == ".jpg" and prefix != 'visual':
                     logging.info('solve image:{}'.format(image_path))
-                    solves_one_image(
+                    one_augment_total, one_augment_total_error = solves_one_image(
                         image_path,
                         class_name,
                         output_class_dir,
                         session_step1,
                         image_tensor_step1,
                         detection_boxes,
-                        detection_scores,
-                        augment_total,
-                        augment_total_error
+                        detection_scores
                     )
+                    augment_total += one_augment_total
+                    augment_total_error += one_augment_total_error
 
     logging.info("augment complete: {}/{}".format(augment_total_error, augment_total))
     session_step1.close()

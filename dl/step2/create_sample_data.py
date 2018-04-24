@@ -25,11 +25,11 @@ def solves_one_class(class_dir,
                      session_step1,
                      image_tensor_step1,
                      detection_boxes,
-                     detection_scores,
-                     sample_total
+                     detection_scores
                      ):
     if class_name == 'ziptop-drink-stand' or class_name == 'bottled-drink-stand':
-        return
+        return 0
+    sample_cnt = 0
     matcher = None
     filelist = os.listdir(class_dir)
     for j in range(0, len(filelist)):
@@ -129,7 +129,8 @@ def solves_one_class(class_dir,
             upc=class_name,
             name=class_name,
         )
-        sample_total += 1
+        sample_cnt += 1
+    return sample_cnt
 
 def create_sample(data_dir, output_dir, step1_model_path):
     graph_step1 = tf.Graph()
@@ -172,7 +173,7 @@ def create_sample(data_dir, output_dir, step1_model_path):
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
 
-            solves_one_class(
+            sample_total += solves_one_class(
                 class_dir,
                 class_name,
                 output_class_dir,
@@ -180,8 +181,6 @@ def create_sample(data_dir, output_dir, step1_model_path):
                 image_tensor_step1,
                 detection_boxes,
                 detection_scores,
-                sample_total
-
             )
 
     logging.info("sample create complete: {}".format(sample_total))
