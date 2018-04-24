@@ -36,8 +36,10 @@ def solves_one_class(class_dir,
         image_path = os.path.join(class_dir, filelist[j])
         prefix = filelist[j].split('_')[0]
         example, ext = os.path.splitext(image_path)
-        if ext == ".jpg" and prefix != 'visual':
-            logging.info('solve image:{}'.format(image_path))
+        if ext != ".jpg" or prefix == 'visual':
+            continue
+
+        logging.info('solve image:{}'.format(image_path))
         img = cv2.imread(image_path)
 
         output_image_path = os.path.join(output_class_dir, os.path.basename(image_path))
