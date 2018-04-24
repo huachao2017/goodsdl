@@ -127,7 +127,7 @@ def solves_one_class(class_dir,
 
 
         SampleImageClass.objects.create(
-            source='{}/{}/{}'.format(os.path.basename(os.path.basename(output_class_dir)),class_name,os.path.basename(output_image_path)),
+            source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME, common.SAMPLE_PREFIX if FLAGS.dest_dir_serial=='' else common.SAMPLE_PREFIX+'_'+FLAGS.dest_dir_serial, class_name,os.path.basename(output_image_path)),
             upc=class_name,
             name=class_name,
         )
