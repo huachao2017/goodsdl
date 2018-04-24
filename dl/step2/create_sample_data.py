@@ -43,9 +43,9 @@ def solves_one_class(class_dir,
         img = cv2.imread(image_path)
 
         output_image_path = os.path.join(output_class_dir, os.path.basename(image_path))
-        if tf.gfile.Exists(output_image_path):
-            # 文件存在不再重新生成，从而支持增量生成
-            break
+        # if tf.gfile.Exists(output_image_path):
+        #     # 文件存在不再重新生成，从而支持增量生成
+        #     continue
 
         im_height = img.shape[0]
         im_width = img.shape[1]
