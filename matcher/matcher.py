@@ -48,7 +48,7 @@ class Matcher:
         key = upc + '_'+ str(self.upc_to_cnt[upc])
         self.path_to_baseline_info[key] = (kp, desc,image)
 
-    def match_image_all_info(self, image_path, solve_size=True, match_points_cnt=5):
+    def match_image_all_info(self, image_path, solve_size=True, match_points_cnt=4):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         match_info = {}
@@ -60,7 +60,7 @@ class Matcher:
             (b_kp,b_desc, b_image) = self.path_to_baseline_info[key]
             raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
             kp_pairs = self.filter_matches(b_kp, kp, raw_matches)
-            if len(kp_pairs) >= 4:
+            if len(kp_pairs) >= match_points_cnt:
                 mkp1, mkp2 = zip(*kp_pairs)
                 p1 = numpy.float32([kp.pt for kp in mkp1])
                 p2 = numpy.float32([kp.pt for kp in mkp2])
@@ -192,7 +192,7 @@ def test_3(image1,image2):
     time1 = time.time()
     matcher.add_baseline_image(image1)
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info(image2,solve_size=False)
+    match_key, cnt = matcher.match_image_best_one_info(image2, match_points_cnt=0, solve_size=False)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -200,8 +200,8 @@ def test_3(image1,image2):
 if __name__ == '__main__':
     """Test code: Uses the two specified"""
 
-    test_1()
-    sys.exit(0)
-    fn1 = 'images/1.jpg'
-    fn2 = 'images/2.jpg'
+    # test_1()
+    # sys.exit(0)
+    fn1 = 'images/noodles/1.jpg'
+    fn2 = 'images/noodles/2.jpg'
     test_3(fn1, fn2)
