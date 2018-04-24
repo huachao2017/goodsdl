@@ -95,18 +95,36 @@ class Matcher:
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def match_image_best_one_info(self, image_path, solve_size=True, match_points_cnt=5, visual=True):
+    def match_image_top_n(self, image_path, n=5, solve_size=True, match_points_cnt=5, visual=True):
         match_info = self.match_image_all_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
         if len(match_info) == 0:
             return None,0
         sorted_match_info = sorted(match_info.items(), key=lambda d: numpy.sum(d[1][3]), reverse=True)
+        top_n = sorted_match_info[:n]
+        ret = []
+        for match in top_n:
+            ret.append((match[0],numpy.sum(match[1][3])))
         if visual:
-            visual_path = os.path.join(os.path.dirname(image_path),'visual_{}_{}'.format(sorted_match_info[0][0],os.path.basename(image_path)) )
-            self.match_visual(visual_path, sorted_match_info[0][1][0],sorted_match_info[0][1][1],sorted_match_info[0][1][2],sorted_match_info[0][1][3],sorted_match_info[0][1][4])
-        return sorted_match_info[0][0],numpy.sum(sorted_match_info[0][1][3])
+            for i in range(len(top_n)):
+                match = top_n[i]
+                visual_path = os.path.join(os.path.dirname(image_path),'visual_{}_{}_{}'.format(match[0],i,os.path.basename(image_path)) )
+                self.match_visual(visual_path, match[1][0],match[1][1],match[1][2],match[1][3],match[1][4])
+        return ret
+
+    def match_image_best_one(self, image_path, solve_size=True, match_points_cnt=5, visual=True):
+        match_info = self.match_image_all_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt)
+        if len(match_info) == 0:
+            return None,0
+        sorted_match_info = sorted(match_info.items(), key=lambda d: numpy.sum(d[1][3]), reverse=True)
+        best_match = sorted_match_info[0]
+        ret = (best_match[0],numpy.sum(best_match[1][3]))
+        if visual:
+            visual_path = os.path.join(os.path.dirname(image_path),'visual_{}_{}'.format(best_match[0],os.path.basename(image_path)) )
+            self.match_visual(visual_path, best_match[1][0],best_match[1][1],best_match[1][2],best_match[1][3],best_match[1][4])
+        return ret
 
     def is_find_match(self, image_path, solve_size=True, match_points_cnt=5, visual=True):
-        key, cnt = self.match_image_best_one_info(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt, visual=visual)
+        key, cnt = self.match_image_best_one(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt, visual=visual)
         return key != None
 
     def match_visual(self, visual_path, img1, img2, kp_pairs, status=None, H=None):
@@ -170,7 +188,7 @@ def test_1():
     for i in range(8):
         matcher.add_baseline_image('images/%d.jpg' % (i+1))
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info('images/9.jpg')
+    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -181,7 +199,7 @@ def test_2(image1,image2):
     time1 = time.time()
     matcher.add_baseline_image(image1)
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info(image2)
+    match_key, cnt = matcher.match_image_best_one(image2)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -192,7 +210,7 @@ def test_3(image1,image2):
     time1 = time.time()
     matcher.add_baseline_image(image1)
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one_info(image2, match_points_cnt=0, solve_size=False)
+    match_key, cnt = matcher.match_image_best_one(image2, match_points_cnt=0, solve_size=False)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
