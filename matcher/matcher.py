@@ -101,7 +101,7 @@ class Matcher:
             return None,0
         sorted_match_info = sorted(match_info.items(), key=lambda d: numpy.sum(d[1][3]), reverse=True)
         if visual:
-            visual_path = os.path.join(os.path.dirname(image_path),'{}_{}'.format(sorted_match_info[0][0],os.path.basename(image_path)) )
+            visual_path = os.path.join(os.path.dirname(image_path),'visual_{}_{}'.format(sorted_match_info[0][0],os.path.basename(image_path)) )
             self.match_visual(visual_path, sorted_match_info[0][1][0],sorted_match_info[0][1][1],sorted_match_info[0][1][2],sorted_match_info[0][1][3],sorted_match_info[0][1][4])
         return sorted_match_info[0][0],numpy.sum(sorted_match_info[0][1][3])
 
