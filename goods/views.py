@@ -18,6 +18,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from matcher.matcher import Matcher
 
 from dl import common
 from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, \
@@ -505,6 +506,33 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 # 写入新的xml
                 a, b = os.path.splitext(serializer.instance.source.path)
                 tree.write(a + ".xml")
+
+                # 生成模式识别的sample图片
+                source_samples = SampleImageClass.objects.filter(upc=serializer.instance.upc)
+                if len(source_samples)>0:
+                    matcher = Matcher()
+                    for sample in source_samples:
+                        matcher.add_baseline_image(sample.source.path)
+
+                    if not matcher.is_find_match(image_path):
+                        sample_image = image.crop((xmin, ymin, xmax, ymax))
+                        sample_image_dir = os.path.join(
+                            settings.MEDIA_ROOT,
+                            settings.DATASET_DIR_NAME,
+                            common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
+                            serializer.instance.upc
+                            )
+                        if not tf.gfile.Exists(sample_image_dir):
+                            tf.gfile.MakeDirs(sample_image_dir)
+
+                        sample_image.save(os.path.join(sample_image_dir,os.path.basename(image_path)), 'JPEG')
+                        SampleImageClass.objects.create(
+                            source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME,
+                                                        common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
+                                                        serializer.instance.upc, os.path.basename(image_path)),
+                            upc=serializer.instance.upc,
+                            name=serializer.instance.upc,
+                        )
 
                 # # 生成step2图片
                 # upc_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2', serializer.instance.upc)
