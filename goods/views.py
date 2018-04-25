@@ -510,32 +510,38 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
 
                 # 生成模式识别的sample图片
                 source_samples = SampleImageClass.objects.filter(Q(deviceid=serializer.instance.deviceid)|Q(deviceid='')).filter(upc=serializer.instance.upc)
+
+                is_add = True
                 if len(source_samples)>0:
                     matcher = Matcher()
                     for sample in source_samples:
                         matcher.add_baseline_image(sample.source.path)
 
-                    if not matcher.is_find_match(image_path):
-                        logging.info('add sample:{},{}'.format(serializer.instance.deviceid,serializer.instance.upc))
-                        sample_image = image.crop((xmin, ymin, xmax, ymax))
-                        sample_image_dir = os.path.join(
-                            settings.MEDIA_ROOT,
-                            settings.DATASET_DIR_NAME,
-                            common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
-                            serializer.instance.upc
-                            )
-                        if not tf.gfile.Exists(sample_image_dir):
-                            tf.gfile.MakeDirs(sample_image_dir)
+                    if matcher.is_find_match(image_path):
+                        is_add = False
 
-                        sample_image.save(os.path.join(sample_image_dir,os.path.basename(image_path)), 'JPEG')
-                        SampleImageClass.objects.create(
-                            source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME,
-                                                        common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
-                                                        serializer.instance.upc, os.path.basename(image_path)),
-                            deviceid=serializer.instance.deviceid,
-                            upc=serializer.instance.upc,
-                            name=serializer.instance.upc,
+                if is_add:
+                    logging.info('add sample:{},{}'.format(serializer.instance.deviceid,serializer.instance.upc))
+                    sample_image = image.crop((xmin, ymin, xmax, ymax))
+                    sample_image_dir = os.path.join(
+                        settings.MEDIA_ROOT,
+                        settings.DATASET_DIR_NAME,
+                        common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
+                        serializer.instance.upc
                         )
+                    if not tf.gfile.Exists(sample_image_dir):
+                        tf.gfile.MakeDirs(sample_image_dir)
+
+                    sample_image.save(os.path.join(sample_image_dir,os.path.basename(image_path)), 'JPEG')
+                    SampleImageClass.objects.create(
+                        source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME,
+                                                    common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
+                                                    serializer.instance.upc, os.path.basename(image_path)),
+                        deviceid=serializer.instance.deviceid,
+                        upc=serializer.instance.upc,
+                        name=serializer.instance.upc,
+                    )
+
 
                 # # 生成step2图片
                 # upc_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'step2', serializer.instance.upc)
