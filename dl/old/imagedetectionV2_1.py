@@ -1,17 +1,16 @@
-import tensorflow as tf
-from tensorflow.contrib import slim
-from nets import inception
-from preprocessing import inception_preprocessing
-import os
-from PIL import Image
-import numpy as np
-from object_detection.utils import label_map_util
-from dl.step2 import dataset
-from object_detection.utils import visualization_utils as vis_util
 import logging
+import os
 import time
+
+import numpy as np
+import tensorflow as tf
+from PIL import Image
+from nets import inception
+from object_detection.utils import visualization_utils as vis_util
+from tensorflow.contrib import slim
+
 from goods.models import ProblemGoods
-from edge.contour_detect import find_contour
+from tradition.edge.contour_detect import find_contour
 
 logger = logging.getLogger("detect")
 
