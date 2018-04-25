@@ -12,14 +12,12 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image as im
 from django.conf import settings
-from django.db.models import Q
 from object_detection.utils import visualization_utils as vis_util
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from matcher.matcher import Matcher
 
 from dl import common
 from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, \
@@ -31,6 +29,7 @@ from dl.step2 import convert_goods
 from dl.step20 import convert_goods_step20
 from dl.step3 import convert_goods_step3
 from dl.step30 import convert_goods_step30
+from matcher.matcher import Matcher
 from .serializers import *
 
 logger = logging.getLogger("django")
