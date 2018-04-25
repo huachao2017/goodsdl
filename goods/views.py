@@ -516,6 +516,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                         matcher.add_baseline_image(sample.source.path)
 
                     if not matcher.is_find_match(image_path):
+                        logging.info('add sample:{},{}'.format(serializer.instance.deviceid,serializer.instance.upc))
                         sample_image = image.crop((xmin, ymin, xmax, ymax))
                         sample_image_dir = os.path.join(
                             settings.MEDIA_ROOT,
