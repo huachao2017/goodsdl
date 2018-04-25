@@ -113,37 +113,25 @@ class ImageDetector:
             logger.info('detectV3: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
             return [], time2-time0
 
-        probabilities = self.step2_cnn.detect(step2_images)
-
-        labels_step2 = []
-        scores_step2 = []
-        for i in range(len(boxes_step1)):
-            type_to_probability = probabilities[i]
-            sorted_inds = [j[0] for j in sorted(enumerate(-type_to_probability), key=lambda x: x[1])]
-
-            labels_step2.append(sorted_inds[0])
-            scores_step2.append(type_to_probability[sorted_inds[0]])
-            if scores_step2[i] < step2_min_score_thresh:
-                # add to database
-                self.log_problem_goods(i, image_instance, type_to_probability, sorted_inds)
+        upcs_step2, scores_step2  = self.step2_cnn.detect(step2_images)
 
         time2 = time.time()
 
-        ret = self.do_addition_logic_work(boxes_step1, scores_step1, labels_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
+        ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
 
         time3 = time.time()
         logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
         return ret, time3-time0
 
-    def do_addition_logic_work(self, boxes_step1, scores_step1, labels_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh):
+    def do_addition_logic_work(self, boxes_step1, scores_step1, upcs_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh):
         ret = []
         for i in range(len(boxes_step1)):
             ymin, xmin, ymax, xmax = boxes_step1[i]
 
-            class_type = labels_step2[i]
+            class_type = 0 # 该字段应该被废
             score2 = scores_step2[i]
             action = 0
-            upc = self.step2_cnn.labels_to_names[class_type]
+            upc = upcs_step2[i]
             if scores_step2[i] < step2_min_score_thresh:
                 # 识别度不够
                 class_type = -1
