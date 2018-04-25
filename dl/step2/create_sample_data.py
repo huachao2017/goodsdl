@@ -1,14 +1,13 @@
-import os
 import logging
-import numpy as np
+import os
+
 import cv2
-import math
-import time
-from PIL import Image as im
-import xml.etree.ElementTree as ET
-from dl import common
-from matcher.matcher import Matcher
 import django
+import numpy as np
+
+from dl import common
+from tradition.matcher.matcher import Matcher
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
 from goods.models import ExportAction, SampleImageClass
