@@ -147,7 +147,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     last_image = one_image
                     break
 
-            from tracking.tracking import compare_same
+            from tradition.tracking.tracking import compare_same
             if last_image is not None and compare_same(serializer.instance.source.path, last_image.source.path):
                 tmp_dir = os.path.join(os.path.split(serializer.instance.source.path)[0], 'tmp')
                 if not tf.gfile.Exists(tmp_dir):
