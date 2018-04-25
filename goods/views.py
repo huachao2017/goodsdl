@@ -12,6 +12,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image as im
 from django.conf import settings
+from django.db.models import Q
 from object_detection.utils import visualization_utils as vis_util
 from rest_framework import mixins
 from rest_framework import status
@@ -508,7 +509,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 tree.write(a + ".xml")
 
                 # 生成模式识别的sample图片
-                source_samples = SampleImageClass.objects.filter(upc=serializer.instance.upc)
+                source_samples = SampleImageClass.objects.filter(Q(deviceid=serializer.instance.deviceid)|Q(deviceid='')).filter(upc=serializer.instance.upc)
                 if len(source_samples)>0:
                     matcher = Matcher()
                     for sample in source_samples:
@@ -530,6 +531,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                             source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME,
                                                         common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
                                                         serializer.instance.upc, os.path.basename(image_path)),
+                            deviceid=serializer.instance.deviceid,
                             upc=serializer.instance.upc,
                             name=serializer.instance.upc,
                         )

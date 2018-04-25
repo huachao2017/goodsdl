@@ -103,6 +103,7 @@ class TrainImageClass(models.Model):
 
 class SampleImageClass(models.Model):
     source = models.ImageField(max_length=200)
+    deviceid = models.CharField(max_length=20, default='', db_index=True)
     upc = models.CharField(max_length=20, db_index=True)
     name = models.CharField(max_length=20, default='')
     create_time = models.DateTimeField('date created', auto_now_add=True)

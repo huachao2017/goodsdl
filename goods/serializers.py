@@ -59,7 +59,7 @@ class TrainImageClassSerializer(serializers.ModelSerializer):
 class SampleImageClassSerializer(serializers.ModelSerializer):
     class Meta:
         model = SampleImageClass
-        fields = ('pk', 'source', 'upc', 'name', 'create_time')
+        fields = ('pk', 'deviceid', 'source', 'upc', 'name', 'create_time')
         read_only_fields = ('create_time',)
 
 class DatasetActionSerializer(serializers.ModelSerializer):
