@@ -48,6 +48,9 @@ class Matcher:
         key = upc + '_'+ str(self.upc_to_cnt[upc])
         self.path_to_baseline_info[key] = (kp, desc,image)
 
+    def get_baseline_cnt(self):
+        return len(self.path_to_baseline_info)
+
     def match_image_all_info(self, image_path, solve_size=True, match_points_cnt=4):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
