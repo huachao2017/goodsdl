@@ -528,12 +528,12 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                     for sample in source_samples:
                         matcher.add_baseline_image(sample.source.path)
 
-                    logging.info('match:{},{}'.format(matcher.get_baseline_cnt(),sample_image_path))
+                    logger.info('match:{},{}'.format(matcher.get_baseline_cnt(),sample_image_path))
                     if matcher.is_find_match(sample_image_path):
                         is_add = False
 
                 if is_add:
-                    logging.info('add sample:{},{}'.format(serializer.instance.deviceid,serializer.instance.upc))
+                    logger.info('add sample:{},{}'.format(serializer.instance.deviceid,serializer.instance.upc))
                     SampleImageClass.objects.create(
                         source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME,
                                                     common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
