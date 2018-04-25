@@ -176,10 +176,9 @@ class ImageDetector:
             visualize_boxes_and_labels_on_image_array_V2(
                 image_np,
                 np.array(boxes_step1),
-                np.array(labels_step2),
+                np.array(upcs_step2),
                 scores_step1,
                 scores_step2,
-                self.step2_cnn.labels_to_names,  # TODO need fix
                 use_normalized_coordinates=False,
                 step2_min_score_thresh=step2_min_score_thresh,
                 line_thickness=2)

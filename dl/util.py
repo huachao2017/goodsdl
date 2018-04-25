@@ -41,10 +41,9 @@ def get_names_to_labels(labels_filepath):
 
 def visualize_boxes_and_labels_on_image_array_V2(image,
                                                  boxes,
-                                                 classes,
+                                                 upcs,
                                                  scores_step1,
                                                  scores_step2,
-                                                 labels_to_names,
                                                  instance_masks=None,
                                                  keypoints=None,
                                                  use_normalized_coordinates=False,
@@ -63,13 +62,11 @@ def visualize_boxes_and_labels_on_image_array_V2(image,
     Args:
       image: uint8 numpy array with shape (img_height, img_width, 3)
       boxes: a numpy array of shape [N, 4]
-      classes: a numpy array of shape [N]. Note that class indices are 1-based,
+      upcs: a numpy array of shape [N]. Note that class indices are 1-based,
         and match the keys in the label map.
       scores_step1: a numpy array of shape [N] or None.  If scores=None, then
         this function assumes that the boxes to be plotted are groundtruth
         boxes and plot all boxes as black with no classes or scores.
-      labels_to_names: a dict containing category dictionaries (each holding
-        category name) keyed by category indices.
       instance_masks: a numpy array of shape [N, image_height, image_width], can
         be None
       keypoints: a numpy array of shape [N, num_keypoints, 2], can
@@ -107,10 +104,7 @@ def visualize_boxes_and_labels_on_image_array_V2(image,
                 box_to_color_map[box] = 'black'
             else:
                 if not agnostic_mode:
-                    if classes[i] in labels_to_names.keys():
-                        class_name = labels_to_names[classes[i]]
-                    else:
-                        class_name = 'N/A'
+                    class_name = upcs[i]
                     display_str = '{}'.format(class_name)
                     box_to_display_str_map[box].append(display_str)
                     display_str = '{}%, {}%'.format(
@@ -128,8 +122,7 @@ def visualize_boxes_and_labels_on_image_array_V2(image,
                     if scores_step2[i] < step2_min_score_thresh:
                         box_to_color_map[box] = 'Red'
                     else:
-                        box_to_color_map[box] = vis_util.STANDARD_COLORS[
-                            classes[i] % len(vis_util.STANDARD_COLORS)]
+                        box_to_color_map[box] = 'DarkOrange'
 
     # Draw all boxes onto image.
     for box, color in box_to_color_map.items():
