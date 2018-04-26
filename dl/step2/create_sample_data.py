@@ -64,6 +64,7 @@ def solves_one_class(class_dir,
         scores_step1 = np.squeeze(scores)
 
         new_boxes = []
+        is_sample = True
         for j in range(boxes.shape[0]):
             if scores_step1[j] > 0.7:
                 new_boxes.append(boxes[j])
@@ -81,13 +82,14 @@ def solves_one_class(class_dir,
             cv2.imwrite(output_image_path, newimage)
             if matcher is None:
                 matcher = Matcher()
-                matcher.add_baseline_image(output_image_path, class_name)
+                if not matcher.add_baseline_image(output_image_path, class_name):
+                    is_sample = False
             else:
                 if matcher.is_find_match(output_image_path):
-                    os.remove(output_image_path)
-                    continue
+                    is_sample = False
                 else:
-                    matcher.add_baseline_image(output_image_path, class_name)
+                    if not matcher.add_baseline_image(output_image_path, class_name):
+                        is_sample = False
         else:
             index = -1
             area = 0
@@ -114,25 +116,29 @@ def solves_one_class(class_dir,
                 cv2.imwrite(output_image_path, newimage)
                 if matcher is None:
                     matcher = Matcher()
-                    matcher.add_baseline_image(output_image_path, class_name)
+                    if not matcher.add_baseline_image(output_image_path, class_name):
+                        is_sample = False
                 else:
                     if matcher.is_find_match(output_image_path):
-                        os.remove(output_image_path)
-                        continue
+                        is_sample = False
                     else:
-                        matcher.add_baseline_image(output_image_path, class_name)
+                        if not matcher.add_baseline_image(output_image_path, class_name):
+                            is_sample = False
             else:
                 logging.error("not detected error! image:{}.".format(image_path))
                 continue
 
 
-        SampleImageClass.objects.create(
-            source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME, common.SAMPLE_PREFIX if FLAGS.dest_dir_serial=='' else common.SAMPLE_PREFIX+'_'+FLAGS.dest_dir_serial, class_name,os.path.basename(output_image_path)),
-            deviceid=FLAGS.dest_dir_serial,
-            upc=class_name,
-            name=class_name,
-        )
-        sample_cnt += 1
+        if is_sample:
+            SampleImageClass.objects.create(
+                source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME, common.SAMPLE_PREFIX if FLAGS.dest_dir_serial=='' else common.SAMPLE_PREFIX+'_'+FLAGS.dest_dir_serial, class_name,os.path.basename(output_image_path)),
+                deviceid=FLAGS.dest_dir_serial,
+                upc=class_name,
+                name=class_name,
+            )
+            sample_cnt += 1
+        else:
+            os.remove(output_image_path)
     return sample_cnt
 
 def create_sample(data_dir, output_dir, step1_model_path):
