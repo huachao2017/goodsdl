@@ -17,6 +17,8 @@ class TraditionMatch:
         for sample in samples:
             if os.path.isfile(sample.source.path):
                 self._matcher.add_baseline_image(sample.source.path, sample.upc)
+            else:
+                SampleImageClass.objects.get(pk=sample.pk).delete()
 
         logger.info('end loading TraditionMatch')
         self._isload = True
