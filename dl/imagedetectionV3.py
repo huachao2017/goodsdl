@@ -54,8 +54,8 @@ class ImageDetector:
             self.step1_cnn.load(self.config)
             self.step2_cnn.load(self.config)
 
-    def add_baseline_image(self, image_path):
-        self.tradition_match.add_baseline_image(image_path)
+    def add_baseline_image(self, image_path, upc):
+        self.tradition_match.add_baseline_image(image_path, upc)
 
     def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
         if not self.step2_cnn.is_load():

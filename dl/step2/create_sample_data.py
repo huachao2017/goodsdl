@@ -81,13 +81,13 @@ def solves_one_class(class_dir,
             cv2.imwrite(output_image_path, newimage)
             if matcher is None:
                 matcher = Matcher()
-                matcher.add_baseline_image(output_image_path)
+                matcher.add_baseline_image(output_image_path, class_name)
             else:
                 if matcher.is_find_match(output_image_path):
                     os.remove(output_image_path)
                     continue
                 else:
-                    matcher.add_baseline_image(output_image_path)
+                    matcher.add_baseline_image(output_image_path, class_name)
         else:
             index = -1
             area = 0
@@ -114,13 +114,13 @@ def solves_one_class(class_dir,
                 cv2.imwrite(output_image_path, newimage)
                 if matcher is None:
                     matcher = Matcher()
-                    matcher.add_baseline_image(output_image_path)
+                    matcher.add_baseline_image(output_image_path, class_name)
                 else:
                     if matcher.is_find_match(output_image_path):
                         os.remove(output_image_path)
                         continue
                     else:
-                        matcher.add_baseline_image(output_image_path)
+                        matcher.add_baseline_image(output_image_path, class_name)
             else:
                 logging.error("not detected error! image:{}.".format(image_path))
                 continue

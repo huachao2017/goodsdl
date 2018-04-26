@@ -108,7 +108,7 @@ def solves_one_image(image_path,
             cv2.imwrite(output_image_path_augment, augment_newimage)
             if angle == 0:
                 matcher = Matcher()
-                matcher.add_baseline_image(output_image_path_augment)
+                matcher.add_baseline_image(output_image_path_augment, class_name)
             else:
                 if not matcher.is_find_match(output_image_path_augment):
                     os.remove(output_image_path_augment)
@@ -141,7 +141,7 @@ def solves_one_image(image_path,
                 cv2.imwrite(output_image_path_augment, augment_newimage)
                 if angle == 0:
                     matcher = Matcher()
-                    matcher.add_baseline_image(output_image_path_augment)
+                    matcher.add_baseline_image(output_image_path_augment, class_name)
                 else:
                     if not matcher.is_find_match(output_image_path_augment):
                         os.remove(output_image_path_augment)

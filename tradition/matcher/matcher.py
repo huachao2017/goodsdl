@@ -33,14 +33,13 @@ class Matcher:
         self.detector = cv2.xfeatures2d.SURF_create(400, 5, 5)
         self.matcher = cv2.BFMatcher(cv2.NORM_L2)
 
-    def add_baseline_image(self, image_path):
+    def add_baseline_image(self, image_path, upc):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         if len(kp) == 0:
             print('error: no key point to base image:{}'.format(image_path))
             return
 
-        upc = os.path.basename(os.path.dirname(image_path))
         if upc in self.upc_to_cnt:
             self.upc_to_cnt[upc] += 1
         else:
@@ -106,7 +105,7 @@ class Matcher:
         top_n = sorted_match_info[:n]
         ret = []
         for match in top_n:
-            ret.append((match[0],numpy.sum(match[1][3])))
+            ret.append((match[0].split('_')[0],numpy.sum(match[1][3])))
         if visual:
             for i in range(len(top_n)):
                 match = top_n[i]
@@ -120,15 +119,15 @@ class Matcher:
             return None,0
         sorted_match_info = sorted(match_info.items(), key=lambda d: numpy.sum(d[1][3]), reverse=True)
         best_match = sorted_match_info[0]
-        ret = (best_match[0],numpy.sum(best_match[1][3]))
+        ret = (best_match[0].split('_')[0],numpy.sum(best_match[1][3]))
         if visual:
             visual_path = os.path.join(os.path.dirname(image_path),'visual_{}_{}'.format(best_match[0],os.path.basename(image_path)) )
             self.match_visual(visual_path, best_match[1][0],best_match[1][1],best_match[1][2],best_match[1][3],best_match[1][4])
         return ret
 
     def is_find_match(self, image_path, solve_size=True, match_points_cnt=5, visual=True):
-        key, cnt = self.match_image_best_one(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt, visual=visual)
-        return key != None
+        upc, cnt = self.match_image_best_one(image_path, solve_size=solve_size, match_points_cnt=match_points_cnt, visual=visual)
+        return upc != None
 
     def match_visual(self, visual_path, img1, img2, kp_pairs, status=None, H=None):
         h1, w1 = img1.shape[:2]
@@ -189,7 +188,7 @@ def test_1():
     matcher = Matcher()
     time1 = time.time()
     for i in range(8):
-        matcher.add_baseline_image('images/%d.jpg' % (i+1))
+        matcher.add_baseline_image('images/%d.jpg' % (i + 1), str(i))
     time2 = time.time()
     match_key, cnt = matcher.match_image_best_one('images/9.jpg')
     time3 = time.time()
@@ -200,7 +199,7 @@ def test_2(image1,image2):
     time0 = time.time()
     matcher = Matcher()
     time1 = time.time()
-    matcher.add_baseline_image(image1)
+    matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
     match_key, cnt = matcher.match_image_best_one(image2)
     time3 = time.time()
@@ -211,7 +210,7 @@ def test_3(image1,image2):
     time0 = time.time()
     matcher = Matcher()
     time1 = time.time()
-    matcher.add_baseline_image(image1)
+    matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
     match_key, cnt = matcher.match_image_best_one(image2, match_points_cnt=0, solve_size=False)
     time3 = time.time()

@@ -526,7 +526,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 if len(source_samples)>0:
                     matcher = Matcher()
                     for sample in source_samples:
-                        matcher.add_baseline_image(sample.source.path)
+                        matcher.add_baseline_image(sample.source.path, sample.upc)
 
                     logger.info('match:{},{}'.format(matcher.get_baseline_cnt(),sample_image_path))
                     if matcher.is_find_match(sample_image_path):
@@ -555,7 +555,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                     else:
                         detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk)
                         detector.load()
-                        detector.add_baseline_image(sample_image_path)
+                        detector.add_baseline_image(sample_image_path, serializer.instance.upc)
                 else:
                     os.remove(sample_image_path)
 

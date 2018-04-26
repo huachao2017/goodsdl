@@ -16,7 +16,7 @@ class TraditionMatch:
         samples = SampleImageClass.objects.filter(deviceid=self._deviceid)
         for sample in samples:
             if os.path.isfile(sample.source.path):
-                self._matcher.add_baseline_image(sample.source.path)
+                self._matcher.add_baseline_image(sample.source.path, sample.upc)
 
         logger.info('end loading TraditionMatch')
         self._isload = True
@@ -24,9 +24,9 @@ class TraditionMatch:
     def is_load(self):
         return self._isload
 
-    def add_baseline_image(self, image_path):
+    def add_baseline_image(self, image_path, upc):
         if os.path.isfile(image_path):
-            self._matcher.add_baseline_image(image_path)
+            self._matcher.add_baseline_image(image_path, upc)
 
     def detect(self,image_paths):
 
