@@ -8,6 +8,7 @@ from goods.models import ProblemGoods
 from dl.step1_cnn import Step1CNN
 from dl.step2_cnn import Step2CNN
 from dl.step3_cnn import Step3CNN
+from dl.tradition_match import TraditionMatch
 from dl.util import visualize_boxes_and_labels_on_image_array_V2
 
 logger = logging.getLogger("detect")
@@ -35,6 +36,7 @@ class ImageDetector:
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(export1id)))
         self.step2_cnn = Step2CNN(os.path.join(file_path, 'model', str(export2id)),step2_model_name)
         self.step3_cnn = Step3CNN(os.path.join(file_path, 'model'), export3_arr)
+        self.tradition_match = TraditionMatch()
 
         self.counter = 0
         self.config = tf.ConfigProto()
@@ -48,8 +50,12 @@ class ImageDetector:
             return
         self.counter = self.counter + 1
         if not self.step2_cnn.is_load():
+            self.tradition_match.load()
             self.step1_cnn.load(self.config)
             self.step2_cnn.load(self.config)
+
+    def add_baseline_image(self, image_path):
+        self.tradition_match.add_baseline_image(image_path)
 
     def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
         if not self.step2_cnn.is_load():
@@ -113,17 +119,31 @@ class ImageDetector:
             logger.info('detectV3: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
             return [], time2-time0
 
-        upcs_step2, scores_step2  = self.step2_cnn.detect(step2_images)
-
+        upcs_match, scores_match = self.tradition_match.detect(step2_image_paths)
         time2 = time.time()
 
-        ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
-
+        upcs_step2, scores_step2  = self.step2_cnn.detect(step2_images)
         time3 = time.time()
-        logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
+
+        types_step2 = []
+        for i in range(len(step2_image_paths)):
+            # if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
+            #     continue
+            types_step2.append(1)
+            if upcs_match[i] != upcs_step2[i]:
+                if scores_match[i] > step2_min_score_thresh:
+                    upcs_step2[i] = scores_match[i]
+                    scores_step2[i] = scores_match[i]
+                    types_step2[i] = 0
+        logger.info(types_step2)
+
+        ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
+
+        time4 = time.time()
+        logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time2))
         return ret, time3-time0
 
-    def do_addition_logic_work(self, boxes_step1, scores_step1, upcs_step2, scores_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh):
+    def do_addition_logic_work(self, boxes_step1, scores_step1, upcs_step2, scores_step2, match_types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh):
         ret = []
         for i in range(len(boxes_step1)):
             ymin, xmin, ymax, xmax = boxes_step1[i]
@@ -132,7 +152,8 @@ class ImageDetector:
             score2 = scores_step2[i]
             action = 0
             upc = upcs_step2[i]
-            if scores_step2[i] < step2_min_score_thresh:
+            match_type = match_types_step2[i]
+            if score2 < step2_min_score_thresh:
                 # 识别度不够
                 class_type = -1
                 upc = ''
@@ -142,7 +163,7 @@ class ImageDetector:
                 class_type = -1
                 upc = ''
                 action = 2
-            elif upc in self.step2_cnn.cluster_upc_to_traintype:
+            elif match_type == 1 and upc in self.step2_cnn.cluster_upc_to_traintype:
                 traintype = self.step2_cnn.cluster_upc_to_traintype[upc]
                 probabilities, step3_labels_to_names = self.step3_cnn.detect(self.config, step2_image_paths[i], traintype)
                 if step3_labels_to_names is not None:
