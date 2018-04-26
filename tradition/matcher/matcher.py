@@ -90,11 +90,15 @@ class Matcher:
                         print(first_parallel_value, second_parallel_value)
 
                         if first_parallel_value < 0.5 and second_parallel_value < 0.5:
-                            # 面积接近不能差距三倍（暂时不用）
-                            # area = cv2.contourArea(corners)
-                            match_info[key] = (b_image,image,kp_pairs,status,H)
-                            if numpy.sum(status) >=max_match_points:
-                                break
+                            # 面积接近不能差20%
+                            b_area = b_image.shape[1]*b_image.shape[0]
+                            transfer_area = cv2.contourArea(corners)
+                            area_distance = abs(transfer_area-b_area)/max(b_area,transfer_area)
+                            print(area_distance)
+                            if area_distance < 0.2:
+                                match_info[key] = (b_image,image,kp_pairs,status,H)
+                                if numpy.sum(status) >=max_match_points:
+                                    break
         return match_info
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75):
