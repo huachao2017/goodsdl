@@ -148,19 +148,18 @@ class ImageDetector:
         for i in range(len(boxes_step1)):
             ymin, xmin, ymax, xmax = boxes_step1[i]
 
-            class_type = 0 # 该字段应该被废
             score2 = scores_step2[i]
             action = 0
             upc = upcs_step2[i]
             match_type = match_types_step2[i]
             if score2 < step2_min_score_thresh:
                 # 识别度不够
-                class_type = -1
+                match_type = -1
                 upc = ''
 
             if upc == 'bottled-drink-stand' or upc == 'ziptop-drink-stand':
                 # 立姿水需要躺倒平放
-                class_type = -1
+                match_type = -1
                 upc = ''
                 action = 2
             elif match_type == 1 and upc in self.step2_cnn.cluster_upc_to_traintype:
@@ -180,7 +179,7 @@ class ImageDetector:
                         upc = step3_labels_to_names[step3_class_type]
                     logger.info('step3: %d, %s, %d' % (traintype, upc, action))
 
-            ret.append({'class': class_type,
+            ret.append({'class': match_type,
                         'score': scores_step1[i],
                         'score2': score2,
                         'action': action,
