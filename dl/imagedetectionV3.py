@@ -132,7 +132,7 @@ class ImageDetector:
             types_step2.append(1)
             if upcs_match[i] != upcs_step2[i]:
                 if scores_match[i] > step2_min_score_thresh:
-                    upcs_step2[i] = scores_match[i]
+                    upcs_step2[i] = upcs_match[i]
                     scores_step2[i] = scores_match[i]
                     types_step2[i] = 0
         logger.info(types_step2)
