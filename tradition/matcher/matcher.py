@@ -61,7 +61,7 @@ class Matcher:
             print('kp:{}'.format(len(kp)))
         match_info = {}
         if len(kp) < 30:
-            print('warn: too less keypoint count to match image:{}'.format(image_path))
+            print('warn: too less keypoint count to match image:{}/{}'.format(len(kp),image_path))
             return match_info
 
         for key in self.path_to_baseline_info:
