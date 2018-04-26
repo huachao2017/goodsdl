@@ -69,6 +69,7 @@ def solves_one_class(class_dir,
                 new_boxes.append(boxes[j])
         if len(new_boxes) <= 0:
             logging.error("not detected error! image:{}.".format(image_path))
+            continue
         elif len(new_boxes) == 1:
             ymin, xmin, ymax, xmax = new_boxes[0]
             ymin = int(ymin * im_height)
