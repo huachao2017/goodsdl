@@ -50,7 +50,7 @@ class Matcher:
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
-    def match_image_all_info(self, image_path, min_match_points_cnt=4, max_match_points=20):
+    def match_image_all_info(self, image_path, min_match_points_cnt=4, max_match_points=20, debug=False, visual=True):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         match_info = {}
@@ -62,11 +62,19 @@ class Matcher:
             (b_kp,b_desc, b_image) = self.path_to_baseline_info[key]
             raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
             kp_pairs = self.filter_matches(b_kp, kp, raw_matches)
+            if debug:
+                print('kp_pairs:{}'.format(len(kp_pairs)))
             if len(kp_pairs) >= min_match_points_cnt:
                 mkp1, mkp2 = zip(*kp_pairs)
                 p1 = numpy.float32([kp.pt for kp in mkp1])
                 p2 = numpy.float32([kp.pt for kp in mkp2])
                 H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
+                if debug:
+                    print('kp_cnt:{}'.format(numpy.sum(status)))
+                if visual:
+                    visual_path = os.path.join(os.path.dirname(image_path),
+                                               'visual_{}_{}'.format(key, os.path.basename(image_path)))
+                    self.match_visual(visual_path, b_image,image,kp_pairs,status,H)
                 if numpy.sum(status) >= min_match_points_cnt:
                     corners = numpy.float32([[0, 0], [b_image.shape[1], 0], [b_image.shape[1], b_image.shape[0]], [0, b_image.shape[0]]])
                     corners = numpy.int32(
@@ -74,9 +82,6 @@ class Matcher:
 
                     x = corners[:, 0]
                     y = corners[:, 1]
-                    # print(numpy.min(x),numpy.min(y),numpy.max(x),numpy.max(y))
-                    # print(image.shape[1],image.shape[0])
-                    # print(area,image.shape[1]*image.shape[0])
 
                     # 四个顶点都靠近边缘或者超出边缘，则正确匹配
                     if numpy.min(x) < image.shape[1]/5 and numpy.min(y) < image.shape[0]/5 and image.shape[1]-numpy.max(x) < image.shape[1]/5 and image.shape[0]-numpy.max(y) < image.shape[0]/5:
@@ -87,16 +92,19 @@ class Matcher:
                         line2_delta = (corners[3][1]-corners[0][1])/(corners[3][0]-corners[0][0])
                         line4_delta = (corners[2][1]-corners[1][1])/(corners[2][0]-corners[1][0])
                         second_parallel_value = abs(line2_delta/line4_delta - 1)
-                        print(first_parallel_value, second_parallel_value)
+                        if debug:
+                            print('parallel_value:{},{}'.format(first_parallel_value, second_parallel_value))
 
                         if first_parallel_value < 0.5 and second_parallel_value < 0.5:
                             # 面积接近不能差20%
                             b_area = b_image.shape[1]*b_image.shape[0]
                             transfer_area = cv2.contourArea(corners)
                             area_distance = abs(transfer_area-b_area)/max(b_area,transfer_area)
-                            print(area_distance)
+                            if debug:
+                                print('area_distance:{}'.format(area_distance))
                             if area_distance < 0.2:
-                                match_info[key] = (b_image,image,kp_pairs,status,H)
+                                match_info[key] = self.caculate_score(numpy.sum(status))
+
                                 if numpy.sum(status) >=max_match_points:
                                     break
         return match_info
@@ -139,19 +147,13 @@ class Matcher:
     #             self.match_visual(visual_path, match[1][0],match[1][1],match[1][2],match[1][3],match[1][4])
     #     return ret
 
-    def match_image_best_one(self, image_path, min_match_points_cnt=5, max_match_points=20, visual=True):
-        match_info = self.match_image_all_info(image_path, min_match_points_cnt=min_match_points_cnt,max_match_points=max_match_points)
+    def match_image_best_one(self, image_path, min_match_points_cnt=5, max_match_points=20, visual=True, debug=False):
+        match_info = self.match_image_all_info(image_path, min_match_points_cnt=min_match_points_cnt,max_match_points=max_match_points, debug=debug, visual=visual)
         if len(match_info) == 0:
             return None,0
-        sorted_match_info = sorted(match_info.items(), key=lambda d: numpy.sum(d[1][3]), reverse=True)
+        sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         best_match = sorted_match_info[0]
-
-        score = self.caculate_score(numpy.sum(best_match[1][3]))
-
-        ret = (best_match[0].split('_')[0],score)
-        if visual:
-            visual_path = os.path.join(os.path.dirname(image_path),'visual_{}_{}'.format(best_match[0],os.path.basename(image_path)) )
-            self.match_visual(visual_path, best_match[1][0],best_match[1][1],best_match[1][2],best_match[1][3],best_match[1][4])
+        ret = (best_match[0].split('_')[0], best_match[1])
         return ret
 
     def is_find_match(self, image_path, score_thresh = 0.5, min_match_points_cnt=5, visual=True):
@@ -219,7 +221,7 @@ def test_1():
     for i in range(8):
         matcher.add_baseline_image('images/%d.jpg' % (i + 1), str(i))
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
+    match_key, cnt = matcher.match_image_best_one('images/9.jpg', debug=True)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -230,7 +232,7 @@ def test_2(image1,image2):
     time1 = time.time()
     matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one(image2)
+    match_key, cnt = matcher.match_image_best_one(image2, debug=True)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -241,7 +243,7 @@ def test_3(image1,image2):
     time1 = time.time()
     matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one(image2)
+    match_key, cnt = matcher.match_image_best_one(image2, debug=True)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -257,6 +259,9 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/error/3.jpg'
-    fn2 = 'images/error/4.jpg'
+    fn1 = 'images/test/1.jpg'
+    fn2 = 'images/test/2.jpg'
+
+    # fn1 = 'images/error/3.jpg'
+    # fn2 = 'images/error/4.jpg'
     test_3(fn1, fn2)
