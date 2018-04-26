@@ -40,14 +40,16 @@ class Matcher:
             print('error: no key point to base image:{}'.format(image_path))
             return False
 
+        if len(kp)< 50:
+            print('error: too less keypoint count :{}/{}'.format(len(kp),image_path))
+            return False
         if upc in self.upc_to_cnt:
             self.upc_to_cnt[upc] += 1
         else:
             self.upc_to_cnt[upc] = 1
         key = upc + '_'+ str(self.upc_to_cnt[upc])
         self.path_to_baseline_info[key] = (kp, desc,image)
-        if debug:
-            print('kp:{}/{}'.format(len(kp),image_path))
+        return True
 
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
@@ -65,14 +67,16 @@ class Matcher:
         for key in self.path_to_baseline_info:
             (b_kp,b_desc, b_image) = self.path_to_baseline_info[key]
             raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
-            kp_pairs = self.filter_matches(b_kp, kp, raw_matches)
+            if debug:
+                print('raw_matches:{}'.format(len(raw_matches)))
+            kp_pairs = self.filter_matches(b_kp, kp, raw_matches,debug=debug)
             if debug:
                 print('kp_pairs:{}'.format(len(kp_pairs)))
             if len(kp_pairs) >= min_match_points_cnt:
                 mkp1, mkp2 = zip(*kp_pairs)
                 p1 = numpy.float32([kp.pt for kp in mkp1])
                 p2 = numpy.float32([kp.pt for kp in mkp2])
-                H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
+                H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 3.0)
                 if debug:
                     print('kp_cnt:{}'.format(numpy.sum(status)))
                 if visual:
@@ -113,7 +117,7 @@ class Matcher:
                                     break
         return match_info
 
-    def filter_matches(self, kp1, kp2, matches, ratio=0.75):
+    def filter_matches(self, kp1, kp2, matches, ratio=0.75, debug=False):
         mkp1, mkp2 = [], []
         for m in matches:
             if len(m) == 2 and m[0].distance < m[1].distance * ratio:
@@ -267,6 +271,6 @@ if __name__ == '__main__':
     fn1 = 'images/test/old/5.jpg'
     fn2 = 'images/test/old/6.jpg'
 
-    fn1 = 'images/error/5.jpg'
-    fn2 = 'images/error/6.jpg'
+    fn1 = 'images/error/4.jpg'
+    fn2 = 'images/error/3.jpg'
     test_3(fn1, fn2)
