@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger("detect")
 
 class TraditionMatch:
-    def __init(self, deviceid=''):
+    def __init__(self, deviceid=''):
         self._isload = False
         self._deviceid = deviceid
         self._matcher = Matcher()
