@@ -90,10 +90,12 @@ class Step2CNN:
             self._detection_classes, feed_dict={self._input_images_tensor: images_nps})
         upcs = []
         scores = []
+        print(self.labels_to_names)
         for i in range(len(probabilities)):
             type_to_probability = probabilities[i]
             sorted_inds = [j[0] for j in sorted(enumerate(-type_to_probability), key=lambda x: x[1])]
 
+            print(sorted_inds[0])
             upcs.append(self.labels_to_names(sorted_inds[0]))
             scores.append(type_to_probability[sorted_inds[0]])
         return upcs, scores
