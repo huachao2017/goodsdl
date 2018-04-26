@@ -72,7 +72,6 @@ class Matcher:
                     corners = numpy.int32(
                         cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
 
-                    print(corners)
                     x = corners[:, 0]
                     y = corners[:, 1]
                     # print(numpy.min(x),numpy.min(y),numpy.max(x),numpy.max(y))
@@ -84,12 +83,13 @@ class Matcher:
                         # 转移必须是平行四边形
                         line1_delta = (corners[1][1]-corners[0][1])/(corners[1][0]-corners[0][0])
                         line3_delta = (corners[2][1]-corners[3][1])/(corners[2][0]-corners[3][0])
-                        print(line1_delta,line3_delta)
+                        first_parallel_value = abs(line1_delta/line3_delta - 1)
                         line2_delta = (corners[3][1]-corners[0][1])/(corners[3][0]-corners[0][0])
                         line4_delta = (corners[2][1]-corners[1][1])/(corners[2][0]-corners[1][0])
-                        print(line2_delta,line4_delta)
+                        second_parallel_value = abs(line2_delta/line4_delta - 1)
+                        print(first_parallel_value, second_parallel_value)
 
-                        if abs(line1_delta/line3_delta - 1) < 0.1 and abs(line2_delta/line4_delta - 1) < 0.1:
+                        if first_parallel_value < 0.5 and second_parallel_value < 0.5:
                             # 面积接近不能差距三倍（暂时不用）
                             # area = cv2.contourArea(corners)
                             match_info[key] = (b_image,image,kp_pairs,status,H)
@@ -242,11 +242,14 @@ def test_3(image1,image2):
 if __name__ == '__main__':
     """Test code: Uses the two specified"""
 
-    test_1()
-    sys.exit(0)
-    fn1 = 'images/1.jpg'
-    fn2 = 'images/2.jpg'
+    # test_1()
+    # sys.exit(0)
+    # fn1 = 'images/1.jpg'
+    # fn2 = 'images/2.jpg'
 
-    # fn1 = 'images/error/3.jpg'
-    # fn2 = 'images/error/4.jpg'
+    # fn1 = 'images/12.jpg'
+    # fn2 = 'images/13.jpg'
+
+    fn1 = 'images/error/3.jpg'
+    fn2 = 'images/error/4.jpg'
     test_3(fn1, fn2)
