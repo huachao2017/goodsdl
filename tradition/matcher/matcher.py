@@ -95,7 +95,7 @@ class Matcher:
                         if debug:
                             print('parallel_value:{},{}'.format(first_parallel_value, second_parallel_value))
 
-                        if first_parallel_value < 0.5 and second_parallel_value < 0.5:
+                        if first_parallel_value < 5 and second_parallel_value < 5:
                             # 面积接近不能差20%
                             b_area = b_image.shape[1]*b_image.shape[0]
                             transfer_area = cv2.contourArea(corners)
@@ -103,7 +103,7 @@ class Matcher:
                             if debug:
                                 print('area_distance:{}'.format(area_distance))
                             if area_distance < 0.2:
-                                match_info[key] = self.caculate_score(numpy.sum(status))
+                                match_info[key] = self.caculate_score(numpy.sum(status),max(first_parallel_value,second_parallel_value),area_distance)
 
                                 if numpy.sum(status) >=max_match_points:
                                     break
@@ -119,11 +119,12 @@ class Matcher:
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def caculate_score(self, cnt):
-        if cnt < 5:
+    def caculate_score(self, cnt, parallel_value, area_distance):
+        # TODO need use parallel_value and area_distance
+        if cnt < 10:
             score = 0.5
         else:
-            score = (cnt-5)/10 + 0.5
+            score = (cnt-10)/100 + 0.5
 
         if score >= 1:
             score = 0.99
@@ -259,8 +260,8 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/test/1.jpg'
-    fn2 = 'images/test/2.jpg'
+    fn1 = 'images/test/2.jpg'
+    fn2 = 'images/test/3.jpg'
 
     # fn1 = 'images/error/3.jpg'
     # fn2 = 'images/error/4.jpg'
