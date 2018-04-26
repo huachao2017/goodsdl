@@ -112,10 +112,13 @@ class Matcher:
         return kp_pairs
 
     def caculate_score(self, cnt):
-        if cnt < 10:
+        if cnt < 5:
             score = 0.5
         else:
-            score = (cnt-10)/20 + 0.5
+            score = (cnt-5)/10 + 0.5
+
+        if score >= 1:
+            score = 0.99
 
         return score
 
