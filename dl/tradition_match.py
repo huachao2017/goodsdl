@@ -33,13 +33,9 @@ class TraditionMatch:
         upcs = []
         scores = []
         for image_path in image_paths:
-            key, cnt = self._matcher.match_image_best_one(image_path)
-            upcs.append(key)
-            if cnt < 10:
-                scores.append(cnt/10)
-            else:
-                scores.append(0.99)
-
+            upc, score = self._matcher.match_image_best_one(image_path)
+            upcs.append(upc)
+            scores.append(score)
 
         # TODO need test top_n
         # top_5 = self._matcher.match_image_top_n(image_path)
