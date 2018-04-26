@@ -198,7 +198,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             ret_reborn = []
             index = 0
-            class_index_dict = {}
+            upc_index_dict = {}
             for goods in ret:
                 # 兼容上一个版本
                 if 'action' not in goods:
@@ -215,8 +215,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                      xmax=goods['xmax'],
                                      ymax=goods['ymax'],
                                      )
-                if goods['class'] in class_index_dict:
-                    ret_reborn[class_index_dict[goods['class']]]['box'].append({
+                if goods['upc'] in upc_index_dict:
+                    ret_reborn[upc_index_dict[goods['class']]]['box'].append({
                         'score': goods['score'],
                         'score2': goods['score2'],
                         'action': goods['action'],
@@ -241,7 +241,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                         'upc': goods['upc'],
                         'box': box
                     })
-                    class_index_dict[goods['class']] = index
+                    upc_index_dict[goods['upc']] = index
                     index = index + 1
 
             # 保存ai本次返回和计算时间
