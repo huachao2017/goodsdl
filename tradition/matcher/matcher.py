@@ -33,12 +33,12 @@ class Matcher:
         self.detector = cv2.xfeatures2d.SURF_create(400, 5, 5)
         self.matcher = cv2.BFMatcher(cv2.NORM_L2)
 
-    def add_baseline_image(self, image_path, upc):
+    def add_baseline_image(self, image_path, upc, debug=False):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         if len(kp) == 0:
             print('error: no key point to base image:{}'.format(image_path))
-            return
+            return False
 
         if upc in self.upc_to_cnt:
             self.upc_to_cnt[upc] += 1
@@ -46,6 +46,8 @@ class Matcher:
             self.upc_to_cnt[upc] = 1
         key = upc + '_'+ str(self.upc_to_cnt[upc])
         self.path_to_baseline_info[key] = (kp, desc,image)
+        if debug:
+            print('kp:{}/{}'.format(len(kp),image_path))
 
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
@@ -53,6 +55,8 @@ class Matcher:
     def match_image_all_info(self, image_path, min_match_points_cnt=4, max_match_points=20, debug=False, visual=True):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
+        if debug:
+            print('kp:{}'.format(len(kp)))
         match_info = {}
         if len(kp) == 0:
             print('warn: no key point to match image:{}'.format(image_path))
@@ -148,7 +152,7 @@ class Matcher:
     #             self.match_visual(visual_path, match[1][0],match[1][1],match[1][2],match[1][3],match[1][4])
     #     return ret
 
-    def match_image_best_one(self, image_path, min_match_points_cnt=5, max_match_points=20, visual=True, debug=False):
+    def match_image_best_one(self, image_path, min_match_points_cnt=4, max_match_points=20, visual=True, debug=False):
         match_info = self.match_image_all_info(image_path, min_match_points_cnt=min_match_points_cnt,max_match_points=max_match_points, debug=debug, visual=visual)
         if len(match_info) == 0:
             return None,0
@@ -220,7 +224,7 @@ def test_1():
     matcher = Matcher()
     time1 = time.time()
     for i in range(8):
-        matcher.add_baseline_image('images/%d.jpg' % (i + 1), str(i))
+        matcher.add_baseline_image('images/%d.jpg' % (i + 1), str(i), debug=True)
     time2 = time.time()
     match_key, cnt = matcher.match_image_best_one('images/9.jpg', debug=True)
     time3 = time.time()
@@ -231,7 +235,7 @@ def test_2(image1,image2):
     time0 = time.time()
     matcher = Matcher()
     time1 = time.time()
-    matcher.add_baseline_image(image1, 'tt')
+    matcher.add_baseline_image(image1, 'tt', debug=True)
     time2 = time.time()
     match_key, cnt = matcher.match_image_best_one(image2, debug=True)
     time3 = time.time()
@@ -242,7 +246,7 @@ def test_3(image1,image2):
     time0 = time.time()
     matcher = Matcher()
     time1 = time.time()
-    matcher.add_baseline_image(image1, 'tt')
+    matcher.add_baseline_image(image1, 'tt', debug=True)
     time2 = time.time()
     match_key, cnt = matcher.match_image_best_one(image2, debug=True)
     time3 = time.time()
@@ -260,9 +264,9 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/test/2.jpg'
-    fn2 = 'images/test/3.jpg'
+    fn1 = 'images/test/old/5.jpg'
+    fn2 = 'images/test/old/6.jpg'
 
-    # fn1 = 'images/error/3.jpg'
-    # fn2 = 'images/error/4.jpg'
+    fn1 = 'images/error/5.jpg'
+    fn2 = 'images/error/6.jpg'
     test_3(fn1, fn2)
