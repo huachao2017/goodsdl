@@ -542,6 +542,20 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                         upc=serializer.instance.upc,
                         name=serializer.instance.upc,
                     )
+
+                    export1s = ExportAction.objects.filter(train_action__action='T1').filter(
+                        checkpoint_prefix__gt=0).order_by(
+                        '-update_time')[:1]
+                    export2s = ExportAction.objects.filter(train_action__action='T2').filter(
+                        train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
+                        '-update_time')[:1]
+
+                    if len(export1s) == 0 or len(export2s) == 0:
+                        logger.error('not found detection model!')
+                    else:
+                        detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk)
+                        detector.load()
+                        detector.add_baseline_image(sample_image_path)
                 else:
                     os.remove(sample_image_path)
 
