@@ -129,12 +129,16 @@ class ImageDetector:
         for i in range(len(step2_image_paths)):
             # if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
             #     continue
-            types_step2.append(1)
+            types_step2.append(2) # 使用两个检测
             if upcs_match[i] != upcs_step2[i]:
                 if scores_match[i] > step2_min_score_thresh:
                     upcs_step2[i] = upcs_match[i]
                     scores_step2[i] = scores_match[i]
-                    types_step2[i] = 0
+                    types_step2[i] = 0 # 使用模式匹配
+                elif scores_step2[i] > step2_min_score_thresh:
+                    types_step2[i] = 1 # 使用深度学习
+                else:
+                    types_step2[i] = -1 # 无效检测
         logger.info(types_step2)
 
         ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
@@ -152,14 +156,11 @@ class ImageDetector:
             action = 0
             upc = upcs_step2[i]
             match_type = match_types_step2[i]
-            if score2 < step2_min_score_thresh:
+            if match_type == -1:
                 # 识别度不够
-                match_type = -1
                 upc = ''
-
-            if upc == 'bottled-drink-stand' or upc == 'ziptop-drink-stand':
+            elif match_type == 1 and (upc == 'bottled-drink-stand' or upc == 'ziptop-drink-stand'):
                 # 立姿水需要躺倒平放
-                match_type = -1
                 upc = ''
                 action = 2
             elif match_type == 1 and upc in self.step2_cnn.cluster_upc_to_traintype:
