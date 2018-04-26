@@ -41,7 +41,7 @@ class Matcher:
             return False
 
         if len(kp)< 50:
-            print('error: too less keypoint count :{}/{}'.format(len(kp),image_path))
+            print('error: too less keypoint count to base image:{}/{}'.format(len(kp),image_path))
             return False
         if upc in self.upc_to_cnt:
             self.upc_to_cnt[upc] += 1
@@ -60,8 +60,8 @@ class Matcher:
         if debug:
             print('kp:{}'.format(len(kp)))
         match_info = {}
-        if len(kp) == 0:
-            print('warn: no key point to match image:{}'.format(image_path))
+        if len(kp) < 30:
+            print('warn: too less keypoint count to match image:{}'.format(image_path))
             return match_info
 
         for key in self.path_to_baseline_info:
@@ -268,9 +268,9 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/test/old/5.jpg'
-    fn2 = 'images/test/old/6.jpg'
+    fn1 = 'images/test/2.jpg'
+    fn2 = 'images/test/1.jpg'
 
-    fn1 = 'images/error/4.jpg'
-    fn2 = 'images/error/3.jpg'
+    # fn1 = 'images/error/4.jpg'
+    # fn2 = 'images/error/3.jpg'
     test_3(fn1, fn2)
