@@ -36,11 +36,13 @@ class Matcher:
     def add_baseline_image(self, image_path, upc, debug=False):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
+        if debug:
+            print('b_image kp:{}'.format(len(kp)))
         if len(kp) == 0:
             print('error: no key point to base image:{}'.format(image_path))
             return False
 
-        if len(kp)< 50:
+        if len(kp)< 30:
             print('error: too less keypoint count to base image:{}/{}'.format(len(kp),image_path))
             return False
         if upc in self.upc_to_cnt:
@@ -54,11 +56,11 @@ class Matcher:
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
-    def match_image_all_info(self, image_path, min_match_points_cnt=4, max_match_points=20, debug=False, visual=True):
+    def match_image_all_info(self, image_path, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=True):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         if debug:
-            print('kp:{}'.format(len(kp)))
+            print('image kp:{}'.format(len(kp)))
         match_info = {}
         if len(kp) < 30:
             print('warn: too less keypoint count to match image:{}/{}'.format(len(kp),image_path))
@@ -79,42 +81,40 @@ class Matcher:
                 H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 3.0)
                 if debug:
                     print('kp_cnt:{}'.format(numpy.sum(status)))
-                if visual:
-                    visual_path = os.path.join(os.path.dirname(image_path),
-                                               'visual_{}_{}'.format(key, os.path.basename(image_path)))
-                    self.match_visual(visual_path, b_image,image,kp_pairs,status,H)
                 if numpy.sum(status) >= min_match_points_cnt:
                     corners = numpy.float32([[0, 0], [b_image.shape[1], 0], [b_image.shape[1], b_image.shape[0]], [0, b_image.shape[0]]])
                     corners = numpy.int32(
                         cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
 
-                    x = corners[:, 0]
-                    y = corners[:, 1]
+                    # corners平行四边形判断
+                    line1_delta = (corners[1][1]-corners[0][1])/(corners[1][0]-corners[0][0])
+                    line3_delta = (corners[2][1]-corners[3][1])/(corners[2][0]-corners[3][0])
+                    first_parallel_distance = abs(line1_delta/line3_delta - 1)
+                    line2_delta = (corners[3][1]-corners[0][1])/(corners[3][0]-corners[0][0])
+                    line4_delta = (corners[2][1]-corners[1][1])/(corners[2][0]-corners[1][0])
+                    second_parallel_distance = abs(line2_delta/line4_delta - 1)
+                    parallel_distance = max(first_parallel_distance, second_parallel_distance)
+                    if debug:
+                        print('parallel_distance:{}'.format(parallel_distance))
 
-                    # 四个顶点都靠近边缘或者超出边缘，则正确匹配
-                    if numpy.min(x) < image.shape[1]/5 and numpy.min(y) < image.shape[0]/5 and image.shape[1]-numpy.max(x) < image.shape[1]/5 and image.shape[0]-numpy.max(y) < image.shape[0]/5:
-                        # 转移必须是平行四边形
-                        line1_delta = (corners[1][1]-corners[0][1])/(corners[1][0]-corners[0][0])
-                        line3_delta = (corners[2][1]-corners[3][1])/(corners[2][0]-corners[3][0])
-                        first_parallel_value = abs(line1_delta/line3_delta - 1)
-                        line2_delta = (corners[3][1]-corners[0][1])/(corners[3][0]-corners[0][0])
-                        line4_delta = (corners[2][1]-corners[1][1])/(corners[2][0]-corners[1][0])
-                        second_parallel_value = abs(line2_delta/line4_delta - 1)
-                        if debug:
-                            print('parallel_value:{},{}'.format(first_parallel_value, second_parallel_value))
+                    b_area = b_image.shape[1]*b_image.shape[0]
+                    transfer_area = cv2.contourArea(corners)
+                    area_distance = abs(transfer_area-b_area)/min(b_area,transfer_area)
+                    if debug:
+                        print('area_distance:{}'.format(area_distance))
+                    score = self.caculate_score(numpy.sum(status),
+                                                max(first_parallel_distance, second_parallel_distance),
+                                                area_distance,
+                                                debug=debug)
 
-                        if first_parallel_value < 5 and second_parallel_value < 5:
-                            # 面积接近不能差20%
-                            b_area = b_image.shape[1]*b_image.shape[0]
-                            transfer_area = cv2.contourArea(corners)
-                            area_distance = abs(transfer_area-b_area)/max(b_area,transfer_area)
-                            if debug:
-                                print('area_distance:{}'.format(area_distance))
-                            if area_distance < 0.2:
-                                match_info[key] = self.caculate_score(numpy.sum(status),max(first_parallel_value,second_parallel_value),area_distance)
-
-                                if numpy.sum(status) >=max_match_points:
-                                    break
+                    if visual:
+                        visual_path = os.path.join(os.path.dirname(image_path),
+                                                   'visual_{}_{}_{}'.format(int(score*100), key, os.path.basename(image_path)))
+                        self.match_visual(visual_path, b_image, image, kp_pairs, status, H)
+                    if score < min_score_thresh:
+                        match_info[key] = score
+                        if score >= max_score_thresh:
+                            break
         return match_info
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75, debug=False):
@@ -127,15 +127,28 @@ class Matcher:
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def caculate_score(self, cnt, parallel_value, area_distance):
-        # TODO need use parallel_value and area_distance
+    def caculate_score(self, cnt, parallel_distance, area_distance, debug=False):
         if cnt < 10:
-            score = 0.5
+            cnt_score = 0.05*cnt
         else:
-            score = (cnt-10)/100 + 0.5
+            cnt_score = (cnt-10)/100 + 0.5
+        if cnt_score >= 1:
+            cnt_score = 0.99
 
-        if score >= 1:
-            score = 0.99
+        if parallel_distance > 20:# 平行角度接近差20, parallel_score为0
+            parallel_score = 0.0
+        else:
+            parallel_score = 0.05 * (20 - parallel_distance)
+
+        if area_distance > 1:# 面积接近差1倍area_score为0
+            area_score = 0.0
+        else:
+            area_score = 1-area_distance
+
+        if debug:
+            print('score:{},{},{}'.format(cnt_score,parallel_score,area_score))
+
+        score = cnt_score * 0.6 + parallel_score * 0.2 + area_score * 0.2
 
         return score
 
@@ -156,8 +169,12 @@ class Matcher:
     #             self.match_visual(visual_path, match[1][0],match[1][1],match[1][2],match[1][3],match[1][4])
     #     return ret
 
-    def match_image_best_one(self, image_path, min_match_points_cnt=4, max_match_points=20, visual=True, debug=False):
-        match_info = self.match_image_all_info(image_path, min_match_points_cnt=min_match_points_cnt,max_match_points=max_match_points, debug=debug, visual=visual)
+    def match_image_best_one(self, image_path, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, visual=True, debug=False):
+        match_info = self.match_image_all_info(image_path,
+                                               min_match_points_cnt=min_match_points_cnt,
+                                               min_score_thresh=min_score_thresh,
+                                               max_score_thresh=max_score_thresh,
+                                               debug=debug, visual=visual)
         if len(match_info) == 0:
             return None,0
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
@@ -262,15 +279,15 @@ if __name__ == '__main__':
 
     # test_1()
     # sys.exit(0)
-    # fn1 = 'images/1.jpg'
-    # fn2 = 'images/2.jpg'
+    fn1 = 'images/12.jpg'
+    fn2 = 'images/13.jpg'
 
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/test/2.jpg'
-    fn2 = 'images/test/1.jpg'
-
+    # fn1 = 'images/test/old/9.jpg'
+    # fn2 = 'images/test/old/8.jpg'
+    #
     # fn1 = 'images/error/4.jpg'
     # fn2 = 'images/error/3.jpg'
     test_3(fn1, fn2)
