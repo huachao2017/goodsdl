@@ -39,6 +39,8 @@ class TraditionMatch:
             upcs.append(upc)
             scores.append(score)
 
-        # TODO need test top_n
-        # top_5 = self._matcher.match_image_top_n(image_path)
         return upcs, scores
+
+    def verify_score(self,image_path,upc):
+        upc, score = self._matcher.match_image_best_one(image_path,within_upcs=[upc])
+        return score
