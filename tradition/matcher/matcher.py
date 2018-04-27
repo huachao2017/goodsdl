@@ -73,7 +73,7 @@ class Matcher:
                     continue
             if filter_upcs is not None:
                 upc = key.split('_')[0]
-                if upc not in filter_upcs:
+                if upc in filter_upcs:
                     continue
             (b_kp,b_desc, b_image) = self.path_to_baseline_info[key]
             raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
