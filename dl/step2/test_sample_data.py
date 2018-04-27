@@ -41,7 +41,7 @@ def test_one_class(matcher,
             error_cnt += 1
             output_image_path = os.path.join(output_dir, '{}_{}.jpg'.format(class_name,error_cnt))
             shutil.copy(image_path, output_image_path)
-            matcher.match_image_best_one(image_path, filter_upcs=[class_name],debug=True)
+            matcher.match_image_best_one(output_image_path, filter_upcs=[class_name],visual=True,debug=False)
     return error_cnt
 
 def test_sample(data_dir, output_dir):
