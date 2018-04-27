@@ -169,7 +169,7 @@ class Matcher:
         #
         area_score = 1 - area_distance # 面积接近差1倍,则惩罚为负值
         if area_score < -1:
-            area_score = 1
+            area_score = -1
 
         score = cnt_score * 0.5 + corner_score * 0.25 + area_score * 0.25
 
