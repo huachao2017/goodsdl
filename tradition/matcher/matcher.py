@@ -87,12 +87,12 @@ class Matcher:
                         cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
 
                     # corners平行四边形判断
-                    line1_delta = (corners[1][1]-corners[0][1])/(corners[1][0]-corners[0][0])
-                    line3_delta = (corners[2][1]-corners[3][1])/(corners[2][0]-corners[3][0])
-                    first_parallel_distance = abs(line1_delta/line3_delta - 1)
-                    line2_delta = (corners[3][1]-corners[0][1])/(corners[3][0]-corners[0][0])
-                    line4_delta = (corners[2][1]-corners[1][1])/(corners[2][0]-corners[1][0])
-                    second_parallel_distance = abs(line2_delta/line4_delta - 1)
+                    line1_delta = (corners[1][1]-corners[0][1])/max(1,(corners[1][0]-corners[0][0]))
+                    line3_delta = (corners[2][1]-corners[3][1])/max(1,(corners[2][0]-corners[3][0]))
+                    first_parallel_distance = abs(line1_delta/max(1,line3_delta) - 1)
+                    line2_delta = (corners[3][1]-corners[0][1])/max(1,(corners[3][0]-corners[0][0]))
+                    line4_delta = (corners[2][1]-corners[1][1])/max(1,(corners[2][0]-corners[1][0]))
+                    second_parallel_distance = abs(line2_delta/max(1,line4_delta) - 1)
                     parallel_distance = max(first_parallel_distance, second_parallel_distance)
                     if debug:
                         print('parallel_distance:{}'.format(parallel_distance))
