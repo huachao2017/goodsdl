@@ -85,7 +85,7 @@ def solves_one_class(class_dir,
                 if not matcher.add_baseline_image(output_image_path, class_name):
                     is_sample = False
             else:
-                if matcher.is_find_match(output_image_path):
+                if matcher.is_find_match(output_image_path, debug=True):
                     is_sample = False
                 else:
                     if not matcher.add_baseline_image(output_image_path, class_name):
@@ -119,7 +119,7 @@ def solves_one_class(class_dir,
                     if not matcher.add_baseline_image(output_image_path, class_name):
                         is_sample = False
                 else:
-                    if matcher.is_find_match(output_image_path):
+                    if matcher.is_find_match(output_image_path, debug=True):
                         is_sample = False
                     else:
                         if not matcher.add_baseline_image(output_image_path, class_name):
