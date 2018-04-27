@@ -22,7 +22,7 @@ import tensorflow as tf
 def test_one_class(matcher,
                    class_dir,
                    class_name,
-                   output_dir
+                   output_class_dir
                    ):
     if class_name == 'ziptop-drink-stand' or class_name == 'bottled-drink-stand':
         return 0
@@ -39,7 +39,9 @@ def test_one_class(matcher,
         upc, score = matcher.match_image_best_one(image_path,filter_upcs=[class_name],visual=False,debug=False)
         if upc != class_name:
             error_cnt += 1
-            output_image_path = os.path.join(output_dir, '{}_{}.jpg'.format(class_name,error_cnt))
+            output_image_path = os.path.join(output_class_dir, '{}_{}.jpg'.format(class_name,error_cnt))
+            if not tf.gfile.Exists(output_class_dir):
+                tf.gfile.MakeDirs(output_class_dir)
             shutil.copy(image_path, output_image_path)
             matcher.match_image_best_one(output_image_path, filter_upcs=[class_name],visual=True,debug=False)
     return error_cnt
@@ -52,18 +54,17 @@ def test_sample(data_dir, output_dir):
     for sample in samples:
         if os.path.isfile(sample.source.path):
             matcher.add_baseline_image(sample.source.path, sample.upc)
-    if not tf.gfile.Exists(output_dir):
-        tf.gfile.MakeDirs(output_dir)
     for i in range(0, len(dirlist)):
         class_name = dirlist[i]
         class_dir = os.path.join(data_dir, class_name)
         if os.path.isdir(class_dir):
             logging.info('test class:{}'.format(class_name))
+            output_class_dir = os.path.join(output_dir,class_name)
             error_total += test_one_class(
                 matcher,
                 class_dir,
                 class_name,
-                output_dir
+                output_class_dir
             )
 
     logging.info("sample test complete, error count: {}".format(error_total))
