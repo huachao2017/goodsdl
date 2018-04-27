@@ -115,7 +115,7 @@ class Matcher:
                                                 area_distance,
                                                 debug=debug)
 
-                    if visual:
+                    if visual and (score > min_score_thresh or debug):
                         visual_path = os.path.join(os.path.dirname(image_path),
                                                    'visual_{}_{}_{}'.format(int(score*100), key, os.path.basename(image_path)))
                         self.match_visual(visual_path, b_image, image, kp_pairs, status, H)
