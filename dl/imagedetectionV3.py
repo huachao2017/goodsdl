@@ -10,6 +10,7 @@ from dl.step2_cnn import Step2CNN
 from dl.step3_cnn import Step3CNN
 from dl.tradition_match import TraditionMatch
 from dl.util import visualize_boxes_and_labels_on_image_array_V2
+from dl import common
 
 logger = logging.getLogger("detect")
 
@@ -127,18 +128,19 @@ class ImageDetector:
 
         types_step2 = []
         for i in range(len(step2_image_paths)):
-            # if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
-            #     continue
-            types_step2.append(2) # 使用两个检测
+            if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
+                types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
+                continue
+            types_step2.append(common.MATCH_TYPE_BOTH)
             if upcs_match[i] != upcs_step2[i]:
-                if scores_match[i] > step2_min_score_thresh:
+                types_step2[i] = common.MATCH_TYPE_UNKNOWN
+                if scores_match[i] > 0.8: # TODO
                     upcs_step2[i] = upcs_match[i]
                     scores_step2[i] = scores_match[i]
-                    types_step2[i] = 0 # 使用模式匹配
-                elif scores_step2[i] > step2_min_score_thresh:
-                    types_step2[i] = 1 # 使用深度学习
-                else:
-                    types_step2[i] = -1 # 无效检测
+                    types_step2[i] = common.MATCH_TYPE_TRADITION
+                elif scores_match[i] > step2_min_score_thresh:
+                    if upcs_step2[i] in self.step2_cnn.cluster_upc_to_traintype:
+                        types_step2[i] = common.MATCH_TYPE_DEEPLEARNING
         logger.info(types_step2)
 
         ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
