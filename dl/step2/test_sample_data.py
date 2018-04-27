@@ -37,7 +37,7 @@ def test_one_class(matcher,
 
         logging.info('test image:{}'.format(image_path))
         upc, score = matcher.match_image_best_one(image_path,filter_upcs=[class_name],visual=False,debug=False)
-        if upc != class_name:
+        if upc is not None:
             error_cnt += 1
             output_image_path = os.path.join(output_class_dir, '{}_{}.jpg'.format(class_name,error_cnt))
             if not tf.gfile.Exists(output_class_dir):
