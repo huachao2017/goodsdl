@@ -127,11 +127,17 @@ class Matcher:
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75, debug=False):
         mkp1, mkp2 = [], []
+        trainIdxs = []
         for m in matches:
             if len(m) == 2 and m[0].distance < m[1].distance * ratio:
                 m = m[0]
+                # if m.queryIdx in queryIdxs:
+                #     continue
+                if m.trainIdx in trainIdxs:
+                    continue
                 mkp1.append(kp1[m.queryIdx])
                 mkp2.append(kp2[m.trainIdx])
+                trainIdxs.append(m.trainIdx)
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
@@ -297,8 +303,8 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/test/1.jpg'
-    fn2 = 'images/test/2.jpg'
+    fn1 = 'images/test/old/14.jpg'
+    fn2 = 'images/test/old/15.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
