@@ -76,10 +76,10 @@ class Matcher:
                 if upc in filter_upcs:
                     continue
             (b_kp,b_desc, b_image) = self.path_to_baseline_info[key]
-            raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
+            raw_matches = self.matcher.knnMatch(desc, trainDescriptors=b_desc, k=2)  # 2
             if debug:
                 print('raw_matches:{}'.format(len(raw_matches)))
-            kp_pairs = self.filter_matches(b_kp, kp, raw_matches,debug=debug)
+            kp_pairs = self.filter_matches(kp, b_kp, raw_matches,debug=debug)
             if debug:
                 print('kp_pairs:{}'.format(len(kp_pairs)))
             if len(kp_pairs) >= min_match_points_cnt:
@@ -90,7 +90,7 @@ class Matcher:
                 if debug:
                     print('kp_cnt:{}'.format(numpy.sum(status)))
                 if numpy.sum(status) >= min_match_points_cnt:
-                    corners = numpy.float32([[0, 0], [b_image.shape[1], 0], [b_image.shape[1], b_image.shape[0]], [0, b_image.shape[0]]])
+                    corners = numpy.float32([[0, 0], [image.shape[1], 0], [image.shape[1], image.shape[0]], [0, image.shape[0]]])
                     corners = numpy.int32(
                         cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
 
@@ -98,37 +98,39 @@ class Matcher:
                     y = corners[:, 1]
                     # 四个顶点远离边缘的距离
                     corner_distance = max(
-                        abs(numpy.min(x))/image.shape[1],
-                        abs(numpy.min(y))/image.shape[0],
-                        abs(numpy.max(x)-image.shape[1])/image.shape[1],
-                        abs(numpy.max(y)-image.shape[0])/image.shape[0]
+                        abs(numpy.min(x))/b_image.shape[1],
+                        abs(numpy.min(y))/b_image.shape[0],
+                        abs(numpy.max(x)-b_image.shape[1])/b_image.shape[1],
+                        abs(numpy.max(y)-b_image.shape[0])/b_image.shape[0]
                     )
-                    # # corners平行四边形判断
-                    # line1_delta = (corners[1][1]-corners[0][1])/max(1,(corners[1][0]-corners[0][0]))
-                    # line3_delta = (corners[2][1]-corners[3][1])/max(1,(corners[2][0]-corners[3][0]))
-                    # first_parallel_distance = abs(line1_delta/max(1,line3_delta) - 1)
-                    # line2_delta = (corners[3][1]-corners[0][1])/max(1,(corners[3][0]-corners[0][0]))
-                    # line4_delta = (corners[2][1]-corners[1][1])/max(1,(corners[2][0]-corners[1][0]))
-                    # second_parallel_distance = abs(line2_delta/max(1,line4_delta) - 1)
-                    # parallel_distance = max(first_parallel_distance, second_parallel_distance)
-                    # if debug:
-                    #     print('parallel_distance:{}'.format(parallel_distance))
-                    #
-                    b_area = b_image.shape[1]*b_image.shape[0]
+                    if debug:
+                        print('corner_distance:{}'.format(corner_distance))
+                    # corners平行四边形判断
+                    line1_delta = (corners[1][1]-corners[0][1])/max(1,(corners[1][0]-corners[0][0]))
+                    line3_delta = (corners[2][1]-corners[3][1])/max(1,(corners[2][0]-corners[3][0]))
+                    first_parallel_distance = abs(line1_delta/max(1,line3_delta) - 1)
+                    line2_delta = (corners[3][1]-corners[0][1])/max(1,(corners[3][0]-corners[0][0]))
+                    line4_delta = (corners[2][1]-corners[1][1])/max(1,(corners[2][0]-corners[1][0]))
+                    second_parallel_distance = abs(line2_delta/max(1,line4_delta) - 1)
+                    parallel_distance = max(first_parallel_distance, second_parallel_distance)
+                    if debug:
+                        print('parallel_distance:{}'.format(parallel_distance))
+
+                    area = image.shape[1]*image.shape[0]
                     transfer_area = cv2.contourArea(corners)
-                    area_distance = abs(transfer_area-b_area)/max(1,min(b_area,transfer_area))
+                    area_distance = abs(transfer_area-area)/max(1,min(area,transfer_area))
                     if debug:
                         print('area_distance:{}'.format(area_distance))
                     score = self.caculate_score(numpy.sum(status),
                                                 corner_distance,
-                                                # parallel_distance,
+                                                parallel_distance,
                                                 area_distance,
                                                 debug=debug)
 
                     if visual and (score > min_score_thresh or debug):
                         visual_path = os.path.join(os.path.dirname(image_path),
                                                    'visual_{}_{}_{}'.format(int(score*100), key, os.path.basename(image_path)))
-                        self.match_visual(visual_path, b_image, image, kp_pairs, status, H)
+                        self.match_visual(visual_path, image, b_image, kp_pairs, status, H)
                     if score > min_score_thresh:
                         match_info[key] = score
                         if score >= max_score_thresh:
@@ -137,21 +139,25 @@ class Matcher:
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75, debug=False):
         mkp1, mkp2 = [], []
-        trainIdxs = []
+        trainIdxs = {}
         for m in matches:
             if len(m) == 2 and m[0].distance < m[1].distance * ratio:
                 m = m[0]
                 # if m.queryIdx in queryIdxs:
                 #     continue
                 if m.trainIdx in trainIdxs:
-                    continue
+                    if trainIdxs[m.trainIdx] > 2:
+                        continue
                 mkp1.append(kp1[m.queryIdx])
                 mkp2.append(kp2[m.trainIdx])
-                trainIdxs.append(m.trainIdx)
+                if m.trainIdx in trainIdxs:
+                    trainIdxs[m.trainIdx] += 1
+                else:
+                    trainIdxs[m.trainIdx] = 1
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def caculate_score(self, cnt, corner_distance, area_distance, debug=False):
+    def caculate_score(self, cnt, corner_distance, area_distance, parallel_distance, debug=False):
         if cnt <= 10:
             cnt_score = 0.05*cnt
         elif cnt <= 20:
@@ -165,13 +171,13 @@ class Matcher:
         if corner_score < -1:
             corner_score = -1
 
-        # parallel_score = 0.05 * (20 - parallel_distance)# 平行角度差距大于20, 则惩罚为负值
-        #
+        parallel_score = 0.05 * (20 - parallel_distance)# 平行角度差距大于20, 则惩罚为负值
+
         area_score = 1 - area_distance # 面积接近差1倍,则惩罚为负值
         if area_score < -1:
             area_score = -1
 
-        score = cnt_score * 0.5 + corner_score * 0.25 + area_score * 0.25
+        score = cnt_score * 0.5 + min(corner_score,parallel_score) * 0.25 + area_score * 0.25
 
         if debug:
             print('score: %.2f -- %.2f, %.2f, %.2f' % (score, cnt_score,corner_score,area_score))
@@ -315,11 +321,11 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/test/old/16.jpg'
-    fn2 = 'images/test/old/17.jpg'
-
-    # fn1 = 'images/test/2.jpg'
-    # fn2 = 'images/test/1.jpg'
+    # fn1 = 'images/test/old/16.jpg'
+    # fn2 = 'images/test/old/17.jpg'
+    #
+    # fn1 = 'images/test/1.jpg'
+    # fn2 = 'images/test/2.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
