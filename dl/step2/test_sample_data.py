@@ -36,14 +36,28 @@ def test_one_class(matcher,
             continue
 
         logging.info('test image:{}'.format(image_path))
-        upc, score = matcher.match_image_best_one(image_path,filter_upcs=[class_name],visual=False,debug=False)
-        if upc is not None:
-            error_cnt += 1
-            output_image_path = os.path.join(output_class_dir, '{}_{}.jpg'.format(class_name,error_cnt))
+        f_upc, f_score = matcher.match_image_best_one(image_path,filter_upcs=[class_name],visual=False,debug=False)
+
+        is_error = False
+        if f_upc is not None:
+            is_error = True
+            output_image_path = os.path.join(output_class_dir, '{}_{}_f.jpg'.format(class_name,error_cnt))
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
             shutil.copy(image_path, output_image_path)
             matcher.match_image_best_one(output_image_path, filter_upcs=[class_name],visual=True,debug=False)
+
+        t_upc, t_score = matcher.match_image_best_one(image_path,within_upcs=[class_name],visual=False,debug=False)
+        if t_score < 0.8:
+            is_error = True
+            output_image_path = os.path.join(output_class_dir, '{}_{}_t.jpg'.format(class_name,error_cnt))
+            if not tf.gfile.Exists(output_class_dir):
+                tf.gfile.MakeDirs(output_class_dir)
+            shutil.copy(image_path, output_image_path)
+            matcher.match_image_best_one(output_image_path, within_upcs=[class_name],visual=True,debug=False)
+
+        if is_error:
+            error_cnt += 1
     return error_cnt
 
 def test_sample(data_dir, output_dir):
