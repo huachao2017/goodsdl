@@ -36,12 +36,12 @@ def test_one_class(matcher,
             continue
 
         logging.info('test image:{}'.format(image_path))
-        upc, score = matcher.match_image_best_one(image_path,visual=False,debug=False)
+        upc, score = matcher.match_image_best_one(image_path,filter_upcs=[class_name],visual=False,debug=False)
         if upc != class_name:
             error_cnt += 1
-            output_image_path = os.path.join(output_dir, os.path.basename(image_path))
+            output_image_path = os.path.join(output_dir, '{}_{}.jpg'.format(class_name,error_cnt))
             shutil.copy(image_path, output_image_path)
-            matcher.match_image_best_one(image_path, debug=True)
+            matcher.match_image_best_one(image_path, filter_upcs=[class_name],debug=True)
     return error_cnt
 
 def test_sample(data_dir, output_dir):
