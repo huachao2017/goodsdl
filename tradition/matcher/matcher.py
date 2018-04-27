@@ -162,12 +162,14 @@ class Matcher:
             cnt_score = 0.99
 
         corner_score = 1 - corner_distance # 差距大于1倍, 则惩罚为负值
+        if corner_score < -1:
+            corner_score = -1
+
         # parallel_score = 0.05 * (20 - parallel_distance)# 平行角度差距大于20, 则惩罚为负值
         #
-        if area_distance >= 1:# 面积接近差1倍,则惩罚为负值
-            area_score = area_distance-1
-        else:
-            area_score = 1-area_distance
+        area_score = 1 - area_distance # 面积接近差1倍,则惩罚为负值
+        if area_score < -1:
+            area_score = 1
 
         score = cnt_score * 0.5 + corner_score * 0.25 + area_score * 0.25
 
@@ -313,11 +315,11 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    # fn1 = 'images/test/old/18.jpg'
-    # fn2 = 'images/test/old/19.jpg'
+    fn1 = 'images/test/old/16.jpg'
+    fn2 = 'images/test/old/17.jpg'
 
-    fn1 = 'images/test/2.jpg'
-    fn2 = 'images/test/1.jpg'
+    # fn1 = 'images/test/2.jpg'
+    # fn2 = 'images/test/1.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
