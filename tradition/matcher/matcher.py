@@ -114,15 +114,15 @@ class Matcher:
                     # if debug:
                     #     print('parallel_distance:{}'.format(parallel_distance))
                     #
-                    # b_area = b_image.shape[1]*b_image.shape[0]
-                    # transfer_area = cv2.contourArea(corners)
-                    # area_distance = abs(transfer_area-b_area)/max(1,min(b_area,transfer_area))
-                    # if debug:
-                    #     print('area_distance:{}'.format(area_distance))
+                    b_area = b_image.shape[1]*b_image.shape[0]
+                    transfer_area = cv2.contourArea(corners)
+                    area_distance = abs(transfer_area-b_area)/max(1,min(b_area,transfer_area))
+                    if debug:
+                        print('area_distance:{}'.format(area_distance))
                     score = self.caculate_score(numpy.sum(status),
                                                 corner_distance,
                                                 # parallel_distance,
-                                                # area_distance,
+                                                area_distance,
                                                 debug=debug)
 
                     if visual and (score > min_score_thresh or debug):
@@ -151,7 +151,7 @@ class Matcher:
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def caculate_score(self, cnt, corner_distance, debug=False):
+    def caculate_score(self, cnt, corner_distance, area_distance, debug=False):
         if cnt <= 10:
             cnt_score = 0.05*cnt
         elif cnt <= 20:
@@ -164,15 +164,15 @@ class Matcher:
         corner_score = 1 - corner_distance # 差距大于1倍, 则惩罚为负值
         # parallel_score = 0.05 * (20 - parallel_distance)# 平行角度差距大于20, 则惩罚为负值
         #
-        # if area_distance >= 1:# 面积接近差1倍,则惩罚为负值
-        #     area_score = area_distance-1
-        # else:
-        #     area_score = 1-area_distance
+        if area_distance >= 1:# 面积接近差1倍,则惩罚为负值
+            area_score = area_distance-1
+        else:
+            area_score = 1-area_distance
 
-        score = cnt_score * 0.5 + corner_score * 0.5 # + parallel_score * 0.2 + area_score * 0.2
+        score = cnt_score * 0.5 + corner_score * 0.25 + area_score * 0.25
 
         if debug:
-            print('score: %.2f -- %.2f, %.2f' % (score, cnt_score,corner_score))
+            print('score: %.2f -- %.2f, %.2f, %.2f' % (score, cnt_score,corner_score,area_score))
 
         return score
 
@@ -313,8 +313,8 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    fn1 = 'images/test/old/18.jpg'
-    fn2 = 'images/test/old/19.jpg'
+    # fn1 = 'images/test/old/18.jpg'
+    # fn2 = 'images/test/old/19.jpg'
 
     fn1 = 'images/test/2.jpg'
     fn2 = 'images/test/1.jpg'
