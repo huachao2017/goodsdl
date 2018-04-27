@@ -56,7 +56,7 @@ class Matcher:
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
-    def match_image_all_info(self, image_path, within_upcs=None, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=True):
+    def match_image_all_info(self, image_path, within_upcs=None, filter_upcs=None, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=True):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         if debug:
@@ -70,6 +70,10 @@ class Matcher:
             if within_upcs is not None:
                 upc = key.split('_')[0]
                 if upc not in within_upcs:
+                    continue
+            if filter_upcs is not None:
+                upc = key.split('_')[0]
+                if upc not in filter_upcs:
                     continue
             (b_kp,b_desc, b_image) = self.path_to_baseline_info[key]
             raw_matches = self.matcher.knnMatch(b_desc, trainDescriptors=desc, k=2)  # 2
@@ -173,22 +177,25 @@ class Matcher:
     #             self.match_visual(visual_path, match[1][0],match[1][1],match[1][2],match[1][3],match[1][4])
     #     return ret
 
-    def match_image_best_one(self, image_path, within_upcs=None, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, visual=True, debug=False):
+    def match_image_best_one(self, image_path, within_upcs=None, filter_upcs=None, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, visual=True, debug=False):
         match_info = self.match_image_all_info(image_path,
                                                within_upcs=within_upcs,
+                                               filter_upcs=filter_upcs,
                                                min_match_points_cnt=min_match_points_cnt,
                                                min_score_thresh=min_score_thresh,
                                                max_score_thresh=max_score_thresh,
                                                debug=debug, visual=visual)
         if len(match_info) == 0:
             return None,0
+        if debug:
+            print('match_info:{}'.format(len(match_info)))
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         best_match = sorted_match_info[0]
         ret = (best_match[0].split('_')[0], best_match[1])
         return ret
 
-    def is_find_match(self, image_path, within_upcs=None, min_match_points_cnt=5, debug=False, visual=True):
-        upc, score = self.match_image_best_one(image_path, within_upcs=within_upcs, min_match_points_cnt=min_match_points_cnt, debug=debug, visual=visual)
+    def is_find_match(self, image_path, within_upcs=None, filter_upcs=None, min_match_points_cnt=5, debug=False, visual=True):
+        upc, score = self.match_image_best_one(image_path, within_upcs=within_upcs,filter_upcs=filter_upcs, min_match_points_cnt=min_match_points_cnt, debug=debug, visual=visual)
         return upc != None
 
     def match_visual(self, visual_path, img1, img2, kp_pairs, status=None, H=None):
