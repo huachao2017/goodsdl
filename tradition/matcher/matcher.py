@@ -103,7 +103,7 @@ class Matcher:
                     if debug:
                         print('area_distance:{}'.format(area_distance))
                     score = self.caculate_score(numpy.sum(status),
-                                                max(first_parallel_distance, second_parallel_distance),
+                                                parallel_distance,
                                                 area_distance,
                                                 debug=debug)
 
@@ -111,7 +111,7 @@ class Matcher:
                         visual_path = os.path.join(os.path.dirname(image_path),
                                                    'visual_{}_{}_{}'.format(int(score*100), key, os.path.basename(image_path)))
                         self.match_visual(visual_path, b_image, image, kp_pairs, status, H)
-                    if score < min_score_thresh:
+                    if score > min_score_thresh:
                         match_info[key] = score
                         if score >= max_score_thresh:
                             break
@@ -182,9 +182,9 @@ class Matcher:
         ret = (best_match[0].split('_')[0], best_match[1])
         return ret
 
-    def is_find_match(self, image_path, score_thresh = 0.5, min_match_points_cnt=5, visual=True):
-        upc, score = self.match_image_best_one(image_path, min_match_points_cnt=min_match_points_cnt, visual=visual)
-        return upc != None and score > score_thresh
+    def is_find_match(self, image_path, min_match_points_cnt=5, debug=False, visual=True):
+        upc, score = self.match_image_best_one(image_path, min_match_points_cnt=min_match_points_cnt, debug=debug, visual=visual)
+        return upc != None
 
     def match_visual(self, visual_path, img1, img2, kp_pairs, status=None, H=None):
         h1, w1 = img1.shape[:2]
@@ -279,14 +279,14 @@ if __name__ == '__main__':
 
     # test_1()
     # sys.exit(0)
-    fn1 = 'images/12.jpg'
-    fn2 = 'images/13.jpg'
+    # fn1 = 'images/12.jpg'
+    # fn2 = 'images/13.jpg'
 
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    # fn1 = 'images/test/old/9.jpg'
-    # fn2 = 'images/test/old/8.jpg'
+    fn1 = 'images/test/1.jpg'
+    fn2 = 'images/test/2.jpg'
     #
     # fn1 = 'images/error/4.jpg'
     # fn2 = 'images/error/3.jpg'
