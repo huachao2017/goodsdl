@@ -99,7 +99,7 @@ class Matcher:
 
                     b_area = b_image.shape[1]*b_image.shape[0]
                     transfer_area = cv2.contourArea(corners)
-                    area_distance = abs(transfer_area-b_area)/min(b_area,transfer_area)
+                    area_distance = abs(transfer_area-b_area)/max(1,min(b_area,transfer_area))
                     if debug:
                         print('area_distance:{}'.format(area_distance))
                     score = self.caculate_score(numpy.sum(status),
