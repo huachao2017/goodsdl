@@ -96,29 +96,33 @@ class Matcher:
 
                     x = corners[:, 0]
                     y = corners[:, 1]
-                    # corners平行四边形判断
-                    # 四个顶点原理边缘，则不是平行四边形
-                    if numpy.min(x) < -image.shape[1] or numpy.min(y) < -image.shape[0] or numpy.max(x) > image.shape[1]*2 or numpy.max(y) > image.shape[0]*2 :
-                        parallel_distance = 20
-                    else:
-                        line1_delta = (corners[1][1]-corners[0][1])/max(1,(corners[1][0]-corners[0][0]))
-                        line3_delta = (corners[2][1]-corners[3][1])/max(1,(corners[2][0]-corners[3][0]))
-                        first_parallel_distance = abs(line1_delta/max(1,line3_delta) - 1)
-                        line2_delta = (corners[3][1]-corners[0][1])/max(1,(corners[3][0]-corners[0][0]))
-                        line4_delta = (corners[2][1]-corners[1][1])/max(1,(corners[2][0]-corners[1][0]))
-                        second_parallel_distance = abs(line2_delta/max(1,line4_delta) - 1)
-                        parallel_distance = max(first_parallel_distance, second_parallel_distance)
-                    if debug:
-                        print('parallel_distance:{}'.format(parallel_distance))
-
-                    b_area = b_image.shape[1]*b_image.shape[0]
-                    transfer_area = cv2.contourArea(corners)
-                    area_distance = abs(transfer_area-b_area)/max(1,min(b_area,transfer_area))
-                    if debug:
-                        print('area_distance:{}'.format(area_distance))
+                    # 四个顶点远离边缘的距离
+                    corner_distance = max(
+                        abs(numpy.min(x))/image.shape[1],
+                        abs(numpy.min(y))/image.shape[0],
+                        abs(numpy.max(x)-image.shape[1])/image.shape[1],
+                        abs(numpy.max(y)-image.shape[0])/image.shape[0]
+                    )
+                    # # corners平行四边形判断
+                    # line1_delta = (corners[1][1]-corners[0][1])/max(1,(corners[1][0]-corners[0][0]))
+                    # line3_delta = (corners[2][1]-corners[3][1])/max(1,(corners[2][0]-corners[3][0]))
+                    # first_parallel_distance = abs(line1_delta/max(1,line3_delta) - 1)
+                    # line2_delta = (corners[3][1]-corners[0][1])/max(1,(corners[3][0]-corners[0][0]))
+                    # line4_delta = (corners[2][1]-corners[1][1])/max(1,(corners[2][0]-corners[1][0]))
+                    # second_parallel_distance = abs(line2_delta/max(1,line4_delta) - 1)
+                    # parallel_distance = max(first_parallel_distance, second_parallel_distance)
+                    # if debug:
+                    #     print('parallel_distance:{}'.format(parallel_distance))
+                    #
+                    # b_area = b_image.shape[1]*b_image.shape[0]
+                    # transfer_area = cv2.contourArea(corners)
+                    # area_distance = abs(transfer_area-b_area)/max(1,min(b_area,transfer_area))
+                    # if debug:
+                    #     print('area_distance:{}'.format(area_distance))
                     score = self.caculate_score(numpy.sum(status),
-                                                parallel_distance,
-                                                area_distance,
+                                                corner_distance,
+                                                # parallel_distance,
+                                                # area_distance,
                                                 debug=debug)
 
                     if visual and (score > min_score_thresh or debug):
@@ -147,7 +151,7 @@ class Matcher:
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def caculate_score(self, cnt, parallel_distance, area_distance, debug=False):
+    def caculate_score(self, cnt, corner_distance, debug=False):
         if cnt <= 10:
             cnt_score = 0.05*cnt
         elif cnt <= 20:
@@ -157,20 +161,18 @@ class Matcher:
         if cnt_score >= 1:
             cnt_score = 0.99
 
-        if parallel_distance >= 20:# 平行角度接近差20, parallel_score为0
-            parallel_score = 0.0
-        else:
-            parallel_score = 0.05 * (20 - parallel_distance)
+        corner_score = 1 - corner_distance # 差距大于1倍, 则惩罚为负值
+        # parallel_score = 0.05 * (20 - parallel_distance)# 平行角度差距大于20, 则惩罚为负值
+        #
+        # if area_distance >= 1:# 面积接近差1倍,则惩罚为负值
+        #     area_score = area_distance-1
+        # else:
+        #     area_score = 1-area_distance
 
-        if area_distance >= 1:# 面积接近差1倍area_score为0
-            area_score = 0.0
-        else:
-            area_score = 1-area_distance
-
-        score = cnt_score * 0.5 + parallel_score * 0.25 + area_score * 0.25
+        score = cnt_score * 0.5 + corner_score * 0.5 # + parallel_score * 0.2 + area_score * 0.2
 
         if debug:
-            print('score: %.2f -- %.2f, %.2f, %.2f' % (score, cnt_score,parallel_score,area_score))
+            print('score: %.2f -- %.2f, %.2f' % (score, cnt_score,corner_score))
 
         return score
 
@@ -310,6 +312,9 @@ if __name__ == '__main__':
 
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
+
+    fn1 = 'images/test/old/18.jpg'
+    fn2 = 'images/test/old/19.jpg'
 
     fn1 = 'images/test/2.jpg'
     fn2 = 'images/test/1.jpg'
