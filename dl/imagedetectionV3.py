@@ -131,31 +131,26 @@ class ImageDetector:
             if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
                 types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
                 continue
-            logger.info(step2_image_paths)
-            logger.info(upcs_step2)
-            upc_verify, score_verify = self.tradition_match.verify_score(step2_image_paths[i],upcs_step2[i])
-            if upc_verify == upcs_step2[i]:
+            if upcs_step2[i] in self.step2_cnn.cluster_upc_to_traintype:
+                within_upcs = self.step2_cnn.cluster_traintype_to_class_names[self.step2_cnn.cluster_upc_to_traintype[upcs_step2[i]]]
+            else:
+                within_upcs = [upcs_step2[i]]
+            score_verify = self.tradition_match.verify_score(step2_image_paths[i], within_upcs)
+            if score_verify > 0.5:
                 types_step2.append(common.MATCH_TYPE_BOTH)
-            elif upc_verify in self.step2_cnn.cluster_setting.get_class_names_to_cluster_class_names(upcs_step2[i]):
-                    types_step2.append(common.MATCH_TYPE_BOTH)
             else:
                 time3_0 = time.time()
                 upc_match, score_match = self.tradition_match.detect_one(step2_image_paths[i])
                 time3_1 = time.time()
                 logger.info('step2 tridition match: %.2f,%s, %.2f' % (time3_1-time3_0, upc_match, score_match))
-                if score_match > 0.8: # TODO
+                if score_match > 0.5: # TODO
                     upcs_step2[i] = upc_match
                     scores_step2[i] = score_match
                     types_step2.append(common.MATCH_TYPE_TRADITION)
-                elif score_match > 0.5 and upc_match in self.step2_cnn.cluster_setting.get_class_names_to_cluster_class_names(upcs_step2[i]):
-                    upcs_step2[i] = self.step2_cnn.cluster_setting.get_class_names_to_cluster_class_names(upcs_step2[i])[upc_match]
-                    types_step2.append(common.MATCH_TYPE_BOTH)
-                elif score_match > 0.5:
-                    upcs_step2[i] = upc_match
-                    scores_step2[i] = score_match
-                    types_step2.append(common.MATCH_TYPE_TRADITION)
+                    if upc_match in self.step2_cnn.cluster_class_names_to_main_class:
+                        upcs_step2[i] = self.step2_cnn.cluster_class_names_to_main_class[upc_match]
                 else:
-                    types_step2.append(common.MATCH_TYPE_UNKNOWN)
+                    types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
 
         logger.info(types_step2)
         time3 = time.time()
@@ -182,7 +177,7 @@ class ImageDetector:
                 # 立姿水需要躺倒平放
                 upc = ''
                 action = 2
-            elif (match_type == 1 or match_type == 2) and upc in self.step2_cnn.cluster_upc_to_traintype:
+            elif match_type != -1 and upc in self.step2_cnn.cluster_upc_to_traintype:
                 traintype = self.step2_cnn.cluster_upc_to_traintype[upc]
                 probabilities, step3_labels_to_names = self.step3_cnn.detect(self.config, step2_image_paths[i], traintype)
                 if step3_labels_to_names is not None:
