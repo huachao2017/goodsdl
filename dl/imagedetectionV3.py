@@ -120,34 +120,46 @@ class ImageDetector:
             logger.info('detectV3: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
             return [], time2-time0
 
-        upcs_match, scores_match = self.tradition_match.detect(step2_image_paths)
-        time2 = time.time()
+        # upcs_match, scores_match = self.tradition_match.detect(step2_image_paths)
+        # time2 = time.time()
 
         upcs_step2, scores_step2  = self.step2_cnn.detect(step2_images)
-        time3 = time.time()
+        time2 = time.time()
 
         types_step2 = []
         for i in range(len(step2_image_paths)):
             if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
                 types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
                 continue
-            types_step2.append(common.MATCH_TYPE_BOTH)
-            if upcs_match[i] != upcs_step2[i]:
-                types_step2[i] = common.MATCH_TYPE_UNKNOWN
-                if scores_match[i] > 0.8: # TODO
-                    upcs_step2[i] = upcs_match[i]
-                    scores_step2[i] = scores_match[i]
-                    types_step2[i] = common.MATCH_TYPE_TRADITION
-                elif scores_match[i] > step2_min_score_thresh:
-                    if upcs_step2[i] in self.step2_cnn.cluster_upc_to_traintype:
-                        types_step2[i] = common.MATCH_TYPE_DEEPLEARNING
+            upc_verify, score_verify = self.tradition_match.verify_score(step2_image_paths[i],upcs_step2[i])
+            if upc_verify == upcs_step2[i]:
+                types_step2.append(common.MATCH_TYPE_BOTH)
+            elif upc_verify in self.step2_cnn.cluster_setting.get_class_names_to_cluster_class_names(upcs_step2[i]):
+                    types_step2.append(common.MATCH_TYPE_BOTH)
+            else:
+                upc_match, score_match = self.tradition_match.detect_one(step2_image_paths[i])
+                if score_match > 0.8: # TODO
+                    upcs_step2[i] = upc_match
+                    scores_step2[i] = score_match
+                    types_step2.append(common.MATCH_TYPE_TRADITION)
+                elif score_match > 0.5 and upc_match in self.step2_cnn.cluster_setting.get_class_names_to_cluster_class_names(upcs_step2[i]):
+                    upcs_step2[i] = self.step2_cnn.cluster_setting.get_class_names_to_cluster_class_names(upcs_step2[i])[upc_match]
+                    types_step2.append(common.MATCH_TYPE_BOTH)
+                elif score_match > 0.5:
+                    upcs_step2[i] = upc_match
+                    scores_step2[i] = score_match
+                    types_step2.append(common.MATCH_TYPE_TRADITION)
+                else:
+                    types_step2.append(common.MATCH_TYPE_UNKNOWN)
+
         logger.info(types_step2)
+        time3 = time.time()
 
         ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
 
         time4 = time.time()
         logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time2))
-        return ret, time3-time0
+        return ret, time4-time0
 
     def do_addition_logic_work(self, boxes_step1, scores_step1, upcs_step2, scores_step2, match_types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh):
         ret = []
@@ -165,7 +177,7 @@ class ImageDetector:
                 # 立姿水需要躺倒平放
                 upc = ''
                 action = 2
-            elif match_type == 1 and upc in self.step2_cnn.cluster_upc_to_traintype:
+            elif (match_type == 1 or match_type == 2) and upc in self.step2_cnn.cluster_upc_to_traintype:
                 traintype = self.step2_cnn.cluster_upc_to_traintype[upc]
                 probabilities, step3_labels_to_names = self.step3_cnn.detect(self.config, step2_image_paths[i], traintype)
                 if step3_labels_to_names is not None:

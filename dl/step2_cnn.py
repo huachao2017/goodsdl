@@ -72,6 +72,7 @@ class Step2CNN:
 
         cluster_setting = cluster.ClusterSettings(os.path.join(self.model_dir, common.CLUSTER_FILE_NAME))
         self.cluster_upc_to_traintype = cluster_setting.get_main_class_name_to_traintype()
+        self.cluster_setting = cluster_setting
 
         logger.info('end loading model...')
         self._isload = True

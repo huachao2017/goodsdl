@@ -41,6 +41,10 @@ class TraditionMatch:
 
         return upcs, scores
 
+    def detect_one(self,image_path):
+        upc, score = self._matcher.match_image_best_one(image_path)
+        return upc, score
+
     def verify_score(self,image_path,upc):
         upc, score = self._matcher.match_image_best_one(image_path,within_upcs=[upc])
         return score
