@@ -167,7 +167,8 @@ class Matcher:
         thread_pool = None
         thread_size = self.get_thread_size()
         if thread_size>1:
-            thread_pool = ThreadPool(self.max_thread)
+            thread_pool = ThreadPool(thread_size)
+            print('info: use multi-thread:{}'.format(thread_size))
         for key in self.path_to_baseline_info:
             if within_upcs is not None:
                 upc = key.split('_')[0]
