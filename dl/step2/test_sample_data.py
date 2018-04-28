@@ -24,8 +24,6 @@ def test_one_class(matcher,
                    class_name,
                    output_class_dir
                    ):
-    if class_name == 'ziptop-drink-stand' or class_name == 'bottled-drink-stand':
-        return 0
     f_error_cnt = 0
     t_error_cnt = 0
     filelist = os.listdir(class_dir)
@@ -71,6 +69,8 @@ def test_sample(data_dir, output_dir):
         class_name = dirlist[i]
         class_dir = os.path.join(data_dir, class_name)
         if os.path.isdir(class_dir):
+            if class_name == 'ziptop-drink-stand' or class_name == 'bottled-drink-stand':
+                continue
             logging.info('test class:{}'.format(class_name))
             output_class_dir = os.path.join(output_dir,class_name)
             f_error, t_error= test_one_class(
