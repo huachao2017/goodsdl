@@ -131,6 +131,8 @@ class ImageDetector:
             if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
                 types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
                 continue
+            logger.info(step2_image_paths)
+            logger.info(upcs_step2)
             upc_verify, score_verify = self.tradition_match.verify_score(step2_image_paths[i],upcs_step2[i])
             if upc_verify == upcs_step2[i]:
                 types_step2.append(common.MATCH_TYPE_BOTH)
