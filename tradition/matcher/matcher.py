@@ -105,7 +105,7 @@ class Matcher:
                     )
                     if debug:
                         print('corner_distance:{}'.format(corner_distance))
-                    if corner_distance > 2:# 四个顶点远离边缘的距离过大，则不匹配
+                    if corner_distance > 1:# 四个顶点远离边缘的距离过大，则不匹配 TODO maybe some problem
                         continue
                     # corners平行四边形判断
                     line1_delta = math.atan((corners[1][1]-corners[0][1])/(corners[1][0]-corners[0][0]) if corners[1][0]-corners[0][0] != 0 else 10000)*180/math.pi
@@ -165,7 +165,7 @@ class Matcher:
 
     def caculate_score(self, cnt, parallel_distance,area_distance, debug=False):
         if cnt <= 10:
-            cnt_score = 0.05*cnt
+            cnt_score = 0.1*(cnt-5)
         elif cnt <= 20:
             cnt_score = 0.03*(cnt-10) + 0.5
         else:
@@ -326,8 +326,8 @@ if __name__ == '__main__':
     # fn1 = 'images/test/old/15.jpg'
     # fn2 = 'images/test/old/14.jpg'
     # #
-    # fn1 = 'images/test/1.jpg'
-    # fn2 = 'images/test/2.jpg'
+    fn1 = 'images/test/2.jpg'
+    fn2 = 'images/test/1.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
