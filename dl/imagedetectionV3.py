@@ -150,7 +150,7 @@ class ImageDetector:
                     if upc_match in self.step2_cnn.cluster_class_names_to_main_class:
                         upcs_step2[i] = self.step2_cnn.cluster_class_names_to_main_class[upc_match]
                 else:
-                    types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
+                    types_step2.append(common.MATCH_TYPE_UNKNOWN) # TODO 暂时做悲观处理
 
         logger.info(types_step2)
         time3 = time.time()
