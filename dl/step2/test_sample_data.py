@@ -60,7 +60,7 @@ def test_sample(data_dir, output_dir):
     f_error_total = 0
     t_error_total = 0
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
-    matcher = Matcher(visual=True,debug=False)
+    matcher = Matcher(visual=True,debug=True)
     samples = SampleImageClass.objects.filter(deviceid='')
     for sample in samples:
         if os.path.isfile(sample.source.path):
