@@ -20,6 +20,7 @@ import os
 
 import sys
 import time
+import math
 
 
 ###############################################################################
@@ -96,7 +97,6 @@ class Matcher:
 
                     x = corners[:, 0]
                     y = corners[:, 1]
-                    # 四个顶点远离边缘的距离
                     corner_distance = max(
                         abs(numpy.min(x))/b_image.shape[1],
                         abs(numpy.min(y))/b_image.shape[0],
@@ -105,16 +105,22 @@ class Matcher:
                     )
                     if debug:
                         print('corner_distance:{}'.format(corner_distance))
+                    if corner_distance > 2:# 四个顶点远离边缘的距离过大，则不匹配
+                        continue
                     # corners平行四边形判断
-                    line1_delta = (corners[1][1]-corners[0][1])/max(1,(corners[1][0]-corners[0][0]))
-                    line3_delta = (corners[2][1]-corners[3][1])/max(1,(corners[2][0]-corners[3][0]))
-                    first_parallel_distance = abs(line1_delta/max(1,line3_delta) - 1)
-                    line2_delta = (corners[3][1]-corners[0][1])/max(1,(corners[3][0]-corners[0][0]))
-                    line4_delta = (corners[2][1]-corners[1][1])/max(1,(corners[2][0]-corners[1][0]))
-                    second_parallel_distance = abs(line2_delta/max(1,line4_delta) - 1)
+                    line1_delta = math.atan((corners[1][1]-corners[0][1])/(corners[1][0]-corners[0][0]) if corners[1][0]-corners[0][0] != 0 else 10000)*180/math.pi
+                    line3_delta = math.atan((corners[2][1]-corners[3][1])/(corners[2][0]-corners[3][0]) if corners[2][0]-corners[3][0] != 0 else 10000)*180/math.pi
+                    first_parallel_distance = abs(line1_delta-line3_delta)
+                    if debug:
+                        print(line1_delta,line3_delta,first_parallel_distance)
+                    line2_delta = math.atan((corners[3][1]-corners[0][1])/(corners[3][0]-corners[0][0]) if corners[3][0]-corners[0][0] != 0 else 10000)*180/math.pi
+                    line4_delta = math.atan((corners[2][1]-corners[1][1])/(corners[2][0]-corners[1][0]) if corners[2][0]-corners[1][0] != 0 else 10000)*180/math.pi
+                    second_parallel_distance = abs(line2_delta-line4_delta)
+                    if debug:
+                        print(line2_delta,line4_delta,second_parallel_distance)
                     parallel_distance = max(first_parallel_distance, second_parallel_distance)
                     if debug:
-                        print('parallel_distance:{}'.format(parallel_distance))
+                        print('parallel_distance:{},{},{}'.format(parallel_distance,first_parallel_distance,second_parallel_distance))
 
                     area = image.shape[1]*image.shape[0]
                     transfer_area = cv2.contourArea(corners)
@@ -122,7 +128,7 @@ class Matcher:
                     if debug:
                         print('area_distance:{}'.format(area_distance))
                     score = self.caculate_score(numpy.sum(status),
-                                                corner_distance,
+                                                # corner_distance,
                                                 parallel_distance,
                                                 area_distance,
                                                 debug=debug)
@@ -146,7 +152,7 @@ class Matcher:
                 # if m.queryIdx in queryIdxs:
                 #     continue
                 if m.trainIdx in trainIdxs:
-                    if trainIdxs[m.trainIdx] > 2:
+                    if trainIdxs[m.trainIdx] > 2: # FIXME 匹配两个以上尚未支持
                         continue
                 mkp1.append(kp1[m.queryIdx])
                 mkp2.append(kp2[m.trainIdx])
@@ -157,7 +163,7 @@ class Matcher:
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def caculate_score(self, cnt, corner_distance, area_distance, parallel_distance, debug=False):
+    def caculate_score(self, cnt, parallel_distance,area_distance, debug=False):
         if cnt <= 10:
             cnt_score = 0.05*cnt
         elif cnt <= 20:
@@ -167,20 +173,16 @@ class Matcher:
         if cnt_score >= 1:
             cnt_score = 0.99
 
-        corner_score = 1 - corner_distance # 差距大于1倍, 则惩罚为负值
-        if corner_score < -1:
-            corner_score = -1
-
-        parallel_score = 0.05 * (20 - parallel_distance)# 平行角度差距大于20, 则惩罚为负值
+        parallel_score = 0.02 * (50 - parallel_distance)# 平行角度差距大于20, 则惩罚为负值
 
         area_score = 1 - area_distance # 面积接近差1倍,则惩罚为负值
         if area_score < -1:
             area_score = -1
 
-        score = cnt_score * 0.5 + min(corner_score,parallel_score) * 0.25 + area_score * 0.25
+        score = cnt_score * 0.5 + min(parallel_score,area_score) * 0.5
 
         if debug:
-            print('score: %.2f -- %.2f, %.2f, %.2f' % (score, cnt_score,corner_score,area_score))
+            print('score: %.2f = %.2f*0.5+min(%.2f, %.2f)*0.5' % (score, cnt_score,parallel_score,area_score))
 
         return score
 
@@ -321,9 +323,9 @@ if __name__ == '__main__':
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
 
-    # fn1 = 'images/test/old/16.jpg'
-    # fn2 = 'images/test/old/17.jpg'
-    #
+    # fn1 = 'images/test/old/15.jpg'
+    # fn2 = 'images/test/old/14.jpg'
+    # #
     # fn1 = 'images/test/1.jpg'
     # fn2 = 'images/test/2.jpg'
     #
