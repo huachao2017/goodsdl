@@ -139,8 +139,6 @@ def solves_one_class(class_dir,
             sample_cnt += 1
         else:
             os.remove(output_image_path)
-    if matcher is not None:
-        matcher.close_all_thread()
     return sample_cnt
 
 def create_sample(data_dir, output_dir, step1_model_path):

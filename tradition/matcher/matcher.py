@@ -152,9 +152,6 @@ class Matcher:
 
         return thread_size
 
-    def close_all_thread(self):
-        pass
-
     def _all_match(self, image_path, within_upcs=None, filter_upcs=None):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
@@ -339,7 +336,6 @@ def test_1():
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
-    matcher.close_all_thread()
 
 def test_2(image1,image2):
     time0 = time.time()
@@ -351,7 +347,6 @@ def test_2(image1,image2):
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
-    matcher.close_all_thread()
 
 def test_3(image1):
     time0 = time.time()
@@ -373,7 +368,6 @@ def test_3(image1):
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
-    matcher.close_all_thread()
 
 if __name__ == '__main__':
     """Test code: Uses the two specified"""

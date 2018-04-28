@@ -153,9 +153,6 @@ def solves_one_image(image_path,
                 if angle == 0:
                     break
 
-    if matcher is not None:
-        matcher.close_all_thread()
-
     return augment_total, augment_total_error
 
 def create_step2_goods_V2(data_dir, output_dir, step1_model_path, dir_day_hour=None):
