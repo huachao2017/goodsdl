@@ -345,12 +345,15 @@ def test_3(image1):
     import django
     django.setup()
     from goods.models import SampleImageClass
+    from django.conf import settings
     samples = SampleImageClass.objects.filter(deviceid='')
     for sample in samples:
         if os.path.isfile(sample.source.path):
             matcher.add_baseline_image(sample.source.path, sample.upc)
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one(image1)
+    image_path = os.path.join(settings.BASE_DIR, 'tradition/matcher', image1)
+    print(image_path)
+    match_key, cnt = matcher.match_image_best_one(image_path)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
