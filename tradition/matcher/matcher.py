@@ -186,7 +186,7 @@ class Matcher:
 
         if thread_pool is not None:
             while True:
-                if self.debug:
+                if True:
                     print("\033[32;0m任务停止之前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
                           % (len(thread_pool.generate_list), len(thread_pool.free_list)))
                 if len(thread_pool.free_list) == len(thread_pool.generate_list):
