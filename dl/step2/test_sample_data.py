@@ -26,7 +26,8 @@ def test_one_class(matcher,
                    ):
     if class_name == 'ziptop-drink-stand' or class_name == 'bottled-drink-stand':
         return 0
-    error_cnt = 0
+    f_error_cnt = 0
+    t_error_cnt = 0
     filelist = os.listdir(class_dir)
     for j in range(0, len(filelist)):
         image_path = os.path.join(class_dir, filelist[j])
@@ -38,9 +39,8 @@ def test_one_class(matcher,
         logging.info('test image:{}'.format(image_path))
         f_upc, f_score = matcher.match_image_best_one(image_path,filter_upcs=[class_name],visual=False,debug=False)
 
-        is_error = False
         if f_upc is not None:
-            is_error = True
+            f_error_cnt += 1
             output_image_path = os.path.join(output_class_dir, '{}_{}_f.jpg'.format(class_name,error_cnt))
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
@@ -49,19 +49,18 @@ def test_one_class(matcher,
 
         t_upc, t_score = matcher.match_image_best_one(image_path,within_upcs=[class_name],visual=False,debug=False)
         if t_score < 0.8:
-            is_error = True
+            t_error_cnt += 1
             output_image_path = os.path.join(output_class_dir, '{}_{}_t.jpg'.format(class_name,error_cnt))
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
             shutil.copy(image_path, output_image_path)
             matcher.match_image_best_one(output_image_path, within_upcs=[class_name],visual=True,debug=False)
 
-        if is_error:
-            error_cnt += 1
-    return error_cnt
+    return f_error_cnt, t_error_cnt
 
 def test_sample(data_dir, output_dir):
-    error_total = 0
+    f_error_total = 0
+    t_error_total = 0
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
     matcher = Matcher()
     samples = SampleImageClass.objects.filter(deviceid='')
@@ -74,14 +73,16 @@ def test_sample(data_dir, output_dir):
         if os.path.isdir(class_dir):
             logging.info('test class:{}'.format(class_name))
             output_class_dir = os.path.join(output_dir,class_name)
-            error_total += test_one_class(
+            f_error, t_error= test_one_class(
                 matcher,
                 class_dir,
                 class_name,
                 output_class_dir
             )
+            f_error_total += f_error
+            t_error_total += t_error
 
-    logging.info("sample test complete, error count: {}".format(error_total))
+    logging.info("sample test complete, error count: ({}+{})/{}={}".format(f_error_total, t_error_total, matcher.get_baseline_cnt(),(f_error_total+t_error_total)/matcher.get_baseline_cnt()))
 
 tf.app.flags.DEFINE_string(
     'source_dir_serial', '',
