@@ -323,8 +323,6 @@ def test_1():
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
-    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
-    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
     matcher.close_all_thread()
 
 def test_2(image1,image2):
@@ -337,14 +335,34 @@ def test_2(image1,image2):
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
+    matcher.close_all_thread()
+
+def test_3(image1):
+    time0 = time.time()
+    matcher = Matcher(debug=True, visual=True)
+    time1 = time.time()
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+    import django
+    django.setup()
+    from goods.models import SampleImageClass
+    samples = SampleImageClass.objects.filter(deviceid='')
+    for sample in samples:
+        if os.path.isfile(sample.source.path):
+            matcher.add_baseline_image(sample.source.path, sample.upc)
+    time2 = time.time()
+    match_key, cnt = matcher.match_image_best_one(image1)
+    time3 = time.time()
+    print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
+    print(match_key, cnt)
+    matcher.close_all_thread()
 
 if __name__ == '__main__':
     """Test code: Uses the two specified"""
 
-    test_1()
-    sys.exit(0)
+    # test_1()
+    # sys.exit(0)
     fn1 = 'images/1.jpg'
-    fn2 = 'images/2.jpg'
+    fn2 = 'images/1.jpg'
 
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
@@ -352,9 +370,10 @@ if __name__ == '__main__':
     # fn1 = 'images/test/old/15.jpg'
     # fn2 = 'images/test/old/14.jpg'
     # #
-    # fn1 = 'images/test/2.jpg'
-    # fn2 = 'images/test/1.jpg'
+    fn1 = 'images/test/1.jpg'
+    fn2 = 'images/test/1.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
-    test_2(fn1, fn2)
+    # test_2(fn1, fn2)
+    test_3(fn1)
