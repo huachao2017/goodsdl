@@ -136,14 +136,14 @@ class ImageDetector:
             else:
                 within_upcs = [upcs_step2[i]]
             score_verify = self.tradition_match.verify_score(step2_image_paths[i], within_upcs)
-            if score_verify > 0.5:
+            if score_verify > 0.6:
                 types_step2.append(common.MATCH_TYPE_BOTH)
             else:
                 time3_0 = time.time()
                 upc_match, score_match = self.tradition_match.detect_one(step2_image_paths[i])
                 time3_1 = time.time()
                 logger.info('step2 tridition match: %.2f,%s, %.2f' % (time3_1-time3_0, upc_match, score_match))
-                if score_match > 0.5: # TODO
+                if score_match > 0.6: # TODO
                     upcs_step2[i] = upc_match
                     scores_step2[i] = score_match
                     types_step2.append(common.MATCH_TYPE_TRADITION)
