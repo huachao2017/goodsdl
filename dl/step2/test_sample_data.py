@@ -83,6 +83,7 @@ def test_sample(data_dir, output_dir):
             t_error_total += t_error
 
     logging.info("sample test complete, error count: ({}+{})/{}={}".format(f_error_total, t_error_total, matcher.get_baseline_cnt(),(f_error_total+t_error_total)/matcher.get_baseline_cnt()))
+    matcher.close_all_thread()
 
 tf.app.flags.DEFINE_string(
     'source_dir_serial', '',

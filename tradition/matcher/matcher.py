@@ -146,6 +146,9 @@ class Matcher:
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
+    def close_all_thread(self):
+        self.thread_pool.close()
+
     def _all_match(self, image_path, within_upcs=None, filter_upcs=None):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
@@ -174,7 +177,6 @@ class Matcher:
                 print("\033[32;0m任务停止之前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
                       % (len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
             if len(self.thread_pool.free_list) == len(self.thread_pool.generate_list):
-                self.thread_pool.close()
                 break
             time.sleep(0.1)
 
@@ -321,6 +323,9 @@ def test_1():
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
+    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
+    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
+    matcher.close_all_thread()
 
 def test_2(image1,image2):
     time0 = time.time()
