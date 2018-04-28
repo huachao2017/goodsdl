@@ -108,7 +108,7 @@ def _one_match(thread_name, matcher, key, image_path, image, kp, desc):
 # Image Matching For Servicing
 ###############################################################################
 class Matcher:
-    def __init__(self, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=False, max_thread=8):
+    def __init__(self, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=False, max_thread=10):
         self.path_to_baseline_info = {}
         self.upc_to_cnt = {}
         self.detector = cv2.xfeatures2d.SURF_create(400, 5, 5)
@@ -120,7 +120,6 @@ class Matcher:
         self.visual = visual
         self.match_info = None
         self.max_thread = max_thread
-        self.thread_pool = ThreadPool(self.max_thread)
 
 
     def add_baseline_image(self, image_path, upc):
@@ -146,8 +145,15 @@ class Matcher:
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
+    def get_thread_size(self):
+        thread_size = int(len(self.path_to_baseline_info)/100)
+        if thread_size > self.max_thread:
+            thread_size = self.max_thread
+
+        return thread_size
+
     def close_all_thread(self):
-        self.thread_pool.close()
+        pass
 
     def _all_match(self, image_path, within_upcs=None, filter_upcs=None):
         image = cv2.imread(image_path)
@@ -160,6 +166,11 @@ class Matcher:
 
         if self.debug:
             print('baseline image:{}'.format(len(self.path_to_baseline_info)))
+
+        thread_pool = None
+        thread_size = self.get_thread_size()
+        if thread_size>1:
+            thread_pool = ThreadPool(self.max_thread)
         for key in self.path_to_baseline_info:
             if within_upcs is not None:
                 upc = key.split('_')[0]
@@ -170,15 +181,20 @@ class Matcher:
                 if upc in filter_upcs:
                     continue
 
-            self.thread_pool.put(_one_match, (self, key, image_path, image, kp, desc), None)
-            # _one_match(self, key, image_path, image, kp, desc)
-        while True:
-            if self.debug:
-                print("\033[32;0m任务停止之前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
-                      % (len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
-            if len(self.thread_pool.free_list) == len(self.thread_pool.generate_list):
-                break
-            time.sleep(0.1)
+            if thread_pool is not None:
+                thread_pool.put(_one_match, (self, key, image_path, image, kp, desc), None)
+            else:
+                _one_match('main_thread',self, key, image_path, image, kp, desc)
+
+        if thread_pool is not None:
+            while True:
+                if self.debug:
+                    print("\033[32;0m任务停止之前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
+                          % (len(thread_pool.generate_list), len(thread_pool.free_list)))
+                if len(thread_pool.free_list) == len(thread_pool.generate_list):
+                    thread_pool.close()
+                    break
+                time.sleep(0.1)
 
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75):
@@ -365,7 +381,7 @@ if __name__ == '__main__':
     # test_1()
     # sys.exit(0)
     fn1 = 'images/1.jpg'
-    fn2 = 'images/1.jpg'
+    fn2 = 'images/2.jpg'
 
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
@@ -373,10 +389,10 @@ if __name__ == '__main__':
     # fn1 = 'images/test/old/15.jpg'
     # fn2 = 'images/test/old/14.jpg'
     # #
-    fn1 = 'images/test/1.jpg'
-    fn2 = 'images/test/1.jpg'
+    # fn1 = 'images/test/1.jpg'
+    # fn2 = 'images/test/2.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
-    # test_2(fn1, fn2)
-    test_3(fn1)
+    test_2(fn1, fn2)
+    # test_3(fn1)
