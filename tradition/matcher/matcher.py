@@ -21,23 +21,32 @@ import os
 import sys
 import time
 import math
+import threading
 
 
 ###############################################################################
 # Image Matching For Servicing
 ###############################################################################
+class Matcher_Thread(threading.Thread):
+    def run(self):
+        pass
 
 class Matcher:
-    def __init__(self):
+    def __init__(self, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=False):
         self.path_to_baseline_info = {}
         self.upc_to_cnt = {}
         self.detector = cv2.xfeatures2d.SURF_create(400, 5, 5)
         self.matcher = cv2.BFMatcher(cv2.NORM_L2)
+        self.min_match_points_cnt = min_match_points_cnt
+        self.min_score_thresh = min_score_thresh
+        self.max_score_thresh = max_score_thresh
+        self.debug = debug
+        self.visual = visual
 
-    def add_baseline_image(self, image_path, upc, debug=False):
+    def add_baseline_image(self, image_path, upc):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
-        if debug:
+        if self.debug:
             print('b_image kp:{}'.format(len(kp)))
         if len(kp) == 0:
             print('error: no key point to base image:{}'.format(image_path))
@@ -57,10 +66,10 @@ class Matcher:
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
-    def match_image_all_info(self, image_path, within_upcs=None, filter_upcs=None, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=True):
+    def match_image_all_info(self, image_path, within_upcs=None, filter_upcs=None):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
-        if debug:
+        if self.debug:
             print('image kp:{}'.format(len(kp)))
         match_info = {}
         if len(kp) < 30:
@@ -78,19 +87,19 @@ class Matcher:
                     continue
             (b_kp,b_desc, b_image) = self.path_to_baseline_info[key]
             raw_matches = self.matcher.knnMatch(desc, trainDescriptors=b_desc, k=2)  # 2
-            if debug:
+            if self.debug:
                 print('raw_matches:{}'.format(len(raw_matches)))
-            kp_pairs = self.filter_matches(kp, b_kp, raw_matches,debug=debug)
-            if debug:
+            kp_pairs = self.filter_matches(kp, b_kp, raw_matches)
+            if self.debug:
                 print('kp_pairs:{}'.format(len(kp_pairs)))
-            if len(kp_pairs) >= min_match_points_cnt:
+            if len(kp_pairs) >= self.min_match_points_cnt:
                 mkp1, mkp2 = zip(*kp_pairs)
                 p1 = numpy.float32([kp.pt for kp in mkp1])
                 p2 = numpy.float32([kp.pt for kp in mkp2])
                 H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 3.0)
-                if debug:
+                if self.debug:
                     print('kp_cnt:{}'.format(numpy.sum(status)))
-                if numpy.sum(status) >= min_match_points_cnt:
+                if numpy.sum(status) >= self.min_match_points_cnt:
                     corners = numpy.float32([[0, 0], [image.shape[1], 0], [image.shape[1], image.shape[0]], [0, image.shape[0]]])
                     corners = numpy.int32(
                         cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2))
@@ -103,47 +112,46 @@ class Matcher:
                         abs(numpy.max(x)-b_image.shape[1])/b_image.shape[1],
                         abs(numpy.max(y)-b_image.shape[0])/b_image.shape[0]
                     )
-                    if debug:
+                    if self.debug:
                         print('corner_distance:{}'.format(corner_distance))
-                    if corner_distance > 1:# 四个顶点远离边缘的距离过大，则不匹配 TODO maybe some problem
-                        continue
+                    # if corner_distance > 1:# 四个顶点远离边缘的距离过大，则不匹配 TODO maybe some problem
+                    #     continue
                     # corners平行四边形判断
                     line1_delta = math.atan((corners[1][1]-corners[0][1])/(corners[1][0]-corners[0][0]) if corners[1][0]-corners[0][0] != 0 else 10000)*180/math.pi
                     line3_delta = math.atan((corners[2][1]-corners[3][1])/(corners[2][0]-corners[3][0]) if corners[2][0]-corners[3][0] != 0 else 10000)*180/math.pi
                     first_parallel_distance = abs(line1_delta-line3_delta)
-                    if debug:
+                    if self.debug:
                         print(line1_delta,line3_delta,first_parallel_distance)
                     line2_delta = math.atan((corners[3][1]-corners[0][1])/(corners[3][0]-corners[0][0]) if corners[3][0]-corners[0][0] != 0 else 10000)*180/math.pi
                     line4_delta = math.atan((corners[2][1]-corners[1][1])/(corners[2][0]-corners[1][0]) if corners[2][0]-corners[1][0] != 0 else 10000)*180/math.pi
                     second_parallel_distance = abs(line2_delta-line4_delta)
-                    if debug:
+                    if self.debug:
                         print(line2_delta,line4_delta,second_parallel_distance)
                     parallel_distance = max(first_parallel_distance, second_parallel_distance)
-                    if debug:
+                    if self.debug:
                         print('parallel_distance:{},{},{}'.format(parallel_distance,first_parallel_distance,second_parallel_distance))
 
                     area = image.shape[1]*image.shape[0]
                     transfer_area = cv2.contourArea(corners)
                     area_distance = abs(transfer_area-area)/max(1,min(area,transfer_area))
-                    if debug:
+                    if self.debug:
                         print('area_distance:{}'.format(area_distance))
                     score = self.caculate_score(numpy.sum(status),
                                                 # corner_distance,
                                                 parallel_distance,
-                                                area_distance,
-                                                debug=debug)
+                                                area_distance)
 
-                    if visual and (score > min_score_thresh or debug):
+                    if self.visual and (score > self.min_score_thresh or self.debug):
                         visual_path = os.path.join(os.path.dirname(image_path),
                                                    'visual_{}_{}_{}'.format(int(score*100), key, os.path.basename(image_path)))
                         self.match_visual(visual_path, image, b_image, kp_pairs, status, H)
-                    if score > min_score_thresh:
+                    if score > self.min_score_thresh:
                         match_info[key] = score
-                        if score >= max_score_thresh:
-                            break
+                        # if score >= self.max_score_thresh:
+                        #     break
         return match_info
 
-    def filter_matches(self, kp1, kp2, matches, ratio=0.75, debug=False):
+    def filter_matches(self, kp1, kp2, matches, ratio=0.75):
         mkp1, mkp2 = [], []
         trainIdxs = {}
         for m in matches:
@@ -163,7 +171,7 @@ class Matcher:
         kp_pairs = list(zip(mkp1, mkp2))
         return kp_pairs
 
-    def caculate_score(self, cnt, parallel_distance,area_distance, debug=False):
+    def caculate_score(self, cnt, parallel_distance,area_distance):
         if cnt <= 10:
             cnt_score = 0.1*(cnt-5)
         elif cnt <= 20:
@@ -181,7 +189,7 @@ class Matcher:
 
         score = cnt_score * 0.5 + min(parallel_score,area_score) * 0.5
 
-        if debug:
+        if self.debug:
             print('score: %.2f = %.2f*0.5+min(%.2f, %.2f)*0.5' % (score, cnt_score,parallel_score,area_score))
 
         return score
@@ -203,25 +211,21 @@ class Matcher:
     #             self.match_visual(visual_path, match[1][0],match[1][1],match[1][2],match[1][3],match[1][4])
     #     return ret
 
-    def match_image_best_one(self, image_path, within_upcs=None, filter_upcs=None, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, visual=True, debug=False):
+    def match_image_best_one(self, image_path, within_upcs=None, filter_upcs=None):
         match_info = self.match_image_all_info(image_path,
                                                within_upcs=within_upcs,
-                                               filter_upcs=filter_upcs,
-                                               min_match_points_cnt=min_match_points_cnt,
-                                               min_score_thresh=min_score_thresh,
-                                               max_score_thresh=max_score_thresh,
-                                               debug=debug, visual=visual)
+                                               filter_upcs=filter_upcs)
         if len(match_info) == 0:
             return None,0
-        if debug:
+        if self.debug:
             print('match_info:{}'.format(len(match_info)))
         sorted_match_info = sorted(match_info.items(), key=lambda d: d[1], reverse=True)
         best_match = sorted_match_info[0]
         ret = (best_match[0].split('_')[0], best_match[1])
         return ret
 
-    def is_find_match(self, image_path, within_upcs=None, filter_upcs=None, min_match_points_cnt=5, debug=False, visual=True):
-        upc, score = self.match_image_best_one(image_path, within_upcs=within_upcs,filter_upcs=filter_upcs, min_match_points_cnt=min_match_points_cnt, debug=debug, visual=visual)
+    def is_find_match(self, image_path, within_upcs=None, filter_upcs=None):
+        upc, score = self.match_image_best_one(image_path, within_upcs=within_upcs,filter_upcs=filter_upcs)
         return upc != None
 
     def match_visual(self, visual_path, img1, img2, kp_pairs, status=None, H=None):
@@ -280,12 +284,12 @@ class Matcher:
 
 def test_1():
     time0 = time.time()
-    matcher = Matcher()
+    matcher = Matcher(debug=True, visual=True)
     time1 = time.time()
     for i in range(8):
-        matcher.add_baseline_image('images/%d.jpg' % (i + 1), str(i), debug=True)
+        matcher.add_baseline_image('images/%d.jpg' % (i + 1), str(i))
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one('images/9.jpg', debug=True)
+    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
@@ -294,20 +298,20 @@ def test_2(image1,image2):
     time0 = time.time()
     matcher = Matcher()
     time1 = time.time()
-    matcher.add_baseline_image(image1, 'tt', debug=True)
+    matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one(image2, debug=True)
+    match_key, cnt = matcher.match_image_best_one(image2)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)
 
 def test_3(image1,image2):
     time0 = time.time()
-    matcher = Matcher()
+    matcher = Matcher(debug=True, visual=True)
     time1 = time.time()
-    matcher.add_baseline_image(image1, 'tt', debug=True)
+    matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one(image2, debug=True)
+    match_key, cnt = matcher.match_image_best_one(image2)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
     print(match_key, cnt)

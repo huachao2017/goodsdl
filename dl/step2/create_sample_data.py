@@ -115,11 +115,11 @@ def solves_one_class(class_dir,
                 newimage = img[ymin:ymax, xmin:xmax]
                 cv2.imwrite(output_image_path, newimage)
                 if matcher is None:
-                    matcher = Matcher()
+                    matcher = Matcher(debug=True)
                     if not matcher.add_baseline_image(output_image_path, class_name):
                         is_sample = False
                 else:
-                    if matcher.is_find_match(output_image_path, debug=True):
+                    if matcher.is_find_match(output_image_path):
                         is_sample = False
                     else:
                         if not matcher.add_baseline_image(output_image_path, class_name):

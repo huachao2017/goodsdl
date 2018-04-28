@@ -35,7 +35,7 @@ def test_one_class(matcher,
             continue
 
         logging.info('test image:{}'.format(image_path))
-        f_upc, f_score = matcher.match_image_best_one(image_path,filter_upcs=[class_name],visual=False,debug=False)
+        f_upc, f_score = matcher.match_image_best_one(image_path,filter_upcs=[class_name])
 
         if f_upc is not None:
             f_error_cnt += 1
@@ -43,16 +43,16 @@ def test_one_class(matcher,
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
             shutil.copy(image_path, output_image_path)
-            matcher.match_image_best_one(output_image_path, filter_upcs=[class_name],visual=True,debug=False)
+            matcher.match_image_best_one(output_image_path, filter_upcs=[class_name])
 
-        t_upc, t_score = matcher.match_image_best_one(image_path,within_upcs=[class_name],visual=False,debug=False)
+        t_upc, t_score = matcher.match_image_best_one(image_path,within_upcs=[class_name])
         if t_score < 0.8:
             t_error_cnt += 1
             output_image_path = os.path.join(output_class_dir, '{}_{}_t.jpg'.format(class_name,t_error_cnt))
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
             shutil.copy(image_path, output_image_path)
-            matcher.match_image_best_one(output_image_path, within_upcs=[class_name],visual=True,debug=False)
+            matcher.match_image_best_one(output_image_path, within_upcs=[class_name])
 
     return f_error_cnt, t_error_cnt
 
@@ -60,7 +60,7 @@ def test_sample(data_dir, output_dir):
     f_error_total = 0
     t_error_total = 0
     dirlist = os.listdir(data_dir)  # 列出文件夹下所有的目录与文件
-    matcher = Matcher()
+    matcher = Matcher(visual=True,debug=False)
     samples = SampleImageClass.objects.filter(deviceid='')
     for sample in samples:
         if os.path.isfile(sample.source.path):
