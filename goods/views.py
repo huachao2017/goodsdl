@@ -216,7 +216,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                                      ymax=goods['ymax'],
                                      )
                 if goods['upc'] in upc_index_dict:
-                    ret_reborn[upc_index_dict[goods['class']]]['box'].append({
+                    ret_reborn[upc_index_dict[goods['upc']]]['box'].append({
                         'score': goods['score'],
                         'score2': goods['score2'],
                         'action': goods['action'],
