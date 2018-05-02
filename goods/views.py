@@ -84,7 +84,7 @@ class ImageTestViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             if len(export1s)>0:
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
                 step1_min_score_thresh = .5
-                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+                ret, aiinterval = detector.detect(serializer.instance.source.path, step1_min_score_thresh=step1_min_score_thresh)
                 return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
         elif serializer.instance.deviceid == 'os2':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(
@@ -319,6 +319,34 @@ def wrap_ret(ret):
         'attachment': ret,
     }
     return standard_ret
+
+class VerifyCnt(APIView):
+    def get(self, request):
+        deviceid = request.query_params['deviceid']
+        paymentID = request.query_params['paymentID']
+        picurl = request.query_params['picurl']
+        goodscnt = int(request.query_params['goodscnt'])
+
+        ret = {
+            'paymentID':paymentID
+        }
+        export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
+            '-update_time')[:1]
+
+        if len(export1s) > 0:
+            detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
+            step1_min_score_thresh = .5
+            media_dir = settings.MEDIA_ROOT
+            # TODO 通过 picurl 获取图片
+            image_path = ''
+            ret, aiinterval = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
+            ret['verifycnt'] = len(ret)
+            if len(ret) > goodscnt:
+                ret['isverify'] = 0
+            else:
+                ret['isverify'] = 1
+
+        return Response(wrap_ret(ret), status=status.HTTP_200_OK)
 
 class GetSampleCount(APIView):
     def get(self, request):

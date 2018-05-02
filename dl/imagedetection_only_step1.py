@@ -37,7 +37,7 @@ class ImageDetector_os1:
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
 
-    def detect(self, image_instance, step1_min_score_thresh=.5):
+    def detect(self, image_path, step1_min_score_thresh=.5):
         if not self.step1_cnn.is_load():
             self.load()
             if not self.step1_cnn.is_load():
@@ -47,7 +47,7 @@ class ImageDetector_os1:
         import time
         time0 = time.time()
 
-        image_path = image_instance.source.path
+        # image_path = image_instance.source.path
         image = Image.open(image_path)
         if image.mode != 'RGB':
             image = image.convert('RGB')
