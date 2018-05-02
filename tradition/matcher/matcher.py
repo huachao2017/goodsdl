@@ -24,7 +24,7 @@ import math
 from tradition.matcher.thread_pool import ThreadPool
 
 
-def _one_match(thread_name, matcher, key, image_path, image, kp, desc):
+def _one_match(thread_name, matcher, task_cnt, key, image_path, image, kp, desc):
     if matcher.debug:
         print("begin match thread %s" % (thread_name))
     (b_kp, b_desc, b_image) = matcher.path_to_baseline_info[key]
@@ -102,7 +102,7 @@ def _one_match(thread_name, matcher, key, image_path, image, kp, desc):
                 matcher.match_info[key] = score
                 # if score >= self.max_score_thresh:
                 #     break
-
+    matcher.task_info[task_cnt] += 1
 
 ###############################################################################
 # Image Matching For Servicing
@@ -118,6 +118,8 @@ class Matcher:
         self.max_score_thresh = max_score_thresh
         self.debug = debug
         self.visual = visual
+        self.task_cnt = 0
+        self.task_info = {}
         self.match_info = None
         self.max_thread = max_thread
 
@@ -166,9 +168,13 @@ class Matcher:
 
         thread_pool = None
         thread_size = self.get_thread_size()
+        task_cnt = self.task_cnt + 1
+        need_task_cnt = 0
         if thread_size>1:
+            self.task_cnt += 1
+            self.task_info[task_cnt] = 0
             thread_pool = ThreadPool(thread_size)
-            print('info: use multi-thread:{}'.format(thread_size))
+            print('info:{} use multi-thread:{}'.format(task_cnt, thread_size))
         for key in self.path_to_baseline_info:
             if within_upcs is not None:
                 upc = key.split('_')[0]
@@ -180,20 +186,28 @@ class Matcher:
                     continue
 
             if thread_pool is not None:
-                thread_pool.put(_one_match, (self, key, image_path, image, kp, desc), None)
+                need_task_cnt += 1
+                thread_pool.put(_one_match, (self, task_cnt, key, image_path, image, kp, desc), None)
             else:
-                _one_match('main_thread',self, key, image_path, image, kp, desc)
+                _one_match('main_thread',self, task_cnt, key, image_path, image, kp, desc)
 
         if thread_pool is not None:
-            while True:
-                if True:
-                    print("\033[32;0m任务停止之前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
-                          % (len(thread_pool.generate_list), len(thread_pool.free_list)))
-                if len(thread_pool.free_list) == len(thread_pool.generate_list):
+            time0 = time.time()
+            i = 0
+            while i < 30:
+                i += 1
+                if self.task_info[task_cnt] == need_task_cnt:
+                    time1 = time.time()
+                    print("\033[32;0m任务正常完成%s(%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
+                          % (self.task_info[task_cnt], time1-time0, len(thread_pool.generate_list), len(thread_pool.free_list)))
                     thread_pool.close()
                     break
                 time.sleep(0.1)
-
+            else:
+                time1 = time.time()
+                print("\033[31;0m任务没有完成%s(共%s,%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
+                      % (self.task_info[task_cnt], need_task_cnt, time1-time0, len(thread_pool.generate_list), len(thread_pool.free_list)))
+                thread_pool.close()
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75):
         mkp1, mkp2 = [], []
@@ -333,25 +347,25 @@ def test_1():
     for i in range(8):
         matcher.add_baseline_image('images/%d.jpg' % (i + 1), str(i))
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one('images/9.jpg')
+    match_key, score = matcher.match_image_best_one('images/9.jpg')
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
-    print(match_key, cnt)
+    print(match_key, score)
 
 def test_2(image1,image2):
     time0 = time.time()
-    matcher = Matcher(debug=True, visual=True)
+    matcher = Matcher(debug=False, visual=False)
     time1 = time.time()
     matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
-    match_key, cnt = matcher.match_image_best_one(image2)
+    match_key, score = matcher.match_image_best_one(image2)
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
-    print(match_key, cnt)
+    print(match_key, score)
 
-def test_3(image1):
+def test_match_all():
     time0 = time.time()
-    matcher = Matcher(debug=True, visual=True)
+    matcher = Matcher(debug=False, visual=False)
     time1 = time.time()
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
     import django
@@ -359,16 +373,25 @@ def test_3(image1):
     from goods.models import SampleImageClass
     from django.conf import settings
     samples = SampleImageClass.objects.filter(deviceid='')
+    upc_to_image_path = {}
     for sample in samples:
-        if os.path.isfile(sample.source.path):
-            matcher.add_baseline_image(sample.source.path, sample.upc)
+        image_path = sample.source.path
+        image_path = image_path.replace(settings.MEDIA_ROOT, '\\\\192.168.1.170\Image')
+        # image_path = image_path.replace('\\','/')
+        # image_path = '\\' + image_path
+        if os.path.isfile(image_path):
+            matcher.add_baseline_image(image_path, sample.upc)
+            upc_to_image_path[sample.upc] = image_path
     time2 = time.time()
-    image_path = os.path.join(settings.BASE_DIR, 'tradition/matcher', image1)
-    print(image_path)
-    match_key, cnt = matcher.match_image_best_one(image_path)
+    for upc in upc_to_image_path:
+        image_path = upc_to_image_path[upc]
+        # print(image_path)
+        match_key, score = matcher.match_image_best_one(image_path, within_upcs=[upc])
+        if score < 0.8:
+            print(match_key, score)
+
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
-    print(match_key, cnt)
 
 if __name__ == '__main__':
     """Test code: Uses the two specified"""
@@ -389,5 +412,5 @@ if __name__ == '__main__':
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
-    test_2(fn1, fn2)
-    # test_3(fn1)
+    # test_2(fn1, fn2)
+    test_match_all()

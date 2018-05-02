@@ -43,7 +43,7 @@ def test_one_class(matcher,
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
             shutil.copy(image_path, output_image_path)
-            matcher.match_image_best_one(output_image_path, filter_upcs=[class_name])
+            # matcher.match_image_best_one(output_image_path, filter_upcs=[class_name])
 
         t_upc, t_score = matcher.match_image_best_one(image_path,within_upcs=[class_name])
         if t_score < 0.8:
@@ -52,7 +52,7 @@ def test_one_class(matcher,
             if not tf.gfile.Exists(output_class_dir):
                 tf.gfile.MakeDirs(output_class_dir)
             shutil.copy(image_path, output_image_path)
-            matcher.match_image_best_one(output_image_path, within_upcs=[class_name])
+            # matcher.match_image_best_one(output_image_path, within_upcs=[class_name])
 
     return f_error_cnt, t_error_cnt
 
