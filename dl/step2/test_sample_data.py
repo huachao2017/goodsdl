@@ -34,25 +34,29 @@ def test_one_class(matcher,
         if ext != ".jpg" or prefix == 'visual':
             continue
 
+        if not tf.gfile.Exists(output_class_dir):
+            tf.gfile.MakeDirs(output_class_dir)
+
         logging.info('test image:{}'.format(image_path))
-        f_upc, f_score = matcher.match_image_best_one(image_path,filter_upcs=[class_name])
+        output_image_path = os.path.join(output_class_dir, '{}_{}_f.jpg'.format(class_name, f_error_cnt))
+        shutil.copy(image_path, output_image_path)
+        f_upc, f_score = matcher.match_image_best_one(output_image_path,filter_upcs=[class_name])
 
         if f_upc is not None:
             f_error_cnt += 1
-            output_image_path = os.path.join(output_class_dir, '{}_{}_f.jpg'.format(class_name,f_error_cnt))
-            if not tf.gfile.Exists(output_class_dir):
-                tf.gfile.MakeDirs(output_class_dir)
-            shutil.copy(image_path, output_image_path)
-            # matcher.match_image_best_one(output_image_path, filter_upcs=[class_name])
+        else:
+            os.remove(output_image_path)
 
-        t_upc, t_score = matcher.match_image_best_one(image_path,within_upcs=[class_name])
+        output_image_path = os.path.join(output_class_dir, '{}_{}_t.jpg'.format(class_name, t_error_cnt))
+        shutil.copy(image_path, output_image_path)
+        t_upc, t_score = matcher.match_image_best_one(output_image_path,within_upcs=[class_name])
         if t_score < 0.8:
             t_error_cnt += 1
-            output_image_path = os.path.join(output_class_dir, '{}_{}_t.jpg'.format(class_name,t_error_cnt))
-            if not tf.gfile.Exists(output_class_dir):
-                tf.gfile.MakeDirs(output_class_dir)
-            shutil.copy(image_path, output_image_path)
-            # matcher.match_image_best_one(output_image_path, within_upcs=[class_name])
+        else:
+            os.remove(output_image_path)
+
+        if len(os.listdir(output_class_dir)) == 0:
+            os.rmdir(output_class_dir)
 
     return f_error_cnt, t_error_cnt
 
