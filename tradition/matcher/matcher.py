@@ -57,51 +57,50 @@ def _one_match(thread_name, matcher, task_cnt, key, image_path, image, kp, desc)
             )
             if matcher.debug:
                 print('corner_distance:{}'.format(corner_distance))
-            if corner_distance > 1:  # 四个顶点远离边缘的距离过大，则不匹配 TODO maybe some problem
-                return
-            # corners平行四边形判断
-            line1_delta = math.atan(
-                (corners[1][1] - corners[0][1]) / (corners[1][0] - corners[0][0]) if corners[1][0] - corners[0][
-                    0] != 0 else 10000) * 180 / math.pi
-            line3_delta = math.atan(
-                (corners[2][1] - corners[3][1]) / (corners[2][0] - corners[3][0]) if corners[2][0] - corners[3][
-                    0] != 0 else 10000) * 180 / math.pi
-            first_parallel_distance = abs(line1_delta - line3_delta)
-            if matcher.debug:
-                print(line1_delta, line3_delta, first_parallel_distance)
-            line2_delta = math.atan(
-                (corners[3][1] - corners[0][1]) / (corners[3][0] - corners[0][0]) if corners[3][0] - corners[0][
-                    0] != 0 else 10000) * 180 / math.pi
-            line4_delta = math.atan(
-                (corners[2][1] - corners[1][1]) / (corners[2][0] - corners[1][0]) if corners[2][0] - corners[1][
-                    0] != 0 else 10000) * 180 / math.pi
-            second_parallel_distance = abs(line2_delta - line4_delta)
-            if matcher.debug:
-                print(line2_delta, line4_delta, second_parallel_distance)
-            parallel_distance = max(first_parallel_distance, second_parallel_distance)
-            if matcher.debug:
-                print('parallel_distance:{},{},{}'.format(parallel_distance, first_parallel_distance,
-                                                          second_parallel_distance))
+            if corner_distance <= 1:  # 四个顶点远离边缘的距离过大，则不匹配 TODO maybe some problem
+                # corners平行四边形判断
+                line1_delta = math.atan(
+                    (corners[1][1] - corners[0][1]) / (corners[1][0] - corners[0][0]) if corners[1][0] - corners[0][
+                        0] != 0 else 10000) * 180 / math.pi
+                line3_delta = math.atan(
+                    (corners[2][1] - corners[3][1]) / (corners[2][0] - corners[3][0]) if corners[2][0] - corners[3][
+                        0] != 0 else 10000) * 180 / math.pi
+                first_parallel_distance = abs(line1_delta - line3_delta)
+                if matcher.debug:
+                    print(line1_delta, line3_delta, first_parallel_distance)
+                line2_delta = math.atan(
+                    (corners[3][1] - corners[0][1]) / (corners[3][0] - corners[0][0]) if corners[3][0] - corners[0][
+                        0] != 0 else 10000) * 180 / math.pi
+                line4_delta = math.atan(
+                    (corners[2][1] - corners[1][1]) / (corners[2][0] - corners[1][0]) if corners[2][0] - corners[1][
+                        0] != 0 else 10000) * 180 / math.pi
+                second_parallel_distance = abs(line2_delta - line4_delta)
+                if matcher.debug:
+                    print(line2_delta, line4_delta, second_parallel_distance)
+                parallel_distance = max(first_parallel_distance, second_parallel_distance)
+                if matcher.debug:
+                    print('parallel_distance:{},{},{}'.format(parallel_distance, first_parallel_distance,
+                                                              second_parallel_distance))
 
-            area = image.shape[1] * image.shape[0]
-            transfer_area = cv2.contourArea(corners)
-            area_distance = abs(transfer_area - area) / max(1, min(area, transfer_area))
-            if matcher.debug:
-                print('area_distance:{}'.format(area_distance))
-            score = matcher.caculate_score(numpy.sum(status),
-                                           # corner_distance,
-                                        parallel_distance,
-                                           area_distance)
+                area = image.shape[1] * image.shape[0]
+                transfer_area = cv2.contourArea(corners)
+                area_distance = abs(transfer_area - area) / max(1, min(area, transfer_area))
+                if matcher.debug:
+                    print('area_distance:{}'.format(area_distance))
+                score = matcher.caculate_score(numpy.sum(status),
+                                               # corner_distance,
+                                            parallel_distance,
+                                               area_distance)
 
-            if matcher.visual and (score > matcher.min_score_thresh or matcher.debug):
-                visual_path = os.path.join(os.path.dirname(image_path),
-                                           'visual_{}_{}_{}'.format(int(score * 100), key,
-                                                                    os.path.basename(image_path)))
-                matcher.match_visual(visual_path, image, b_image, kp_pairs, status, H)
-            if score > matcher.min_score_thresh:
-                matcher.match_info[key] = score
-                # if score >= self.max_score_thresh:
-                #     break
+                if matcher.visual and (score > matcher.min_score_thresh or matcher.debug):
+                    visual_path = os.path.join(os.path.dirname(image_path),
+                                               'visual_{}_{}_{}'.format(int(score * 100), key,
+                                                                        os.path.basename(image_path)))
+                    matcher.match_visual(visual_path, image, b_image, kp_pairs, status, H)
+                if score > matcher.min_score_thresh:
+                    matcher.match_info[key] = score
+                    # if score >= self.max_score_thresh:
+                    #     break
     matcher.task_info[task_cnt] += 1
 
 ###############################################################################
