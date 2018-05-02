@@ -32,6 +32,20 @@ http://admin.fastxbox.cn(内网：testpay.damaijianshen.cn)/payment/order-by-ai.
     }],
 },
 
+防盗预警：
+1. 支付完成，app抓取图片并保存到阿里云，并给java服务器发送paymentID和图片MID；
+2. java服务器保存记录，一个订单可能会存在多个图片，并根据paymentID提取商品数量，一起保存；
+3. java服务器给ai服务器发送请求，传送paymentID、图片MID和商品数量，ai服务器返回payentID、检测数量和是否有错，java服务器保存检测数量和是否有错；
+4、统计服务，展示某个商家的异常订单（显示图片），可以手动设置为正常状态；
+
+接口：http://ai.fastxbox.cn/api/verifycnt?deviceid=xx&paymentID=xx&picurl=xx&goodscnt=xx
+返回200：
+{
+    'paymentID':20,           -- 支付id
+    'isverify':0              -- 0：错误；1：正确
+    'verifycnt':20,           --
+}
+
 获取训练样本数量：http://train.fastxbox.cn/api/getsamplecount?upc=xxx
 参数说明：
 upc:商品upc
