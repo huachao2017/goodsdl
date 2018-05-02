@@ -108,7 +108,7 @@ def _one_match(thread_name, matcher, task_cnt, key, image_path, image, kp, desc)
 # Image Matching For Servicing
 ###############################################################################
 class Matcher:
-    def __init__(self, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=False, max_thread=10):
+    def __init__(self, min_match_points_cnt=4, min_score_thresh=0.5, max_score_thresh=0.8, debug=False, visual=False, max_thread=20):
         self.path_to_baseline_info = {}
         self.upc_to_cnt = {}
         self.detector = cv2.xfeatures2d.SURF_create(400, 5, 5)
@@ -122,6 +122,7 @@ class Matcher:
         self.task_info = {}
         self.match_info = None
         self.max_thread = max_thread
+        self.thread_pool = ThreadPool(max_thread)
 
 
     def add_baseline_image(self, image_path, upc):
@@ -147,13 +148,13 @@ class Matcher:
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
-    def get_thread_size(self):
-        thread_size = int(len(self.path_to_baseline_info)/100)
-        if thread_size > self.max_thread:
-            thread_size = self.max_thread
-
-        return thread_size
-
+    # def get_thread_size(self):
+    #     thread_size = int(len(self.path_to_baseline_info)/100)
+    #     if thread_size > self.max_thread:
+    #         thread_size = self.max_thread
+    #
+    #     return thread_size
+    #
     def _all_match(self, image_path, within_upcs=None, filter_upcs=None):
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
@@ -166,15 +167,8 @@ class Matcher:
         if self.debug:
             print('baseline image:{}'.format(len(self.path_to_baseline_info)))
 
-        thread_pool = None
-        thread_size = self.get_thread_size()
         task_cnt = self.task_cnt + 1
         need_task_cnt = 0
-        if thread_size>1:
-            self.task_cnt += 1
-            self.task_info[task_cnt] = 0
-            thread_pool = ThreadPool(thread_size)
-            print('info:{} use multi-thread:{}'.format(task_cnt, thread_size))
         for key in self.path_to_baseline_info:
             if within_upcs is not None:
                 upc = key.split('_')[0]
@@ -185,13 +179,13 @@ class Matcher:
                 if upc in filter_upcs:
                     continue
 
-            if thread_pool is not None:
+            if self.thread_pool is not None:
                 need_task_cnt += 1
-                thread_pool.put(_one_match, (self, task_cnt, key, image_path, image, kp, desc), None)
+                self.thread_pool.put(_one_match, (self, task_cnt, key, image_path, image, kp, desc), None)
             else:
                 _one_match('main_thread',self, task_cnt, key, image_path, image, kp, desc)
 
-        if thread_pool is not None:
+        if self.thread_pool is not None:
             time0 = time.time()
             i = 0
             while i < 30:
@@ -199,15 +193,13 @@ class Matcher:
                 if self.task_info[task_cnt] == need_task_cnt:
                     time1 = time.time()
                     print("\033[32;0m任务正常完成%s(%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
-                          % (self.task_info[task_cnt], time1-time0, len(thread_pool.generate_list), len(thread_pool.free_list)))
-                    thread_pool.close()
+                          % (self.task_info[task_cnt], time1-time0, len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
                     break
                 time.sleep(0.1)
             else:
                 time1 = time.time()
                 print("\033[31;0m任务没有完成%s(共%s,%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
-                      % (self.task_info[task_cnt], need_task_cnt, time1-time0, len(thread_pool.generate_list), len(thread_pool.free_list)))
-                thread_pool.close()
+                      % (self.task_info[task_cnt], need_task_cnt, time1-time0, len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75):
         mkp1, mkp2 = [], []
