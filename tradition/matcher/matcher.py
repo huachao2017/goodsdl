@@ -168,6 +168,8 @@ class Matcher:
             print('baseline image:{}'.format(len(self.path_to_baseline_info)))
 
         task_cnt = self.task_cnt + 1
+        self.task_cnt += 1
+        self.task_info[task_cnt] = 0
         need_task_cnt = 0
         for key in self.path_to_baseline_info:
             if within_upcs is not None:
