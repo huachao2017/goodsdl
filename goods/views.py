@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from dl import common
-from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, \
+from dl import imagedetectionV3, imagedetectionV3_S, imageclassifyV1, imagedetection_only_step1, \
     imagedetection_only_step2, imagedetection_only_step3, imagedetection
 # from dl.old import imagedetection
 from .serializers import *
@@ -155,12 +155,18 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             aiinterval = .0
             # 正式应用区
 
-            if serializer.instance.deviceid == '275': # 10类的演示
-                detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-                min_score_thresh = .5
-                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-                ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
-
+            # if serializer.instance.deviceid == '275': # 10类的演示
+            #     detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+            #     min_score_thresh = .5
+            #     logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            #     ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
+            #
+            if serializer.instance.deviceid == '275': # step1+step2+模式类的演示
+                detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+                step1_min_score_thresh = .9
+                step2_min_score_thresh = .6
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                      step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
             else:
                 export1s = ExportAction.objects.filter(train_action__action='T1').filter(
                     checkpoint_prefix__gt=0).order_by(

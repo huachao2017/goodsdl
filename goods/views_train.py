@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from dl import common
-from dl import imagedetectionV3, imagedetection_only_step1
+from dl import imagedetectionV3_S, imagedetection_only_step1
 # from dl.old import imagedetection
 from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
@@ -195,7 +195,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 tree.write(a + ".xml")
 
                 # 生成模式识别的sample图片
-                source_samples = SampleImageClass.objects.filter(upc=serializer.instance.upc)
+                source_samples = SampleImageClass.objects.filter(upc=serializer.instance.upc, deviceid=serializer.instance.deviceid)
 
                 sample_image = image.crop((xmin, ymin, xmax, ymax))
                 sample_image_dir = os.path.join(
@@ -230,19 +230,8 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                         name=serializer.instance.upc,
                     )
 
-                    export1s = ExportAction.objects.filter(train_action__action='T1').filter(
-                        checkpoint_prefix__gt=0).order_by(
-                        '-update_time')[:1]
-                    export2s = ExportAction.objects.filter(train_action__action='T2').filter(
-                        train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
-                        '-update_time')[:1]
-
-                    if len(export1s) == 0 or len(export2s) == 0:
-                        logger.error('not found detection model!')
-                    else:
-                        detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(export1s[0].pk, export2s[0].pk)
-                        detector.load()
-                        detector.add_baseline_image(sample_image_path, serializer.instance.upc)
+                    detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+                    detector.add_baseline_image(sample_image_path, serializer.instance.upc)
                 else:
                     os.remove(sample_image_path)
 

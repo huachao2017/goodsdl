@@ -10,6 +10,7 @@ from dl.step2S_cnn import Step2SCNN
 from dl.tradition_match import TraditionMatch
 from dl.util import visualize_boxes_and_labels_on_image_array_V2
 from dl import common
+from goods.models import ExportAction
 
 logger = logging.getLogger("detect")
 
@@ -20,25 +21,42 @@ class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(export1id,export2id, step2_model_name='nasnet_large'):
-        if step2_model_name not in step2_model_names:
-            return None
-        # step2_model_name : 'nasnet_large','inception_resnet_v2'
+    def get_static_detector(deviceid):
 
-        key = '{}_{}'.format(str(export1id),str(export2id))
+        key = deviceid
         if key not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,step2_model_name)
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(
+                checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+            export2Ss = ExportAction.objects.filter(train_action__action='T2S').filter(
+                train_action__serial='').filter(checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+
+            if len(export1s) == 0:
+                logger.error('not found detection model!')
+                return None
+            else:
+                if len(export2Ss) == 0:
+                    export2Sid = 0
+                    step2_model_name = ''
+                else:
+                    export2Sid = export2Ss[0].pk
+                    step2_model_name = export2Ss[0].step2_model_name
+
+            ImageDetectorFactory._detector[key] = ImageDetector(deviceid, export1s[0].pk, export2Sid, step2_model_name)
         return ImageDetectorFactory._detector[key]
 
 class ImageDetector:
-    def __init__(self, export1id, export2id, step2_model_name):
+    def __init__(self, deviceid, export1id, export2Sid, step2_model_name):
+        self.deviceid = deviceid
+
         file_path, _ = os.path.split(os.path.realpath(__file__))
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(export1id)))
-        if export2id > 0:
-            self.step2S_cnn = Step2SCNN(os.path.join(file_path, 'model', str(export2id)),step2_model_name)
+        if export2Sid > 0:
+            self.step2S_cnn = Step2SCNN(os.path.join(file_path, 'model', str(export2Sid)), step2_model_name)
         else:
             self.step2S_cnn = None
-        self.tradition_match = TraditionMatch()
+        self.tradition_match = TraditionMatch(deviceid)
 
         self.counter = 0
         self.config = tf.ConfigProto()
