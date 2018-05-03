@@ -9,7 +9,7 @@ class TraditionMatch:
     def __init__(self, deviceid=''):
         self._isload = False
         self._deviceid = deviceid
-        self._matcher = Matcher()
+        self._matcher = Matcher(visual=True)
 
     def load(self):
         logger.info('begin loading TraditionMatch')
