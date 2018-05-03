@@ -6,13 +6,10 @@ import shutil
 import subprocess
 import time
 import urllib.request
-import xml.etree.ElementTree as ET
 
 import numpy as np
 import tensorflow as tf
-from PIL import Image as im
 from django.conf import settings
-from object_detection.utils import visualization_utils as vis_util
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework import viewsets
@@ -23,13 +20,6 @@ from dl import common
 from dl import imagedetectionV3, imageclassifyV1, imagedetection_only_step1, \
     imagedetection_only_step2, imagedetection_only_step3, imagedetection
 # from dl.old import imagedetection
-from dl.only_step2 import create_goods_tf_record
-from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
-from dl.step2 import convert_goods
-from dl.step20 import convert_goods_step20
-from dl.step3 import convert_goods_step3
-from dl.step30 import convert_goods_step30
-from tradition.matcher.matcher import Matcher
 from .serializers import *
 
 logger = logging.getLogger("django")
