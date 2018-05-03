@@ -135,6 +135,7 @@ class TrainAction(models.Model):
         (u'T21', u'Train Step 2_1'),
         (u'T30', u'Train Step 3_n'),
         (u'T2', u'Train Step 2'),
+        (u'T2S', u'Train Step 2 Small Sample'),
         (u'T3', u'Train Step 3'),
     )
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
