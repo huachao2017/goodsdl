@@ -133,7 +133,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             last_image = None
             for one_image in last_images:
-                if one_image.ret != '':
+                if one_image.ret != '' and os.path.isfile(one_image):
                     last_image = one_image
                     break
 
