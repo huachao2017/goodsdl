@@ -337,8 +337,13 @@ class VerifyCnt(APIView):
             detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
             step1_min_score_thresh = .5
             media_dir = settings.MEDIA_ROOT
-            # TODO 通过 picurl 获取图片
-            image_path = ''
+            # 通过 picurl 获取图片
+            now = datetime.datetime.now()
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, deviceid, now.strftime('%Y%m%d'))
+            if not tf.gfile.Exists(image_dir):
+                tf.gfile.MakeDirs(image_dir)
+            image_path = os.path.join(image_dir, '{}_{}.jpg'.format(now.strftime('%H%M%S'), str(now.time())))
+            urllib.request.urlretrieve(picurl, image_path)
             ret, aiinterval = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
             ret['verifycnt'] = len(ret)
             if len(ret) > goodscnt:
