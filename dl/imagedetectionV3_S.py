@@ -173,7 +173,7 @@ class ImageDetector:
                     else:
                         types_step2.append(common.MATCH_TYPE_UNKNOWN) # TODO 暂时做悲观处理
         else:
-            upcs_step2, scores_step2  = self.step2S_cnn.detect(step2_images)
+            upcs_step2, scores_step2  = self.tradition_match.detect(step2_image_paths)
             time2 = time.time()
 
             types_step2 = []
@@ -198,10 +198,10 @@ class ImageDetector:
             action = 0
             upc = upcs_step2[i]
             match_type = match_types_step2[i]
-            if match_type == -1:
+            if match_type == common.MATCH_TYPE_UNKNOWN:
                 # 识别度不够
                 upc = ''
-            elif match_type == 1 and (upc == 'bottled-drink-stand' or upc == 'ziptop-drink-stand'):
+            elif match_type == common.MATCH_TYPE_DEEPLEARNING and (upc == 'bottled-drink-stand' or upc == 'ziptop-drink-stand'):
                 # 立姿水需要躺倒平放
                 upc = ''
                 action = 2
