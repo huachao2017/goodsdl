@@ -20,21 +20,24 @@ class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(export1id,export2id, export3_arr=None, step2_model_name='nasnet_large'):
+    def get_static_detector(export1id,export2id, step2_model_name='nasnet_large'):
         if step2_model_name not in step2_model_names:
             return None
         # step2_model_name : 'nasnet_large','inception_resnet_v2'
 
         key = '{}_{}'.format(str(export1id),str(export2id))
         if key not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,export3_arr,step2_model_name)
+            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,step2_model_name)
         return ImageDetectorFactory._detector[key]
 
 class ImageDetector:
-    def __init__(self, export1id, export2id, export3_arr, step2_model_name):
+    def __init__(self, export1id, export2id, step2_model_name):
         file_path, _ = os.path.split(os.path.realpath(__file__))
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(export1id)))
-        self.step2S_cnn = Step2SCNN(os.path.join(file_path, 'model', str(export2id)),step2_model_name)
+        if export2id > 0:
+            self.step2S_cnn = Step2SCNN(os.path.join(file_path, 'model', str(export2id)),step2_model_name)
+        else:
+            self.step2S_cnn = None
         self.tradition_match = TraditionMatch()
 
         self.counter = 0
@@ -48,18 +51,22 @@ class ImageDetector:
             time.sleep(3)
             return
         self.counter = self.counter + 1
-        if not self.step2S_cnn.is_load():
-            self.tradition_match.load()
+        if not self.tradition_match.is_load():
             self.step1_cnn.load(self.config)
-            self.step2S_cnn.load(self.config)
+            if self.step2S_cnn is not None:
+                self.step2S_cnn.load(self.config)
+            self.tradition_match.load()
+            self.counter = 0
 
     def add_baseline_image(self, image_path, upc):
+        if not self.tradition_match.is_load():
+            self.load()
         self.tradition_match.add_baseline_image(image_path, upc)
 
     def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
-        if not self.step2S_cnn.is_load():
+        if not self.tradition_match.is_load():
             self.load()
-            if not self.step2S_cnn.is_load():
+            if not self.tradition_match.is_load():
                 logger.warning('loading model failed')
                 return None, .0
 
@@ -111,48 +118,58 @@ class ImageDetector:
                 new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
                 step2_image_paths.append(new_image_path)
                 newimage.save(new_image_path, 'JPEG')
-                step2_images.append(self.step2S_cnn.pre_detect(new_image_path))
+                if self.step2S_cnn is not None:
+                    step2_images.append(self.step2S_cnn.pre_detect(new_image_path))
 
-        if len(step2_images) <= 0:
+        if len(step2_image_paths) <= 0:
             time2 = time.time()
-            logger.info('detectV3: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
+            logger.info('detectV3_S: %s, 0, %.2f, %.2f, %.2f' % (image_instance.deviceid, time2 - time0, time1 - time0, time2 - time1))
             return [], time2-time0
 
         # upcs_match, scores_match = self.tradition_match.detect(step2_image_paths)
         # time2 = time.time()
 
-        upcs_step2, scores_step2  = self.step2S_cnn.detect(step2_images)
-        time2 = time.time()
+        if self.step2S_cnn is not None:
+            upcs_step2, scores_step2  = self.step2S_cnn.detect(step2_images)
 
-        types_step2 = []
-        for i in range(len(step2_image_paths)):
-            if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
-                types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
-                continue
-            within_upcs = [upcs_step2[i]]
-            score_verify = self.tradition_match.verify_score(step2_image_paths[i], within_upcs)
-            if score_verify > 0.6:
-                types_step2.append(common.MATCH_TYPE_BOTH)
-            else:
-                time3_0 = time.time()
-                upc_match, score_match = self.tradition_match.detect_one(step2_image_paths[i])
-                time3_1 = time.time()
-                logger.info('step2 tridition match: %.2f,%s, %.2f' % (time3_1-time3_0, upc_match, score_match))
-                if score_match > 0.6: # TODO
-                    upcs_step2[i] = upc_match
-                    scores_step2[i] = score_match
+            time2 = time.time()
+
+            types_step2 = []
+            for i in range(len(step2_image_paths)):
+                if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
+                    types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
+                    continue
+                within_upcs = [upcs_step2[i]]
+                score_verify = self.tradition_match.verify_score(step2_image_paths[i], within_upcs)
+                if score_verify > 0.6:
+                    types_step2.append(common.MATCH_TYPE_BOTH)
+                else:
+                    time3_0 = time.time()
+                    upc_match, score_match = self.tradition_match.detect_one(step2_image_paths[i])
+                    time3_1 = time.time()
+                    logger.info('step2 tridition match: %.2f,%s, %.2f' % (time3_1-time3_0, upc_match, score_match))
+                    if score_match > 0.6: # TODO
+                        upcs_step2[i] = upc_match
+                        scores_step2[i] = score_match
+                        types_step2.append(common.MATCH_TYPE_TRADITION)
+                    else:
+                        types_step2.append(common.MATCH_TYPE_UNKNOWN) # TODO 暂时做悲观处理
+        else:
+            upcs_step2, scores_step2  = self.step2S_cnn.detect(step2_images)
+            time2 = time.time()
+
+            types_step2 = []
+            for i in range(len(step2_image_paths)):
+                if scores_step2[i] > 0.6:
                     types_step2.append(common.MATCH_TYPE_TRADITION)
                 else:
-                    types_step2.append(common.MATCH_TYPE_UNKNOWN) # TODO 暂时做悲观处理
-
-        logger.info(types_step2)
-        time3 = time.time()
+                    types_step2.append(common.MATCH_TYPE_UNKNOWN)
 
         ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, types_step2, image_instance, image_np, step2_min_score_thresh)
 
-        time4 = time.time()
-        logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time2))
-        return ret, time4-time0
+        time3 = time.time()
+        logger.info('detectV3_S: %s, %d, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time3-time0, time1-time0, time2-time1, time3-time2))
+        return ret, time3-time0
 
     def do_addition_logic_work(self, boxes_step1, scores_step1, upcs_step2, scores_step2, match_types_step2, image_instance, image_np, step2_min_score_thresh):
         ret = []
