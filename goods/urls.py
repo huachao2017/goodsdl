@@ -17,6 +17,7 @@ from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
 from . import views
+from . import views_train
 
 router = DefaultRouter()
 # router.register(r'image', views.ImageOldViewSet)
@@ -25,20 +26,21 @@ router.register(r'imagetest', views.ImageTestViewSet)
 router.register(r'imagereport', views.ImageReportViewSet)
 router.register(r'imageclass', views.ImageClassViewSet)
 router.register(r'problemgoods', views.ProblemGoodsViewSet)
-router.register(r'trainimage', views.TrainImageViewSet)
-router.register(r'trainimageonly', views.TrainImageOnlyViewSet)
-router.register(r'trainimageclass', views.TrainImageClassViewSet)
-router.register(r'sampleimageclass', views.SampleImageClassViewSet)
-router.register(r'trainaction', views.TrainActionViewSet)
-router.register(r'exportaction', views.ExportActionViewSet)
-router.register(r'stoptrainaction', views.StopTrainActionViewSet)
-router.register(r'rfidimagecompareaction', views.RfidImageCompareActionViewSet)
-router.register(r'transactionmetrix', views.TransactionMetrixViewSet)
-router.register(r'traintask', views.TrainTaskViewSet)
-router.register(r'clusterstructure', views.ClusterStructureViewSet)
-router.register(r'clusterevaldata', views.ClusterEvalDataViewSet)
-router.register(r'clustersamplescore', views.ClusterSampleScoreViewSet)
-router.register(r'clusterupcscore', views.ClusterUpcScoreViewSet)
+
+router.register(r'trainimage', views_train.TrainImageViewSet)
+router.register(r'trainimageonly', views_train.TrainImageOnlyViewSet)
+router.register(r'trainimageclass', views_train.TrainImageClassViewSet)
+router.register(r'sampleimageclass', views_train.SampleImageClassViewSet)
+router.register(r'trainaction', views_train.TrainActionViewSet)
+router.register(r'exportaction', views_train.ExportActionViewSet)
+router.register(r'stoptrainaction', views_train.StopTrainActionViewSet)
+router.register(r'rfidimagecompareaction', views_train.RfidImageCompareActionViewSet)
+router.register(r'transactionmetrix', views_train.TransactionMetrixViewSet)
+router.register(r'traintask', views_train.TrainTaskViewSet)
+router.register(r'clusterstructure', views_train.ClusterStructureViewSet)
+router.register(r'clusterevaldata', views_train.ClusterEvalDataViewSet)
+router.register(r'clustersamplescore', views_train.ClusterSampleScoreViewSet)
+router.register(r'clusterupcscore', views_train.ClusterUpcScoreViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
     url(r'^api/getsamplecount', views.GetSampleCount.as_view()),

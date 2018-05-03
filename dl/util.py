@@ -1,6 +1,17 @@
 import tensorflow as tf
 from object_detection.utils import visualization_utils as vis_util
 
+def get_client_ip(request):
+    try:
+        real_ip = request.META['HTTP_X_FORWARDED_FOR']
+        regip = real_ip.split(",")[0]
+    except:
+        try:
+            regip = request.META['REMOTE_ADDR']
+        except:
+            regip = ""
+    return regip
+
 def get_host_ip():
     import socket
     try:
