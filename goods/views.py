@@ -344,9 +344,9 @@ class VerifyCnt(APIView):
                 tf.gfile.MakeDirs(image_dir)
             image_path = os.path.join(image_dir, '{}_{}.jpg'.format(now.strftime('%H%M%S'), str(now.time())))
             urllib.request.urlretrieve(picurl, image_path)
-            ret, aiinterval = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
-            ret['verifycnt'] = len(ret)
-            if len(ret) > goodscnt:
+            detect_ret, aiinterval = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
+            ret['verifycnt'] = len(detect_ret)
+            if len(detect_ret) > goodscnt:
                 ret['isverify'] = 0
             else:
                 ret['isverify'] = 1
