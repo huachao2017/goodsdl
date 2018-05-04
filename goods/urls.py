@@ -43,7 +43,7 @@ router.register(r'clustersamplescore', views_train.ClusterSampleScoreViewSet)
 router.register(r'clusterupcscore', views_train.ClusterUpcScoreViewSet)
 urlpatterns = [
     url(r'^test', views.Test.as_view()),
-    url(r'^api/getsamplecount', views.GetSampleCount.as_view()),
+    url(r'^api/getsamplecount', views_train.GetSampleCount.as_view()),
     url(r'^api/removeallsample', views_train.RemoveAllSample.as_view()),
     url(r'^api/verifycnt', views.VerifyCnt.as_view()),
     url(r'^api/', include(router.urls))

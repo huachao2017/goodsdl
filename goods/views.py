@@ -329,30 +329,3 @@ class VerifyCnt(APIView):
                 ret['isverify'] = 1
 
         return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)
-
-class GetSampleCount(APIView):
-    def get(self, request):
-        upc = request.query_params['upc']
-
-        ret = {}
-
-        dataset_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME)
-        dirlist = os.listdir(dataset_dir)
-        total_count = 0
-        for dirname in dirlist:
-            if dirname.startswith('data_new_'):
-                deviceid = dirname.split('_')[-1]
-                upc_dir = os.path.join(dataset_dir,dirname,upc)
-                command = 'ls {} | grep -v visual | grep -v .xml | wc -l'.format(upc_dir)
-                # logger.info(command)
-                count = int(os.popen(command).readline())
-                if count > 0:
-                    ret[deviceid] = count
-                    total_count += count
-            elif dirname == 'data_new':
-                ret['official'] = count
-                total_count += count
-
-        ret['total'] = total_count
-
-        return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)
