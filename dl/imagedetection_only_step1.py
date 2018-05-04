@@ -79,6 +79,7 @@ class ImageDetector_os1:
                             })
 
         # visualization
+        output_image_path = None
         if len(ret) > 0:
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
@@ -94,4 +95,4 @@ class ImageDetector_os1:
             output_image.save(output_image_path)
 
         time1 = time.time()
-        return ret, time1-time0
+        return ret, time1-time0,output_image_path

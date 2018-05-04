@@ -75,7 +75,7 @@ class ImageTestViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
             if len(export1s)>0:
                 detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
                 step1_min_score_thresh = .5
-                ret, aiinterval = detector.detect(serializer.instance.source.path, step1_min_score_thresh=step1_min_score_thresh)
+                ret, aiinterval,_ = detector.detect(serializer.instance.source.path, step1_min_score_thresh=step1_min_score_thresh)
                 return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
         elif serializer.instance.deviceid == 'os2':
             export2s = ExportAction.objects.filter(train_action__action='T2').filter(
@@ -321,11 +321,17 @@ class VerifyCnt(APIView):
             image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%H%M%S')))
             logger.info(image_path)
             urllib.request.urlretrieve(picurl, image_path)
-            detect_ret, aiinterval = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
+            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
             ret['verifycnt'] = len(detect_ret)
             if len(detect_ret) > goodscnt:
                 ret['isverify'] = 0
             else:
                 ret['isverify'] = 1
+
+            if visual_image_path is not None:
+                visual_image_path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL)
+                ret['verifypicurl'] = visual_image_path
+            else:
+                ret['verifypicurl'] = ''
 
         return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)

@@ -43,7 +43,8 @@ http://admin.fastxbox.cn(内网：testpay.damaijianshen.cn)/payment/order-by-ai.
 {
     'paymentID':20,           -- 支付id
     'isverify':0              -- 0：错误；1：正确
-    'verifycnt':20,           --
+    'verifycnt':20,           -- 验证数量
+    'verifypicurl':'/media/xx/xx/xx.jpg'  -- 验证图片地址，访问时加前缀http://ai.fastxbox.cn
 }
 
 获取训练样本数量：http://train.fastxbox.cn/api/getsamplecount?upc=xxx
@@ -58,7 +59,7 @@ upc:商品upc
 
 清除训练样本：http://train.fastxbox.cn/api/removeallsample?deviceid=xxx
 参数说明：
-upc:商品upc
+deviceid:设备deviceid
 返回200：
 {
     'count':20                -- 删除的样本数量
