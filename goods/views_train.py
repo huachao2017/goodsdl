@@ -30,6 +30,7 @@ from dl.step3 import convert_goods_step3
 from dl.step30 import convert_goods_step30
 from tradition.matcher.matcher import Matcher
 from .serializers import *
+import goods.util
 
 logger = logging.getLogger("django")
 
@@ -231,7 +232,8 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                     )
 
                     detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
-                    detector.add_baseline_image(sample_image_path, serializer.instance.upc)
+                    if detector is not None:
+                        detector.add_baseline_image(sample_image_path, serializer.instance.upc)
                 else:
                     os.remove(sample_image_path)
 
@@ -246,6 +248,24 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 # newimage.save(new_image_path, 'JPEG')
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class RemoveAllSample(APIView):
+    def get(self, request):
+        deviceid = request.query_params['deviceid']
+
+        ret = {'count':0}
+        detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(deviceid)
+        if detector is not None:
+            samples = SampleImageClass.objects.filter(deviceid=deviceid)
+            for sample in samples:
+                if os.path.isfile(sample.source.path):
+                    os.remove(sample.source.path)
+                    ret['count'] += 1
+
+            SampleImageClass.objects.filter(deviceid=deviceid).delete()
+            detector.removeall_baseline_image()
+
+        return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)
 
 class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')

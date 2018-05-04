@@ -15,6 +15,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+import goods.util
 
 from dl import common
 from dl import imagedetectionV3, imagedetectionV3_S, imageclassifyV1, imagedetection_only_step1, \
@@ -294,13 +295,6 @@ class ProblemGoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericV
     queryset = ProblemGoods.objects.order_by('-id')
     serializer_class = ProblemGoodsSerializer
 
-def wrap_ret(ret):
-    standard_ret = {
-        'status': 200,
-        'message': '成功',
-        'attachment': ret,
-    }
-    return standard_ret
 
 class VerifyCnt(APIView):
     def get(self, request):
@@ -334,7 +328,7 @@ class VerifyCnt(APIView):
             else:
                 ret['isverify'] = 1
 
-        return Response(wrap_ret(ret), status=status.HTTP_200_OK)
+        return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)
 
 class GetSampleCount(APIView):
     def get(self, request):
@@ -361,4 +355,4 @@ class GetSampleCount(APIView):
 
         ret['total'] = total_count
 
-        return Response(wrap_ret(ret), status=status.HTTP_200_OK)
+        return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)

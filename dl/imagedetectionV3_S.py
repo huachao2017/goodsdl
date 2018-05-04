@@ -81,6 +81,11 @@ class ImageDetector:
             self.load()
         self.tradition_match.add_baseline_image(image_path, upc)
 
+
+    def removeall_baseline_image(self):
+        if not self.tradition_match.is_load():
+            self.tradition_match.removeall_baseline_image()
+
     def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
         if not self.tradition_match.is_load():
             self.load()

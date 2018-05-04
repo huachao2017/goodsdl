@@ -144,6 +144,9 @@ class Matcher:
         self.path_to_baseline_info[key] = (kp, desc,image)
         return True
 
+    def removeall_baseline_image(self):
+        self.path_to_baseline_info = {}
+
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
 
