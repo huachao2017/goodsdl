@@ -11,6 +11,7 @@ from dl.step3_cnn import Step3CNN
 from dl.tradition_match import TraditionMatch
 from dl.util import visualize_boxes_and_labels_on_image_array_V2
 from dl import common
+from goods.models import ExportAction
 
 logger = logging.getLogger("detect")
 
@@ -21,18 +22,29 @@ class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(export1id,export2id, export3_arr=None, step2_model_name='nasnet_large'):
-        if step2_model_name not in step2_model_names:
-            return None
-        # step2_model_name : 'nasnet_large','inception_resnet_v2'
-
-        key = '{}_{}'.format(str(export1id),str(export2id))
+    def get_static_detector(deviceid):
+        key = deviceid
         if key not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[key] = ImageDetector(export1id,export2id,export3_arr,step2_model_name)
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(
+                checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+            export2s = ExportAction.objects.filter(train_action__action='T2').filter(train_action__serial='').filter(
+                checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+            export3s = ExportAction.objects.filter(train_action__action='T3').filter(train_action__serial='').filter(
+                checkpoint_prefix__gt=0).order_by(
+                '-update_time')
+
+            if len(export1s) == 0 or len(export2s) == 0:
+                logger.error('not found detection model!')
+                return None
+
+            ImageDetectorFactory._detector[key] = ImageDetector(deviceid, export1s[0].pk,export2s[0].pk,export3s,export2s[0].step2_model_name)
         return ImageDetectorFactory._detector[key]
 
 class ImageDetector:
-    def __init__(self, export1id, export2id, export3_arr, step2_model_name):
+    def __init__(self, deviceid, export1id, export2id, export3_arr, step2_model_name):
+        self.deviceid = deviceid
         file_path, _ = os.path.split(os.path.realpath(__file__))
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(export1id)))
         self.step2_cnn = Step2CNN(os.path.join(file_path, 'model', str(export2id)),step2_model_name)
