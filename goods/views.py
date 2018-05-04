@@ -316,7 +316,8 @@ class VerifyCnt(APIView):
                 ret['isverify'] = 1
 
             if visual_image_path is not None:
-                logger.info(visual_image_path, settings.MEDIA_ROOT)
+                logger.info(visual_image_path)
+                logger.info(settings.MEDIA_ROOT)
                 visual_image_path.replace(settings.MEDIA_ROOT, settings.MEDIA_URL)
                 ret['verifypicurl'] = visual_image_path
             else:
