@@ -356,6 +356,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             )
             logger.info(command)
             subprocess.call(command, shell=True)
+        elif serializer.instance.action == 'T2S':
+            self.train_step2S(serializer.instance)
         elif serializer.instance.action == 'T20':
             self.train_step20(serializer.instance)
         elif serializer.instance.action == 'T21':
@@ -401,6 +403,53 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             os.path.join(train_logs_dir, 'eval_log'),
             len(validation_filenames),
             model_name
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+
+    def train_step2S(self, actionlog):
+        # TODO 需要实现fineture
+        # 训练准备
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+        source_dataset_dir = os.path.join(
+            settings.MEDIA_ROOT,
+            settings.DATASET_DIR_NAME,
+            common.STEP2S_PREFIX if actionlog.serial=='' else common.STEP2S_PREFIX+'_'+str(actionlog.serial))
+
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods_step20.prepare_train(source_dataset_dir,
+            train_logs_dir)
+        # step2_model_name = 'inception_resnet_v2'
+        # step2_model_name = 'nasnet_large'
+        if actionlog.model_name == 'nasnet_large':
+            batch_size = 8
+        else:
+            batch_size = 64
+
+        train_steps = int(len(training_filenames) * 100 / batch_size) # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
+        if train_steps < 20000:
+            train_steps = 20000 # 小样本需要增加训练次数
+        # 训练
+        command = 'nohup python3 {}/step20/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train20.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            len(training_filenames),
+            actionlog.model_name,
+            1,
+            batch_size,
+            train_steps
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+        # 评估
+        command = 'nohup python3 {}/step20/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            source_dataset_dir,
+            train_logs_dir,
+            os.path.join(train_logs_dir, 'eval_log'),
+            len(validation_filenames),
+            actionlog.model_name,
         )
         logger.info(command)
         subprocess.call(command, shell=True)
@@ -749,6 +798,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         elif serializer.instance.action == 'T20':
             self.train_step20(serializer.instance)
+        elif serializer.instance.action == 'T2S':
+            self.train_step2S(serializer.instance)
         elif serializer.instance.action == 'T30':
             self.train_step30(serializer.instance)
         elif serializer.instance.action == 'T2':
@@ -791,7 +842,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if serializer.instance.train_action.action == 'T1':
             prefix = self.export_detection_graph(serializer.instance.train_action, serializer)
 
-        elif serializer.instance.train_action.action in ['T2','T3','T20','T30']:
+        elif serializer.instance.train_action.action in ['T2','T3','T2S','T20','T30']:
             prefix = self.export_classify_graph(serializer.instance.train_action, serializer)
 
         elif serializer.instance.train_action.action == 'TC':
