@@ -36,7 +36,7 @@ def _one_request(thread_name, task_manager, count):
 
         result = str(result, encoding="utf8")
         result = json.loads(result)
-        print(thread_name + ':' + result)
+        print(thread_name + ':' + str(result))
         # print(task_manager.task_cnt)
 
         if result['status'] == 200:
