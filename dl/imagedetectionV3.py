@@ -173,7 +173,7 @@ class ImageDetector:
         ret = self.do_addition_logic_work(boxes_step1, scores_step1, upcs_step2, scores_step2, types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh)
 
         time4 = time.time()
-        logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time2))
+        logger.info('detectV3: %s, %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(image_instance.deviceid, len(ret), time4-time0, time1-time0, time2-time1, time3-time2, time4-time3))
         return ret, time4-time0
 
     def do_addition_logic_work(self, boxes_step1, scores_step1, upcs_step2, scores_step2, match_types_step2, step2_image_paths, image_instance, image_np, step2_min_score_thresh):
