@@ -39,7 +39,7 @@ class ImageDetectorFactory:
                 logger.error('not found detection model!')
                 return None
 
-            ImageDetectorFactory._detector[key] = ImageDetector(deviceid, export1s[0].pk,export2s[0].pk,export3s,export2s[0].step2_model_name)
+            ImageDetectorFactory._detector[key] = ImageDetector(deviceid, export1s[0].pk,export2s[0].pk,export3s,export2s[0].model_name)
         return ImageDetectorFactory._detector[key]
 
 class ImageDetector:

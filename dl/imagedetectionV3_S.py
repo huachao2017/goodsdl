@@ -41,7 +41,7 @@ class ImageDetectorFactory:
                     step2_model_name = ''
                 else:
                     export2Sid = export2Ss[0].pk
-                    step2_model_name = export2Ss[0].step2_model_name
+                    step2_model_name = export2Ss[0].model_name
 
             ImageDetectorFactory._detector[key] = ImageDetector(deviceid, export1s[0].pk, export2Sid, step2_model_name)
         return ImageDetectorFactory._detector[key]
