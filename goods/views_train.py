@@ -25,6 +25,7 @@ from dl import imagedetectionV3_S, imagedetection_only_step1
 from dl.only_step2 import create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
+from dl.step2S import convert_goods_step2S
 from dl.step20 import convert_goods_step20
 from dl.step3 import convert_goods_step3
 from dl.step30 import convert_goods_step30
@@ -416,7 +417,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             settings.DATASET_DIR_NAME,
             common.STEP2S_PREFIX if actionlog.serial=='' else common.STEP2S_PREFIX+'_'+str(actionlog.serial))
 
-        class_names_to_ids, training_filenames, validation_filenames = convert_goods_step20.prepare_train(source_dataset_dir,
+        class_names_to_ids, training_filenames, validation_filenames = convert_goods_step2S.prepare_train(source_dataset_dir,
             train_logs_dir)
         # step2_model_name = 'inception_resnet_v2'
         # step2_model_name = 'nasnet_large'
@@ -429,7 +430,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if train_steps < 20000:
             train_steps = 20000 # 小样本需要增加训练次数
         # 训练
-        command = 'nohup python3 {}/step20/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train20.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train20.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
@@ -442,7 +443,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info(command)
         subprocess.call(command, shell=True)
         # 评估
-        command = 'nohup python3 {}/step20/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
+        command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={} > /root/eval20.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             source_dataset_dir,
