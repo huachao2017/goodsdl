@@ -120,7 +120,7 @@ def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
             image = im.open(encoded_jpg_io)
             width, height = image.size
 
-            name = os.path.basename(os.path.dirname(os.path.dirname(filenames[i])))
+            name = os.path.basename(os.path.dirname(filenames[i]))
             label = names_to_labels[name]
             print('{}:{}'.format(filenames[i],label))
             example = dataset_utils.image_to_tfexample(
