@@ -226,14 +226,17 @@ def create_step2_goods_V2(data_dir, output_dir, step1_model_path, dir_day_hour=N
     session_step1.close()
 
 tf.app.flags.DEFINE_string(
-    'day_hour', None,
-    'day and hour')
+    'step', 'step2',
+    'step type')
 tf.app.flags.DEFINE_string(
     'source_dir_serial', '',
     'source dir serial')
 tf.app.flags.DEFINE_string(
     'dest_dir_serial', '',
     'dest dir serial')
+tf.app.flags.DEFINE_string(
+    'day_hour', None,
+    'day and hour')
 tf.app.flags.DEFINE_string(
     'device', "0",
     'device id')
@@ -248,11 +251,16 @@ def main(_):
     logger.setLevel('INFO')
     dataset_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME)
     source_dir = os.path.join(dataset_dir, 'data_new{}'.format(FLAGS.source_dir_serial if FLAGS.source_dir_serial=='' else '_'+FLAGS.source_dir_serial))
-    step2_dir = os.path.join(dataset_dir, common.STEP2_PREFIX if FLAGS.dest_dir_serial=='' else common.STEP2_PREFIX+'_'+FLAGS.dest_dir_serial)
+    if FLAGS.step == 'step2':
+        output_dir = os.path.join(dataset_dir,
+                                  common.STEP2_PREFIX if FLAGS.dest_dir_serial=='' else common.STEP2_PREFIX+'_'+FLAGS.dest_dir_serial)
+    elif FLAGS.step == 'step2S':
+        output_dir = os.path.join(dataset_dir,
+                                  common.STEP2S_PREFIX if FLAGS.dest_dir_serial == '' else common.STEP2S_PREFIX + '_' + FLAGS.dest_dir_serial)
     export1s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
     step1_model_path = os.path.join(settings.MEDIA_ROOT, 'dl', 'model', str(export1s[0].pk), 'frozen_inference_graph.pb')
 
-    create_step2_goods_V2(source_dir, step2_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
+    create_step2_goods_V2(source_dir, output_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
 
 if __name__ == '__main__':
     tf.app.run()
