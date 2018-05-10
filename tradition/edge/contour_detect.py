@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import os
@@ -408,9 +409,10 @@ def _inner_find_one(image_path, output_dir, area=None, debug_type=2):
 
 if __name__ == "__main__":
     # Enter the input image file
-    image_dir, _ = os.path.split(os.path.realpath(__file__))
+    base_dir, _ = os.path.split(os.path.realpath(__file__))
+    image_dir = os.path.join(base_dir,'images')
     # image_path = os.path.join(image_dir, "7_1.jpg")
-    output_dir = os.path.join(image_dir, 'contour')
+    output_dir = os.path.join(base_dir, 'contour')
     if os.path.isdir(output_dir):
         for image in os.listdir(output_dir):
             tmp_path = os.path.join(output_dir, image)
