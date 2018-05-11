@@ -187,7 +187,7 @@ class TableContour:
         cv2.fillPoly(box_img, [box_contour], 1)
         intersect_image = self.contour_img*box_img
         box_ratio = np.sum(intersect_image)/(w*h)
-        table_ratio = np.sum(intersect_image)/(width*height)
+        table_ratio = np.sum(intersect_image)/np.sum(self.contour_img)
         if self.debug_type > 0:
             print(index,box_contour, box_ratio)
             # print(self.contour_img.shape)
@@ -202,7 +202,7 @@ class TableContour:
         if table_ratio > 0.8:
             return False
 
-        return False
+        return True
 
 if __name__ == "__main__":
     # Enter the input image file
