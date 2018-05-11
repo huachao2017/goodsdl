@@ -412,7 +412,7 @@ if __name__ == "__main__":
     base_dir, _ = os.path.split(os.path.realpath(__file__))
     image_dir = os.path.join(base_dir,'images')
     # image_path = os.path.join(image_dir, "7_1.jpg")
-    output_dir = os.path.join(base_dir, 'contour')
+    output_dir = os.path.join(image_dir, 'contour')
     if os.path.isdir(output_dir):
         for image in os.listdir(output_dir):
             tmp_path = os.path.join(output_dir, image)

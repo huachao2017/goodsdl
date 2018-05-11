@@ -6,6 +6,7 @@ import logging
 import time
 from dl.step1_cnn import Step1CNN
 from dl.util import visualize_boxes_and_labels_on_image_array_V1
+from tradition.edge.table_contour import TableContour
 
 logger = logging.getLogger("detect")
 
@@ -63,6 +64,8 @@ class ImageDetector_os1:
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
 
+        table_contour = TableContour(image_path, debug_type=1)
+
         ret = []
         for i in range(boxes.shape[0]):
             if scores_step1[i] > step1_min_score_thresh:
@@ -71,6 +74,10 @@ class ImageDetector_os1:
                 xmin = int(xmin * im_width)
                 ymax = int(ymax * im_height)
                 xmax = int(xmax * im_width)
+
+                if not table_contour.check_box(xmin, ymin, xmax-xmin, ymax-ymin, i):
+                    scores_step1[i] = 0.1
+
                 ret.append({'class': 1,
                             'score': scores_step1[i],
                             'score2': 0.0,
@@ -89,7 +96,9 @@ class ImageDetector_os1:
                 scores_step1,
                 use_normalized_coordinates=True,
                 step1_min_score_thresh=step1_min_score_thresh,
-                line_thickness=2)
+                line_thickness=2,
+                show_error_boxes=False
+            )
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
             output_image.save(output_image_path)
