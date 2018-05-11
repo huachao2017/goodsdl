@@ -77,13 +77,13 @@ class ImageDetector_os1:
 
                 if not table_contour.check_box(xmin, ymin, xmax-xmin, ymax-ymin, i):
                     scores_step1[i] = 0.1
-
-                ret.append({'class': 1,
-                            'score': scores_step1[i],
-                            'score2': 0.0,
-                            'upc': '',
-                            'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
-                            })
+                else:
+                    ret.append({'class': 1,
+                                'score': scores_step1[i],
+                                'score2': 0.0,
+                                'upc': '',
+                                'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax
+                                })
 
         # visualization
         output_image_path = None
