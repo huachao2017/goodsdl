@@ -186,20 +186,23 @@ class TableContour:
         box_contour.reshape((4,1,2))
         cv2.fillPoly(box_img, [box_contour], 1)
         intersect_image = self.contour_img*box_img
-        ratio = np.sum(intersect_image)/(w*h)
+        box_ratio = np.sum(intersect_image)/(w*h)
+        table_ratio = np.sum(intersect_image)/(width*height)
         if self.debug_type > 0:
-            print(index,box_contour, ratio)
+            print(index,box_contour, box_ratio)
             # print(self.contour_img.shape)
             # print(self.box_img.shape)
-            intersect_path = os.path.join(self.output_dir, 'intersect_%d_%.2f_%s' %  (index, ratio, self.image_name))
+            intersect_path = os.path.join(self.output_dir, 'intersect_%d_%.2f_%.2f_%s' %  (index, box_ratio, table_ratio, self.image_name))
             cv2.imwrite(intersect_path, (self.contour_img+box_img) * 100)
             # only_intersect_path = os.path.join(self.output_dir, 'only_intersect_{}_{}'.format(index,self.image_name))
             # cv2.imwrite(only_intersect_path, intersect_image * 255)
 
-        if ratio >= thresh:
-            return True
-        else:
+        if box_ratio < thresh:
             return False
+        if table_ratio > 0.8:
+            return False
+
+        return False
 
 if __name__ == "__main__":
     # Enter the input image file
