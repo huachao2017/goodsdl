@@ -191,7 +191,7 @@ class TableContour:
             print(index,box_contour, ratio)
             # print(self.contour_img.shape)
             # print(self.box_img.shape)
-            intersect_path = os.path.join(self.output_dir, 'intersect_{}_{}'.format(index,self.image_name))
+            intersect_path = os.path.join(self.output_dir, 'intersect_%d_%.2f_%s' %  (index, ratio, self.image_name))
             cv2.imwrite(intersect_path, (self.contour_img+box_img) * 100)
             # only_intersect_path = os.path.join(self.output_dir, 'only_intersect_{}_{}'.format(index,self.image_name))
             # cv2.imwrite(only_intersect_path, intersect_image * 255)
