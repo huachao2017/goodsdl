@@ -12,6 +12,8 @@ class TableContour:
         self.image_path = image_path
         self.output_dir = output_dir
         self.debug_type=debug_type
+        self.contour = None
+        self.contour_img = None
         image_dir, image_name = os.path.split(image_path)
         if output_dir is None:
             self.output_dir = image_dir
@@ -20,7 +22,7 @@ class TableContour:
         img = cv2.imread(self.image_path)
         self.image_name = image_name
 
-        self.contour = self._find_contour(img)
+        self._find_contour(img)
 
     def _find_area_max_hist(self,source, rect):
         # histogram = cv2.calcHist([area], [0], None, [256], [0, 256])
@@ -126,7 +128,7 @@ class TableContour:
             print(thresh)
         _, thresh_img = cv2.threshold(source, thresh, 255, cv2.THRESH_BINARY)
         if self.debug_type>1:
-            thresh_path = os.path.join(output_dir, channel+'_'+'thresh_'+self.image_name)
+            thresh_path = os.path.join(self.output_dir, channel+'_'+'thresh_'+self.image_name)
             cv2.imwrite(thresh_path, thresh_img)
 
         # step2 erode:
@@ -134,7 +136,7 @@ class TableContour:
         erode = cv2.erode(thresh_img, kernel)
         erode = cv2.erode(erode, kernel)
         if self.debug_type>1:
-            erode_path = os.path.join(output_dir, channel+'_'+'erode_'+self.image_name)
+            erode_path = os.path.join(self.output_dir, channel+'_'+'erode_'+self.image_name)
             cv2.imwrite(erode_path, erode)
 
         # step3: contour and filter
@@ -158,20 +160,46 @@ class TableContour:
             area_to_contour[area] = cnt
 
         # step6: caculate bounding box and draw contours
-        drawing_contours = np.zeros(source.shape, np.uint8)
         if len(area_to_contour) > 0:
             areas = sorted(area_to_contour, reverse=True)
-            cnt = area_to_contour[areas[0]]
-            if self.debug_type > 0:
-                cv2.drawContours(drawing_contours, [cnt], 0, (255,255,255), 1)
-                contours_path = os.path.join(output_dir, channel+'_'+'contours_'+self.image_name)
-                cv2.imwrite(contours_path, drawing_contours)
-            return cnt
+            self.contour = area_to_contour[areas[0]]
+            self.contour_img = np.zeros((height,width), np.uint8)
+            cv2.fillPoly(self.contour_img, [self.contour],1)
+            # cv2.fillPoly(self.contour_img,)
+            if self.debug_type > 1:
+                #print(self.contour)
+                # drawing_contours = np.zeros(source.shape, np.uint8)
+                # cv2.drawContours(drawing_contours, [self.contour], 0, (255,255,255), 1)
+                # cv2.fillPoly(drawing_contours, [self.contour], (255, 255, 255))
+                contours_path = os.path.join(self.output_dir, channel+'_'+'contours_'+self.image_name)
 
-        return None
+                cv2.imwrite(contours_path, self.contour_img * 255)
 
-    def check_box(self,x,y,w,h):
-        return True
+    def check_box(self,x,y,w,h, index, thresh=0.6):
+        if self.contour is None:
+            return True
+        height = self.contour_img.shape[0]
+        width = self.contour_img.shape[1]
+
+        box_img = np.zeros((height, width), np.uint8)
+        box_contour = np.array([(x,y),(x+w,y),(x+w,y+h),(x,y+h)])
+        box_contour.reshape((4,1,2))
+        cv2.fillPoly(box_img, [box_contour], 1)
+        intersect_image = self.contour_img*box_img
+        ratio = np.sum(intersect_image)/(w*h)
+        if self.debug_type > 0:
+            print(index,box_contour, ratio)
+            # print(self.contour_img.shape)
+            # print(self.box_img.shape)
+            intersect_path = os.path.join(self.output_dir, 'intersect_{}_{}'.format(index,self.image_name))
+            cv2.imwrite(intersect_path, (self.contour_img+box_img) * 100)
+            # only_intersect_path = os.path.join(self.output_dir, 'only_intersect_{}_{}'.format(index,self.image_name))
+            # cv2.imwrite(only_intersect_path, intersect_image * 255)
+
+        if ratio >= thresh:
+            return True
+        else:
+            return False
 
 if __name__ == "__main__":
     # Enter the input image file
@@ -188,6 +216,9 @@ if __name__ == "__main__":
     # for test
     image_path = os.path.join(image_dir, "t1.jpg")
     time0 = time.time()
-    table_contour = TableContour(image_path, debug_type=2)
+    table_contour = TableContour(image_path, output_dir=output_dir, debug_type=2)
     time1 = time.time()
-    print('%s:%.2f' %(image_path,time1-time0))
+    table_contour.check_box(100,100,100,100,1)
+    table_contour.check_box(0,0,100,100,2)
+    time2 = time.time()
+    print('%s:%.2f,%.2f,%.2f' %(image_path, time2-time0, time1-time0, time2-time1))
