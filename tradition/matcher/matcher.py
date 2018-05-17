@@ -146,6 +146,7 @@ class Matcher:
 
     def removeall_baseline_image(self):
         self.path_to_baseline_info = {}
+        self.upc_to_cnt = {}
 
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
