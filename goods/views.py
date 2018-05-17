@@ -164,7 +164,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             #
             step1_min_score_thresh = .9
             step2_min_score_thresh = .6
-            if serializer.instance.deviceid == '290': # 楼下演示
+            if serializer.instance.deviceid == '': # 290': # 楼下演示
                 detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
             else:# step1+step2+模式类的演示
                 detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
