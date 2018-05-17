@@ -215,7 +215,8 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 if len(source_samples)>0:
                     matcher = Matcher()
                     for sample in source_samples:
-                        matcher.add_baseline_image(sample.source.path, sample.upc)
+                        if os.path.isfile(sample.source.path):
+                            matcher.add_baseline_image(sample.source.path, sample.upc)
 
                     logger.info('match:{},{}'.format(matcher.get_baseline_cnt(),sample_image_path))
                     if matcher.is_find_match(sample_image_path):
