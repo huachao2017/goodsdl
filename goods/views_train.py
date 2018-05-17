@@ -167,7 +167,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
         if len(export1s) > 0:
             detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
             step1_min_score_thresh = .5
-            ret, _, _= detector.detect(serializer.instance.source.path, step1_min_score_thresh=step1_min_score_thresh)
+            ret, _, _= detector.detect(serializer.instance.source.path, step1_min_score_thresh=step1_min_score_thresh,table_check=False)
             # to data_new
 
             if len(ret) >= 1:

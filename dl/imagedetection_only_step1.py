@@ -38,7 +38,7 @@ class ImageDetector_os1:
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
 
-    def detect(self, image_path, step1_min_score_thresh=.5):
+    def detect(self, image_path, step1_min_score_thresh=.5, table_check=True):
         if not self.step1_cnn.is_load():
             self.load()
             if not self.step1_cnn.is_load():
@@ -64,7 +64,9 @@ class ImageDetector_os1:
         # classes = np.squeeze(classes).astype(np.int32)
         scores_step1 = np.squeeze(scores)
 
-        table_contour = TableContour(image_path, debug_type=1)
+        table_contour = None
+        if table_check:
+            table_contour = TableContour(image_path, debug_type=1)
 
         ret = []
         for i in range(boxes.shape[0]):
@@ -75,7 +77,7 @@ class ImageDetector_os1:
                 ymax = int(ymax * im_height)
                 xmax = int(xmax * im_width)
 
-                if not table_contour.check_box(xmin, ymin, xmax-xmin, ymax-ymin, i):
+                if table_contour is not None and not table_contour.check_box(xmin, ymin, xmax-xmin, ymax-ymin, i):
                     scores_step1[i] = 0.1
                 else:
                     ret.append({'class': 1,
