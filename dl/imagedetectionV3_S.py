@@ -159,9 +159,6 @@ class ImageDetector:
 
             types_step2 = []
             for i in range(len(step2_image_paths)):
-                if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
-                    types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
-                    continue
                 within_upcs = [upcs_step2[i]]
                 score_verify = self.tradition_match.verify_score(step2_image_paths[i], within_upcs)
                 if score_verify > 0.6:
@@ -176,7 +173,10 @@ class ImageDetector:
                         scores_step2[i] = score_match
                         types_step2.append(common.MATCH_TYPE_TRADITION)
                     else:
-                        types_step2.append(common.MATCH_TYPE_UNKNOWN) # TODO 暂时做悲观处理
+                        if upcs_step2[i] == 'bottled-drink-stand' or upcs_step2[i] == 'ziptop-drink-stand':
+                            types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
+                        else:
+                            types_step2.append(common.MATCH_TYPE_UNKNOWN) # TODO 暂时做悲观处理
         else:
             upcs_step2, scores_step2  = self.tradition_match.detect(step2_image_paths)
             time2 = time.time()
