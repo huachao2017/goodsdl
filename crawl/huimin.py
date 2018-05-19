@@ -140,9 +140,10 @@ class HuiMin:
     def _get_goods_upc_and_type(self, goods_id, goods_url, referer=MAIN_URL):
         url = DOMAIN + goods_url
         print(url)
+        result = None
         try:
             result = self.session_requests.get(url, headers=dict(referer=referer), timeout=5)
-        except requests.exceptions.Timeout:
+        except:
             self._login()
             for i in range(1, 5):
                 print('请求超时，第 % s次重复请求' % i)
@@ -150,9 +151,12 @@ class HuiMin:
                     result = self.session_requests.get(url, headers=dict(referer=referer), timeout=5)
                     if result.status_code == 200:
                         break
-                except requests.exceptions.Timeout:
-                    pass
-        tree = html.fromstring(result.content)
+                except Exception as e:
+                    print(e)
+        if result is None:
+            return '',''
+        content = result.content.decode('utf-8')
+        tree = html.fromstring(content)
         detail_text_list = tree.xpath("//div[@class='goods_detail_box']/p/text()")
         upc = ''
         type = ''
