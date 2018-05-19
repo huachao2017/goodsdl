@@ -258,7 +258,7 @@ def main(_):
         output_dir = os.path.join(dataset_dir,
                                   common.STEP2S_PREFIX if FLAGS.dest_dir_serial == '' else common.STEP2S_PREFIX + '_' + FLAGS.dest_dir_serial)
     export1s = ExportAction.objects.filter(train_action__action='T1').order_by('-update_time')[:1]
-    step1_model_path = os.path.join(settings.MEDIA_ROOT, 'dl', 'model', str(export1s[0].pk), 'frozen_inference_graph.pb')
+    step1_model_path = os.path.join(settings.BASE_DIR, 'dl', 'model', str(export1s[0].pk), 'frozen_inference_graph.pb')
 
     create_step2_goods_V2(source_dir, output_dir, step1_model_path, dir_day_hour=FLAGS.day_hour)
 
