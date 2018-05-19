@@ -428,8 +428,12 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             batch_size = 64
 
         train_steps = int(len(training_filenames) * 100 / batch_size) # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
-        if train_steps < 20000:
-            train_steps = 20000 # 小样本需要增加训练次数
+        if actionlog.model_name == 'nasnet_large':
+            if train_steps < 50000:
+                train_steps = 50000  # 小样本需要增加训练次数
+        else:
+            if train_steps < 20000:
+                train_steps = 20000  # 小样本需要增加训练次数
         # 训练
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --max_number_of_steps={} > /root/train2S.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
