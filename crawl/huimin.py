@@ -132,8 +132,11 @@ class HuiMin:
                      'purchasenum': purchasenum,
                      'img': goods_img,
                      }
-            self.f_csv.writerow([goods_id, goods_type, name, upc, norm, price, unit, purchasenum, goods_img])
             print(goods)
+            try:
+                self.f_csv.writerow([goods_id, goods_type, name, upc, norm, price, unit, purchasenum, goods_img])
+            except Exception as e:
+                print(e)
             # 定期休息
             time.sleep(0.5)
 
