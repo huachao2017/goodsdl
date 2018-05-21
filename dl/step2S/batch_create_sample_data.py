@@ -39,7 +39,7 @@ def solves_one_class(class_dir,
         shutil.copy(image_path, output_image_path)
         is_sample = True
         if matcher is None:
-            matcher = Matcher(debug=True, visual=True)
+            matcher = Matcher(visual=True)
             if not matcher.add_baseline_image(output_image_path, class_name):
                 is_sample = False
         else:
