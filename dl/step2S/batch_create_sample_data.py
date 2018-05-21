@@ -74,16 +74,9 @@ def create_sample(data_dir, output_dir, step1_model_path):
 
     logging.info("sample create complete: {}".format(sample_total))
 
-tf.app.flags.DEFINE_string(
-    'device', "0",
-    'gpu device id')
-FLAGS = tf.app.flags.FLAGS
-
 def main(_):
     # if not FLAGS.day_hour:
     #     raise ValueError('You must supply day and hour --day_hour')
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = FLAGS.device
     logger = logging.getLogger()
     logger.setLevel('INFO')
     dataset_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME)
