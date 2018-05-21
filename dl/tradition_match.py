@@ -2,17 +2,31 @@ from tradition.matcher.matcher import Matcher
 from goods.models import SampleImageClass
 import os
 import logging
+from dl import common
 
 logger = logging.getLogger("detect")
 
 class TraditionMatch:
-    def __init__(self, deviceid=''):
+    def __init__(self, deviceid='', step=common.STEP2_PREFIX):
         self._isload = False
+        self.step = step
         self._deviceid = deviceid
         self._matcher = Matcher(visual=True)
 
     def load(self):
         logger.info('begin loading TraditionMatch')
+        if self.step == common.STEP2_PREFIX:
+            base_samples = SampleImageClass.objects.filter(deviceid='')
+        elif self.step == common.STEP2S_PREFIX:
+            base_samples = SampleImageClass.objects.filter(deviceid=common.STEP2S_PREFIX)
+        else:
+            base_samples = []
+        for sample in base_samples:
+            if os.path.isfile(sample.source.path):
+                self._matcher.add_baseline_image(sample.source.path, sample.upc)
+            else:
+                SampleImageClass.objects.get(pk=sample.pk).delete()
+
         samples = SampleImageClass.objects.filter(deviceid=self._deviceid)
         for sample in samples:
             if os.path.isfile(sample.source.path):
@@ -20,7 +34,7 @@ class TraditionMatch:
             else:
                 SampleImageClass.objects.get(pk=sample.pk).delete()
 
-        logger.info('end loading TraditionMatch')
+        logger.info('end loading TraditionMatch:{}'.format(self._matcher.get_baseline_cnt()))
         self._isload = True
 
     def is_load(self):

@@ -56,7 +56,7 @@ class ImageDetector:
             self.step2S_cnn = Step2SCNN(os.path.join(file_path, 'model', str(export2Sid)), step2_model_name)
         else:
             self.step2S_cnn = None
-        self.tradition_match = TraditionMatch(deviceid)
+        self.tradition_match = TraditionMatch(deviceid, step=common.STEP2S_PREFIX)
 
         self.counter = 0
         self.config = tf.ConfigProto()
