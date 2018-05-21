@@ -24,6 +24,7 @@ import logging
 
 import tensorflow as tf
 from nets import nets_factory
+import GPUtil as GPU
 
 from dl.step2 import dataset as step2_ds
 from dl.step2 import eval2_util
@@ -97,8 +98,12 @@ def main(_):
     if not FLAGS.dataset_dir:
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
+    gpus = GPU.getGPUs()
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    if len(gpus)>1:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
     tf.logging.set_verbosity(tf.logging.INFO)
     logger = logging.getLogger()
     logger.setLevel('INFO')
