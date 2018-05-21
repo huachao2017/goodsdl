@@ -29,6 +29,7 @@ class TraditionMatch:
     def add_baseline_image(self, image_path, upc):
         if os.path.isfile(image_path):
             self._matcher.add_baseline_image(image_path, upc)
+            logger.info('baseline image({}): {}'.format(self._matcher.get_baseline_cnt(), image_path))
 
     def removeall_baseline_image(self):
         self._matcher.removeall_baseline_image()
