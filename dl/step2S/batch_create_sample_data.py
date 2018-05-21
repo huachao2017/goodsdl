@@ -5,6 +5,7 @@ import cv2
 import django
 import shutil
 from dl import common
+from tradition.matcher.matcher import Matcher
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
@@ -23,6 +24,7 @@ def solves_one_class(class_dir,
     if class_name == 'ziptop-drink-stand' or class_name == 'bottled-drink-stand':
         return 0
     sample_cnt = 0
+    matcher = None
     filelist = os.listdir(class_dir)
     for j in range(0, len(filelist)):
         image_path = os.path.join(class_dir, filelist[j])
@@ -34,15 +36,31 @@ def solves_one_class(class_dir,
         logging.info('solve image:{}'.format(image_path))
 
         output_image_path = os.path.join(output_class_dir, os.path.basename(image_path))
-        shutil.copy(image_path,output_image_path)
+        shutil.copy(image_path, output_image_path)
+        is_sample = True
+        if matcher is None:
+            matcher = Matcher(debug=True, visual=True)
+            if not matcher.add_baseline_image(output_image_path, class_name):
+                is_sample = False
+        else:
+            upc, score = matcher.match_image_best_one(output_image_path)
+            if score > 0.9:
+                is_sample = False
+            else:
+                if not matcher.add_baseline_image(output_image_path, class_name):
+                    is_sample = False
 
-        SampleImageClass.objects.create(
-            source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME, common.SAMPLE_PREFIX+'_'+common.STEP2S_PREFIX, class_name,os.path.basename(output_image_path)),
-            deviceid=common.STEP2S_PREFIX,
-            upc=class_name,
-            name=class_name,
-        )
-        sample_cnt += 1
+        if is_sample:
+            SampleImageClass.objects.create(
+                source='{}/{}/{}/{}'.format(settings.DATASET_DIR_NAME, common.SAMPLE_PREFIX+'_'+common.STEP2S_PREFIX, class_name,os.path.basename(output_image_path)),
+                deviceid=common.STEP2S_PREFIX,
+                upc=class_name,
+                name=class_name,
+            )
+            sample_cnt += 1
+        else:
+            os.remove(output_image_path)
+
     return sample_cnt
 
 def create_sample(data_dir, output_dir, step1_model_path):
