@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 import goods.util
 
 from dl import common
-from dl import imagedetectionV3, imagedetectionV3_S, imageclassifyV1, imagedetection_only_step1, \
+from dl import imagedetectionV3, imagedetectionV3_S, imagedetectionV3_S_demo, imageclassifyV1, imagedetection_only_step1, \
     imagedetection_only_step2, imagedetection_only_step3, imagedetection
 # from dl.old import imagedetection
 from .serializers import *
@@ -164,8 +164,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             #
             step1_min_score_thresh = .9
             step2_min_score_thresh = .6
-            if serializer.instance.deviceid == '': # 290': # 楼下演示
-                detector = imagedetectionV3.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+            if serializer.instance.deviceid == '1846': # 好邻居demo演示
+                detector = imagedetectionV3_S_demo.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
             else:# step1+step2+模式类的演示
                 detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
 
