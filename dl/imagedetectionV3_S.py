@@ -176,8 +176,8 @@ class ImageDetector:
                     elif score_verify > 0.3: # TODO
                         types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
                     else:
-                        # 瓶装水、听装水、苹果放弃传统识别
-                        if upcs_step2[i] in ['6921168509256','6954767425979','6954767434674','6954767410388','6954767430386','20402204'] or upcs_step2[i] == 'ziptop-drink-stand':
+                        # 四个demo商品传统识别不成功沿用dl
+                        if upcs_step2[i] in ['6921168509256','6907992512570','6954767410388','20402204'] or upcs_step2[i] == 'ziptop-drink-stand':
                             types_step2.append(common.MATCH_TYPE_DEEPLEARNING)
                         else:
                             types_step2.append(common.MATCH_TYPE_UNKNOWN) # TODO 暂时做悲观处理
