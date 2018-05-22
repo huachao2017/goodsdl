@@ -161,7 +161,7 @@ class ImageDetector:
             for i in range(len(step2_image_paths)):
                 within_upcs = [upcs_step2[i]]
                 score_verify = self.tradition_match.verify_score(step2_image_paths[i], within_upcs)
-                logger.info('step2 tridition verify: %s, %.2f' % (upcs_step2[i], score_verify))
+                logger.info('step2 tridition verify: %s, %.2f, %.2f' % (upcs_step2[i], score_verify,scores_step2[i]))
                 if score_verify > 0.5:
                     types_step2.append(common.MATCH_TYPE_BOTH)
                 else:
