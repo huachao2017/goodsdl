@@ -11,6 +11,7 @@ class TraditionMatch:
         self._isload = False
         self.step = step
         self._deviceid = deviceid
+        self.added_sample_upcs_to_cnt = {}
         self._matcher = Matcher(visual=True)
 
     def load(self):
@@ -23,16 +24,13 @@ class TraditionMatch:
             base_samples = []
         for sample in base_samples:
             if os.path.isfile(sample.source.path):
-                self._matcher.add_baseline_image(sample.source.path, sample.upc)
+                self._matcher.add_baseline_image(sample.source.path, sample.upc) # 基准样本不能被删除，所以直接调用_matcher的方法
             else:
                 SampleImageClass.objects.get(pk=sample.pk).delete()
 
         samples = SampleImageClass.objects.filter(deviceid=self._deviceid)
         for sample in samples:
-            if os.path.isfile(sample.source.path):
-                self._matcher.add_baseline_image(sample.source.path, sample.upc)
-            else:
-                SampleImageClass.objects.get(pk=sample.pk).delete()
+            self.add_baseline_image(sample.source.path, sample.upc) # 新增样本可以被删除，调用类中的方法
 
         logger.info('end loading TraditionMatch:{}'.format(self._matcher.get_baseline_cnt()))
         self._isload = True
@@ -43,10 +41,15 @@ class TraditionMatch:
     def add_baseline_image(self, image_path, upc):
         if os.path.isfile(image_path):
             self._matcher.add_baseline_image(image_path, upc)
+            if upc in self.added_sample_upcs_to_cnt:
+                self.added_sample_upcs_to_cnt[upc] += 1
+            else:
+                self.added_sample_upcs_to_cnt[upc] = 1
             logger.info('baseline image({}): {}'.format(self._matcher.get_baseline_cnt(), image_path))
 
     def removeall_baseline_image(self):
-        self._matcher.removeall_baseline_image()
+        for upc in self.added_sample_upcs_to_cnt:
+            self._matcher.removeall_baseline_image(upc)
 
     def detect(self,image_paths):
 

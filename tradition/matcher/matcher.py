@@ -128,7 +128,7 @@ class Matcher:
         image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         if self.debug:
-            print('b_image kp:{}'.format(len(kp)))
+            print('b_image kp:{},{}'.format(len(kp), upc))
         if len(kp) == 0:
             print('error: no key point to base image:{}'.format(image_path))
             return False
@@ -144,9 +144,13 @@ class Matcher:
         self.path_to_baseline_info[key] = (kp, desc,image)
         return True
 
-    def removeall_baseline_image(self):
-        self.path_to_baseline_info = {}
-        self.upc_to_cnt = {}
+    def removeall_baseline_image(self,upc):
+        if upc in self.upc_to_cnt:
+            for i in range(self.upc_to_cnt[upc]):
+                key = upc + '_' + str(i + 1)
+                if key in self.path_to_baseline_info:
+                    del self.path_to_baseline_info[key]
+            del self.upc_to_cnt[upc]
 
     def get_baseline_cnt(self):
         return len(self.path_to_baseline_info)
@@ -390,6 +394,33 @@ def test_match_all():
     time3 = time.time()
     print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
 
+def test_match_one(test_image_path):
+    time0 = time.time()
+    matcher = Matcher(debug=True, visual=True)
+    time1 = time.time()
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+    import django
+    django.setup()
+    from goods.models import SampleImageClass
+    from django.conf import settings
+    from dl import common
+    samples = SampleImageClass.objects.filter(deviceid=common.STEP2S_PREFIX)
+    upc_to_image_path = {}
+    for sample in samples:
+        image_path = sample.source.path
+        image_path = image_path.replace(settings.MEDIA_ROOT, '\\\\192.168.1.170\Image')
+        # image_path = image_path.replace('\\','/')
+        # image_path = '\\' + image_path
+        if os.path.isfile(image_path):
+            matcher.add_baseline_image(image_path, sample.upc)
+            upc_to_image_path[sample.upc] = image_path
+    time2 = time.time()
+    match_key, score = matcher.match_image_best_one(test_image_path)
+    print(match_key, score)
+
+    time3 = time.time()
+    print('MATCH: %.2f, %.2f, %.2f, %.2f' % (time3 - time0, time1 - time0, time2 - time1, time3 - time2))
+
 if __name__ == '__main__':
     """Test code: Uses the two specified"""
 
@@ -397,6 +428,7 @@ if __name__ == '__main__':
     # sys.exit(0)
     fn1 = 'images/1.jpg'
     fn2 = 'images/2.jpg'
+    # test_2(fn1, fn2)
 
     # fn1 = 'images/12.jpg'
     # fn2 = 'images/13.jpg'
@@ -404,10 +436,11 @@ if __name__ == '__main__':
     # fn1 = 'images/test/old/15.jpg'
     # fn2 = 'images/test/old/14.jpg'
     # #
-    # fn1 = 'images/test/1.jpg'
-    # fn2 = 'images/test/2.jpg'
+    fn1 = 'images/test/1.jpg'
+    fn2 = 'images/test/2.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
     # test_2(fn1, fn2)
-    test_match_all()
+    # test_match_all()
+    test_match_one(fn2)
