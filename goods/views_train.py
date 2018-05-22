@@ -214,7 +214,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                 logger.info('save new sample:{},{}'.format(serializer.instance.deviceid, sample_image_path))
                 is_add = True
                 if len(source_samples)>0:
-                    matcher = Matcher()
+                    matcher = Matcher(debug=True)
                     for sample in source_samples:
                         if os.path.isfile(sample.source.path):
                             matcher.add_baseline_image(sample.source.path, sample.upc)
