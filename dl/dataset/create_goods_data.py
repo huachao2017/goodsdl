@@ -54,6 +54,8 @@ def solves_one_image(image_path,
     img = cv2.imread(image_path)
 
     augment_size = 8
+    if not FLAGS.augment:
+        augment_size = 1
     if class_name == 'ziptop-drink-stand' or class_name == 'bottled-drink-stand':
         augment_size = 1
 
@@ -240,6 +242,9 @@ tf.app.flags.DEFINE_string(
 tf.app.flags.DEFINE_string(
     'device', "0",
     'device id')
+tf.app.flags.DEFINE_boolean(
+    'augment', True,
+    'augment or not')
 FLAGS = tf.app.flags.FLAGS
 
 def main(_):
