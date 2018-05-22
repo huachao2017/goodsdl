@@ -285,7 +285,7 @@ class Matcher:
 
     def is_find_match(self, image_path, within_upcs=None, filter_upcs=None):
         upc, score = self.match_image_best_one(image_path, within_upcs=within_upcs,filter_upcs=filter_upcs)
-        return upc != None
+        return upc != None and score > 0.6
 
     def match_visual(self, visual_path, img1, img2, kp_pairs, status=None, H=None):
         h1, w1 = img1.shape[:2]
@@ -443,4 +443,4 @@ if __name__ == '__main__':
     # fn2 = 'images/error/2.jpg'
     # test_2(fn1, fn2)
     # test_match_all()
-    test_match_one(fn2)
+    test_match_one(fn1)
