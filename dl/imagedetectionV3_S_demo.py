@@ -87,9 +87,9 @@ class ImageDetector:
     #         self.tradition_match.removeall_baseline_image()
 
     def detect(self, image_instance, step1_min_score_thresh=.5, step2_min_score_thresh=.5):
-        if not self.tradition_match.is_load():
+        if not self.step2S_cnn.is_load():
             self.load()
-            if not self.tradition_match.is_load():
+            if not self.step2S_cnn.is_load():
                 logger.warning('loading model failed')
                 return None, .0
 
