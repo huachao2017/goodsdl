@@ -39,7 +39,7 @@ def solves_one_class(class_dir,
                                       class_name, os.path.basename(output_image_path))
 
         # 支持增量样本
-        find_sample = SampleImageClass.objects.filter(source=source)
+        find_sample = SampleImageClass.objects.filter(deviceid=common.STEP2S_PREFIX).filter(source=source)
         if len(find_sample)>0:
             continue
 
