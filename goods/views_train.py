@@ -211,6 +211,7 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
 
                 sample_image_path = os.path.join(sample_image_dir, os.path.basename(image_path))
                 sample_image.save(sample_image_path, 'JPEG')
+                logger.info('save new sample:{},{}'.format(serializer.instance.deviceid, sample_image_path))
                 is_add = True
                 if len(source_samples)>0:
                     matcher = Matcher()

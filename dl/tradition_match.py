@@ -46,6 +46,8 @@ class TraditionMatch:
             else:
                 self.added_sample_upcs_to_cnt[upc] = 1
             logger.info('baseline image({}): {}'.format(self._matcher.get_baseline_cnt(), image_path))
+        else:
+            logger.error('baseline image not exist: {}'.format(image_path))
 
     def removeall_baseline_image(self):
         for upc in self.added_sample_upcs_to_cnt:
