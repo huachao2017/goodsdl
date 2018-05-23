@@ -252,20 +252,21 @@ def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
                 if ext == ".jpg" and os.path.isfile(example + '.xml'):
                     examples.append(example)
 
-    additional_dirlist = os.listdir(additional_path)
-    for i in range(0, len(additional_dirlist)):
-        class_dir = os.path.join(additional_path, additional_dirlist[i])
-        if os.path.isdir(class_dir):
-            key = dirlist[i]
-            if key not in label_map_dict:
-                label_map_dict[key] = class_index
-                class_index = class_index + 1
-            filelist = os.listdir(class_dir)
-            for j in range(0, len(filelist)):
-                image_path = os.path.join(class_dir, filelist[j])
-                example, ext = os.path.splitext(image_path)
-                if ext == ".jpg" and os.path.isfile(example + '.xml'):
-                    addition_examples.append(example)
+    if additional_path:
+        additional_dirlist = os.listdir(additional_path)
+        for i in range(0, len(additional_dirlist)):
+            class_dir = os.path.join(additional_path, additional_dirlist[i])
+            if os.path.isdir(class_dir):
+                key = dirlist[i]
+                if key not in label_map_dict:
+                    label_map_dict[key] = class_index
+                    class_index = class_index + 1
+                filelist = os.listdir(class_dir)
+                for j in range(0, len(filelist)):
+                    image_path = os.path.join(class_dir, filelist[j])
+                    example, ext = os.path.splitext(image_path)
+                    if ext == ".jpg" and os.path.isfile(example + '.xml'):
+                        addition_examples.append(example)
     return examples, addition_examples, label_map_dict
 
 def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, local_fineture, additional_data_dir=None):
