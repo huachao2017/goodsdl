@@ -279,7 +279,7 @@ def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, loc
     random.seed(42)
     random.shuffle(normal_examples_list)
     num_examples = len(normal_examples_list)
-    num_train = int(0.7 * normal_examples_list)
+    num_train = int(0.7 * num_examples)
     train_examples = normal_examples_list
     val_examples = normal_examples_list[num_train:]
     logging.info('%d training and %d validation examples.',
