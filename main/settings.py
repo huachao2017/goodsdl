@@ -101,7 +101,7 @@ DATABASES = {
         'NAME': 'goodsdl',
         'USER': 'root',
         'PASSWORD': 'iShehui',
-        'HOST': '192.168.1.173',
+        'HOST': 'localhost',
         'PORT': '3306',
         'CHARSET': 'utf8',
         'COLLATION': 'utf8_general_ci',
