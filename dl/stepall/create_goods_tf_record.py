@@ -276,15 +276,14 @@ def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, loc
     # Test images are not included in the downloaded data set, so we shall perform
     # our own split.
     # 评估时必然包括addition_examples
-    val_examples = addition_examples
-
-    normal_examples_list.extend(addition_examples)
-    # normal_examples_list.extend(addition_examples)
-    train_examples = normal_examples_list
-    logger.info('%d training and %d validation examples.',
-                 len(train_examples), len(val_examples))
     random.seed(42)
-    random.shuffle(train_examples)
+    random.shuffle(normal_examples_list)
+    num_examples = len(normal_examples_list)
+    num_train = int(0.7 * normal_examples_list)
+    train_examples = normal_examples_list
+    val_examples = normal_examples_list[num_train:]
+    logging.info('%d training and %d validation examples.',
+                 len(train_examples), len(val_examples))
 
     output_dir = os.path.join(train_dir, train_name)
     if not os.path.isdir(output_dir):
