@@ -305,7 +305,11 @@ def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, loc
     per_pic_train_counts = 100
     if local_fineture:
         per_pic_train_counts = 20
-    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=len(train_examples)*per_pic_train_counts, fine_tune_checkpoint_dir=fine_tune_checkpoint_dir, eval_num=len(val_examples))
+
+    num_steps = len(train_examples)*per_pic_train_counts
+    if num_steps < 50000:
+        num_steps = 50000
+    update_config_file(train_dir, train_name, len(label_map_dict), num_steps=num_steps, fine_tune_checkpoint_dir=fine_tune_checkpoint_dir, eval_num=len(val_examples))
     return label_map_dict
 
 def prepare_rawdata_update_train(data_dir, train_dir, train_name):
