@@ -388,7 +388,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'data_new_290') # FIXME
 
         fine_tune_checkpoint_dir = settings.TRAIN_ROOT
-        if actionlog.instance.is_fineture:
+        if actionlog.is_fineture:
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(
                 checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
@@ -396,11 +396,11 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
                 fine_tune_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(export1s[0].pk))
 
         label_map_dict = stepall_create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
-                                                                 str(actionlog.instance.pk),
+                                                                 str(actionlog.pk),
                                                                  fine_tune_checkpoint_dir,
-                                                                 actionlog.instance.is_fineture)
+                                                                 actionlog.is_fineture)
 
-        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.instance.pk))
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
 
         # 训练
         # --num_clones=2 同步修改config中的batch_size=2
@@ -408,7 +408,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             os.path.join(settings.BASE_DIR, 'dl'),
             train_logs_dir,
             train_logs_dir,
-            actionlog.instance.is_fineture,
+            actionlog.is_fineture,
         )
         logger.info(command)
         subprocess.call(command, shell=True)
