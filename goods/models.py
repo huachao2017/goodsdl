@@ -137,6 +137,7 @@ class TrainAction(models.Model):
         (u'T2', u'Train Step 2'),
         (u'T2S', u'Train Step 2 Small Sample'),
         (u'T3', u'Train Step 3'),
+        (u'TA', u'Train all in one step'),
     )
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
     serial = models.CharField(max_length=10, default='') # use for step2/3, point to project
