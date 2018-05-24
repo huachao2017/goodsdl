@@ -162,10 +162,13 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             #     logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
             #     ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
             #
-            step1_min_score_thresh = .9
+            step1_min_score_thresh = .8
             step2_min_score_thresh = .6
             if serializer.instance.deviceid == '1846': # 好邻居demo演示
                 detector = imagedetectionV3_S_demo.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+
+                # this detect is for train for all
+                # detector = imagedetection.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
             else:# step1+step2+模式类的演示
                 detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
 

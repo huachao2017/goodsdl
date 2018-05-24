@@ -5,6 +5,8 @@ import numpy as np
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 import threading
+from dl import common
+from goods.models import ExportAction
 import logging
 logger = logging.getLogger("detect")
 
@@ -12,21 +14,31 @@ class ImageDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(type):
-        if type not in ImageDetectorFactory._detector:
-            ImageDetectorFactory._detector[type] = ImageDetector(type)
-        return ImageDetectorFactory._detector[type]
+    def get_static_detector(deviceid):
+        if deviceid not in ImageDetectorFactory._detector:
+            if deviceid == '10':
+                # FIXME hack for first train
+                ImageDetectorFactory._detector[deviceid] = ImageDetector(10)
+            else:
+                exportalls = ExportAction.objects.filter(train_action__action='TA').filter(
+                    checkpoint_prefix__gt=0).order_by(
+                    '-update_time')[:1]
+                if len(exportalls) == 0:
+                    logger.error('not found detection model!')
+                    return None
+                ImageDetectorFactory._detector[deviceid] = ImageDetector(exportalls[0].pk)
+        return ImageDetectorFactory._detector[deviceid]
 
 
 class ImageDetector:
-    def __init__(self, type):
+    def __init__(self, exportallid):
         self.detection_graph = None
         self.session = None
         self.category_index = None
         self.file_path, _ = os.path.split(os.path.realpath(__file__))
 
-        self.model_path = os.path.join(self.file_path, 'model', str(type), 'frozen_inference_graph.pb')
-        self.label_path = os.path.join(self.file_path, 'model', str(type), 'goods_label_map.pbtxt')
+        self.model_path = os.path.join(self.file_path, 'model', str(exportallid), 'frozen_inference_graph.pb')
+        self.label_path = os.path.join(self.file_path, 'model', str(exportallid), 'goods_label_map.pbtxt')
         self.counter = 0
 
     def load(self):
@@ -65,12 +77,15 @@ class ImageDetector:
                 logger.info('end loading old model')
          # semaphore.release()
 
-    def detect(self,image_path,min_score_thresh=.5):
+    def detect(self,image_instance,step1_min_score_thresh=.5,step2_min_score_thresh=.5):
         if self.category_index is None:
             self.load()
             if self.category_index is None:
                 logger.warning('loading model failed')
                 return None
+        import time
+        time0 = time.time()
+        image_path = image_instance.source.path
         image = Image.open(image_path)
         if image.mode != 'RGB':
             image = image.convert('RGB')
@@ -101,7 +116,7 @@ class ImageDetector:
                 np.squeeze(scores),
                 self.category_index,
                 use_normalized_coordinates=True,
-                min_score_thresh=min_score_thresh,
+                min_score_thresh=step1_min_score_thresh,
                 line_thickness=4)
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
@@ -110,20 +125,20 @@ class ImageDetector:
         ret = []
         # have_classes = {}
         for i in range(boxes.shape[0]):
-            if scores is None or scores[i] > min_score_thresh:
-                # if classes[i] in have_classes:
-                #     continue
-                ymin, xmin, ymax, xmax = boxes[i]
-                ymin = int(ymin*im_height)
-                xmin = int(xmin*im_width)
-                ymax = int(ymax*im_height)
-                xmax = int(xmax*im_width)
-                #print(classes[i])
-                #print(self.class_to_name_dic)
-                ret.append({'class':classes[i],
-                            'score':scores[i],
-                            'upc':self.category_index[classes[i]]['name'],
-                            'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
-                            })
-                # have_classes[classes[i]] = True
-        return ret
+            action = 0
+            if scores is not None and scores[i] < step1_min_score_thresh:
+                action = 3
+            ymin, xmin, ymax, xmax = boxes[i]
+            ymin = int(ymin*im_height)
+            xmin = int(xmin*im_width)
+            ymax = int(ymax*im_height)
+            xmax = int(xmax*im_width)
+            ret.append({'class':common.MATCH_TYPE_DEEPLEARNING,
+                        'score':scores[i],
+                        'action':action,
+                        'upc':self.category_index[classes[i]]['name'],
+                        'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
+                        })
+        time1 = time.time()
+        logger.info('detect_all: %s, %d, %.2f' %(image_instance.deviceid, len(ret), time1-time0))
+        return ret, time1-time0
