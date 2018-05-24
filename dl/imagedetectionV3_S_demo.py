@@ -169,6 +169,8 @@ class ImageDetector:
 
             score2 = scores_step2[i]
             action = 0
+            if score2 < step2_min_score_thresh:
+                action = 3
             upc = upcs_step2[i]
             match_type = common.MATCH_TYPE_DEEPLEARNING
             if match_type == common.MATCH_TYPE_UNKNOWN:
