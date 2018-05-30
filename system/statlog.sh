@@ -1,7 +1,7 @@
 #!/bin/bash
 
 outfile="stat_$1.txt"
-greplog.sh -O $1 'json' -c | awk -F "[ ?]+" '
+greplog.sh -O $1 -p 'json' -c | awk -F "[ ?]+" '
 {
 if(($11,$6) in arr){
 arr[$11,$6]+=1;
@@ -22,10 +22,10 @@ time[arr2[1]]=arr[arr2[1],arr2[2]];
 }else{
 if(arr2[1] in num){
 num[arr2[1]]+=arr[arr2[1],arr2[2]];
-other_num[arr2[1]] = sprintf("%s %d",other_num[arr2[1]],arr[arr2[1],arr2[2]]);
+other_num[arr2[1]] = sprintf("%s %d:%d",other_num[arr2[1]],arr2[2],arr[arr2[1],arr2[2]]);
 }else{
 num[arr2[1]]=arr[arr2[1],arr2[2]];
-other_num[arr2[1]] = arr[arr2[1],arr2[2]];
+other_num[arr2[1]] = sprintf("%d:%d",arr2[2],arr[arr2[1],arr2[2]]);
 }
 }
 }
