@@ -1,4 +1,6 @@
 #!/bin/bash
+# 6为res code，7为res time，11为request
+# awk只能通过一维数组模拟二维数组
 
 outfile="stat_$1.txt"
 greplog.sh -O $1 -p 'json' -c | awk -F "[ ?]+" '
