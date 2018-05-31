@@ -164,7 +164,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             #
             step1_min_score_thresh = .8
             step2_min_score_thresh = .6
-            if serializer.instance.deviceid == '1846': # 好邻居demo演示
+            if serializer.instance.deviceid == 'nnn': # 好邻居demo演示
                 detector = imagedetectionV3_S_demo.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
 
                 # this detect is for train for all
