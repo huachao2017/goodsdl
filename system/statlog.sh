@@ -2,8 +2,8 @@
 # 6为res code，7为res time，11为request
 # awk只能通过一维数组模拟二维数组
 
-outfile="stat_$1.txt"
-greplog.sh -O $1 -p 'json' -c | awk -F "[ ?]+" '
+outfile="stat_$2_$1.txt"
+greplog.sh -O $1 -p $2 -c | awk -F "[ ?]+" '
 {
 if(($11,$6) in arr){
 arr[$11,$6]+=1;
