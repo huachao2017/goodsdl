@@ -127,7 +127,7 @@ class ImageDetector:
         for i in range(boxes.shape[0]):
             action = 0
             if scores is not None and scores[i] < step1_min_score_thresh:
-                action = 3
+                continue
             ymin, xmin, ymax, xmax = boxes[i]
             ymin = int(ymin*im_height)
             xmin = int(xmin*im_width)
@@ -140,6 +140,5 @@ class ImageDetector:
                         'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
                         })
         time1 = time.time()
-        logger.info(ret)
         logger.info('detect_all: %s, %d, %.2f' %(image_instance.deviceid, len(ret), time1-time0))
         return ret, time1-time0
