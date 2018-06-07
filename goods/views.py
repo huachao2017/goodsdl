@@ -155,28 +155,29 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             aiinterval = .0
             # 正式应用区
+            if serializer.instance.deviceid == '290': # 10类的演示
+                detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+                min_score_thresh = .5
+                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+                ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
 
-            # if serializer.instance.deviceid == '275': # 10类的演示
-            #     detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-            #     min_score_thresh = .5
-            #     logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-            #     ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
-            #
-            step1_min_score_thresh = .8
-            step2_min_score_thresh = .6
-            if serializer.instance.deviceid == 'nnn': # 好邻居demo演示
-                detector = imagedetectionV3_S_demo.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+            else:
+                step1_min_score_thresh = .8
+                step2_min_score_thresh = .6
 
-                # this detect is for train for all
-                # detector = imagedetection.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
-            else:# step1+step2+模式类的演示
-                detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+                if serializer.instance.deviceid == 'nnn': # 好邻居demo演示
+                    detector = imagedetectionV3_S_demo.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
 
-            if detector is None:
-                return Response([], status=status.HTTP_201_CREATED, headers=headers)
+                    # this detect is for train for all
+                    # detector = imagedetection.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+                else:# step1+step2+模式类的演示
+                    detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
 
-            ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                  step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
+                if detector is None:
+                    return Response([], status=status.HTTP_201_CREATED, headers=headers)
+
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                      step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
 
             if ret is None:
                 logger.error('detection model is not ready')
