@@ -140,5 +140,6 @@ class ImageDetector:
                         'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
                         })
         time1 = time.time()
+        logger.info(ret)
         logger.info('detect_all: %s, %d, %.2f' %(image_instance.deviceid, len(ret), time1-time0))
         return ret, time1-time0

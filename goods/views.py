@@ -127,7 +127,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        if serializer.instance.deviceid == 'nnn':
+        if serializer.instance.deviceid == '290':
             pass
         else:
             last_images = Image.objects.filter(deviceid=serializer.instance.deviceid).filter(pk__lt=serializer.instance.pk).order_by('-create_time')[:5]
@@ -153,93 +153,93 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 # 检测重复直接返回
                 return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
 
-            aiinterval = .0
-            # 正式应用区
-            if serializer.instance.deviceid == '290': # 10类的演示
-                detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-                step1_min_score_thresh = .5
-                logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+        aiinterval = .0
+        # 正式应用区
+        if serializer.instance.deviceid == '290': # 10类的演示
+            detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
+            step1_min_score_thresh = .5
+            logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+            ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
 
-            else:
-                step1_min_score_thresh = .8
-                step2_min_score_thresh = .6
+        else:
+            step1_min_score_thresh = .8
+            step2_min_score_thresh = .6
 
-                if serializer.instance.deviceid == 'nnn': # 好邻居demo演示
-                    detector = imagedetectionV3_S_demo.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+            if serializer.instance.deviceid == 'nnn': # 好邻居demo演示
+                detector = imagedetectionV3_S_demo.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
 
-                    # this detect is for train for all
-                    # detector = imagedetection.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
-                else:# step1+step2+模式类的演示
-                    detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+                # this detect is for train for all
+                # detector = imagedetection.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
+            else:# step1+step2+模式类的演示
+                detector = imagedetectionV3_S.ImageDetectorFactory.get_static_detector(serializer.instance.deviceid)
 
-                if detector is None:
-                    return Response([], status=status.HTTP_201_CREATED, headers=headers)
-
-                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
-                                      step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
-
-            if ret is None:
-                logger.error('detection model is not ready')
-                Image.objects.get(pk=serializer.instance.pk).delete()
+            if detector is None:
                 return Response([], status=status.HTTP_201_CREATED, headers=headers)
 
-            ret_reborn = []
-            index = 0
-            upc_index_dict = {}
-            for goods in ret:
-                # 兼容上一个版本
-                if 'action' not in goods:
-                    goods['action'] = 0
-                if 'score2' not in goods:
-                    goods['score2'] = 0
-                Goods.objects.create(image_id=serializer.instance.pk,
-                                     class_type=goods['class'],
-                                     score1=goods['score'],
-                                     score2=goods['score2'],
-                                     upc=goods['upc'],
-                                     xmin=goods['xmin'],
-                                     ymin=goods['ymin'],
-                                     xmax=goods['xmax'],
-                                     ymax=goods['ymax'],
-                                     )
-                if goods['upc'] in upc_index_dict:
-                    ret_reborn[upc_index_dict[goods['upc']]]['box'].append({
-                        'score': goods['score'],
-                        'score2': goods['score2'],
-                        'action': goods['action'],
-                        'xmin': goods['xmin'],
-                        'ymin': goods['ymin'],
-                        'xmax': goods['xmax'],
-                        'ymax': goods['ymax'],
-                    })
-                else:
-                    box = []
-                    box.append({
-                        'score': goods['score'],
-                        'score2': goods['score2'],
-                        'action': goods['action'],
-                        'xmin': goods['xmin'],
-                        'ymin': goods['ymin'],
-                        'xmax': goods['xmax'],
-                        'ymax': goods['ymax'],
-                    })
-                    ret_reborn.append({
-                        'class': goods['class'],
-                        'upc': goods['upc'],
-                        'box': box
-                    })
-                    upc_index_dict[goods['upc']] = index
-                    index = index + 1
+            ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh,
+                                  step2_min_score_thresh=step2_min_score_thresh) #, compress=True)
 
-            # 保存ai本次返回和计算时间
-            serializer.instance.aiinterval = aiinterval
-            serializer.instance.ret = json.dumps(ret_reborn, cls=NumpyEncoder)
-            serializer.instance.save()
-            logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
-            # logger.info('end create')
-            # return Response({'Test':True})
-            return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
+        if ret is None:
+            logger.error('detection model is not ready')
+            Image.objects.get(pk=serializer.instance.pk).delete()
+            return Response([], status=status.HTTP_201_CREATED, headers=headers)
+
+        ret_reborn = []
+        index = 0
+        upc_index_dict = {}
+        for goods in ret:
+            # 兼容上一个版本
+            if 'action' not in goods:
+                goods['action'] = 0
+            if 'score2' not in goods:
+                goods['score2'] = 0
+            Goods.objects.create(image_id=serializer.instance.pk,
+                                 class_type=goods['class'],
+                                 score1=goods['score'],
+                                 score2=goods['score2'],
+                                 upc=goods['upc'],
+                                 xmin=goods['xmin'],
+                                 ymin=goods['ymin'],
+                                 xmax=goods['xmax'],
+                                 ymax=goods['ymax'],
+                                 )
+            if goods['upc'] in upc_index_dict:
+                ret_reborn[upc_index_dict[goods['upc']]]['box'].append({
+                    'score': goods['score'],
+                    'score2': goods['score2'],
+                    'action': goods['action'],
+                    'xmin': goods['xmin'],
+                    'ymin': goods['ymin'],
+                    'xmax': goods['xmax'],
+                    'ymax': goods['ymax'],
+                })
+            else:
+                box = []
+                box.append({
+                    'score': goods['score'],
+                    'score2': goods['score2'],
+                    'action': goods['action'],
+                    'xmin': goods['xmin'],
+                    'ymin': goods['ymin'],
+                    'xmax': goods['xmax'],
+                    'ymax': goods['ymax'],
+                })
+                ret_reborn.append({
+                    'class': goods['class'],
+                    'upc': goods['upc'],
+                    'box': box
+                })
+                upc_index_dict[goods['upc']] = index
+                index = index + 1
+
+        # 保存ai本次返回和计算时间
+        serializer.instance.aiinterval = aiinterval
+        serializer.instance.ret = json.dumps(ret_reborn, cls=NumpyEncoder)
+        serializer.instance.save()
+        logger.info('end detect:{},{}'.format(serializer.instance.deviceid, str(len(ret_reborn) if ret_reborn is not None else 0)))
+        # logger.info('end create')
+        # return Response({'Test':True})
+        return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
 
 class ImageReportViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = ImageReport.objects.order_by('-id')
