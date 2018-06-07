@@ -159,7 +159,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
                 step1_min_score_thresh = .5
                 logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-                ret = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
+                ret, aiinterval = detector.detect(serializer.instance, step1_min_score_thresh=step1_min_score_thresh)
 
             else:
                 step1_min_score_thresh = .8
