@@ -157,9 +157,9 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 正式应用区
             if serializer.instance.deviceid == '290': # 10类的演示
                 detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
-                min_score_thresh = .5
+                step1_min_score_thresh = .5
                 logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
-                ret = detector.detect(serializer.instance.source.path, min_score_thresh=min_score_thresh)
+                ret = detector.detect(serializer.instance.source.path, step1_min_score_thresh=step1_min_score_thresh)
 
             else:
                 step1_min_score_thresh = .8
