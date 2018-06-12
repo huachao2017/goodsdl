@@ -21,8 +21,19 @@ class TrainImage(models.Model):
     deviceid = models.CharField(max_length=20, default='')
     traintype = models.PositiveIntegerField(default=0)
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
-    upc = models.CharField(max_length=20)
+    upc = models.CharField(max_length=20, db_index=True)
     create_time = models.DateTimeField('date created', auto_now_add=True)
+    FROM_CHOICES = (
+        (1, u'backend'),
+        (2, u'frontend'),
+    )
+    source_from = models.IntegerField(max_length=5, choices=FROM_CHOICES, default=1)
+
+class TrainUpc(models.Model):
+    upc = models.CharField(max_length=20, db_index=True)
+    cnt = models.IntegerField(default=1)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
 
 MODEL_CHOICES = (
     (u'ANY', u'not specify'),
@@ -32,9 +43,10 @@ MODEL_CHOICES = (
 )
 
 class TrainAction(models.Model):
-    ip = models.IPAddressField()
+    train_ip = models.IPAddressField()
     ACTION_CHOICES = (
         (u'TA', u'Train All Dataset'),
+        (u'TF', u'Train Funiture'),
         (u'TC', u'Train Add Class'),
     )
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
@@ -45,7 +57,7 @@ class TrainAction(models.Model):
         (5, u'Training'),
         (10, u'Complete'),
     )
-    state = models.IntegerField(max_length=5, choices=STATE_CHOICES)
+    state = models.IntegerField(max_length=5, choices=STATE_CHOICES, default=1)
 
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
@@ -54,4 +66,4 @@ class TrainAction(models.Model):
 
 class TrainActionUpcs(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="upcs",on_delete=models.CASCADE)
-    upc = models.CharField(max_length=20)
+    train_upc = models.ForeignKey(TrainUpc,related_name="trains",on_delete=models.CASCADE)
