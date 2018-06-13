@@ -68,7 +68,7 @@ class TrainImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TrainUpcViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
+class TrainUpcViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                       viewsets.GenericViewSet):
     queryset = TrainUpc.objects.order_by('-id')
     serializer_class = TrainUpcSerializer

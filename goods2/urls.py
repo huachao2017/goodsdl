@@ -26,6 +26,7 @@ router.register(r'trainimage', views.TrainImageViewSet)
 router.register(r'trainupc', views.TrainUpcViewSet)
 
 router.register(r'trainaction', views_ai.TrainActionViewSet)
+router.register(r'trainmodel', views_ai.TrainModelViewSet)
 urlpatterns = [
     url(r'^api2/', include(router.urls))
 ]

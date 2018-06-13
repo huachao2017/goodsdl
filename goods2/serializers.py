@@ -64,9 +64,8 @@ class TrainModelSerializer(serializers.ModelSerializer):
 class TrainActionSerializer(serializers.ModelSerializer):
     upcs = TrainActionUpcsSerializer(many=True, read_only=True)
     devices = TrainActionDevicesSerializer(many=True, read_only=True)
-    f_model = TrainModelSerializer(many=False, read_only=False)
 
     class Meta:
         model = TrainAction
-        fields = ('pk', 'train_ip', 'action', 'model_name', 'f_model', 'max_step', 'desc')
-        read_only_fields = ('train_path', 'create_time', 'update_time', 'upcs', 'devices')
+        fields = ('pk', 'action', 'model_name', 'f_model', 'desc')
+        read_only_fields = ('train_ip', 'train_path', 'create_time', 'update_time', 'max_step', 'upcs', 'devices')

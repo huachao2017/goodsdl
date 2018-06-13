@@ -1,11 +1,10 @@
 from django.db import models
 import datetime
-from django.conf import settings
-
+from . import common
 
 def image_upload_source(instance, filename):
     now = datetime.datetime.now()
-    return '{}/goods2/{}/{}/{}/{}_{}_{}'.format(settings.DETECT_DIR_NAME, instance.deviceid, now.strftime('%Y%m'),
+    return '{}/{}/{}/{}/{}_{}_{}'.format(common.DETECT_DIR, instance.deviceid, now.strftime('%Y%m'),
                                                 now.strftime('%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
 
@@ -31,7 +30,7 @@ class ImageResult(models.Model):
 
 def train_image_upload_source(instance, filename):
     now = datetime.datetime.now()
-    ret = '{}/goods2/{}/{}_{}_{}'.format(settings.DATASET_DIR_NAME, instance.upc, instance.deviceid, str(now.time()),
+    ret = '{}/{}/{}_{}_{}'.format(common.DATASET_DIR_NAME, instance.upc, instance.deviceid, str(now.time()),
                                          filename)
     return ret
 
