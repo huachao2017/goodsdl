@@ -17,13 +17,14 @@ from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
 from . import views
-from . import views_train
+from . import views_ai
 
 router = DefaultRouter()
 router.register(r'image', views.ImageViewSet)
+router.register(r'trainimage', views.TrainImageViewSet)
+router.register(r'trainupc', views.TrainUpcViewSet)
 
-router.register(r'trainimage', views_train.TrainImageViewSet)
-router.register(r'trainaction', views_train.TrainActionViewSet)
+router.register(r'trainaction', views_ai.TrainActionViewSet)
 urlpatterns = [
     url(r'^api2/', include(router.urls))
 ]

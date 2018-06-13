@@ -38,7 +38,7 @@ class TrainImage(models.Model):
     source_from = models.IntegerField(max_length=5, choices=FROM_CHOICES, default=1)
 
 class TrainUpc(models.Model):
-    upc = models.CharField(max_length=20, db_index=True)
+    upc = models.CharField(max_length=20, unique=True)
     cnt = models.IntegerField(default=1)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
