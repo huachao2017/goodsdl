@@ -35,7 +35,7 @@ class TrainImage(models.Model):
         (1, u'backend'),
         (2, u'frontend'),
     )
-    source_from = models.IntegerField(max_length=5, choices=FROM_CHOICES, default=1)
+    source_from = models.IntegerField(choices=FROM_CHOICES, default=1)
 
 class TrainUpc(models.Model):
     upc = models.CharField(max_length=20, unique=True)
@@ -51,7 +51,7 @@ MODEL_CHOICES = (
 )
 
 class TrainAction(models.Model):
-    train_ip = models.IPAddressField()
+    train_ip = models.GenericIPAddressField()
     ACTION_CHOICES = (
         (u'TA', u'Train All Dataset'),
         (u'TF', u'Train Funiture'),
@@ -65,7 +65,7 @@ class TrainAction(models.Model):
         (5, u'Training'),
         (10, u'Complete'),
     )
-    state = models.IntegerField(max_length=5, choices=STATE_CHOICES, default=1)
+    state = models.IntegerField(choices=STATE_CHOICES, default=1)
 
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
