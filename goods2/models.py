@@ -106,6 +106,8 @@ class TrainModel(models.Model):
 class TrainActionUpcs(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="upcs", on_delete=models.CASCADE)
     train_upc = models.ForeignKey(TrainUpc, related_name="trains", on_delete=models.CASCADE)
+    upc = models.CharField(max_length=20, db_index=True)
+    cnt = models.IntegerField(default=1)
 
 class TrainActionDevices(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="devices", on_delete=models.CASCADE)

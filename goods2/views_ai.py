@@ -28,16 +28,22 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         logger.info('create action:{}'.format(serializer.instance.action))
 
         serializer.instance.train_path = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
-        if serializer.instance.action == 'TA':
+        if serializer.instance.action in ['TA','TF']:
             # 数据准备
-            names_to_labels, training_filenames, _ = convert_goods.prepare_train_TA(serializer.instance)
+            if serializer.instance.action == 'TA':
+                names_to_labels, training_filenames, _ = convert_goods.prepare_train_TA(serializer.instance)
+            else:
+                names_to_labels, training_filenames, _ = convert_goods.prepare_train_TF(serializer.instance)
 
             #更新数据
             # 'upcs'
             for upc in names_to_labels:
+                train_upc = TrainUpc.objects.get(upc=upc)
                 TrainActionUpcs.objects.create(
                     train_action_id=serializer.instance.pk,
-                    train_upc=TrainUpc.objects.get(upc=upc),
+                    train_upc=train_upc,
+                    upc=upc,
+                    cnt=train_upc.cnt,
                 )
 
             batch_size = 8 if serializer.instance.model_name == 'nasnet_large' else 64
@@ -45,8 +51,6 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             serializer.instance.max_step = int(len(training_filenames) * 100 / batch_size)  # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
             if serializer.instance.max_step < 20000:
                 serializer.instance.max_step = 20000  # 小样本需要增加训练次数
-        elif serializer.instance.action == 'TF':
-            pass
         elif serializer.instance.action == 'TC':
             # 'max_step', 'upcs', 'devices'
             pass

@@ -23,7 +23,7 @@ import math
 import tensorflow as tf
 
 from datasets import dataset_utils
-from .models import TrainImage, TrainUpc
+from .models import TrainImage, TrainUpc, TrainActionUpcs, TrainAction, TrainModel
 
 # Seed for repeatability.
 _RANDOM_SEED = 42
@@ -130,6 +130,56 @@ def prepare_train_TA(train_action):
 
     upcs = sorted(upcs)
 
+    training_filenames = []
+    train_images = TrainImage.objects.all()
+    for train_image in train_images:
+        if train_image.upc in upcs:
+            training_filenames.append(train_image.source.path)
+
+
+    names_to_labels = dict(zip(upcs, range(len(upcs))))
+
+    # Divide into train and test:
+    random.seed(_RANDOM_SEED)
+    random.shuffle(training_filenames)
+    validation_filenames = training_filenames[int(0.7 * len(training_filenames)):]
+
+    # First, convert the training and validation sets.
+    _convert_dataset('train', training_filenames, names_to_labels,
+                     output_dir)
+    _convert_dataset('validation', validation_filenames, names_to_labels,
+                     output_dir)
+
+    # Second, write the labels file:
+    labels_to_names = dict(zip(range(len(upcs)), upcs))
+    dataset_utils.write_label_file(labels_to_names, output_dir)
+
+    logger.info('Finished converting the goods dataset!')
+    return names_to_labels, training_filenames, validation_filenames
+
+def prepare_train_TF(train_action):
+    """Runs the conversion operation.
+
+    Args:
+      output_dir: tfrecord will be stored.
+    """
+
+    output_dir = train_action.train_path
+    if not tf.gfile.Exists(output_dir):
+        tf.gfile.MakeDirs(output_dir)
+
+    upcs = []
+    train_upcs = TrainUpc.objects.all()
+    f_model = TrainModel.objects.get(id=train_action.f_model.pk)
+    f_train = TrainAction.objects.get(id=f_model.train_action.pk)
+    last_train_upcs = TrainActionUpcs.objects.filter(train_action_id=f_train.pk)
+    for train_upc in train_upcs:
+        upcs.append(train_upc.upc)
+
+    upcs = sorted(upcs)
+
+
+    # TODO 根据train_upcs和last_train_upcs进行样本筛选
     training_filenames = []
     train_images = TrainImage.objects.all()
     for train_image in train_images:

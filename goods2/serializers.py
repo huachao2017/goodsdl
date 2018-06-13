@@ -40,11 +40,10 @@ class TrainUpcSerializer(serializers.ModelSerializer):
 
 
 class TrainActionUpcsSerializer(serializers.ModelSerializer):
-    train_upc = TrainUpcSerializer(many=False, read_only=True)
 
     class Meta:
         model = TrainActionUpcs
-        fields = ('pk', 'train_upc', 'train_action')
+        fields = ('pk', 'upc', 'cnt')
 
 
 class TrainActionDevicesSerializer(serializers.ModelSerializer):
