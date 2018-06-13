@@ -112,14 +112,14 @@ def _remove_tfrecord_ifexists(output_dir):
             tf.gfile.Remove(output_filename)
 
 
-def prepare_train_TA(dataset_dir, output_dir):
+def prepare_train_TA(train_action):
     """Runs the conversion operation.
 
     Args:
-      dataset_dir: The source directory where the step2 dataset is stored.
       output_dir: tfrecord will be stored.
     """
 
+    output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 

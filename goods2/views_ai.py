@@ -29,25 +29,18 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         serializer.instance.train_path = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
         if serializer.instance.action == 'TA':
-            # 训练准备
-            dataset_dir = os.path.join(
-                settings.MEDIA_ROOT,
-                common.DATASET_DIR)
+            # 数据准备
+            names_to_labels, training_filenames, _ = convert_goods.prepare_train_TA(serializer.instance)
 
+            #更新数据
             # 'upcs'
-            names_to_labels, training_filenames, _ = convert_goods.prepare_train_TA(
-                dataset_dir,
-                serializer.instance.train_path)
             for upc in names_to_labels:
                 TrainActionUpcs.objects.create(
                     train_action_id=serializer.instance.pk,
                     train_upc=TrainUpc.objects.get(upc=upc),
                 )
 
-            if serializer.instance.model_name == 'nasnet_large':
-                batch_size = 8
-            else:
-                batch_size = 64
+            batch_size = 8 if serializer.instance.model_name == 'nasnet_large' else 64
             # 'max_step'
             serializer.instance.max_step = int(len(training_filenames) * 100 / batch_size)  # 设定最大训练次数，每个样本进入网络100次，测试验证200次出现过拟合
             if serializer.instance.max_step < 20000:
