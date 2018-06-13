@@ -6,13 +6,17 @@ def image_upload_source(instance,filename):
     now = datetime.datetime.now()
     return '{}/goods2/{}/{}/{}/{}_{}_{}'.format(settings.DETECT_DIR_NAME, instance.deviceid, now.strftime('%Y%m'), now.strftime('%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
+class ImageGroundTruth(models.Model):
+    identify = models.CharField(max_length=64, db_index=True)
+    groundtruth_upc = models.CharField(max_length=20, db_index=True)
+    create_time = models.DateTimeField('date created', auto_now_add=True,db_index=True)
+
 class Image(models.Model):
+    image_ground_truth = models.ForeignKey(ImageGroundTruth,related_name="ground_truth_images", default=None)
     deviceid = models.CharField(max_length=20, default='0',db_index=True)
     identify = models.CharField(max_length=64, db_index=True)
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
-    groundtruth_upc = models.CharField(max_length=20, db_index=True)
     create_time = models.DateTimeField('date created', auto_now_add=True,db_index=True)
-    update_time = models.DateTimeField('date updated', auto_now=True)
 
 class ImageResult(models.Model):
     image = models.ForeignKey(Image,related_name="image_results",on_delete=models.CASCADE)

@@ -12,18 +12,49 @@ from .serializers import *
 
 logger = logging.getLogger("django")
 
+
 class DefaultMixin:
     paginate_by = 25
     paginate_by_param = 'page_size'
     max_paginate_by = 100
+
 
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
     serializer_class = ImageSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        # TODO detect
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin,viewsets.GenericViewSet):
+    queryset = ImageGroundTruth.objects.order_by('-id')
+    serializer_class = ImageGroundTruthSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        images = Image.objects.filter(identify=serializer.instance.identify)
+        for image in images:
+            image.image_ground_truth=serializer.instance
+            image.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
 class TrainImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                        mixins.DestroyModelMixin,viewsets.GenericViewSet):
+                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = TrainImage.objects.order_by('-id')
     serializer_class = TrainImageSerializer
 
@@ -36,7 +67,8 @@ class TrainImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class TrainUpcViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+
+class TrainUpcViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
     queryset = TrainUpc.objects.order_by('-id')
     serializer_class = TrainUpcSerializer

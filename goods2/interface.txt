@@ -1,0 +1,27 @@
+检测图片接口：http://ai.fastxbox.cn/api2/image
+入参：
+source  file
+filename string
+deviceid  string
+identify  string
+返回201：
+[
+    {
+        "upc": "123123123",                   -- 产品UPC
+        "score": 0.66                         -- 可能性评分
+    },
+    {
+        "upc": "123123123",                   -- 产品UPC
+        "score": 0.66                         -- 可能性评分
+    },
+    {
+        "upc": "123123123",                   -- 产品UPC
+        "score": 0.66                         -- 可能性评分
+    },
+]
+
+发送实际upc接口：http://ai.fastxbox.cn/api2/imagegroundtruth
+入参：
+identify  string
+upc       string
+返回201：

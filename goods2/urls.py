@@ -21,6 +21,7 @@ from . import views_ai
 
 router = DefaultRouter()
 router.register(r'image', views.ImageViewSet)
+router.register(r'imagegroundtruth', views.ImageGroundTruthViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
 router.register(r'trainupc', views.TrainUpcViewSet)
 
