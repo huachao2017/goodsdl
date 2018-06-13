@@ -48,10 +48,9 @@ class TrainUpc(models.Model):
     update_time = models.DateTimeField('date updated', auto_now=True)
 
 MODEL_CHOICES = (
-    (u'ANY', u'not specify'),
-    (u'inception_resnet_v2', u'inception resnet V2'),
     (u'nasnet_large', u'nas large'),
     (u'nasnet_mobile', u'nas mobile'),
+    (u'inception_resnet_v2', u'inception resnet V2'),
 )
 
 class TrainAction(models.Model):
@@ -62,19 +61,34 @@ class TrainAction(models.Model):
         (u'TC', u'Train Add Class'),
     )
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
-    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='ANY')
+    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='nasnet_large')
     desc = models.CharField(max_length=500,null=True)
     STATE_CHOICES = (
         (1, u'Waiting'),
         (5, u'Training'),
         (10, u'Complete'),
+        (20, u'Quit'),
     )
     state = models.IntegerField(choices=STATE_CHOICES, default=1)
+
+    # TF and TC must have f_model
+    f_model = models.ForeignKey('TrainModel', related_name="child_trains", default=None)
 
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
     def __str__(self):
-        return '{}:{}:{}'.format(self.action, self.pk, self.desc)
+        return '{}-{}:{}'.format(self.pk, self.action, self.desc)
+
+class TrainModel(models.Model):
+    train_action = models.ForeignKey(TrainAction,related_name="train_models",on_delete=models.CASCADE)
+    model_path = models.CharField(max_length=200)
+    checkpoint_prefix = models.PositiveIntegerField(default=0)
+    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='nasnet_large')
+    precision = models.FloatField(default=.0)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    def __str__(self):
+        return '{}-{}:{}'.format(self.pk, self.train_action, self.checkpoint_prefix)
+
 
 class TrainActionUpcs(models.Model):
     train_action = models.ForeignKey(TrainAction,related_name="upcs",on_delete=models.CASCADE)
