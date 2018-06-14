@@ -15,7 +15,7 @@ class ImageGroundTruth(models.Model):
 
 
 class Image(models.Model):
-    image_ground_truth = models.ForeignKey(ImageGroundTruth, related_name="ground_truth_images", default=None)
+    image_ground_truth = models.ForeignKey(ImageGroundTruth, related_name="ground_truth_images", default=None, on_delete=models.SET_NULL)
     deviceid = models.CharField(max_length=20, default='0', db_index=True)
     identify = models.CharField(max_length=64, db_index=True)
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
@@ -30,7 +30,7 @@ class ImageResult(models.Model):
 
 def train_image_upload_source(instance, filename):
     now = datetime.datetime.now()
-    ret = '{}/{}/{}_{}_{}'.format(common.DATASET_DIR_NAME, instance.upc, instance.deviceid, str(now.time()),
+    ret = '{}/{}/{}_{}_{}'.format(common.DATASET_DIR, instance.upc, instance.deviceid, str(now.time()),
                                          filename)
     return ret
 
@@ -84,7 +84,7 @@ class TrainAction(models.Model):
     desc = models.CharField(max_length=500, null=True)
 
     # TF and TC must have f_model
-    f_model = models.ForeignKey('TrainModel', related_name="child_trains", default=None)
+    f_model = models.ForeignKey('TrainModel', related_name="child_trains", default=None, on_delete=models.SET_NULL)
 
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
