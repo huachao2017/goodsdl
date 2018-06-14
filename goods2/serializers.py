@@ -67,4 +67,4 @@ class TrainActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainAction
         fields = ('pk', 'action', 'model_name', 'f_model', 'desc')
-        read_only_fields = ('train_ip', 'train_path', 'create_time', 'update_time', 'max_step', 'upcs', 'devices')
+        read_only_fields = ('train_ip', 'train_path', 'create_time', 'update_time', 'example_cnt', 'upcs', 'devices')

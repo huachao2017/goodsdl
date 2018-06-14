@@ -113,16 +113,6 @@ def _remove_tfrecord_ifexists(output_dir):
 
 
 def prepare_train_TA(train_action):
-    """Runs the conversion operation.
-
-    Args:
-      output_dir: tfrecord will be stored.
-    """
-
-    output_dir = train_action.train_path
-    if not tf.gfile.Exists(output_dir):
-        tf.gfile.MakeDirs(output_dir)
-
     upcs = []
     train_upcs = TrainUpc.objects.all()
     for train_upc in train_upcs:
@@ -136,34 +126,55 @@ def prepare_train_TA(train_action):
         if train_image.upc in upcs:
             training_filenames.append(train_image.source.path)
 
-
-    names_to_labels = dict(zip(upcs, range(len(upcs))))
-
-    # Divide into train and test:
-    random.seed(_RANDOM_SEED)
-    random.shuffle(training_filenames)
-    validation_filenames = training_filenames[int(0.7 * len(training_filenames)):]
-
-    # First, convert the training and validation sets.
-    _convert_dataset('train', training_filenames, names_to_labels,
-                     output_dir)
-    _convert_dataset('validation', validation_filenames, names_to_labels,
-                     output_dir)
-
-    # Second, write the labels file:
-    labels_to_names = dict(zip(range(len(upcs)), upcs))
-    dataset_utils.write_label_file(labels_to_names, output_dir)
-
-    logger.info('Finished converting the goods dataset!')
-    return names_to_labels, training_filenames, validation_filenames
+    return upcs, training_filenames
 
 def prepare_train_TF(train_action):
-    """Runs the conversion operation.
+    upcs = []
+    train_upcs = TrainUpc.objects.all()
+    f_model = TrainModel.objects.get(id=train_action.f_model.pk)
+    f_train = TrainAction.objects.get(id=f_model.train_action.pk)
+    for train_upc in train_upcs:
+        upcs.append(train_upc.upc)
 
-    Args:
-      output_dir: tfrecord will be stored.
-    """
+    upcs = sorted(upcs)
 
+    training_filenames = []
+    old_training_filenames_to_upc = {}
+    old_training_filenames = []
+    train_images = TrainImage.objects.all()
+    # 每类样本数
+    upc_to_cnt = {}
+    max_cnt = 0
+    for train_image in train_images:
+        if train_image.upc in upcs:
+            if train_image.create_time > f_train.create_time:
+                # 根据f_train.create_time增加增量样本
+                training_filenames.append(train_image.source.path)
+                upc_to_cnt[train_image.upc] += 1
+                if max_cnt < upc_to_cnt[train_image.upc]:
+                    max_cnt = upc_to_cnt[train_image.upc]
+            else:
+                old_training_filenames_to_upc[train_image.source.path] = train_image.upc
+                old_training_filenames.append(train_image.source.path)
+
+    random.shuffle(old_training_filenames)
+
+    # 存量样本数量上限暂时用两倍策略
+    upc_cnt_thresh = max_cnt*2
+
+    # 增加存量样本
+    for upc in upcs:
+        upc_to_cnt[upc] = 0
+    for training_filename in old_training_filenames:
+        upc = old_training_filenames_to_upc[training_filename]
+        if upc_to_cnt[upc] < upc_cnt_thresh:
+            training_filenames.append(training_filename)
+            upc_to_cnt[upc] += 1
+
+    return upcs, training_filenames
+
+
+def prepare_train_TC(train_action):
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
@@ -172,23 +183,68 @@ def prepare_train_TF(train_action):
     train_upcs = TrainUpc.objects.all()
     f_model = TrainModel.objects.get(id=train_action.f_model.pk)
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
-    last_train_upcs = TrainActionUpcs.objects.filter(train_action_id=f_train.pk)
+    f_train_upcs = TrainActionUpcs.objects.filter(train_action_id=f_train.pk)
     for train_upc in train_upcs:
         upcs.append(train_upc.upc)
 
     upcs = sorted(upcs)
 
+    # 根据train_upcs和f_train_upcs进行样本筛选
+    f_upcs = []
+    for train_upc in f_train_upcs:
+        f_upcs.append(train_upc.upc)
 
-    # TODO 根据train_upcs和last_train_upcs进行样本筛选
+    append_upcs = []
+    for upc in upcs:
+        if upc not in f_upcs:
+            append_upcs.append(upc)
+
     training_filenames = []
+    old_training_filenames_to_upc = {}
+    old_training_filenames = []
     train_images = TrainImage.objects.all()
-    for train_image in train_images:
-        if train_image.upc in upcs:
-            training_filenames.append(train_image.source.path)
 
+    # 增加增量upc样本
+    for train_image in train_images:
+        if train_image.upc in append_upcs:
+            # 根据append_upcs增加增量样本
+            training_filenames.append(train_image.source.path)
+        else:
+            old_training_filenames_to_upc[train_image.source.path] = train_image.upc
+            old_training_filenames.append(train_image.source.path)
+
+
+    random.shuffle(old_training_filenames)
+
+    # 存量样本数量上限暂时用1倍策略
+    upc_cnt_thresh = int(len(training_filenames)/len(append_upcs))
+    upc_to_cnt = {}
+    for upc in f_upcs:
+        upc_to_cnt[upc] = 0
+    # 增加存量样本
+    for training_filename in old_training_filenames:
+        upc = old_training_filenames_to_upc[training_filename]
+        if upc_to_cnt[upc] < upc_cnt_thresh:
+            training_filenames.append(training_filename)
+            upc_to_cnt[upc] += 1
+
+    return upcs, training_filenames
+
+def prepare_train(train_action, action):
+    output_dir = train_action.train_path
+    if not tf.gfile.Exists(output_dir):
+        tf.gfile.MakeDirs(output_dir)
+
+    if action == 'TA':
+        upcs, training_filenames = prepare_train_TA(train_action)
+    elif action == 'TF':
+        upcs, training_filenames = prepare_train_TF(train_action)
+    elif action == 'TC':
+        upcs, training_filenames = prepare_train_TC(train_action)
+    else:
+        raise ValueError('error parameter')
 
     names_to_labels = dict(zip(upcs, range(len(upcs))))
-
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
     random.shuffle(training_filenames)
@@ -205,4 +261,4 @@ def prepare_train_TF(train_action):
     dataset_utils.write_label_file(labels_to_names, output_dir)
 
     logger.info('Finished converting the goods dataset!')
-    return names_to_labels, training_filenames, validation_filenames
+    return labels_to_names, training_filenames, validation_filenames

@@ -79,7 +79,7 @@ class TrainAction(models.Model):
         (20, u'Quit'),
     )
     state = models.IntegerField(choices=STATE_CHOICES, default=1)
-    max_step = models.IntegerField(default=100000)
+    example_cnt = models.IntegerField(default=0)
     desc = models.CharField(max_length=500, null=True)
 
     # TF and TC must have f_model
