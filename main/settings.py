@@ -255,7 +255,7 @@ LOGGING = {
 
 # train setting
 TRAIN_ROOT = os.path.join(BASE_DIR, 'train')
-os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"]+':/usr/local/cuda/lib64/'
+os.environ["LD_LIBRARY_PATH"] = ':/usr/local/cuda/lib64/'
 os.environ["CUDA_HOME"] = '/usr/local/cuda'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
