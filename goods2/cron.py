@@ -6,5 +6,4 @@ django.setup()
 
 logger = logging.getLogger('django')
 
-def test():
-    logger.info('test cron')
+logger.info('test cron')
