@@ -79,7 +79,8 @@ class TrainAction(models.Model):
         (20, u'Quit'),
     )
     state = models.IntegerField(choices=STATE_CHOICES, default=1)
-    example_cnt = models.IntegerField(default=0)
+    train_cnt = models.IntegerField(default=0)
+    validation_cnt = models.IntegerField(default=0)
     desc = models.CharField(max_length=500, null=True)
 
     # TF and TC must have f_model

@@ -29,7 +29,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         serializer.instance.train_path = os.path.join(settings.TRAIN_ROOT, str(serializer.instance.pk))
         # 数据准备
-        names_to_labels, training_filenames, _ = convert_goods.prepare_train(serializer.instance, serializer.instance.action)
+        names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(serializer.instance, serializer.instance.action)
         # 更新数据
         # 'upcs'
         for upc in names_to_labels:
@@ -40,7 +40,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
                 upc=upc,
                 cnt=train_upc.cnt,
             )
-        serializer.instance.example_cnt = len(training_filenames)
+        serializer.instance.train_cnt = len(training_filenames)
+        serializer.instance.validation_cnt = len(validation_filenames)
         # 'devcice'
         if serializer.instance.action == 'TC':
             pass

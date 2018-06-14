@@ -126,7 +126,7 @@ def prepare_train_TA(train_action):
         if train_image.upc in upcs:
             training_filenames.append(train_image.source.path)
 
-    return upcs, training_filenames
+    return upcs, training_filenames, None
 
 def prepare_train_TF(train_action):
     upcs = []
@@ -139,6 +139,7 @@ def prepare_train_TF(train_action):
     upcs = sorted(upcs)
 
     training_filenames = []
+    validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
     train_images = TrainImage.objects.all()
@@ -150,6 +151,7 @@ def prepare_train_TF(train_action):
             if train_image.create_time > f_train.create_time:
                 # 根据f_train.create_time增加增量样本
                 training_filenames.append(train_image.source.path)
+                validation_filenames.append(train_image.source.path)
                 upc_to_cnt[train_image.upc] += 1
                 if max_cnt < upc_to_cnt[train_image.upc]:
                     max_cnt = upc_to_cnt[train_image.upc]
@@ -170,8 +172,11 @@ def prepare_train_TF(train_action):
         if upc_to_cnt[upc] < upc_cnt_thresh:
             training_filenames.append(training_filename)
             upc_to_cnt[upc] += 1
+        elif upc_to_cnt[upc] < upc_cnt_thresh*1.5:
+            validation_filenames.append(training_filename)
+            upc_to_cnt[upc] += 1
 
-    return upcs, training_filenames
+    return upcs, training_filenames, validation_filenames
 
 
 def prepare_train_TC(train_action):
@@ -200,6 +205,7 @@ def prepare_train_TC(train_action):
             append_upcs.append(upc)
 
     training_filenames = []
+    validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
     train_images = TrainImage.objects.all()
@@ -209,6 +215,7 @@ def prepare_train_TC(train_action):
         if train_image.upc in append_upcs:
             # 根据append_upcs增加增量样本
             training_filenames.append(train_image.source.path)
+            validation_filenames.append(train_image.source.path)
         else:
             old_training_filenames_to_upc[train_image.source.path] = train_image.upc
             old_training_filenames.append(train_image.source.path)
@@ -227,8 +234,11 @@ def prepare_train_TC(train_action):
         if upc_to_cnt[upc] < upc_cnt_thresh:
             training_filenames.append(training_filename)
             upc_to_cnt[upc] += 1
+        elif upc_to_cnt[upc] < upc_cnt_thresh*2:
+            validation_filenames.append(training_filename)
+            upc_to_cnt[upc] += 1
 
-    return upcs, training_filenames
+    return upcs, training_filenames, validation_filenames
 
 def prepare_train(train_action, action):
     output_dir = train_action.train_path
@@ -236,11 +246,11 @@ def prepare_train(train_action, action):
         tf.gfile.MakeDirs(output_dir)
 
     if action == 'TA':
-        upcs, training_filenames = prepare_train_TA(train_action)
+        upcs, training_filenames, validation_filenames = prepare_train_TA(train_action)
     elif action == 'TF':
-        upcs, training_filenames = prepare_train_TF(train_action)
+        upcs, training_filenames, validation_filenames = prepare_train_TF(train_action)
     elif action == 'TC':
-        upcs, training_filenames = prepare_train_TC(train_action)
+        upcs, training_filenames, validation_filenames = prepare_train_TC(train_action)
     else:
         raise ValueError('error parameter')
 
@@ -248,7 +258,8 @@ def prepare_train(train_action, action):
     # Divide into train and test:
     random.seed(_RANDOM_SEED)
     random.shuffle(training_filenames)
-    validation_filenames = training_filenames[int(0.7 * len(training_filenames)):]
+    if validation_filenames is None:
+        validation_filenames = training_filenames[int(0.7 * len(training_filenames)):]
 
     # First, convert the training and validation sets.
     _convert_dataset('train', training_filenames, names_to_labels,
