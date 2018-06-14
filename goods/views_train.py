@@ -9,7 +9,6 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 import numpy as np
-import tensorflow as tf
 from PIL import Image as im
 from django.conf import settings
 from object_detection.utils import visualization_utils as vis_util
@@ -207,8 +206,8 @@ class TrainImageClassViewSet(DefaultMixin, viewsets.ModelViewSet):
                     common.SAMPLE_PREFIX if serializer.instance.deviceid == '' else common.SAMPLE_PREFIX + '_' + serializer.instance.deviceid,
                     serializer.instance.upc
                 )
-                if not tf.gfile.Exists(sample_image_dir):
-                    tf.gfile.MakeDirs(sample_image_dir)
+                if not os.path.isdir(sample_image_dir):
+                    os.mkdir(sample_image_dir)
 
                 sample_image_path = os.path.join(sample_image_dir, os.path.basename(image_path))
                 sample_image.save(sample_image_path, 'JPEG')
@@ -911,6 +910,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def export_detection_graph(self, train_action, serializer):
+        import tensorflow as tf
         prefix = None
         logger.info('Export <trainid:{}> Graph from detection train.'.format(train_action.pk))
         trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(train_action.pk))
@@ -918,8 +918,8 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         if checkpoint_model_path:
             prefix = checkpoint_model_path.split('-')[-1]
             model_dir = os.path.join(settings.BASE_DIR, 'dl', 'model', str(serializer.instance.pk))
-            if not tf.gfile.Exists(model_dir):
-                tf.gfile.MakeDirs(model_dir)
+            if not os.path.isdir(model_dir):
+                os.mkdir(model_dir)
             # 输出pb
             e1.export(os.path.join(trained_checkpoint_dir, 'faster_rcnn_nas_goods.config'),
                       checkpoint_model_path,
@@ -934,6 +934,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
         return prefix
 
     def export_classify_graph(self, train_action, serializer):
+        import tensorflow as tf
         prefix = None
         logger.info('Export <trainid:{}> Graph from classify train.'.format(train_action.pk))
         trained_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(train_action.pk))

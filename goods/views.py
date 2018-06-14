@@ -8,7 +8,6 @@ import time
 import urllib.request
 
 import numpy as np
-import tensorflow as tf
 from django.conf import settings
 from rest_framework import mixins
 from rest_framework import status
@@ -113,6 +112,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = ImageSerializer
 
     def create(self, request, *args, **kwargs):
+        import tensorflow as tf
         # logger.info('begin create:')
         # 兼容没有那么字段的请求
         if 'lastinterval' not in request.data:
@@ -289,6 +289,7 @@ class ProblemGoodsViewSet(DefaultMixin, mixins.ListModelMixin, viewsets.GenericV
 
 class VerifyCnt(APIView):
     def get(self, request):
+        import tensorflow as tf
         deviceid = request.query_params['deviceid']
         paymentID = request.query_params['paymentID']
         picurl = request.query_params['picurl']
