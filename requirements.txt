@@ -1,7 +1,6 @@
 fabric3
 django
 djangorestframework
-django-crontab
 opencv_python
 mysqlclient
 gputil
