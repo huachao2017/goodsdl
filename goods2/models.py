@@ -40,6 +40,7 @@ class TrainImage(models.Model):
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     upc = models.CharField(max_length=20, db_index=True)
     create_time = models.DateTimeField('date created', auto_now_add=True)
+    source_image = models.ForeignKey('Image', related_name="trainimages", default=None, null=True, on_delete=models.SET_NULL)
     FROM_CHOICES = (
         (1, u'backend'),
         (2, u'frontend'),
