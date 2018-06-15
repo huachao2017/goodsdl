@@ -7,4 +7,3 @@ django.setup()
 logger = logging.getLogger('django')
 
 logger.info('test cron')
-print('test cron 2')
