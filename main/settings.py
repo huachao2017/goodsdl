@@ -33,6 +33,7 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
+    'django_crontab',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,6 +61,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5
 }
+
+CRONJOBS = [
+    ('*/1 * * * *', 'goods2.cron.test', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log')))
+]
 
 TEMPLATES = [
     {
@@ -211,6 +216,12 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'standard'
         },
+        'cron_log_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, "logs", 'cron.log'),
+            'formatter': 'standard'
+        },
     },
     'loggers': {
         'django': {
@@ -233,6 +244,12 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True  # 是否继承父类的log信息
         },  # handlers 来自于上面的 handlers 定义的内容
+        'goods2.cron': {  # The namespace of the logger above
+            'handlers': ['cron_log_file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+
     }
 }
 
