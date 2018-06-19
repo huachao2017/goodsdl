@@ -66,8 +66,9 @@ class TrainAction(models.Model):
     STATE_CHOICES = (
         (1, u'Waiting'),
         (5, u'Training'),
+        (9, u'Stop'),
         (10, u'Complete'),
-        (20, u'Quit'),
+        (20, u'Complete with stop'),
     )
     state = models.IntegerField(choices=STATE_CHOICES, default=1)
     train_cnt = models.IntegerField(default=0)

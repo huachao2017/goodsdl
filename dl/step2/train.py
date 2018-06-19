@@ -29,6 +29,9 @@ from dl.step2 import dataset as step2_ds
 slim = tf.contrib.slim
 
 tf.app.flags.DEFINE_string(
+    'CUDA_VISIBLE_DEVICES', '0', 'The CUDA_VISIBLE_DEVICES')
+
+tf.app.flags.DEFINE_string(
     'master', '', 'The address of the TensorFlow master to use.')
 
 tf.app.flags.DEFINE_string(
@@ -386,7 +389,7 @@ def main(_):
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = FLAGS.CUDA_VISIBLE_DEVICES
     tf.logging.set_verbosity(tf.logging.INFO)
     with tf.Graph().as_default():
         #######################

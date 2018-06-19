@@ -9,6 +9,7 @@ from . import common
 import socket
 from . import convert_goods
 import datetime
+import subprocess
 
 logger = logging.getLogger('cron')
 
@@ -180,7 +181,7 @@ def _do_create_train():
                 if len(doing_tf_qs) > 0:
                     # 退出正在训练的TF
                     doing_tf = doing_tf_qs[0]
-                    doing_tf.state = 20
+                    doing_tf.state = 9
                     doing_tf.save()
                 logger.info('create_train: TC,新增类（{}）,新增样本（{}）'.format(len(append_upcs), len(train_image_qs)))
                 _create_train('TC', f_train_model.pk)
@@ -272,7 +273,102 @@ def execute_train():
 
 
 def _do_execute_train():
+    my_ip = get_host_ip()
+    if my_ip == '192.168.1.170':
+        quit_train_qs = TrainAction.objects.filter(state=9).exclude(action='TC')
+        for quit_train in quit_train_qs:
+            stop_train(quit_train)
+            quit_train.state = 20
+            quit_train.save()
+
+        begin_train_qs = TrainAction.objects.filter(state=1).exclude(action='TC')
+        for begin_train in begin_train_qs:
+            begin_train(begin_train)
+            begin_train.state = 5
+            begin_train.save()
+    elif my_ip == '192.168.1.173':
+        quit_train_qs = TrainAction.objects.filter(state=9).filter(action='TC')
+        for quit_train in quit_train_qs:
+            stop_train(quit_train)
+            quit_train.state = 20
+            quit_train.save()
+        begin_train_qs = TrainAction.objects.filter(state=1).filter(action='TC')
+        for begin_train in begin_train_qs:
+            begin_train(begin_train)
+            begin_train.state = 5
+            begin_train.save()
+
+
     return ''
+
+def begin_train(train_action):
+    train_cuda_visible_devices = ''
+    if train_action.action == 'TA':
+        train_cuda_visible_devices = '0'
+    elif train_action.action == 'TF':
+        train_cuda_visible_devices = '1'
+    elif train_action.action == 'TC':
+        train_cuda_visible_devices = '0'
+
+    # 训练
+    if train_action.action == 'TC':
+        checkpoint_path = os.path.join(common.MODEL_DIR, str(train_action.f_model.pk))
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+                  '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer,aux_11/aux_logits/FC --trainable_scopes=final_layer,aux_11/aux_logits/FC' \
+                  ' > /root/train_{}.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_action.train_path,
+            train_action.train_path,
+            train_action.train_cnt,
+            'nasnet_large',
+            1,
+            8,
+            train_cuda_visible_devices,
+            checkpoint_path,
+            train_action.action
+        )
+    else:
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+                  ' > /root/train_{}.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_action.train_path,
+            train_action.train_path,
+            train_action.train_cnt,
+            'nasnet_large',
+            1,
+            8,
+            train_cuda_visible_devices,
+            train_action.action
+        )
+    logger.info(command)
+    subprocess.call(command, shell=True)
+    # 评估
+    command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}' \
+              ' > /root/eval_{}.out 2>&1 &'.format(
+        os.path.join(settings.BASE_DIR, 'dl'),
+        train_action.train_path,
+        os.path.join(
+            settings.MEDIA_ROOT,
+            common.DATASET_DIR),
+        train_action.train_path,
+        os.path.join(train_action.train_path, 'eval_log'),
+        train_action.validation_cnt,
+        'nasnet_large',
+        train_action.action,
+    )
+    logger.info(command)
+    subprocess.call(command, shell=True)
+
+def stop_train(train_action):
+    train_dir = os.path.join(common.TRAIN_DIR, str(train_action.pk))
+    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
+    if train_ps != '':
+        pid = int(train_ps.split()[1])
+        os.system('kill -s 9 {}'.format(str(pid)))
+    eval_ps = os.popen('ps -ef | grep eval2.py | grep {} | grep -v grep'.format(train_dir)).readline()
+    if eval_ps != '':
+        pid = int(eval_ps.split()[1])
+        os.system('kill -s 9 {}'.format(str(pid)))
 
 
 def get_host_ip():

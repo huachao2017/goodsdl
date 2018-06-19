@@ -32,6 +32,9 @@ from dl.step2.utils import classify_evaluation
 
 slim = tf.contrib.slim
 
+tf.app.flags.DEFINE_string(
+    'CUDA_VISIBLE_DEVICES', '', 'The CUDA_VISIBLE_DEVICES')
+
 tf.app.flags.DEFINE_integer(
     'batch_size', 50, 'The number of samples in each batch.')
 
@@ -98,12 +101,7 @@ def main(_):
     if not FLAGS.dataset_dir:
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
-    gpus = GPU.getGPUs()
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    if len(gpus)>1:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-    else:
-        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    os.environ["CUDA_VISIBLE_DEVICES"] = FLAGS.CUDA_VISIBLE_DEVICES
     tf.logging.set_verbosity(tf.logging.INFO)
     logger = logging.getLogger()
     logger.setLevel('INFO')
