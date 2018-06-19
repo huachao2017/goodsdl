@@ -20,7 +20,9 @@ def transfer_sample():
     )
 
     try:
+        logger.info('transfer_sample: begin task')
         ret = _do_transfer_sample()
+        logger.info('transfer_sample: end task')
     except Exception as e:
         cur_task.state = 20
         cur_task.message = e
@@ -77,6 +79,7 @@ def _do_transfer_sample():
                     example_cnt += 1
                     total_example_cnt += 1
                     false_example = True
+                    logger.info('transfer_sample: add one false example')
             else:
                 # true example 加score最高的一个
                 image_result = image_result_qs[0]
@@ -96,6 +99,7 @@ def _do_transfer_sample():
             )
             example_cnt += 1
             total_example_cnt += 1
+            logger.info('transfer_sample: add one true example')
 
         if false_example or true_image is not None:
             # add or update TrainUpc
@@ -121,14 +125,17 @@ def execute_train():
     )
 
     try:
-        _do_execute_train()
+        logger.info('execute_train: begin task')
+        ret = _do_execute_train()
+        logger.info('execute_train: end task')
     except Exception as e:
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
     else:
         cur_task.state=10
+        cur_task.message = ret
         cur_task.save()
 
 def _do_execute_train():
-    pass
+    return ''
