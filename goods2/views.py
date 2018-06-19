@@ -58,6 +58,25 @@ class TrainImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
     queryset = TrainImage.objects.order_by('-id')
     serializer_class = TrainImageSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        # add or update TrainUpc
+        try:
+            train_upc = TrainUpc.objects.get(upc=serializer.instance.upc)
+            train_upc.cnt += 1
+            train_upc.save()
+        except TrainUpc.DoesNotExist as e:
+            TrainUpc.objects.create(
+                upc=serializer.instance.upc,
+                cnt=1,
+            )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         train_upc = TrainUpc.objects.get(upc=instance.upc)

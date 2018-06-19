@@ -1,5 +1,5 @@
 检测图片接口：http://ai.fastxbox.cn/api2/image
-入参：
+post入参：
 source  file
 filename string
 deviceid  string
@@ -21,7 +21,7 @@ identify  string
 ]
 
 发送实际upc接口：http://ai.fastxbox.cn/api2/imagegroundtruth
-入参：
+post入参：
 identify  string
 upc       string
 返回201：
