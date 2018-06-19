@@ -84,6 +84,11 @@ class TrainAction(models.Model):
     def __str__(self):
         return '{}-{}:{}'.format(self.pk, self.action, self.desc)
 
+class EvalLog(models.Model):
+    train_action = models.ForeignKey(TrainAction, related_name="train_evals", on_delete=models.CASCADE)
+    precision = models.FloatField(default=0.0)
+    checkpoint_step = models.IntegerField(default=0)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
 
 class TrainModel(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="train_models", on_delete=models.CASCADE)

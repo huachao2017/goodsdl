@@ -329,9 +329,9 @@ def begin_train(train_action):
         )
     elif train_action.action == 'TF':
         checkpoint_path = os.path.join(common.MODEL_DIR, str(train_action.f_model.pk))
-        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+        command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   '--checkpoint_path={} > /root/train_{}.out 2>&1 &'.format(
-            os.path.join(settings.BASE_DIR, 'dl'),
+            settings.BASE_DIR,
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
@@ -343,9 +343,9 @@ def begin_train(train_action):
             train_action.action
         )
     else:
-        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+        command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   ' > /root/train_{}.out 2>&1 &'.format(
-            os.path.join(settings.BASE_DIR, 'dl'),
+            settings.BASE_DIR,
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
@@ -358,9 +358,9 @@ def begin_train(train_action):
     logger.info(command)
     subprocess.call(command, shell=True)
     # 评估
-    command = 'nohup python3 {}/step2/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}' \
+    command = 'nohup python3 {}/goods2/dl/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}' \
               ' > /root/eval_{}.out 2>&1 &'.format(
-        os.path.join(settings.BASE_DIR, 'dl'),
+        settings.BASE_DIR,
         train_action.train_path,
         os.path.join(
             settings.MEDIA_ROOT,
