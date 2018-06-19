@@ -63,7 +63,9 @@ REST_FRAMEWORK = {
 }
 
 CRONJOBS = [
-    ('*/1 * * * *', 'goods2.cron.test', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log')))
+    ('*/1 * * * *', 'goods2.cron.transfer_sample', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
+    ('*/10 * * * *', 'goods2.cron.create_train', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
+    ('*/10 * * * *', 'goods2.cron.execute_train', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
 ]
 
 TEMPLATES = [
@@ -255,5 +257,6 @@ LOGGING = {
 
 # train setting
 TRAIN_ROOT = os.path.join(BASE_DIR, 'train')
+MODEL_ROOT = os.path.join(BASE_DIR, 'dl', 'model')
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
