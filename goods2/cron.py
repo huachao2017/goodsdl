@@ -298,8 +298,8 @@ def _do_execute_train():
             begin_train.state = 5
             begin_train.save()
 
-
     return ''
+
 
 def begin_train(train_action):
     train_cuda_visible_devices = ''
@@ -316,6 +316,21 @@ def begin_train(train_action):
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer,aux_11/aux_logits/FC --trainable_scopes=final_layer,aux_11/aux_logits/FC' \
                   ' > /root/train_{}.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_action.train_path,
+            train_action.train_path,
+            train_action.train_cnt,
+            'nasnet_large',
+            1,
+            8,
+            train_cuda_visible_devices,
+            checkpoint_path,
+            train_action.action
+        )
+    elif train_action.action == 'TF':
+        checkpoint_path = os.path.join(common.MODEL_DIR, str(train_action.f_model.pk))
+        command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+                  '--checkpoint_path={} > /root/train_{}.out 2>&1 &'.format(
             os.path.join(settings.BASE_DIR, 'dl'),
             train_action.train_path,
             train_action.train_path,
@@ -358,6 +373,7 @@ def begin_train(train_action):
     )
     logger.info(command)
     subprocess.call(command, shell=True)
+
 
 def stop_train(train_action):
     train_dir = os.path.join(common.TRAIN_DIR, str(train_action.pk))
