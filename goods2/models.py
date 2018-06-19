@@ -114,3 +114,19 @@ class TrainActionUpcs(models.Model):
 class TrainActionDevices(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="devices", on_delete=models.CASCADE)
     train_deviceid = models.CharField(max_length=20, default='')
+
+class TaskLog(models.Model):
+    NAME_CHOICES = (
+        (1, u'transfer_sample'),
+        (2, u'execute_train'),
+    )
+    name=models.IntegerField(choices=NAME_CHOICES, default=1)
+    STATE_CHOICES = (
+        (1, u'Doing'),
+        (10, u'Complete'),
+        (20, u'Error'),
+    )
+    message = models.CharField(max_length=500, default='')
+    state = models.IntegerField(choices=STATE_CHOICES, default=1)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
