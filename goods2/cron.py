@@ -3,13 +3,19 @@ import os
 import shutil
 from django.conf import settings
 import tensorflow as tf
-from .models import Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog
+from .models import Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
+    TrainModel
 from . import common
+import socket
+from . import convert_goods
+import datetime
 
 logger = logging.getLogger('cron')
 
+
 def test():
     logger.info('test cron')
+
 
 def transfer_sample():
     doing_qs = TaskLog.objects.filter(name='transfer_sample').filter(state=1)
@@ -28,9 +34,10 @@ def transfer_sample():
         cur_task.message = e
         cur_task.save()
     else:
-        cur_task.state=10
+        cur_task.state = 10
         cur_task.message = ret
         cur_task.save()
+
 
 def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
@@ -116,6 +123,132 @@ def _do_transfer_sample():
     return '成功转化{}个样本'.format(total_example_cnt)
 
 
+def create_train():
+    doing_qs = TaskLog.objects.filter(name='create_train').filter(state=1)
+    if len(doing_qs) > 0:
+        return
+    cur_task = TaskLog.objects.create(
+        name='create_train',
+    )
+
+    try:
+        logger.info('create_train: begin task')
+        ret = _do_create_train()
+        logger.info('create_train: end task')
+    except Exception as e:
+        cur_task.state = 20
+        cur_task.message = e
+        cur_task.save()
+    else:
+        cur_task.state = 10
+        cur_task.message = ret
+        cur_task.save()
+
+
+def _do_create_train():
+    _do_create_train_ta()
+    # TF & TC
+    last_t_qs = TrainAction.objects.filter(state__gte=10).order_by('-id')
+    if len(last_t_qs) > 0:
+        last_t = last_t_qs[0]
+        train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).order_by('-id')
+        f_train_model = train_model_qs[0]
+        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lt=10).order_by('-id')
+        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lt=10).order_by('-id')
+        f_train_upcs = last_t.upcs.all()
+        train_upcs = TrainUpc.objects.all()
+
+        upcs = []
+        for train_upc in train_upcs:
+            upcs.append(train_upc.upc)
+
+        upcs = sorted(upcs)
+
+        f_upcs = []
+        for train_upc in f_train_upcs:
+            f_upcs.append(train_upc.upc)
+
+        # 根据train_upcs和f_train_upcs进行样本筛选
+        append_upcs = []
+        for upc in upcs:
+            if upc not in f_upcs:
+                append_upcs.append(upc)
+
+        train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
+        if len(append_upcs) > 0:
+            if len(doing_tc_qs) == 0 and len(train_image_qs) > 10:
+                if len(doing_tf_qs) > 0:
+                    # 退出正在训练的TF
+                    doing_tf = doing_tf_qs[0]
+                    doing_tf.state = 20
+                    doing_tf.save()
+                logger.info('create_train: TC,新增类（{}）,新增样本（{}）'.format(len(append_upcs), len(train_image_qs)))
+                _create_train('TC', f_train_model.pk)
+        else:
+            if len(doing_tf_qs) == 0:
+                now = datetime.datetime.now()
+                if (now - last_t.create_time).days >= 1 or len(train_image_qs) > 200:
+                    logger.info('create_train: TF,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
+                                                                            (now - last_t.create_time).days))
+                    _create_train('TF', f_train_model.pk)
+
+    return ''
+
+
+def _do_create_train_ta():
+    # TA
+    doing_ta = TrainAction.objects.filter(action='TA').filter(state__lt=10)
+    if len(doing_ta) == 0:
+        last_ta = None
+        last_ta_qs = TrainAction.objects.filter(action='TA').filter(state__gte=10).order_by('-id')
+        if len(last_ta_qs) > 0:
+            last_ta = last_ta_qs[0]
+
+        if last_ta is None:
+            # 样本有2000个
+            train_image_qs = TrainImage.objects.all()
+            if len(train_image_qs) >= 2000:
+                logger.info('create_train: TA,新增样本（{}）'.format(len(train_image_qs)))
+                _create_train('TA', 0)
+        else:
+            # 间距达到7天或者新增样本超过2000个
+            now = datetime.datetime.now()
+            train_image_qs = TrainImage.objects.filter(create_time__gt=last_ta.create_time)
+            if (now - last_ta.create_time).days >= 7 or len(train_image_qs) >= 2000:
+                logger.info('create_train: TA,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
+                                                                        (now - last_ta.create_time).days))
+                _create_train('TA', 0)
+
+
+def _create_train(action, f_model_id):
+    train_action = TrainAction.objects.create(
+        action=action,
+        f_model_id=f_model_id,
+        desc=''
+    )
+
+    train_action.train_path = os.path.join(common.TRAIN_DIR, str(train_action.pk))
+    # 数据准备
+    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action)
+    # 更新数据
+    # 'upcs'
+    for upc in names_to_labels:
+        train_upc = TrainUpc.objects.get(upc=upc)
+        TrainActionUpcs.objects.create(
+            train_action_id=train_action.pk,
+            train_upc=train_upc,
+            upc=upc,
+            cnt=train_upc.cnt,
+        )
+    train_action.train_cnt = len(training_filenames)
+    train_action.validation_cnt = len(validation_filenames)
+    # 'devcice'
+    if train_action.action == 'TC':
+        pass
+
+    train_action.save()
+
+
 def execute_train():
     doing_qs = TaskLog.objects.filter(name='execute_train').filter(state=1)
     if len(doing_qs) > 0:
@@ -133,9 +266,21 @@ def execute_train():
         cur_task.message = e
         cur_task.save()
     else:
-        cur_task.state=10
+        cur_task.state = 10
         cur_task.message = ret
         cur_task.save()
 
+
 def _do_execute_train():
     return ''
+
+
+def get_host_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+
+    return ip

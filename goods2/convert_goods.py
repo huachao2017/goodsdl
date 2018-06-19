@@ -24,11 +24,11 @@ import tensorflow as tf
 
 from datasets import dataset_utils
 from .models import TrainImage, TrainUpc, TrainActionUpcs, TrainAction, TrainModel
-
+from . import common
 # Seed for repeatability.
 _RANDOM_SEED = 42
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("cron")
 
 
 class ImageReader(object):
@@ -184,11 +184,12 @@ def prepare_train_TC(train_action):
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
-    upcs = []
     train_upcs = TrainUpc.objects.all()
     f_model = TrainModel.objects.get(id=train_action.f_model.pk)
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
-    f_train_upcs = TrainActionUpcs.objects.filter(train_action_id=f_train.pk)
+    f_train_upcs = f_train.upcs.all()
+
+    upcs = []
     for train_upc in train_upcs:
         upcs.append(train_upc.upc)
 
@@ -240,16 +241,16 @@ def prepare_train_TC(train_action):
 
     return upcs, training_filenames, validation_filenames
 
-def prepare_train(train_action, action):
+def prepare_train(train_action):
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
-    if action == 'TA':
+    if train_action.action == 'TA':
         upcs, training_filenames, validation_filenames = prepare_train_TA(train_action)
-    elif action == 'TF':
+    elif train_action.action == 'TF':
         upcs, training_filenames, validation_filenames = prepare_train_TF(train_action)
-    elif action == 'TC':
+    elif train_action.action == 'TC':
         upcs, training_filenames, validation_filenames = prepare_train_TC(train_action)
     else:
         raise ValueError('error parameter')

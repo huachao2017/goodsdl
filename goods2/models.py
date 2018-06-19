@@ -55,15 +55,7 @@ class TrainUpc(models.Model):
     update_time = models.DateTimeField('date updated', auto_now=True)
 
 
-MODEL_CHOICES = (
-    (u'nasnet_large', u'nas large'),
-    (u'nasnet_mobile', u'nas mobile'),
-    (u'inception_resnet_v2', u'inception resnet V2'),
-)
-
-
 class TrainAction(models.Model):
-    train_ip = models.GenericIPAddressField()
     ACTION_CHOICES = (
         (u'TA', u'Train All Dataset'),
         (u'TF', u'Train Funiture'),
@@ -71,11 +63,9 @@ class TrainAction(models.Model):
     )
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
     train_path = models.CharField(max_length=200)
-    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES, default='nasnet_large')
     STATE_CHOICES = (
         (1, u'Waiting'),
         (5, u'Training'),
-        (9, u'pause'),
         (10, u'Complete'),
         (20, u'Quit'),
     )
