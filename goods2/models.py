@@ -116,11 +116,7 @@ class TrainActionDevices(models.Model):
     train_deviceid = models.CharField(max_length=20, default='')
 
 class TaskLog(models.Model):
-    NAME_CHOICES = (
-        (1, u'transfer_sample'),
-        (2, u'execute_train'),
-    )
-    name=models.IntegerField(choices=NAME_CHOICES, default=1)
+    name=models.CharField(max_length=50)
     STATE_CHOICES = (
         (1, u'Doing'),
         (10, u'Complete'),
