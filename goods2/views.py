@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from django.conf import settings
+from goods2.dl import imagedetection
+
+from .models import TrainModel,TrainAction
 
 from .serializers import *
 
@@ -30,9 +33,26 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        # TODO detect
+        # detect
+        ret = []
+        last_normal_train_qs = TrainAction.objects.filter(state=10).exclude(action='TC').order_by('-id')
+        if len(last_normal_train_qs)>0:
+            last_train = last_normal_train_qs[0]
+            last_normal_train_model = TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
+            detector = imagedetection.ImageDetectorFactory.get_static_detector(
+                last_normal_train_model)
+            ret = detector.detect(serializer.instance)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            last_tc_train_qs = TrainAction.objects.filter(state=10).filter(action='TC').filter(update_time__gt=last_normal_train_model.create_time).order_by('-id')
+            if len(last_tc_train_qs)>0:
+                last_tc_train = last_tc_train_qs[0]
+                last_tc_train_model = TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
+                detector2 = imagedetection.ImageDetectorFactory.get_static_detector(
+                    last_tc_train_model)
+                ret2 = detector2.detect(serializer.instance)
+                # TODO 拼接ret和ret2
+
+        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin,viewsets.GenericViewSet):

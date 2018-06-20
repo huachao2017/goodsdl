@@ -180,11 +180,11 @@ def _do_create_train():
         train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
         if len(append_upcs) > 0:
             if len(doing_tc_qs) == 0 and len(train_image_qs) > 10:
-                if len(doing_tf_qs) > 0:
+                # if len(doing_tf_qs) > 0:
                     # 退出正在训练的TF
-                    doing_tf = doing_tf_qs[0]
-                    doing_tf.state = 9
-                    doing_tf.save()
+                    # doing_tf = doing_tf_qs[0]
+                    # doing_tf.state = 9
+                    # doing_tf.save()
                 logger.info('create_train: TC,新增类（{}）,新增样本（{}）'.format(len(append_upcs), len(train_image_qs)))
                 _create_train('TC', f_train_model.pk)
         else:
