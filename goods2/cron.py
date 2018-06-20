@@ -277,31 +277,31 @@ def _do_execute_train():
     if my_ip == '192.168.1.170':
         quit_train_qs = TrainAction.objects.filter(state=9).exclude(action='TC')
         for quit_train in quit_train_qs:
-            stop_train(quit_train)
+            _do_stop_train(quit_train)
             quit_train.state = 20
             quit_train.save()
 
         begin_train_qs = TrainAction.objects.filter(state=1).exclude(action='TC')
         for begin_train in begin_train_qs:
-            begin_train(begin_train)
+            _do_begin_train(begin_train)
             begin_train.state = 5
             begin_train.save()
     elif my_ip == '192.168.1.173':
         quit_train_qs = TrainAction.objects.filter(state=9).filter(action='TC')
         for quit_train in quit_train_qs:
-            stop_train(quit_train)
+            _do_stop_train(quit_train)
             quit_train.state = 20
             quit_train.save()
         begin_train_qs = TrainAction.objects.filter(state=1).filter(action='TC')
         for begin_train in begin_train_qs:
-            begin_train(begin_train)
+            _do_begin_train(begin_train)
             begin_train.state = 5
             begin_train.save()
 
     return ''
 
 
-def begin_train(train_action):
+def _do_begin_train(train_action):
     train_cuda_visible_devices = ''
     if train_action.action == 'TA':
         train_cuda_visible_devices = '0'
@@ -375,7 +375,7 @@ def begin_train(train_action):
     subprocess.call(command, shell=True)
 
 
-def stop_train(train_action):
+def _do_stop_train(train_action):
     train_dir = os.path.join(common.TRAIN_DIR, str(train_action.pk))
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
     if train_ps != '':
