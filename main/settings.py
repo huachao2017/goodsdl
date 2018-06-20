@@ -64,8 +64,9 @@ REST_FRAMEWORK = {
 
 CRONJOBS = [
     ('*/1 * * * *', 'goods2.cron.transfer_sample', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
-    ('*/10 * * * *', 'goods2.cron.create_train', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
-    ('*/10 * * * *', 'goods2.cron.execute_train', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
+    ('*/5 * * * *', 'goods2.cron.create_train', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
+    ('*/1 * * * *', 'goods2.cron.execute_train', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
+    ('*/10 * * * *', 'goods2.cron.check_train', '>> {} 2>&1'.format(os.path.join(BASE_DIR, "logs", 'cron.log'))),
 ]
 
 TEMPLATES = [
