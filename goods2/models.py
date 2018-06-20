@@ -92,13 +92,13 @@ class EvalLog(models.Model):
 
 class TrainModel(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="train_models", on_delete=models.CASCADE)
-    model_path = models.CharField(max_length=200)
-    checkpoint_prefix = models.PositiveIntegerField(default=0)
+    model_path = models.CharField(max_length=200, default='')
+    checkpoint_step = models.PositiveIntegerField(default=0)
     precision = models.FloatField(default=.0)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
     def __str__(self):
-        return '{}-{}:{}'.format(self.pk, self.train_action, self.checkpoint_prefix)
+        return '{}-{}:{},{}'.format(self.pk, self.train_action, self.checkpoint_step, self.precision)
 
 
 class TrainActionUpcs(models.Model):
@@ -113,6 +113,7 @@ class TrainActionDevices(models.Model):
 
 class TaskLog(models.Model):
     name=models.CharField(max_length=50)
+    ip=models.CharField(max_length=50, default='')
     STATE_CHOICES = (
         (1, u'Doing'),
         (10, u'Complete'),

@@ -4,7 +4,7 @@ import shutil
 from django.conf import settings
 import tensorflow as tf
 from .models import Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
-    TrainModel
+    TrainModel, EvalLog
 from . import common
 import socket
 from . import convert_goods
@@ -24,6 +24,7 @@ def transfer_sample():
         return
     cur_task = TaskLog.objects.create(
         name='transfer_sample',
+        ip=get_host_ip(),
     )
 
     try:
@@ -130,6 +131,7 @@ def create_train():
         return
     cur_task = TaskLog.objects.create(
         name='create_train',
+        ip=get_host_ip()
     )
 
     try:
@@ -152,7 +154,7 @@ def _do_create_train():
     last_t_qs = TrainAction.objects.filter(state__gte=10).order_by('-id')
     if len(last_t_qs) > 0:
         last_t = last_t_qs[0]
-        train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).order_by('-id')
+        train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
         f_train_model = train_model_qs[0]
         doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lt=10).order_by('-id')
         doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lt=10).order_by('-id')
@@ -256,6 +258,7 @@ def execute_train():
         return
     cur_task = TaskLog.objects.create(
         name='execute_train',
+        ip=get_host_ip(),
     )
 
     try:
@@ -386,6 +389,149 @@ def _do_stop_train(train_action):
         pid = int(eval_ps.split()[1])
         os.system('kill -s 9 {}'.format(str(pid)))
 
+
+def check_train():
+    doing_qs = TaskLog.objects.filter(name='check_train').filter(state=1)
+    if len(doing_qs) > 0:
+        return
+    cur_task = TaskLog.objects.create(
+        name='check_train',
+        ip=get_host_ip(),
+    )
+
+    try:
+        logger.info('execute_train: begin task')
+        ret = _do_check_train()
+        logger.info('execute_train: end task')
+    except Exception as e:
+        cur_task.state = 20
+        cur_task.message = e
+        cur_task.save()
+    else:
+        cur_task.state = 10
+        cur_task.message = ret
+        cur_task.save()
+
+def _do_check_train():
+    my_ip = get_host_ip()
+    ret = ''
+    if my_ip == '192.168.1.170':
+        doing_train_qs = TrainAction.objects.filter(state=5).exclude(action='TC')
+        for check_train in doing_train_qs:
+            ret += _do_check_one_train(check_train)
+    elif my_ip == '192.168.1.173':
+        doing_train_qs = TrainAction.objects.filter(state=5).filter(action='TC')
+        for check_train in doing_train_qs:
+            ret += _do_check_one_train(check_train)
+
+    return ret
+
+# 生成信号：
+# precsion达0.95后：
+# TA：距离上次生成超5000/step或精度上升超0.3%存一次
+# TF：距离上次生成超2000/step或精度上升超0.6%存一次
+# TC：距离上次生成超500/step或精度上升超1%存一次
+#
+# 训练结束信号（导出）：
+# precsion达0.95后：
+# TA：10次生成达0.998以上或精度提升小于0.2%后结束
+# TF：5次生成达0.995以上或精度提升小于0.3%后结束
+# TC：3次生成达0.99以上或精度提升小于0.5%后结束
+def _do_check_one_train(train_action):
+    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_action.train_path)).readline()
+    if train_ps == '':
+        train_action.state=20
+        train_action.save()
+        logger.error('train process has been killed:{};'.format(train_action.pk))
+        return  'train process has been killed:{};'.format(train_action.pk)
+
+    eval_log_qs = EvalLog.objects.filter(train_action_id=train_action.pk).order_by('-id')
+
+    train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')
+    last_train_model = None
+    if len(train_model_qs)>0:
+        last_train_model = train_model_qs[0]
+
+    if len(eval_log_qs)>0 and eval_log_qs[0].precision>0.95:
+        if last_train_model is None:
+            _do_create_train_model(train_action, eval_log_qs[0])
+        else:
+            step_interval = eval_log_qs[0].checkpoint_step - last_train_model.checkpoint_step
+            precision_interval = eval_log_qs[0].precision - last_train_model.precision
+            if train_action.action == 'TA':
+                if step_interval>=5000 or precision_interval>=0.003:
+                    _do_create_train_model(train_action,eval_log_qs[0])
+            elif train_action.action == 'TF':
+                if step_interval>=2000 or precision_interval>=0.006:
+                    _do_create_train_model(train_action,eval_log_qs[0])
+            elif train_action.action == 'TC':
+                if step_interval>=500 or precision_interval>=0.01:
+                    _do_create_train_model(train_action,eval_log_qs[0])
+
+
+def _do_create_train_model(train_action, eval_log):
+    cur_train_model = TrainModel.objects.create(
+        train_action_id=train_action.pk,
+        checkpoint_step=eval_log.checkpoint_step,
+        precision=eval_log.precision,
+    )
+    if train_action.action == 'TA':
+        count = 10
+    elif train_action.action == 'TF':
+        count = 5
+    elif train_action.action == 'TC':
+        count = 3
+    train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')[:count]
+    if len(train_model_qs) == count:
+        min_precision = train_model_qs[0].precision
+        max_precision = train_model_qs[0].precision
+        for train_model in train_model_qs:
+            if min_precision > train_model.precision:
+                min_precision = train_model.precision
+            if max_precision < train_model.precision:
+                max_precision = train_model.precision
+        if train_action.action == 'TA':
+            if min_precision > 0.998 or max_precision - min_precision < 0.002:
+                _do_export_train(train_action, cur_train_model)
+        elif train_action.action == 'TF':
+            if min_precision > 0.995 or max_precision - min_precision < 0.003:
+                _do_export_train(train_action, cur_train_model)
+        elif train_action.action == 'TC':
+            if min_precision > 0.99 or max_precision - min_precision < 0.005:
+                _do_export_train(train_action, cur_train_model)
+    return cur_train_model
+
+
+def _do_export_train(train_action, train_model):
+    logger.info('Export <trainid:{}> Graph from classify train.'.format(train_action.pk))
+    checkpoint_model_path = tf.train.latest_checkpoint(train_action.train_path)
+    if checkpoint_model_path:
+        checkpoint_step = checkpoint_model_path.split('-')[-1]
+        model_path = os.path.join(common.MODEL_DIR, str(train_model.pk))
+        if not tf.gfile.Exists(model_path):
+            tf.gfile.MakeDirs(model_path)
+        checkpoint_file_path = os.path.join(model_path, 'checkpoint')
+        # 输出pb
+        # e2.export(step2_model_name, trained_checkpoint_dir, export_file_path)
+        # 重写checkpoint file
+        with open(checkpoint_file_path, 'w') as output:
+            a = os.path.split(checkpoint_model_path)
+            output.write('model_checkpoint_path: "{}"\n'.format(os.path.join(model_path, a[1])))
+            output.write('all_model_checkpoint_paths: "{}"\n'.format(os.path.join(model_path, a[1])))
+        shutil.copy(checkpoint_model_path + '.data-00000-of-00001', model_path)
+        shutil.copy(checkpoint_model_path + '.index', model_path)
+        shutil.copy(checkpoint_model_path + '.meta', model_path)
+        # copy dataset
+        # shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'),
+        #             model_dir)
+        # copy label
+        shutil.copy(os.path.join(train_action.train_path, 'labels.txt'), model_path)
+
+        train_model.checkpoint_step = checkpoint_step
+        train_model.model_path = model_path
+        train_model.save()
+        train_action.state = 10
+        train_action.save()
 
 def get_host_ip():
     try:
