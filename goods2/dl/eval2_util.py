@@ -345,7 +345,10 @@ def repeated_checkpoint_run(tensor_dict,
     raise ValueError('`checkpoint_dirs` must have at least one entry.')
 
   # FIXME 用目录去id
-  train_action_id = int(os.path.basename(checkpoint_dirs[0]))
+  train_basename = os.path.basename(checkpoint_dirs[0])
+  if train_basename == '':
+      train_basename = os.path.basename(os.path.dirname(checkpoint_dirs[0]))
+  train_action_id = int(train_basename)
   last_evaluated_model_path = None
   number_of_evaluations = 0
   while True:
