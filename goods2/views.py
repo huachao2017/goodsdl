@@ -6,10 +6,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from django.conf import settings
 from goods2.dl import imagedetection
-
-from .models import TrainModel,TrainAction
 
 from .serializers import *
 
@@ -33,7 +30,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        # detect
+        # 检测阶段
         ret = []
         last_normal_train_qs = TrainAction.objects.filter(state=10).exclude(action='TC').order_by('-id')
         if len(last_normal_train_qs)>0:
@@ -41,7 +38,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             last_normal_train_model = TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
             detector = imagedetection.ImageDetectorFactory.get_static_detector(
                 last_normal_train_model)
-            ret = detector.detect(serializer.instance)
+            upcs, scores = detector.detect(serializer.instance)
 
             last_tc_train_qs = TrainAction.objects.filter(state=10).filter(action='TC').filter(update_time__gt=last_normal_train_model.create_time).order_by('-id')
             if len(last_tc_train_qs)>0:
@@ -49,8 +46,41 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 last_tc_train_model = TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
                 detector2 = imagedetection.ImageDetectorFactory.get_static_detector(
                     last_tc_train_model)
-                ret2 = detector2.detect(serializer.instance)
-                # TODO 拼接ret和ret2
+                upcs2, scores2 = detector2.detect(serializer.instance)
+                # 联合计算
+                upc_to_scores = {}
+                for i in range(len(upcs)):
+                    if upcs[i] in upc_to_scores:
+                        upc_to_scores[upcs[i]] = upc_to_scores[upcs[i]]*0.5 + scores[i]*0.5
+                    else:
+                        upc_to_scores[upcs[i]] = scores[i]
+                for i in range(len(upcs2)):
+                    if upcs2[i] in upc_to_scores:
+                        upc_to_scores[upcs2[i]] = upc_to_scores[upcs2[i]]*0.5 + scores2[i]*0.5
+                    else:
+                        upc_to_scores[upcs2[i]] = scores2[i]
+
+                items = upc_to_scores.items()
+                backitems = [[v[1], v[0]] for v in items]
+                backitems.sort(reverse=True)
+
+                upcs = [backitems[i][0] for i in range(0, len(backitems))]
+                scores = [backitems[i][1] for i in range(0, len(backitems))]
+
+            # 输出结果
+            ret = []
+            for i in range(len(upcs)):
+                ret.append(
+                    {
+                        'upc': upcs[i],
+                        'score': scores[i],
+                    }
+                )
+                ImageResult.objects.create(
+                    image_id=serializer.instance.pk,
+                    upc=upcs[i],
+                    score=scores[i]
+                )
 
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 

@@ -56,16 +56,5 @@ class ImageDetector:
         upcs, scores = self.cnn.detect(image_np)
 
         time2 = time.time()
-
-        ret = []
-        for i in range(len(upcs)):
-            ret.append(
-                {
-                    'upc': upcs[i],
-                    'score': scores[i],
-}
-            )
-
-        time3 = time.time()
-        logger.info('detect: %s, %.2f, %.2f, %.2f' %(image_instance.deviceid, time3-time0, time1-time0, time2-time1))
-        return ret
+        logger.info('detect: %s, %.2f, %.2f, %.2f' %(image_instance.deviceid, time2-time0, time1-time0, time2-time1))
+        return upcs, scores

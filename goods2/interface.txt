@@ -19,6 +19,7 @@ identify  string
         "score": 0.66                         -- 可能性评分
     },
 ]
+如果返回空[]，说明model还没有准备好，系统处于准备样本阶段
 
 发送实际upc接口：http://ai.fastxbox.cn/api2/imagegroundtruth
 post入参：
