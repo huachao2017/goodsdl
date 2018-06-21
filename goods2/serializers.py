@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from goods2.models import Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel
+from goods2.models import Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel, TaskLog
 
 
 class ImageResultSerializer(serializers.ModelSerializer):
@@ -74,3 +74,9 @@ class TrainActionSerializer(serializers.ModelSerializer):
         model = TrainAction
         fields = ('pk', 'action', 'f_model', 'desc')
         read_only_fields = ('train_path', 'create_time', 'update_time', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')
+
+class TaskLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskLog
+        fields = ('pk', )
+        read_only_fields = ('name', 'ip', 'message', 'state', 'create_time', 'update_time')
