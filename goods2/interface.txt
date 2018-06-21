@@ -1,4 +1,5 @@
-检测图片接口：http://ai.fastxbox.cn/api2/image
+1、检测图片接口：http://ai.fastxbox.cn/api2/image
+该接口在称清零后加重量开始每秒调用，直到调用接口2
 post入参：
 source  file
 filename string
@@ -19,9 +20,9 @@ identify  string
         "score": 0.66                         -- 可能性评分
     },
 ]
-如果返回空[]，说明model还没有准备好，系统处于准备样本阶段
+如果返回空[]，说明model还没有准备好，系统处于样本收集阶段
 
-发送实际upc接口：http://ai.fastxbox.cn/api2/imagegroundtruth
+2、发送实际upc接口：http://ai.fastxbox.cn/api2/imagegroundtruth
 post入参：
 identify  string
 upc       string
