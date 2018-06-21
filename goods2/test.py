@@ -4,8 +4,6 @@ from io import BytesIO
 
 
 class TaskLogTestCase(TestCase):
-    reset_sequences = True
-
     def setUp(self):
         pass
 
