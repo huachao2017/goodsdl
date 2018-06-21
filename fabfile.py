@@ -10,3 +10,7 @@ def migrate():
 def start_container(ip='0.0.0.0', port='80'):
     #migrate()
     local('python manage.py runserver {}:{}'.format(ip, port))
+
+@task
+def do_test():
+    local('python manage.py test')
