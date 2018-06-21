@@ -156,14 +156,14 @@ def _do_create_train():
         last_t = last_t_qs[0]
         if last_t.action == 'TA':
             # 'TA'训练完即建立了新的主分支
-            doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state=5).order_by('-id')
+            doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=5).order_by('-id')
             if len(doing_tf_qs)>0:
                 doing_tf = doing_tf_qs[0]
                 if doing_tf.create_time < last_t.complete_time:
                     # 退出TA之前的TF
                     doing_tf.state = 9
                     doing_tf.save()
-            doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state=5).order_by('-id')
+            doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=5).order_by('-id')
             if len(doing_tc_qs)>0:
                 doing_tc = doing_tc_qs[0]
                 if doing_tc.create_time < last_t.complete_time:
@@ -173,8 +173,8 @@ def _do_create_train():
 
 
         train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
-        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state=5).order_by('-id')
-        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state=5).order_by('-id')
+        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=5).order_by('-id')
+        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=5).order_by('-id')
         f_train_model = train_model_qs[0]
         f_train_upcs = last_t.upcs.all()
         train_upcs = TrainUpc.objects.all()
