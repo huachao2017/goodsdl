@@ -1,6 +1,6 @@
 from django.db import models
 import datetime
-from . import common
+from goods2 import common
 
 def image_upload_source(instance, filename):
     now = datetime.datetime.now()

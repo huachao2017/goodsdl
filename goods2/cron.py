@@ -3,11 +3,11 @@ import os
 import shutil
 from django.conf import settings
 import tensorflow as tf
-from .models import Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
+from goods2.models import Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
     TrainModel, EvalLog
 from . import common
 import socket
-from . import convert_goods
+from goods2 import convert_goods
 import datetime
 import subprocess
 

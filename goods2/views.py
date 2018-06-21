@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from goods2.dl import imagedetection
 
-from .serializers import *
+from goods2.serializers import *
 
 logger = logging.getLogger("django")
 

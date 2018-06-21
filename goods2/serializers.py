@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel
+from goods2.models import Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel
 
 
 class ImageResultSerializer(serializers.ModelSerializer):

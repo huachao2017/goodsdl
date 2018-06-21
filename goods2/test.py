@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import TaskLog
+from goods2.models import TaskLog
 
 class ImageTestCase(TestCase):
     def setUp(self):

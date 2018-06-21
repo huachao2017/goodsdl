@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
-from . import views
+from goods2 import views
 
 router = DefaultRouter()
 router.register(r'image', views.ImageViewSet)

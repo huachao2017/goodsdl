@@ -23,8 +23,7 @@ import math
 import tensorflow as tf
 
 from datasets import dataset_utils
-from .models import TrainImage, TrainUpc, TrainActionUpcs, TrainAction, TrainModel
-from . import common
+from goods2.models import TrainImage, TrainUpc, TrainActionUpcs, TrainAction, TrainModel
 # Seed for repeatability.
 _RANDOM_SEED = 42
 
