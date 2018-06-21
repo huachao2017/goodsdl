@@ -151,3 +151,13 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
 class TrainUpcViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TrainUpc.objects.order_by('-id')
     serializer_class = TrainUpcSerializer
+
+class TrainActionViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                      viewsets.GenericViewSet):
+    queryset = TrainAction.objects.order_by('-id')
+    serializer_class = TrainActionSerializer
+
+
+class TrainModelViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = TrainModel.objects.order_by('-id')
+    serializer_class = TrainModelSerializer

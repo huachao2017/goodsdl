@@ -17,7 +17,6 @@ from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
 from . import views
-from . import views_ai
 
 router = DefaultRouter()
 router.register(r'image', views.ImageViewSet)
@@ -25,8 +24,8 @@ router.register(r'imagegroundtruth', views.ImageGroundTruthViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
 router.register(r'trainupc', views.TrainUpcViewSet)
 
-router.register(r'trainaction', views_ai.TrainActionViewSet)
-router.register(r'trainmodel', views_ai.TrainModelViewSet)
+router.register(r'trainaction', views.TrainActionViewSet)
+router.register(r'trainmodel', views.TrainModelViewSet)
 urlpatterns = [
     url(r'^api2/', include(router.urls))
 ]
