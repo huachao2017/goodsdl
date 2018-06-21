@@ -80,6 +80,7 @@ class TrainAction(models.Model):
 
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
+    complete_time = models.DateTimeField('train finish time', default=None)
 
     def __str__(self):
         return '{}-{}:{}'.format(self.pk, self.action, self.desc)

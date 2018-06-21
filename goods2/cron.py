@@ -151,13 +151,31 @@ def create_train():
 def _do_create_train():
     _do_create_train_ta()
     # TF & TC
-    last_t_qs = TrainAction.objects.filter(state__gte=10).order_by('-id')
+    last_t_qs = TrainAction.objects.filter(state__gte=10).order_by('-complete_time')
     if len(last_t_qs) > 0:
         last_t = last_t_qs[0]
+        if last_t.action == 'TA':
+            # 'TA'训练完即建立了新的主分支
+            doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state=5).order_by('-id')
+            if len(doing_tf_qs)>0:
+                doing_tf = doing_tf_qs[0]
+                if doing_tf.create_time < last_t.complete_time:
+                    # 退出TA之前的TF
+                    doing_tf.state = 9
+                    doing_tf.save()
+            doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state=5).order_by('-id')
+            if len(doing_tc_qs)>0:
+                doing_tc = doing_tc_qs[0]
+                if doing_tc.create_time < last_t.complete_time:
+                    # 退出TA之前的TC
+                    doing_tc.state = 9
+                    doing_tc.save()
+
+
         train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
+        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state=5).order_by('-id')
+        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state=5).order_by('-id')
         f_train_model = train_model_qs[0]
-        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lt=10).order_by('-id')
-        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lt=10).order_by('-id')
         f_train_upcs = last_t.upcs.all()
         train_upcs = TrainUpc.objects.all()
 
@@ -282,6 +300,7 @@ def _do_execute_train():
         for quit_train in quit_train_qs:
             _do_stop_train(quit_train)
             quit_train.state = 20
+            quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
 
         begin_train_qs = TrainAction.objects.filter(state=1).exclude(action='TC')
@@ -294,6 +313,7 @@ def _do_execute_train():
         for quit_train in quit_train_qs:
             _do_stop_train(quit_train)
             quit_train.state = 20
+            quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
         begin_train_qs = TrainAction.objects.filter(state=1).filter(action='TC')
         for begin_train in begin_train_qs:
@@ -531,6 +551,7 @@ def _do_export_train(train_action, train_model):
         train_model.model_path = model_path
         train_model.save()
         train_action.state = 10
+        train_action.complete_time = datetime.datetime.now()
         train_action.save()
 
 def get_host_ip():
