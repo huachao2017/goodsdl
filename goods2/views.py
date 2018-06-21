@@ -93,7 +93,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin,viewsets.GenericViewSet):
+class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = ImageGroundTruth.objects.order_by('-id')
     serializer_class = ImageGroundTruthSerializer
 
@@ -158,7 +158,7 @@ class TrainActionViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMod
     serializer_class = TrainActionSerializer
 
 
-class TrainModelViewSet(DefaultMixin, viewsets.ModelViewSet):
+class TrainModelViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TrainModel.objects.order_by('-id')
     serializer_class = TrainModelSerializer
 
