@@ -333,7 +333,7 @@ def _do_begin_train(train_action):
     elif train_action.action == 'TF':
         checkpoint_path = os.path.join(common.MODEL_DIR, str(train_action.f_model.pk))
         command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
-                  '--checkpoint_path={} > /root/train_{}.out 2>&1 &'.format(
+                  '--learning_rate=0.003 --checkpoint_path={} > /root/train_{}.out 2>&1 &'.format(
             settings.BASE_DIR,
             train_action.train_path,
             train_action.train_path,
