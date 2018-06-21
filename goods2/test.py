@@ -13,8 +13,7 @@ class TaskLogTestCase(TestCase):
 
     def test_tasklog_get(self):
         task_log = TaskLog.objects.create(name='test', ip='test', message='')
-        c = Client()
-        response = c.get('/api2/tasklog/')
+        response = self.client.get('/api2/tasklog/')
         self.assertEqual(response.status_code,200)
         task_log_list = response.data['results']
         self.assertEqual(len(task_log_list), 1)
