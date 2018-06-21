@@ -103,12 +103,15 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin,viewsets.Gen
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class TrainImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImage.objects.order_by('-id')
     serializer_class = TrainImageSerializer
 
     def create(self, request, *args, **kwargs):
+        if 'source_from' not in request.data:
+            request.data['source_from'] = 1
+        if 'score' not in request.data:
+            request.data['score'] = 1.0
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

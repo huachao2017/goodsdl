@@ -39,13 +39,15 @@ class TrainImage(models.Model):
     deviceid = models.CharField(max_length=20, default='')
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     upc = models.CharField(max_length=20, db_index=True)
-    create_time = models.DateTimeField('date created', auto_now_add=True)
     source_image = models.ForeignKey('Image', related_name="trainimages", default=None, null=True, on_delete=models.SET_NULL)
     FROM_CHOICES = (
         (1, u'backend'),
         (2, u'frontend'),
     )
     source_from = models.IntegerField(choices=FROM_CHOICES, default=1)
+    score = models.FloatField(default=1.0)# 可靠度评分，用于筛选样本
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
 
 
 class TrainUpc(models.Model):

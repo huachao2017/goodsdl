@@ -28,8 +28,8 @@ class ImageSerializer(serializers.ModelSerializer):
 class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainImage
-        fields = ('pk', 'deviceid', 'source', 'upc', 'source_image', 'source_from', 'create_time')
-        read_only_fields = ('create_time',)
+        fields = ('pk', 'deviceid', 'source', 'upc', 'source_from', 'score')
+        read_only_fields = ('source_image', 'create_time', 'update_time')
 
 
 class TrainUpcSerializer(serializers.ModelSerializer):
@@ -67,4 +67,4 @@ class TrainActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainAction
         fields = ('pk', 'action', 'f_model', 'desc')
-        read_only_fields = ('train_path', 'create_time', 'update_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')
+        read_only_fields = ('train_path', 'create_time', 'update_time', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')

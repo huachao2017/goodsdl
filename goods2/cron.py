@@ -84,6 +84,7 @@ def _do_transfer_sample():
                         upc=image_ground_truth.groundtruth_upc,
                         source_image_id=image.pk,
                         source_from=2,
+                        score=0.0,
                     )
                     example_cnt += 1
                     total_example_cnt += 1
@@ -105,6 +106,7 @@ def _do_transfer_sample():
                 upc=image_ground_truth.groundtruth_upc,
                 source_image_id=true_image.pk,
                 source_from=2,
+                score=true_max_score,
             )
             example_cnt += 1
             total_example_cnt += 1
