@@ -78,5 +78,4 @@ class TrainActionSerializer(serializers.ModelSerializer):
 class TaskLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskLog
-        fields = ('pk', )
-        read_only_fields = ('name', 'ip', 'message', 'state', 'create_time', 'update_time')
+        fields = ('pk''name', 'ip', 'message', 'state', 'create_time', 'update_time')

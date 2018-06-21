@@ -162,6 +162,6 @@ class TrainModelViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainModel.objects.order_by('-id')
     serializer_class = TrainModelSerializer
 
-class TaskLogViewSet(DefaultMixin, viewsets.ModelViewSet):
+class TaskLogViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TaskLog.objects.order_by('-id')
     serializer_class = TaskLogSerializer
