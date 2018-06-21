@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices
+from .models import Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel
 
 
 class ImageResultSerializer(serializers.ModelSerializer):
@@ -14,14 +14,20 @@ class ImageGroundTruthSerializer(serializers.ModelSerializer):
         fields = ('pk', 'upc', 'identify')
         read_only_fields = ('create_time',)
 
+class ImageTrainModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageTrainModel
+        fields = ('pk', 'train_model', 'image')
+
 
 class ImageSerializer(serializers.ModelSerializer):
     image_results = ImageResultSerializer(many=True, read_only=True)
     image_ground_truth = ImageGroundTruthSerializer(many=False, read_only=True)
+    train_models = ImageTrainModelSerializer(many=False, read_only=True)
 
     class Meta:
         model = Image
-        fields = ('pk', 'deviceid', 'identify', 'source', 'image_ground_truth', 'image_results')
+        fields = ('pk', 'deviceid', 'identify', 'source', 'image_ground_truth', 'image_results', 'train_models')
         read_only_fields = ('create_time',)
 
 

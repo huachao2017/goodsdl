@@ -39,6 +39,10 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             detector = imagedetection.ImageDetectorFactory.get_static_detector(
                 last_normal_train_model)
             upcs, scores = detector.detect(serializer.instance)
+            ImageTrainModel.objects.create(
+                train_model_id=last_normal_train_model.pk,
+                image_id=serializer.instance.pk
+            )
 
             last_tc_train_qs = TrainAction.objects.filter(state=10).filter(action='TC').filter(update_time__gt=last_normal_train_model.create_time).order_by('-id')
             if len(last_tc_train_qs)>0:
@@ -47,6 +51,10 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 detector2 = imagedetection.ImageDetectorFactory.get_static_detector(
                     last_tc_train_model)
                 upcs2, scores2 = detector2.detect(serializer.instance)
+                ImageTrainModel.objects.create(
+                    train_model_id=last_tc_train_model.pk,
+                    image_id=serializer.instance.pk
+                )
                 # 联合计算
                 upc_to_scores = {}
                 for i in range(len(upcs)):
@@ -140,7 +148,6 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TrainUpcViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                      viewsets.GenericViewSet):
+class TrainUpcViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TrainUpc.objects.order_by('-id')
     serializer_class = TrainUpcSerializer

@@ -103,6 +103,9 @@ class TrainModel(models.Model):
     def __str__(self):
         return '{}-{}:{},{}'.format(self.pk, self.train_action, self.checkpoint_step, self.precision)
 
+class ImageTrainModel(models.Model):
+    train_model = models.ForeignKey('TrainModel', related_name="images", on_delete=models.CASCADE)
+    image = models.ForeignKey('Image', related_name="train_models", on_delete=models.CASCADE)
 
 class TrainActionUpcs(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="upcs", on_delete=models.CASCADE)
