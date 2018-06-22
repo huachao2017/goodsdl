@@ -4,10 +4,12 @@ from rest_framework import status
 
 from goods2.models import TaskLog
 from PIL import Image
-import tempfile
 from io import BytesIO
+import os
 
-class TaskLogTestCase(APITestCase):
+from django.conf import settings
+
+class DebugTestCase(APITestCase):
     def setUp(self):
         pass
 
@@ -29,13 +31,9 @@ class TaskLogTestCase(APITestCase):
     def test_image_create(self):
         # image = Image.new('RGB', (100, 100))
         #
-        # tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
-        # tmp_file.name='a.jpg'
-        # image.save(tmp_file)
+        # img = BytesIO(image.tobytes('jpeg'))
+        # img.name='myimage2.jpg'
+        with open(os.path.join(settings.BASE_DIR, 'images/test_1.jpg'), mode='rb') as fp:
+            response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': fp}, format='multipart')
 
-        image = Image.new('RGB', (100, 100))
-
-        img = BytesIO(image.tobytes())
-        img.name='myimage2.jpg'
-        response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': img}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
