@@ -1,12 +1,13 @@
-from rest_framework.test import APIClient
 from django.test import TestCase
+from rest_framework.test import APIClient, APITestCase
+from rest_framework import status
 
 from goods2.models import TaskLog
 from PIL import Image
 import tempfile
 
 
-class TaskLogTestCase(TestCase):
+class TaskLogTestCase(APITestCase):
     def setUp(self):
         pass
 
@@ -16,11 +17,10 @@ class TaskLogTestCase(TestCase):
         self.assertEqual(len(task_log_qs), 1)
 
     def test_tasklog_get(self):
-        client = APIClient()
         task_log = TaskLog.objects.create(name='test', ip='test', message='')
-        response = client.get('/api2/tasklog/')
-        print(response)
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/api2/tasklog/')
+        print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         task_log_list = response.data['results']
         self.assertEqual(len(task_log_list), 1)
         self.assertEqual(task_log_list[0]['name'], 'test')
@@ -31,4 +31,4 @@ class TaskLogTestCase(TestCase):
         tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
         image.save(tmp_file)
         response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': tmp_file}, format='multipart')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
