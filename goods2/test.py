@@ -1,6 +1,10 @@
-from django.test import TestCase
-from goods2.models import TaskLog
 from io import BytesIO
+
+from django.test import TestCase
+
+from goods2.models import TaskLog
+from PIL import Image
+import tempfile
 
 
 class TaskLogTestCase(TestCase):
@@ -21,7 +25,9 @@ class TaskLogTestCase(TestCase):
         self.assertEqual(task_log_list[0]['name'], 'test')
 
     def test_image_create(self):
-        img = BytesIO(b'mybinarydata')
-        img.name = 'myimage.jpg'
-        response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': img}, format='multipart')
+        image = Image.new('RGB', (100, 100))
+
+        tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
+        image.save(tmp_file)
+        response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': tmp_file}, format='multipart')
         self.assertEqual(response.status_code, 201)
