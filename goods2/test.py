@@ -23,5 +23,5 @@ class TaskLogTestCase(TestCase):
     def test_image_create(self):
         img = BytesIO(b'mybinarydata')
         img.name = 'myimage.jpg'
-        response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': img})
+        response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': img}, format='multipart')
         self.assertEqual(response.status_code, 201)
