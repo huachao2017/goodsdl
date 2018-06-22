@@ -23,7 +23,7 @@ class ImageTrainModelSerializer(serializers.ModelSerializer):
 class ImageSerializer(serializers.ModelSerializer):
     image_results = ImageResultSerializer(many=True, read_only=True)
     image_ground_truth = ImageGroundTruthSerializer(many=False, read_only=True)
-    train_models = ImageTrainModelSerializer(many=False, read_only=True)
+    train_models = ImageTrainModelSerializer(many=True, read_only=True)
 
     class Meta:
         model = Image
