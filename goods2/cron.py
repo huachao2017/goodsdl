@@ -72,16 +72,16 @@ def _do_transfer_sample():
         example_cnt = 0
         for image in identify_to_images[identify]:
             image_ground_truth = image.image_ground_truth
-            image_result_qs = image.image_results.filter(upc=image_ground_truth.groundtruth_upc)
+            image_result_qs = image.image_results.filter(upc=image_ground_truth.upc)
             if len(image_result_qs) == 0:
                 # false example 只加一个
                 if not false_example:
-                    train_source = '{}/{}/{}'.format(common.DATASET_DIR, image_ground_truth.groundtruth_upc,
+                    train_source = '{}/{}/{}'.format(common.DATASET_DIR, image_ground_truth.upc,
                                                      os.path.basename(image.source.path))
                     shutil.copy(image.source.path, os.path.join(settings.MEDIA_ROOT, train_source))
                     TrainImage.objects.create(
                         source=train_source,
-                        upc=image_ground_truth.groundtruth_upc,
+                        upc=image_ground_truth.upc,
                         source_image_id=image.pk,
                         source_from=2,
                         score=0.0,
@@ -98,12 +98,12 @@ def _do_transfer_sample():
                     true_image = image
 
         if true_image is not None:
-            train_source = '{}/{}/{}'.format(common.DATASET_DIR, image_ground_truth.groundtruth_upc,
+            train_source = '{}/{}/{}'.format(common.DATASET_DIR, image_ground_truth.upc,
                                              os.path.basename(true_image.source.path))
             shutil.copy(true_image.source.path, os.path.join(settings.MEDIA_ROOT, train_source))
             TrainImage.objects.create(
                 source=train_source,
-                upc=image_ground_truth.groundtruth_upc,
+                upc=image_ground_truth.upc,
                 source_image_id=true_image.pk,
                 source_from=2,
                 score=true_max_score,
@@ -115,12 +115,12 @@ def _do_transfer_sample():
         if false_example or true_image is not None:
             # add or update TrainUpc
             try:
-                train_upc = TrainUpc.objects.get(upc=image_ground_truth.groundtruth_upc)
+                train_upc = TrainUpc.objects.get(upc=image_ground_truth.upc)
                 train_upc.cnt += example_cnt
                 train_upc.save()
             except TrainUpc.DoesNotExist as e:
                 TrainUpc.objects.create(
-                    upc=image_ground_truth.groundtruth_upc,
+                    upc=image_ground_truth.upc,
                     cnt=example_cnt,
                 )
 
