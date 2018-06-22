@@ -25,6 +25,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = ImageSerializer
 
     def create(self, request, *args, **kwargs):
+        logger.info('begin detect image:{},{}'.format(request.data['deviceid'],request.data['identify']))
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

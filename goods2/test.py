@@ -21,6 +21,7 @@ class TaskLogTestCase(APITestCase):
         response = self.client.get('/api2/tasklog/')
         print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
         task_log_list = response.data['results']
         self.assertEqual(len(task_log_list), 1)
         self.assertEqual(task_log_list[0]['name'], 'test')
