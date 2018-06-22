@@ -1,15 +1,12 @@
-from django.test import TestCase
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from goods2.models import TaskLog
-from PIL import Image
-from io import BytesIO
+from goods2.models import TaskLog, Image, TrainImage, TrainUpc
 import os
 
 from django.conf import settings
 
-class DebugTestCase(APITestCase):
+class FrontEndTestCase(APITestCase):
     def setUp(self):
         pass
 
@@ -28,12 +25,62 @@ class DebugTestCase(APITestCase):
         self.assertEqual(len(task_log_list), 1)
         self.assertEqual(task_log_list[0]['name'], 'test')
 
-    def test_image_create(self):
-        # image = Image.new('RGB', (100, 100))
-        #
-        # img = BytesIO(image.tobytes('jpeg'))
-        # img.name='myimage2.jpg'
+    def test_image_post(self):
         with open(os.path.join(settings.BASE_DIR, 'images/test_1.jpg'), mode='rb') as fp:
             response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': fp}, format='multipart')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_image_groundtruth_post(self):
+        with open(os.path.join(settings.BASE_DIR, 'images/test_1.jpg'), mode='rb') as fp:
+            self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': fp}, format='multipart')
+        with open(os.path.join(settings.BASE_DIR, 'images/train_1.jpg'), mode='rb') as fp:
+            self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': fp}, format='multipart')
+
+        image_qs = Image.objects.filter(identify='1111')
+        self.assertEqual(len(image_qs), 2)
+        response = self.client.post('/api2/imagegroundtruth/', {'identify': '1111', 'upc': '111'})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        image_qs = Image.objects.filter(identify='1111')
+        last_image = image_qs[0]
+        image_ground_truth = last_image.image_ground_truth
+        self.assertEqual(image_ground_truth.upc, '111')
+
+    def test_train_image_post(self):
+        with open(os.path.join(settings.BASE_DIR, 'images/test_1.jpg'), mode='rb') as fp:
+            response = self.client.post('/api2/trainimage/', {'deviceid': '0', 'upc':'111', 'source': fp}, format='multipart')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        train_image_qs = TrainImage.objects.filter(upc='111')
+        train_image = train_image_qs[0]
+        self.assertEqual(train_image.source_from, 1)
+        train_upc_qs = TrainUpc.objects.filter(upc='111')
+        self.assertEqual(len(train_upc_qs), 1)
+        self.assertEqual(train_upc_qs[0].cnt, 1)
+
+class CronTestCase(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # 上传2类图片各10张
+        client = APIClient()
+
+    def test_transfer_sample(self):
+        self.assertEqual(0,0)
+
+    def test_create_train_TA(self):
+        self.assertEqual(0,0)
+
+    def test_create_train_TF(self):
+        self.assertEqual(0,0)
+
+    def test_create_train_TC(self):
+        self.assertEqual(0,0)
+
+    def test_execute_train(self):
+        self.assertEqual(0,0)
+
+    def test_check_train(self):
+        self.assertEqual(0,0)
