@@ -1,5 +1,4 @@
-from io import BytesIO
-
+from rest_framework.test import APIClient
 from django.test import TestCase
 
 from goods2.models import TaskLog
@@ -17,8 +16,10 @@ class TaskLogTestCase(TestCase):
         self.assertEqual(len(task_log_qs), 1)
 
     def test_tasklog_get(self):
+        client = APIClient()
         task_log = TaskLog.objects.create(name='test', ip='test', message='')
-        response = self.client.get('/api2/tasklog/')
+        response = client.get('/api2/tasklog/')
+        print(response)
         self.assertEqual(response.status_code, 200)
         task_log_list = response.data['results']
         self.assertEqual(len(task_log_list), 1)
