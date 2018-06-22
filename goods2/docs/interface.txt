@@ -28,7 +28,7 @@ identify  string
 upc       string
 返回201：
 
-3、后台上传训练图片接口：http://train.fastxbox.cn/api2/trainimageclass
+3、后台上传训练图片接口：http://train.fastxbox.cn/api2/trainimage
 post入参：
 deviceid  string
 source  file
