@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Image, ImageReport, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, SampleImageClass, TrainAction, ExportAction, StopTrainAction, \
+from goods.models import Image, ImageReport, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, SampleImageClass, TrainAction, ExportAction, StopTrainAction, \
     RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction, TrainTask, ClusterStructure, ClusterEvalData, ClusterSampleScore, ClusterUpcScore
 
 class GoodsSerializer(serializers.ModelSerializer):

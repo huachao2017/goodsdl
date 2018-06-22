@@ -30,7 +30,7 @@ from dl.step20 import convert_goods_step20
 from dl.step3 import convert_goods_step3
 from dl.step30 import convert_goods_step30
 from tradition.matcher.matcher import Matcher
-from .serializers import *
+from goods.serializers import *
 import goods.util
 
 logger = logging.getLogger("django")

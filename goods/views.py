@@ -16,7 +16,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import goods.util
 
-from dl import common
 from dl import imagedetectionV3, imagedetectionV3_S, imagedetectionV3_S_demo, imageclassifyV1, imagedetection_only_step1, \
     imagedetection_only_step2, imagedetection_only_step3, imagedetection
 # from dl.old import imagedetection
