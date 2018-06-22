@@ -25,12 +25,17 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = ImageSerializer
 
     def create(self, request, *args, **kwargs):
-        logger.info('begin detect image:{},{}'.format(request.data['deviceid'],request.data['identify']))
+        logger.info('begin detect image:{},{}'.format(request.data['deviceid'], request.data['identify']))
+        logger.info(request.data)
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+        except Exception as e:
+            logger.error(e)
+            raise e
 
         # 检测阶段
         ret = []

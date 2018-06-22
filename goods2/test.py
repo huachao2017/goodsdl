@@ -5,7 +5,7 @@ from rest_framework import status
 from goods2.models import TaskLog
 from PIL import Image
 import tempfile
-
+from io import BytesIO
 
 class TaskLogTestCase(APITestCase):
     def setUp(self):
@@ -19,7 +19,7 @@ class TaskLogTestCase(APITestCase):
     def test_tasklog_get(self):
         task_log = TaskLog.objects.create(name='test', ip='test', message='')
         response = self.client.get('/api2/tasklog/')
-        print(response.data)
+        # print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
         task_log_list = response.data['results']
@@ -27,9 +27,15 @@ class TaskLogTestCase(APITestCase):
         self.assertEqual(task_log_list[0]['name'], 'test')
 
     def test_image_create(self):
+        # image = Image.new('RGB', (100, 100))
+        #
+        # tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
+        # tmp_file.name='a.jpg'
+        # image.save(tmp_file)
+
         image = Image.new('RGB', (100, 100))
 
-        tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
-        image.save(tmp_file)
-        response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': tmp_file}, format='multipart')
+        img = BytesIO(image.tobytes())
+        img.name='myimage2.jpg'
+        response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': img}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
