@@ -20,6 +20,7 @@ from goods2 import views
 
 router = DefaultRouter()
 router.register(r'device', views.DeviceidViewSet)
+router.register(r'deviceexclude', views.DeviceidExcludeViewSet)
 router.register(r'image', views.ImageViewSet)
 router.register(r'imagegroundtruth', views.ImageGroundTruthViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)

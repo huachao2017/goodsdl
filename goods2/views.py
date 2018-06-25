@@ -22,6 +22,10 @@ class DeviceidViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = Deviceid.objects.order_by('-id')
     serializer_class = DeviceidSerializer
 
+class DeviceidExcludeViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = DeviceidExclude.objects.order_by('-id')
+    serializer_class = DeviceidExcludeSerializer
+
 
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
@@ -118,12 +122,16 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
     serializer_class = ImageGroundTruthSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+        except Exception as e:
+            logger.error(e)
+            raise e
 
-        images = Image.objects.filter(identify=serializer.instance.identify)
+        images = Image.objects.filter(identify=serializer.instance.identify).filter(deviceid=serializer.instance.deviceid)
         truth_image_result_cnt = 0
         false_image_result_cnt = 0
         total_precision = 0.0

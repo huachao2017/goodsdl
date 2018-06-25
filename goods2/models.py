@@ -20,6 +20,10 @@ class Deviceid(models.Model):
     update_time = models.DateTimeField('date updated', auto_now=True)
     commercial_time = models.DateTimeField('testing finish time', auto_now_add=True)
 
+class DeviceidExclude(models.Model):
+    deviceid = models.CharField(max_length=20, default='0', unique=True)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+
 
 class DeviceidPrecision(models.Model):
     device = models.ForeignKey(Deviceid, related_name="device_precisions", on_delete=models.CASCADE)
@@ -30,7 +34,7 @@ class DeviceidPrecision(models.Model):
 
 class ImageGroundTruth(models.Model):
     deviceid = models.CharField(max_length=20, default='0', db_index=True)
-    identify = models.CharField(max_length=64, db_index=True)
+    identify = models.CharField(max_length=64, unique=True)
     upc = models.CharField(max_length=20, db_index=True)
     cnt = models.IntegerField(default=0)
     truth_rate = models.FloatField(default=0.0)

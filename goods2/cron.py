@@ -3,7 +3,7 @@ import os
 import shutil
 from django.conf import settings
 import tensorflow as tf
-from goods2.models import Deviceid, DeviceidPrecision, Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
+from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
     TrainModel, EvalLog
 from . import common
 import socket
@@ -104,14 +104,14 @@ def transfer_sample():
 def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
     train_image_qs = TrainImage.objects.filter(source_image_id__gt=0).order_by('-id')
+    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
     if len(train_image_qs) == 0:
-        # TODO 临时方案：deviceid必须大于1000
-        image_qs = Image.objects.filter(deviceid__gt=1000)
+        image_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs)
     else:
         last_train_image = train_image_qs[0]
         last_image = Image.objects.get(id=last_train_image.source_image.pk)
-        image_qs = Image.objects.filter(id__gt=last_image.pk).filter(deviceid__gt=1000).exclude(
-            image_ground_truth_id=last_image.image_group_truth.pk)
+        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).exclude(
+            image_ground_truth_id=last_image.image_ground_truth.pk)
 
     # 将Image列表转化为dict: key=identify，value=Image[]
     identify_to_images = {}
