@@ -49,6 +49,7 @@ class FrontEndTestCase(APITestCase):
 
         image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid='0').filter(identify='1111')
         self.assertEqual(image_ground_truth_qs[0].cnt, 2)
+        self.assertEqual(image_ground_truth_qs[0].truth_rate, 0.0)
         self.assertEqual(image_ground_truth_qs[0].precision, 0.0)
 
         image_qs = Image.objects.filter(identify='1111')

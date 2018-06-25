@@ -23,6 +23,7 @@ class Deviceid(models.Model):
 
 class DeviceidPrecision(models.Model):
     device = models.ForeignKey(Deviceid, related_name="device_precisions", on_delete=models.CASCADE)
+    truth_rate = models.FloatField(default=0.0)
     precision = models.FloatField(default=0.0)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
@@ -32,6 +33,7 @@ class ImageGroundTruth(models.Model):
     identify = models.CharField(max_length=64, db_index=True)
     upc = models.CharField(max_length=20, db_index=True)
     cnt = models.IntegerField(default=0)
+    truth_rate = models.FloatField(default=0.0)
     precision = models.FloatField(default=0.0)
     create_time = models.DateTimeField('date created', auto_now_add=True, db_index=True)
 

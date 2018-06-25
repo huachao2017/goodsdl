@@ -58,16 +58,21 @@ def _do_check_device():
 
 
 def _do_check_one_device(device, image_ground_truth_qs):
+    total_truth_rate = 0.0
     total_precision = 0.0
     for image_group_truth in image_ground_truth_qs:
+        total_truth_rate += image_group_truth.truth_rate
         total_precision += image_group_truth.precision
+
     precision = total_precision / 10
-    if device.state < 10 and precision > 0.95:
+    truth_rate = total_truth_rate / 10
+    if device.state < 10 and truth_rate > 0.95:
         device.state = 10
         device.commercial_time = datetime.datetime.now()
         device.save()
     DeviceidPrecision.objects.create(
         device_id=device.pk,
+        truth_rate=truth_rate,
         precision=precision
     )
 

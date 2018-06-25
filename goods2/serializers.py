@@ -5,7 +5,7 @@ from goods2.models import Deviceid, DeviceidPrecision, Image, ImageGroundTruth, 
 class DeviceidPrecisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeviceidPrecision
-        fields = ('pk', 'precision', 'create_time')
+        fields = ('pk', 'truth_rate', 'precision', 'create_time')
         read_only_fields = ('create_time')
 
 class DeviceidSerializer(serializers.ModelSerializer):
@@ -24,8 +24,8 @@ class ImageResultSerializer(serializers.ModelSerializer):
 class ImageGroundTruthSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageGroundTruth
-        fields = ('pk', 'deviceid', 'upc', 'identify', 'cnt', 'precision', 'create_time')
-        read_only_fields = ('cnt', 'precision', 'create_time',)
+        fields = ('pk', 'deviceid', 'upc', 'identify', 'cnt', 'truth_rate', 'precision', 'create_time')
+        read_only_fields = ('cnt', 'truth_rate', 'precision', 'create_time',)
 
 class ImageTrainModelSerializer(serializers.ModelSerializer):
     class Meta:
