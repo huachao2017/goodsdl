@@ -108,7 +108,7 @@ class CronBeforeTrainTestCase(APITestCase):
                 if index >= 10:
                     break
 
-    def _add_image(self, deviceid, identify):
+    def _add_image(self, deviceid, identify, add_ground_truth=True):
         dataset_root_path=os.path.join(settings.MEDIA_ROOT, 'dataset','step2')
         upcs = ['4711931005106', '4714221811227']
 
@@ -124,7 +124,8 @@ class CronBeforeTrainTestCase(APITestCase):
                 if index >= 10:
                     break
 
-            self.client.post('/api2/imagegroundtruth/', {'deviceid': deviceid, 'identify': upc+identify, 'upc': upc})
+            if add_ground_truth:
+                self.client.post('/api2/imagegroundtruth/', {'deviceid': deviceid, 'identify': upc+identify, 'upc': upc})
 
     def test_transfer_sample(self):
         train_image_qs = TrainImage.objects.all()
@@ -156,6 +157,15 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=10)),3)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs),24) # 再增加2样本
+        train_upc = TrainUpc.objects.get(upc='4711931005106')
+        self.assertEqual(train_upc.cnt,12)
+
+        self._add_image('1000', '3', add_ground_truth=False)
+        transfer_sample()
+        self.assertEqual(len(Image.objects.all()),80)
+        self.assertEqual(len(TaskLog.objects.filter(state=10)),4)
+        train_image_qs = TrainImage.objects.all()
+        self.assertEqual(len(train_image_qs),24) # 不再增加样本
         train_upc = TrainUpc.objects.get(upc='4711931005106')
         self.assertEqual(train_upc.cnt,12)
 
