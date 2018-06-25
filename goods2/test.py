@@ -169,6 +169,15 @@ class CronBeforeTrainTestCase(APITestCase):
         train_upc = TrainUpc.objects.get(upc='4711931005106')
         self.assertEqual(train_upc.cnt,12)
 
+        self._add_image('1000', '4')
+        transfer_sample()
+        self.assertEqual(len(Image.objects.all()),100)
+        self.assertEqual(len(TaskLog.objects.filter(state=10)),5)
+        train_image_qs = TrainImage.objects.all()
+        self.assertEqual(len(train_image_qs),26) # 不再增加样本
+        train_upc = TrainUpc.objects.get(upc='4711931005106')
+        self.assertEqual(train_upc.cnt,13)
+
 
     def test_create_train_TA(self):
         self.assertEqual(0,0)
