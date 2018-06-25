@@ -124,9 +124,23 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
         headers = self.get_success_headers(serializer.data)
 
         images = Image.objects.filter(identify=serializer.instance.identify)
+        truth_image_result_cnt = 0
+        false_image_result_cnt = 0
         for image in images:
+            truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc)
+            if len(truth_image_result_qs)>0:
+                truth_image_result_cnt += 1
+            else:
+                false_image_result_cnt += 1
             image.image_ground_truth=serializer.instance
             image.save()
+
+        serializer.instance.cnt = len(images)
+        if truth_image_result_cnt+false_image_result_cnt > 0:
+            serializer.instance.precision = truth_image_result_cnt/(truth_image_result_cnt+false_image_result_cnt)
+        else:
+            serializer.instance.precision = 0
+        serializer.instance.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

@@ -1,7 +1,7 @@
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from goods2.models import TaskLog, Image, TrainImage, TrainUpc, Deviceid
+from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid
 import os
 
 from django.conf import settings
@@ -44,8 +44,12 @@ class FrontEndTestCase(APITestCase):
 
         image_qs = Image.objects.filter(identify='1111')
         self.assertEqual(len(image_qs), 2)
-        response = self.client.post('/api2/imagegroundtruth/', {'identify': '1111', 'upc': '111'})
+        response = self.client.post('/api2/imagegroundtruth/', {'deviceid': '0', 'identify': '1111', 'upc': '111'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid='0').filter(identify='1111')
+        self.assertEqual(image_ground_truth_qs[0].cnt, 2)
+        self.assertEqual(image_ground_truth_qs[0].precision, 0.0)
 
         image_qs = Image.objects.filter(identify='1111')
         last_image = image_qs[0]
@@ -71,6 +75,9 @@ class CronTestCase(APITestCase):
     def setUpTestData(cls):
         # 上传2类图片各10张
         client = APIClient()
+
+    def test_check_device(self):
+        self.assertEqual(0,0)
 
     def test_transfer_sample(self):
         self.assertEqual(0,0)

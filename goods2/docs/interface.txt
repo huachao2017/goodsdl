@@ -24,6 +24,7 @@ identify  string
 
 2、发送实际upc接口：http://ai.fastxbox.cn/api2/imagegroundtruth
 post入参：
+deviceid  string
 identify  string
 upc       string
 返回201：

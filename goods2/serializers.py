@@ -1,11 +1,18 @@
 from rest_framework import serializers
-from goods2.models import Deviceid, Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel, TaskLog
+from goods2.models import Deviceid, DeviceidPrecision, Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel, TaskLog
 
+
+class DeviceidPrecisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeviceidPrecision
+        fields = ('pk', 'precision', 'create_time')
+        read_only_fields = ('create_time')
 
 class DeviceidSerializer(serializers.ModelSerializer):
+    device_precisions = DeviceidPrecisionSerializer(many=True, read_only=True)
     class Meta:
         model = Deviceid
-        fields = ('pk', 'state', 'create_time', 'update_time', 'commercial_time')
+        fields = ('pk', 'state', 'device_precisions', 'create_time', 'update_time', 'commercial_time')
         read_only_fields = ('create_time', 'update_time', 'commercial_time')
 
 class ImageResultSerializer(serializers.ModelSerializer):
@@ -17,8 +24,8 @@ class ImageResultSerializer(serializers.ModelSerializer):
 class ImageGroundTruthSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageGroundTruth
-        fields = ('pk', 'upc', 'identify', 'create_time')
-        read_only_fields = ('create_time',)
+        fields = ('pk', 'deviceid', 'upc', 'identify', 'cnt', 'precision', 'create_time')
+        read_only_fields = ('cnt', 'precision', 'create_time',)
 
 class ImageTrainModelSerializer(serializers.ModelSerializer):
     class Meta:

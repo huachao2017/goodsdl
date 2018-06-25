@@ -3,7 +3,7 @@ import os
 import shutil
 from django.conf import settings
 import tensorflow as tf
-from goods2.models import Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
+from goods2.models import Deviceid, DeviceidPrecision, Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
     TrainModel, EvalLog
 from . import common
 import socket
@@ -16,6 +16,60 @@ logger = logging.getLogger('cron')
 
 def test():
     logger.info('test cron')
+
+
+def check_device():
+    doing_qs = TaskLog.objects.filter(name='check_device').filter(state=1)
+    if len(doing_qs) > 0:
+        return
+    cur_task = TaskLog.objects.create(
+        name='check_device',
+        ip=get_host_ip(),
+    )
+
+    try:
+        logger.info('check_device: begin task')
+        ret = _do_check_device()
+        logger.info('check_device: end task')
+    except Exception as e:
+        logger.error('check_device: {}'.format(e))
+        cur_task.state = 20
+        cur_task.message = e
+        cur_task.save()
+    else:
+        cur_task.state = 10
+        cur_task.message = ret
+        cur_task.save()
+
+
+def _do_check_device():
+    device_qs = Deviceid.objects.all()
+    for device in device_qs:
+        device_precision_qs = device.device_precisions.order_by('-id')
+        if len(device_precision_qs) == 0:
+            image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid=device.deviceid).order_by('-id')
+            if len(image_ground_truth_qs) >= 10:
+                _do_check_one_device(device, image_ground_truth_qs[:10])
+        else:
+            last_device_precision = device_precision_qs[0]
+            image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid=device.deviceid).filter(create_time__gt=last_device_precision.create_time).order_by('-id')
+            if len(image_ground_truth_qs) >= 10:
+                _do_check_one_device(device, image_ground_truth_qs[:10])
+
+
+def _do_check_one_device(device, image_ground_truth_qs):
+    total_precision = 0.0
+    for image_group_truth in image_ground_truth_qs:
+        total_precision += image_group_truth.precision
+    precision = total_precision / 10
+    if device.state < 10 and precision > 0.95:
+        device.state = 10
+        device.commercial_time = datetime.datetime.now()
+        device.save()
+    DeviceidPrecision.objects.create(
+        device_id=device.pk,
+        precision=precision
+    )
 
 
 def transfer_sample():
@@ -32,6 +86,7 @@ def transfer_sample():
         ret = _do_transfer_sample()
         logger.info('transfer_sample: end task')
     except Exception as e:
+        logger.error('transfer_sample: {}'.format(e))
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
@@ -142,6 +197,7 @@ def create_train():
         ret = _do_create_train()
         logger.info('create_train: end task')
     except Exception as e:
+        logger.error('create_train: {}'.format(e))
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
@@ -287,6 +343,7 @@ def execute_train():
         ret = _do_execute_train()
         logger.info('execute_train: end task')
     except Exception as e:
+        logger.error('execute_train: {}'.format(e))
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
@@ -423,10 +480,11 @@ def check_train():
     )
 
     try:
-        logger.info('execute_train: begin task')
+        logger.info('check_train: begin task')
         ret = _do_check_train()
-        logger.info('execute_train: end task')
+        logger.info('check_train: end task')
     except Exception as e:
+        logger.error('check_train: {}'.format(e))
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
