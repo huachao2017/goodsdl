@@ -1,11 +1,13 @@
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
+from django.test import override_settings
 from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid
 import os
 
 from django.conf import settings
 
+@override_settings(DETECT_DIR_NAME='images_test', DATASET_DIR_NAME='dataset_test')
 class FrontEndTestCase(APITestCase):
     def setUp(self):
         pass
@@ -33,6 +35,7 @@ class FrontEndTestCase(APITestCase):
 
         image = Image.objects.filter(identify='1111')[0]
         self.assertEqual(image.deviceid, '0')
+        self.assertTrue(os.path.isfile(image.source.path))
         device = Deviceid.objects.get(deviceid=image.deviceid)
         self.assertEqual(device.state, 0)
 
@@ -70,15 +73,13 @@ class FrontEndTestCase(APITestCase):
         self.assertEqual(len(train_upc_qs), 1)
         self.assertEqual(train_upc_qs[0].cnt, 1)
 
-class CronTestCase(APITestCase):
+@override_settings(DETECT_DIR_NAME='images_test', DATASET_DIR_NAME='dataset_test')
+class CronBeforeTrainTestCase(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
         # 上传2类图片各10张
         client = APIClient()
-
-    def test_check_device(self):
-        self.assertEqual(0,0)
 
     def test_transfer_sample(self):
         self.assertEqual(0,0)
@@ -92,8 +93,41 @@ class CronTestCase(APITestCase):
     def test_create_train_TC(self):
         self.assertEqual(0,0)
 
+@override_settings(DETECT_DIR_NAME='images_test', DATASET_DIR_NAME='dataset_test')
+class CronBetweenTrainTestCase(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # 上传2类图片各10张
+        client = APIClient()
+
     def test_execute_train(self):
         self.assertEqual(0,0)
 
     def test_check_train(self):
+        self.assertEqual(0,0)
+
+@override_settings(DETECT_DIR_NAME='images_test', DATASET_DIR_NAME='dataset_test')
+class CronAfterTrainTestCase(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # 上传2类图片各10张
+        client = APIClient()
+
+    def test_check_device(self):
+        self.assertEqual(0,0)
+
+@override_settings(DETECT_DIR_NAME='images_test', DATASET_DIR_NAME='dataset_test')
+class FrontEndAfterTrainTestCase(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # 准备模型和样本库
+        client = APIClient()
+
+    def test_image_post(self):
+        self.assertEqual(0,0)
+
+    def test_image_groundtruth_post(self):
         self.assertEqual(0,0)

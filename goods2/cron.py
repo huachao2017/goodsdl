@@ -137,9 +137,11 @@ def _do_transfer_sample():
             if len(image_result_qs) == 0:
                 # false example 只加一个
                 if not false_example:
-                    train_source = '{}/{}/{}'.format(common.DATASET_DIR, image_ground_truth.upc,
+                    train_source = '{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.upc,
                                                      os.path.basename(image.source.path))
-                    shutil.copy(image.source.path, os.path.join(settings.MEDIA_ROOT, train_source))
+                    train_source_path = '{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.upc,
+                                                     os.path.basename(image.source.path))
+                    shutil.copy(image.source.path, train_source_path)
                     TrainImage.objects.create(
                         source=train_source,
                         upc=image_ground_truth.upc,
@@ -159,9 +161,11 @@ def _do_transfer_sample():
                     true_image = image
 
         if true_image is not None:
-            train_source = '{}/{}/{}'.format(common.DATASET_DIR, image_ground_truth.upc,
+            train_source = '{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.upc,
                                              os.path.basename(true_image.source.path))
-            shutil.copy(true_image.source.path, os.path.join(settings.MEDIA_ROOT, train_source))
+            train_source_path = '{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.upc,
+                                             os.path.basename(true_image.source.path))
+            shutil.copy(true_image.source.path, train_source_path)
             TrainImage.objects.create(
                 source=train_source,
                 upc=image_ground_truth.upc,
@@ -312,7 +316,7 @@ def _create_train(action, f_model_id):
         desc=''
     )
 
-    train_action.train_path = os.path.join(common.TRAIN_DIR, str(train_action.pk))
+    train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
     # 数据准备
     names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action)
     # 更新数据
@@ -400,7 +404,7 @@ def _do_begin_train(train_action):
 
     # 训练
     if train_action.action == 'TC':
-        checkpoint_path = os.path.join(common.MODEL_DIR, str(train_action.f_model.pk))
+        checkpoint_path = os.path.join(common.get_model_path(), str(train_action.f_model.pk))
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer,aux_11/aux_logits/FC --trainable_scopes=final_layer,aux_11/aux_logits/FC' \
                   ' > /root/train_{}.out 2>&1 &'.format(
@@ -416,7 +420,7 @@ def _do_begin_train(train_action):
             train_action.action
         )
     elif train_action.action == 'TF':
-        checkpoint_path = os.path.join(common.MODEL_DIR, str(train_action.f_model.pk))
+        checkpoint_path = os.path.join(common.get_model_path(), str(train_action.f_model.pk))
         command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   '--learning_rate=0.003 --checkpoint_path={} > /root/train_{}.out 2>&1 &'.format(
             settings.BASE_DIR,
@@ -450,9 +454,7 @@ def _do_begin_train(train_action):
               ' > /root/eval_{}.out 2>&1 &'.format(
         settings.BASE_DIR,
         train_action.train_path,
-        os.path.join(
-            settings.MEDIA_ROOT,
-            common.DATASET_DIR),
+        common.get_dataset_dir(True),
         train_action.train_path,
         os.path.join(train_action.train_path, 'eval_log'),
         train_action.validation_cnt,
@@ -464,7 +466,7 @@ def _do_begin_train(train_action):
 
 
 def _do_stop_train(train_action):
-    train_dir = os.path.join(common.TRAIN_DIR, str(train_action.pk))
+    train_dir = os.path.join(common.get_train_path(), str(train_action.pk))
     train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
     if train_ps != '':
         pid = int(train_ps.split()[1])
@@ -593,7 +595,7 @@ def _do_export_train(train_action, train_model):
     checkpoint_model_path = tf.train.latest_checkpoint(train_action.train_path)
     if checkpoint_model_path:
         checkpoint_step = checkpoint_model_path.split('-')[-1]
-        model_path = os.path.join(common.MODEL_DIR, str(train_model.pk))
+        model_path = os.path.join(common.get_model_path(), str(train_model.pk))
         if not tf.gfile.Exists(model_path):
             tf.gfile.MakeDirs(model_path)
         checkpoint_file_path = os.path.join(model_path, 'checkpoint')
@@ -607,9 +609,6 @@ def _do_export_train(train_action, train_model):
         shutil.copy(checkpoint_model_path + '.data-00000-of-00001', model_path)
         shutil.copy(checkpoint_model_path + '.index', model_path)
         shutil.copy(checkpoint_model_path + '.meta', model_path)
-        # copy dataset
-        # shutil.copy(os.path.join(settings.TRAIN_ROOT, str(train_action.pk), 'goods_recogonize_train.tfrecord'),
-        #             model_dir)
         # copy label
         shutil.copy(os.path.join(train_action.train_path, 'labels.txt'), model_path)
 

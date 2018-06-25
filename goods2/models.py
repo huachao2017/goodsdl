@@ -5,7 +5,7 @@ from goods2 import common
 
 def image_upload_source(instance, filename):
     now = datetime.datetime.now()
-    return '{}/{}/{}/{}/{}_{}_{}'.format(common.DETECT_DIR, instance.deviceid, now.strftime('%Y%m'),
+    return '{}/{}/{}/{}/{}_{}_{}'.format(common.get_detect_dir(), instance.deviceid, now.strftime('%Y%m'),
                                          now.strftime('%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
 
@@ -55,7 +55,7 @@ class ImageResult(models.Model):
 
 def train_image_upload_source(instance, filename):
     now = datetime.datetime.now()
-    ret = '{}/{}/{}_{}_{}'.format(common.DATASET_DIR, instance.upc, instance.deviceid, str(now.time()),
+    ret = '{}/{}/{}_{}_{}'.format(common.get_dataset_dir(), instance.upc, instance.deviceid, str(now.time()),
                                   filename)
     return ret
 
