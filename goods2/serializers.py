@@ -1,6 +1,12 @@
 from rest_framework import serializers
-from goods2.models import Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel, TaskLog
+from goods2.models import Deviceid, Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel, TaskLog
 
+
+class DeviceidSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Deviceid
+        fields = ('pk', 'state', 'create_time', 'update_time', 'commercial_time')
+        read_only_fields = ('create_time', 'update_time', 'commercial_time')
 
 class ImageResultSerializer(serializers.ModelSerializer):
     class Meta:

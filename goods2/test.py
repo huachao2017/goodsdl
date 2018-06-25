@@ -1,7 +1,7 @@
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from goods2.models import TaskLog, Image, TrainImage, TrainUpc
+from goods2.models import TaskLog, Image, TrainImage, TrainUpc, Deviceid
 import os
 
 from django.conf import settings
@@ -30,6 +30,11 @@ class FrontEndTestCase(APITestCase):
             response = self.client.post('/api2/image/', {'deviceid': '0', 'identify': '1111', 'source': fp}, format='multipart')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        image = Image.objects.filter(identify='1111')[0]
+        self.assertEqual(image.deviceid, '0')
+        device = Deviceid.objects.get(deviceid=image.deviceid)
+        self.assertEqual(device.state, 0)
 
     def test_image_groundtruth_post(self):
         with open(os.path.join(settings.BASE_DIR, 'images/test_1.jpg'), mode='rb') as fp:

@@ -18,6 +18,10 @@ class DefaultMixin:
     paginate_by_param = 'page_size'
     max_paginate_by = 100
 
+class DeviceidViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = Deviceid.objects.order_by('-id')
+    serializer_class = DeviceidSerializer
+
 
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
@@ -36,6 +40,13 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         except Exception as e:
             logger.error(e)
             raise e
+
+        try:
+            device = Deviceid.objects.get(deviceid=serializer.instance.deviceid)
+        except Deviceid.DoesNotExist as e:
+            device = Deviceid.objects.create(
+                deviceid=serializer.instance.deviceid,
+            )
 
         # 检测阶段
         ret = []
@@ -85,12 +96,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 输出结果
             ret = []
             for i in range(len(upcs)):
-                ret.append(
-                    {
-                        'upc': upcs[i],
-                        'score': scores[i],
-                    }
-                )
+                if device.state == 10:
+                    # 没有商用的不返回结果
+                    ret.append(
+                        {
+                            'upc': upcs[i],
+                            'score': scores[i],
+                        }
+                    )
                 ImageResult.objects.create(
                     image_id=serializer.instance.pk,
                     upc=upcs[i],

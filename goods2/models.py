@@ -7,6 +7,17 @@ def image_upload_source(instance, filename):
     return '{}/{}/{}/{}/{}_{}_{}'.format(common.DETECT_DIR, instance.deviceid, now.strftime('%Y%m'),
                                                 now.strftime('%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
+class Deviceid(models.Model):
+    deviceid = models.CharField(max_length=20, default='0', unique=True)
+    STATE_CHOICES = (
+        (0, u'testing'),
+        (10, u'commercial'),
+    )
+    state = models.IntegerField(choices=STATE_CHOICES, default=0)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
+    commercial_time = models.DateTimeField('testing finish time', auto_now_add=True)
+
 
 class ImageGroundTruth(models.Model):
     identify = models.CharField(max_length=64, db_index=True)
@@ -82,7 +93,7 @@ class TrainAction(models.Model):
 
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
-    complete_time = models.DateTimeField('train finish time', default=None)
+    complete_time = models.DateTimeField('train finish time', auto_now_add=True)
 
     def __str__(self):
         return '{}-{}:{}'.format(self.pk, self.action, self.desc)

@@ -45,11 +45,12 @@ def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
     train_image_qs = TrainImage.objects.filter(source_image_id__gt=0).order_by('-id')
     if len(train_image_qs) == 0:
-        image_qs = Image.objects.all()
+        # TODO 临时方案：deviceid必须大于1000
+        image_qs = Image.objects.filter(deviceid__gt=1000)
     else:
         last_train_image = train_image_qs[0]
         last_image = Image.objects.get(id=last_train_image.source_image.pk)
-        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(
+        image_qs = Image.objects.filter(id__gt=last_image.pk).filter(deviceid__gt=1000).exclude(
             image_ground_truth_id=last_image.image_group_truth.pk)
 
     # 将Image列表转化为dict: key=identify，value=Image[]
