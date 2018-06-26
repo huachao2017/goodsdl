@@ -144,6 +144,8 @@ def prepare_train_TF(train_action):
     train_images = TrainImage.objects.all()
     # 每类样本数
     upc_to_cnt = {}
+    for upc in upcs:
+        upc_to_cnt[upc] = 0
     max_cnt = 0
     for train_image in train_images:
         if train_image.upc in upcs:
@@ -163,9 +165,6 @@ def prepare_train_TF(train_action):
     # 存量样本数量上限暂时用两倍策略
     upc_cnt_thresh = max_cnt*2
 
-    # 增加存量样本
-    for upc in upcs:
-        upc_to_cnt[upc] = 0
     for training_filename in old_training_filenames:
         upc = old_training_filenames_to_upc[training_filename]
         if upc_to_cnt[upc] < upc_cnt_thresh:

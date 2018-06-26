@@ -219,7 +219,7 @@ def create_train():
 def _do_create_train():
     _do_create_train_ta()
     # TF & TC
-    last_t_qs = TrainAction.objects.filter(state__gte=10).order_by('-complete_time')
+    last_t_qs = TrainAction.objects.filter(state=10).order_by('-complete_time')
     if len(last_t_qs) > 0:
         last_t = last_t_qs[0]
         if last_t.action == 'TA':
@@ -265,7 +265,7 @@ def _do_create_train():
 
         train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
         if len(append_upcs) > 0:
-            if len(doing_tc_qs) == 0 and len(train_image_qs) > 10:
+            if len(doing_tc_qs) == 0 and len(train_image_qs) >= 10:
                 # if len(doing_tf_qs) > 0:
                     # 退出正在训练的TF
                     # doing_tf = doing_tf_qs[0]
@@ -276,7 +276,7 @@ def _do_create_train():
         else:
             if len(doing_tf_qs) == 0:
                 now = datetime.datetime.now()
-                if (now - last_t.create_time).days >= 1 or len(train_image_qs) > 200:
+                if (now - last_t.create_time).days >= 1 or len(train_image_qs) >= 200:
                     logger.info('create_train: TF,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
                                                                             (now - last_t.create_time).days))
                     _create_train('TF', f_train_model.pk)
@@ -286,10 +286,10 @@ def _do_create_train():
 
 def _do_create_train_ta():
     # TA
-    doing_ta = TrainAction.objects.filter(action='TA').filter(state__lt=10)
+    doing_ta = TrainAction.objects.filter(action='TA').filter(state__lte=5)
     if len(doing_ta) == 0:
         last_ta = None
-        last_ta_qs = TrainAction.objects.filter(action='TA').filter(state__gte=10).order_by('-id')
+        last_ta_qs = TrainAction.objects.filter(action='TA').filter(state=10).order_by('-id')
         if len(last_ta_qs) > 0:
             last_ta = last_ta_qs[0]
 

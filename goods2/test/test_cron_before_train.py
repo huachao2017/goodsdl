@@ -2,7 +2,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
 from django.test import override_settings
-from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid, DeviceidExclude, TrainAction
+from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid, DeviceidExclude, TrainAction, TrainModel
 from goods2.cron import check_device, transfer_sample, create_train, execute_train, check_train
 import os
 import shutil
@@ -11,10 +11,9 @@ from goods2 import common
 from django.conf import settings
 
 
-def _add_train_image(client):
+def _add_train_image(client, upcs, one_upc_cnt = 10):
     # 上传2类图片各10张
     dataset_root_path = os.path.join(settings.MEDIA_ROOT, 'dataset', 'step2')
-    upcs = ['4711931005106', '4714221811227']
 
     for upc in upcs:
         upc_path = os.path.join(dataset_root_path, upc)
@@ -26,7 +25,7 @@ def _add_train_image(client):
                                        format='multipart')
 
             index += 1
-            if index >= 10:
+            if index >= one_upc_cnt:
                 break
 
 
@@ -63,7 +62,7 @@ class CronBeforeTrainTestCase(APITestCase):
     def test_transfer_sample(self):
         # 排除deviceid=500
         self.client.post('/api2/deviceexclude/', {'deviceid': '500'})
-        _add_train_image(self.client)
+        _add_train_image(self.client, upcs = ['4711931005106', '4714221811227'])
 
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs),20)
@@ -121,19 +120,84 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=10)),1)
         self.assertEqual(len(TrainAction.objects.all()),0)
 
-        for i in range(101):
-            _add_train_image(self.client)
+        for i in range(100):
+            _add_train_image(self.client, upcs = ['4711931005106', '4714221811227'])
         create_train()
         self.assertEqual(len(TaskLog.objects.filter(state=10)),2)
         train_action = TrainAction.objects.filter(action='TA').filter(state=1)[0]
-        self.assertEqual(train_action.train_cnt, 2020)
-        self.assertEqual(train_action.validation_cnt, int(2020*0.3))
+        self.assertEqual(train_action.train_cnt, 2000)
+        self.assertEqual(train_action.validation_cnt, int(2000*0.3))
         train_action_upcs_qs = train_action.upcs.all()
         self.assertEqual(len(train_action_upcs_qs), 2)
-        self.assertEqual(train_action_upcs_qs[0].cnt, 1010)
+        self.assertEqual(train_action_upcs_qs[0].cnt, 1000)
 
-    def test_create_train_TF(self):
-        self.assertEqual(0,0)
+        train_action.state=10
+        train_action.save()
+        train_model = TrainModel.objects.create(
+            train_action_id=train_action.pk,
+            checkpoint_step=100,
+            precision=0.9,
+            model_path='/test/a/'
+        )
+        create_train()
+        self.assertEqual(len(TaskLog.objects.filter(state=10)),3)
+        self.assertEqual(len(TrainAction.objects.all()),1)
 
-    def test_create_train_TC(self):
-        self.assertEqual(0,0)
+    def test_create_train_TF_from_TA(self):
+        for i in range(100):
+            _add_train_image(self.client, upcs = ['4711931005106', '4714221811227'])
+        create_train()
+
+        train_action_ta = TrainAction.objects.filter(action='TA').filter(state=1)[0]
+        train_action_ta.state=10
+        train_action_ta.save()
+
+        train_model = TrainModel.objects.create(
+            train_action_id=train_action_ta.pk,
+            checkpoint_step=100,
+            precision=0.9,
+            model_path='/test/a/'
+        )
+        for i in range(10):
+            _add_train_image(self.client, upcs = ['4711931005106'])
+        create_train()
+        train_action_tf_qs = TrainAction.objects.filter(action='TF').filter(state=1)
+        self.assertEqual(len(train_action_tf_qs),0)
+
+        for i in range(10):
+            _add_train_image(self.client, upcs = ['4711931005106'])
+
+        self.assertEqual(len(TrainImage.objects.all()),2200)
+        create_train()
+        train_action_tf = TrainAction.objects.filter(action='TF').filter(state=1)[0]
+        self.assertEqual(train_action_tf.f_model.pk, train_model.pk)
+        self.assertEqual(train_action_tf.train_cnt, 800)
+        self.assertEqual(train_action_tf.validation_cnt, 600)
+        train_action_tf_upcs_qs = train_action_tf.upcs.filter(upc='4711931005106')
+        self.assertEqual(train_action_tf_upcs_qs[0].cnt, 1200)
+
+    def test_create_train_TC_from_TA(self):
+        for i in range(100):
+            _add_train_image(self.client, upcs = ['4711931005106', '4714221811227'])
+        create_train()
+
+        train_action = TrainAction.objects.filter(action='TA').filter(state=1)[0]
+        train_action.state=10
+        train_action.save()
+
+        train_model = TrainModel.objects.create(
+            train_action_id=train_action.pk,
+            checkpoint_step=100,
+            precision=0.9,
+            model_path='/test/a/'
+        )
+        _add_train_image(self.client, upcs = ['6901668002525'])
+        self.assertEqual(len(TrainImage.objects.all()),2010)
+        self.assertEqual(len(TrainUpc.objects.all()),3)
+        create_train()
+        train_action_tc = TrainAction.objects.filter(action='TC').filter(state=1)[0]
+        self.assertEqual(train_action_tc.f_model.pk, train_model.pk)
+        self.assertEqual(train_action_tc.train_cnt, 30)
+        self.assertEqual(train_action_tc.validation_cnt, 30)
+        train_action_tc_upcs_qs = train_action_tc.upcs.filter(upc='6901668002525')
+        self.assertEqual(train_action_tc_upcs_qs[0].cnt, 10)
