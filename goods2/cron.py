@@ -298,7 +298,7 @@ def _do_create_train_ta():
             train_image_qs = TrainImage.objects.all()
             if len(train_image_qs) >= 2000:
                 logger.info('create_train: TA,新增样本（{}）'.format(len(train_image_qs)))
-                _create_train('TA', 0)
+                _create_train('TA', None)
         else:
             # 间距达到7天或者新增样本超过2000个
             now = datetime.datetime.now()
@@ -306,7 +306,7 @@ def _do_create_train_ta():
             if (now - last_ta.create_time).days >= 7 or len(train_image_qs) >= 2000:
                 logger.info('create_train: TA,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
                                                                         (now - last_ta.create_time).days))
-                _create_train('TA', 0)
+                _create_train('TA', None)
 
 
 def _create_train(action, f_model_id):

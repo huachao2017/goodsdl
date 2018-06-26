@@ -272,4 +272,4 @@ def prepare_train(train_action):
     dataset_utils.write_label_file(labels_to_names, output_dir)
 
     logger.info('Finished converting the goods dataset!')
-    return labels_to_names, training_filenames, validation_filenames
+    return names_to_labels, training_filenames, validation_filenames
