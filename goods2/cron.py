@@ -10,6 +10,7 @@ import socket
 from goods2 import convert_goods
 import datetime
 import subprocess
+import traceback
 
 logger = logging.getLogger('cron')
 
@@ -33,6 +34,7 @@ def check_device():
         logger.info('check_device: end task')
     except Exception as e:
         logger.error('check_device: {}'.format(e))
+        logger.error(traceback.format_exc())
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
@@ -92,6 +94,7 @@ def transfer_sample():
         logger.info('transfer_sample: end task')
     except Exception as e:
         logger.error('transfer_sample: {}'.format(e))
+        logger.error(traceback.format_exc())
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
@@ -207,6 +210,7 @@ def create_train():
         logger.info('create_train: end task')
     except Exception as e:
         logger.error('create_train: {}'.format(e))
+        logger.error(traceback.format_exc())
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
@@ -353,6 +357,7 @@ def execute_train():
         logger.info('execute_train: end task')
     except Exception as e:
         logger.error('execute_train: {}'.format(e))
+        logger.error(traceback.format_exc())
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
@@ -492,6 +497,7 @@ def check_train():
         logger.info('check_train: end task')
     except Exception as e:
         logger.error('check_train: {}'.format(e))
+        logger.error(traceback.format_exc())
         cur_task.state = 20
         cur_task.message = e
         cur_task.save()
