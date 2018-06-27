@@ -399,13 +399,6 @@ def _do_execute_train():
 
 
 def _do_begin_train(train_action):
-    train_cuda_visible_devices = ''
-    if train_action.action == 'TA':
-        train_cuda_visible_devices = '0'
-    elif train_action.action == 'TF':
-        train_cuda_visible_devices = '1'
-    elif train_action.action == 'TC':
-        train_cuda_visible_devices = '0'
 
     # 训练
     if train_action.action == 'TC':
@@ -421,7 +414,7 @@ def _do_begin_train(train_action):
             'nasnet_large',
             1,
             8,
-            train_cuda_visible_devices,
+            '0',
             checkpoint_path,
             train_action.action
         )
@@ -436,7 +429,7 @@ def _do_begin_train(train_action):
             'nasnet_large',
             1,
             8,
-            train_cuda_visible_devices,
+            '1',
             checkpoint_path,
             train_action.action
         )
@@ -450,7 +443,7 @@ def _do_begin_train(train_action):
             'nasnet_large',
             1,
             8,
-            train_cuda_visible_devices,
+            '0',
             train_action.action
         )
     logger.info(command)
