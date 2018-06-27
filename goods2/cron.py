@@ -606,6 +606,8 @@ def _do_export_train(train_action, train_model):
         train_action.state = 10
         train_action.complete_time = datetime.datetime.now()
         train_action.save()
+    else:
+        raise ValueError('checkpoint_model_path is None')
 
 def get_host_ip():
     try:
