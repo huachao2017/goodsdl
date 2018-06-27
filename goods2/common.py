@@ -18,7 +18,7 @@ def get_train_path():
     return os.path.join(settings.TRAIN_ROOT, PREFIX)
 
 def get_model_path():
-    os.path.join(settings.MODEL_ROOT, PREFIX)
+    return os.path.join(settings.MODEL_ROOT, PREFIX)
 
 def get_train_pid(train_action):
     train_dir = os.path.join(get_train_path(), str(train_action.pk))
