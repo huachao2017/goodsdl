@@ -217,12 +217,12 @@ class CronBeforeTrainTestCase(APITestCase):
                 EvalLog.objects.create(
                     train_action_id=train_action.pk,
                     precision=0.998,
-                    checkpoint_step=1000+i*10,
+                    checkpoint_step=1000+i*5000,
                 )
-            check_train()
-            self.assertEqual(len(TaskLog.objects.filter(state=10)), 4)
+                check_train()
+            self.assertEqual(len(TaskLog.objects.filter(state=10)), 13)
             train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')
-            self.assertEqual(len(train_model_qs), 2)
+            self.assertEqual(len(train_model_qs), 11)
             self.assertEqual(train_model_qs[0].model_path, os.path.join(common.get_model_path(), str(train_model_qs[0].pk)))
             train_action_qs = TrainAction.objects.filter(action='TA').filter(state=10)
             self.assertEqual(len(train_action_qs), 1)
