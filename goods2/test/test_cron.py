@@ -96,6 +96,7 @@ class CronBeforeTrainTestCase(APITestCase):
         my_ip = get_host_ip()
         if my_ip == '192.168.1.170':
             execute_train()
+            self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
             train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
             time.sleep(1)
             self.assertTrue(common.get_train_pid(train_action) > 0)
@@ -111,7 +112,6 @@ class CronBeforeTrainTestCase(APITestCase):
             model_path='/test/a/'
         )
         create_train()
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
         self.assertEqual(len(TrainAction.objects.all()), 1)
 
 
@@ -222,7 +222,7 @@ class CronBeforeTrainTestCase(APITestCase):
             check_train()
             self.assertEqual(len(TaskLog.objects.filter(state=10)), 4)
             train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk)
-            self.assertEqual(len(train_model_qs), 1)
+            self.assertEqual(len(train_model_qs), 2)
             self.assertEqual(train_model_qs[0].model_path, os.path.join(common.get_model_path(), str(train_model_qs[0].pk)))
             train_action_qs = TrainAction.objects.filter(action='TA').filter(state=10)
             self.assertEqual(len(train_action_qs), 1)
