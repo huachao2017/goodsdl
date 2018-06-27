@@ -1,5 +1,6 @@
 import os
 from django.conf import settings
+from goods2 import common
 
 def _add_train_image(client, upcs, one_upc_cnt = 10):
     # 上传2类图片各10张

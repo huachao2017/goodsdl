@@ -19,3 +19,30 @@ def get_train_path():
 
 def get_model_path():
     os.path.join(settings.MODEL_ROOT, PREFIX)
+
+def get_train_pid(train_action):
+    train_dir = os.path.join(get_train_path(), str(train_action.pk))
+    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
+    if train_ps != '':
+        return int(train_ps.split()[1])
+    else:
+        return 0
+
+def get_eval_pid(train_action):
+    train_dir = os.path.join(get_train_path(), str(train_action.pk))
+    eval_ps = os.popen('ps -ef | grep eval2.py | grep {} | grep -v grep'.format(train_dir)).readline()
+    if eval_ps != '':
+        return int(eval_ps.split()[1])
+    else:
+        return 0
+
+def stop_train_ps(train_action):
+    train_dir = os.path.join(get_train_path(), str(train_action.pk))
+    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
+    if train_ps != '':
+        pid = int(train_ps.split()[1])
+        os.system('kill -s 9 {}'.format(str(pid)))
+    eval_ps = os.popen('ps -ef | grep eval2.py | grep {} | grep -v grep'.format(train_dir)).readline()
+    if eval_ps != '':
+        pid = int(eval_ps.split()[1])
+        os.system('kill -s 9 {}'.format(str(pid)))

@@ -3,7 +3,7 @@ from rest_framework import status
 
 from django.test import override_settings
 from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid, DeviceidExclude
-from goods2.cron import check_device, transfer_sample, create_train, execute_train, check_train
+from goods2.cron import check_train, get_host_ip
 import os
 import shutil
 from goods2 import common
@@ -22,9 +22,6 @@ class CronBetweenTrainTestCase(APITestCase):
     def tearDownClass(cls):
         shutil.rmtree(common.get_dataset_dir(True), True)
         shutil.rmtree(common.get_train_path(), True)
-
-    def test_execute_train(self):
-        self.assertEqual(0,0)
 
     def test_check_train(self):
         self.assertEqual(0,0)

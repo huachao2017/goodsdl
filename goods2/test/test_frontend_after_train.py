@@ -3,7 +3,7 @@ from rest_framework import status
 
 from django.test import override_settings
 from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid, DeviceidExclude
-from goods2.cron import check_device, transfer_sample, create_train, execute_train, check_train
+from goods2.cron import check_device
 import os
 
 from django.conf import settings
@@ -15,6 +15,9 @@ class FrontEndAfterTrainTestCase(APITestCase):
     def setUpTestData(cls):
         # 准备模型和样本库
         client = APIClient()
+
+    def test_check_device(self):
+        self.assertEqual(0,0)
 
     def test_image_post(self):
         self.assertEqual(0,0)

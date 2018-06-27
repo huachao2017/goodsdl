@@ -372,7 +372,7 @@ def _do_execute_train():
     if my_ip == '192.168.1.170':
         quit_train_qs = TrainAction.objects.filter(state=9).exclude(action='TC')
         for quit_train in quit_train_qs:
-            _do_stop_train(quit_train)
+            common.stop_train_ps(quit_train)
             quit_train.state = 20
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
@@ -385,7 +385,7 @@ def _do_execute_train():
     elif my_ip == '192.168.1.173':
         quit_train_qs = TrainAction.objects.filter(state=9).filter(action='TC')
         for quit_train in quit_train_qs:
-            _do_stop_train(quit_train)
+            common.stop_train_ps(quit_train)
             quit_train.state = 20
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
@@ -468,18 +468,6 @@ def _do_begin_train(train_action):
     )
     logger.info(command)
     subprocess.call(command, shell=True)
-
-
-def _do_stop_train(train_action):
-    train_dir = os.path.join(common.get_train_path(), str(train_action.pk))
-    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_dir)).readline()
-    if train_ps != '':
-        pid = int(train_ps.split()[1])
-        os.system('kill -s 9 {}'.format(str(pid)))
-    eval_ps = os.popen('ps -ef | grep eval2.py | grep {} | grep -v grep'.format(train_dir)).readline()
-    if eval_ps != '':
-        pid = int(eval_ps.split()[1])
-        os.system('kill -s 9 {}'.format(str(pid)))
 
 
 def check_train():
