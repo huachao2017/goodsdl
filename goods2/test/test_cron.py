@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 
 from django.test import override_settings
-from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, TrainAction, TrainModel
+from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, TrainAction, TrainModel, EvalLog
 from goods2.cron import transfer_sample, create_train, execute_train, check_train, get_host_ip
 import os
 import shutil
@@ -190,4 +190,41 @@ class CronBeforeTrainTestCase(APITestCase):
             common.stop_train_ps(train_action)
 
     def test_check_train(self):
-        self.assertEqual(0, 0)
+        my_ip = get_host_ip()
+        if my_ip == '192.168.1.170':
+            for i in range(100):
+                util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
+            create_train()
+            execute_train()
+            train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
+
+            # 增加1次eval_log
+            EvalLog.objects.create(
+                train_action_id=train_action.pk,
+                precision=0.95,
+                checkpoint_step=100,
+            )
+            check_train()
+            self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
+            train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk)
+            self.assertEqual(len(train_model_qs), 1)
+            self.assertEqual(train_model_qs[0].model_path, '')
+
+            # 增加10次eval_log
+            for i in range(10):
+                EvalLog.objects.create(
+                    train_action_id=train_action.pk,
+                    precision=0.998,
+                    checkpoint_step=1000+i*10,
+                )
+            check_train()
+            self.assertEqual(len(TaskLog.objects.filter(state=10)), 4)
+            train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk)
+            self.assertEqual(len(train_model_qs), 1)
+            self.assertEqual(train_model_qs[0].model_path, os.path.join(common.get_model_path(), str(train_model_qs[0].pk)))
+            train_action_qs = TrainAction.objects.filter(action='TA').filter(state=10)
+            self.assertEqual(len(train_action_qs), 1)
+
+            common.stop_train_ps(train_action)
+        elif my_ip == '192.168.1.173':
+            pass
