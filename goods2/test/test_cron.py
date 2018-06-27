@@ -93,6 +93,15 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(train_action_upcs_qs), 2)
         self.assertEqual(train_action_upcs_qs[0].cnt, 1000)
 
+        my_ip = get_host_ip()
+        if my_ip == '192.168.1.170':
+            execute_train()
+            train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
+            time.sleep(1)
+            self.assertTrue(common.get_train_pid(train_action) > 0)
+            self.assertTrue(common.get_eval_pid(train_action) > 0)
+            common.stop_train_ps(train_action)
+
         train_action.state = 10
         train_action.save()
         train_model = TrainModel.objects.create(
@@ -105,14 +114,6 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
         self.assertEqual(len(TrainAction.objects.all()), 1)
 
-        my_ip = get_host_ip()
-        if my_ip == '192.168.1.170':
-            execute_train()
-            train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
-            time.sleep(1)
-            self.assertTrue(common.get_train_pid(train_action) > 0)
-            self.assertTrue(common.get_eval_pid(train_action) > 0)
-            common.stop_train_ps(train_action)
 
     def test_create_train_TF_from_TA(self):
         for i in range(100):
