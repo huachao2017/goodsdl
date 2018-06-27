@@ -535,7 +535,7 @@ def _do_check_one_train(train_action):
     if len(train_model_qs)>0:
         last_train_model = train_model_qs[0]
 
-    if len(eval_log_qs)>0 and eval_log_qs[0].precision>0.95:
+    if len(eval_log_qs)>0 and eval_log_qs[0].precision>=0.95:
         if last_train_model is None:
             _do_create_train_model(train_action, eval_log_qs[0])
         else:
