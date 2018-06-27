@@ -3,7 +3,7 @@ from rest_framework import status
 
 from django.test import override_settings
 from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid, DeviceidExclude, TrainAction, TrainModel
-from goods2.cron import check_device, transfer_sample, create_train, execute_train, check_train, get_host_ip
+from goods2.cron import transfer_sample, create_train, execute_train, check_train, get_host_ip
 import os
 import shutil
 import time
@@ -188,3 +188,6 @@ class CronBeforeTrainTestCase(APITestCase):
             self.assertTrue(common.get_train_pid(train_action) > 0)
             self.assertTrue(common.get_eval_pid(train_action) > 0)
             common.stop_train_ps(train_action)
+
+    def test_check_train(self):
+        self.assertEqual(0,0)
