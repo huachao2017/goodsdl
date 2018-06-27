@@ -196,6 +196,7 @@ class CronBeforeTrainTestCase(APITestCase):
                 util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
             create_train()
             execute_train()
+            self.assertEqual(len(TaskLog.objects.filter(state=10)), 2)
             train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
 
             # 增加1次eval_log

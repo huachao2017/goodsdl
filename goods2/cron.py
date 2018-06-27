@@ -501,11 +501,11 @@ def _do_check_train():
     if my_ip == '192.168.1.170':
         doing_train_qs = TrainAction.objects.filter(state=5).exclude(action='TC')
         for check_train in doing_train_qs:
-            ret += _do_check_one_train(check_train)
+            _do_check_one_train(check_train)
     elif my_ip == '192.168.1.173':
         doing_train_qs = TrainAction.objects.filter(state=5).filter(action='TC')
         for check_train in doing_train_qs:
-            ret += _do_check_one_train(check_train)
+            _do_check_one_train(check_train)
 
     return ret
 
