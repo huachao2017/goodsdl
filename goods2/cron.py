@@ -409,7 +409,9 @@ def _do_begin_train(train_action):
 
     # 训练
     if train_action.action == 'TC':
-        checkpoint_path = os.path.join(common.get_model_path(), str(train_action.f_model.pk))
+        f_model_id = train_action.f_model.pk
+        print(f_model_id)
+        checkpoint_path = os.path.join(common.get_model_path(), str(f_model_id))
         command = 'nohup python3 {}/step2/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer,aux_11/aux_logits/FC --trainable_scopes=final_layer,aux_11/aux_logits/FC' \
                   ' > /root/train_{}.out 2>&1 &'.format(
@@ -520,12 +522,12 @@ def _do_check_train():
 # TF：5次生成达0.995以上或精度提升小于0.3%后结束
 # TC：3次生成达0.99以上或精度提升小于0.5%后结束
 def _do_check_one_train(train_action):
-    train_ps = os.popen('ps -ef | grep train.py | grep {} | grep -v grep'.format(train_action.train_path)).readline()
-    if train_ps == '':
+    train_pid = common.get_train_pid(train_action)
+    if train_pid == 0:
         train_action.state=20
         train_action.save()
         logger.error('train process has been killed:{};'.format(train_action.pk))
-        return  'train process has been killed:{};'.format(train_action.pk)
+        return 'train process has been killed:{};'.format(train_action.pk)
 
     eval_log_qs = EvalLog.objects.filter(train_action_id=train_action.pk).order_by('-id')
 
@@ -573,13 +575,13 @@ def _do_create_train_model(train_action, eval_log):
             if max_precision < train_model.precision:
                 max_precision = train_model.precision
         if train_action.action == 'TA':
-            if min_precision > 0.998 or max_precision - min_precision < 0.002:
+            if min_precision >= 0.998 or max_precision - min_precision < 0.002:
                 _do_export_train(train_action, cur_train_model)
         elif train_action.action == 'TF':
-            if min_precision > 0.995 or max_precision - min_precision < 0.003:
+            if min_precision >= 0.995 or max_precision - min_precision < 0.003:
                 _do_export_train(train_action, cur_train_model)
         elif train_action.action == 'TC':
-            if min_precision > 0.99 or max_precision - min_precision < 0.005:
+            if min_precision >= 0.99 or max_precision - min_precision < 0.005:
                 _do_export_train(train_action, cur_train_model)
     return cur_train_model
 
