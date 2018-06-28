@@ -99,6 +99,7 @@ class CronBeforeTrainTestCase(APITestCase):
             self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
             train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
             time.sleep(1)
+            self.assertEqual(train_action.ip, my_ip)
             self.assertTrue(common.get_train_pid(train_action) > 0)
             self.assertTrue(common.get_eval_pid(train_action) > 0)
             common.stop_train_ps(train_action)
@@ -158,6 +159,7 @@ class CronBeforeTrainTestCase(APITestCase):
             execute_train()
             train_action = TrainAction.objects.filter(action='TF').filter(state=5)[0]
             time.sleep(1)
+            self.assertEqual(train_action.ip, my_ip)
             self.assertTrue(common.get_train_pid(train_action) > 0)
             self.assertTrue(common.get_eval_pid(train_action) > 0)
             common.stop_train_ps(train_action)
@@ -199,6 +201,7 @@ class CronBeforeTrainTestCase(APITestCase):
             execute_train()
             train_action = TrainAction.objects.filter(action='TC').filter(state=5)[0]
             time.sleep(1)
+            self.assertEqual(train_action.ip, my_ip)
             self.assertTrue(common.get_train_pid(train_action) > 0)
             self.assertTrue(common.get_eval_pid(train_action) > 0)
             common.stop_train_ps(train_action)

@@ -113,6 +113,9 @@ class TrainAction(models.Model):
 
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
+    ip = models.CharField(max_length=20, default='')
+    train_command = models.CharField(max_length=500, default='')
+    eval_command = models.CharField(max_length=500, default='')
     complete_time = models.DateTimeField('train finish time', auto_now_add=True)
 
     def __str__(self):

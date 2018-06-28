@@ -379,7 +379,10 @@ def _do_execute_train():
 
         begin_train_qs = TrainAction.objects.filter(state=1).exclude(action='TC')
         for begin_train in begin_train_qs:
-            _do_begin_train(begin_train)
+            train_command, eval_command = _do_begin_train(begin_train)
+            begin_train.ip = my_ip
+            begin_train.train_command = train_command
+            begin_train.eval_command = eval_command
             begin_train.state = 5
             begin_train.save()
     elif my_ip == '192.168.1.173':
@@ -391,7 +394,10 @@ def _do_execute_train():
             quit_train.save()
         begin_train_qs = TrainAction.objects.filter(state=1).filter(action='TC')
         for begin_train in begin_train_qs:
-            _do_begin_train(begin_train)
+            train_command, eval_command = _do_begin_train(begin_train)
+            begin_train.ip = my_ip
+            begin_train.train_command = train_command
+            begin_train.eval_command = eval_command
             begin_train.state = 5
             begin_train.save()
 
@@ -404,7 +410,7 @@ def _do_begin_train(train_action):
     if train_action.action == 'TC':
         f_model_id = train_action.f_model.pk
         checkpoint_path = os.path.join(common.get_model_path(), str(f_model_id))
-        command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+        train_command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   '--checkpoint_path={} --checkpoint_exclude_scopes=final_layer,aux_11/aux_logits/FC --trainable_scopes=final_layer,aux_11/aux_logits/FC' \
                   ' > /root/train_{}.out 2>&1 &'.format(
             settings.BASE_DIR,
@@ -420,7 +426,7 @@ def _do_begin_train(train_action):
         )
     elif train_action.action == 'TF':
         checkpoint_path = os.path.join(common.get_model_path(), str(train_action.f_model.pk))
-        command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+        train_command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   '--learning_rate=0.003 --checkpoint_path={} > /root/train_{}.out 2>&1 &'.format(
             settings.BASE_DIR,
             train_action.train_path,
@@ -434,7 +440,7 @@ def _do_begin_train(train_action):
             train_action.action
         )
     else:
-        command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
+        train_command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   ' > /root/train_{}.out 2>&1 &'.format(
             settings.BASE_DIR,
             train_action.train_path,
@@ -446,10 +452,9 @@ def _do_begin_train(train_action):
             '0',
             train_action.action
         )
-    logger.info(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(train_command, shell=True)
     # 评估
-    command = 'nohup python3 {}/goods2/dl/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}' \
+    eval_command = 'nohup python3 {}/goods2/dl/eval2.py --dataset_split_name=validation --dataset_dir={} --source_dataset_dir={} --checkpoint_path={} --eval_dir={} --example_num={} --model_name={}' \
               ' > /root/eval_{}.out 2>&1 &'.format(
         settings.BASE_DIR,
         train_action.train_path,
@@ -460,8 +465,8 @@ def _do_begin_train(train_action):
         'nasnet_large',
         train_action.action,
     )
-    logger.info(command)
-    subprocess.call(command, shell=True)
+    subprocess.call(eval_command, shell=True)
+    return train_command, eval_command
 
 
 def check_train():
