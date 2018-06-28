@@ -175,6 +175,9 @@ class CronBeforeTrainTestCase(APITestCase):
         util._add_train_image(self.client, upcs=['6901668002525'])
         self.assertEqual(len(TrainImage.objects.all()), 2010)
         self.assertEqual(len(TrainUpc.objects.all()), 3)
+        add_train_image_qs = TrainImage.objects.filter(create_time__gt=train_action.create_time)
+        self.assertEqual(len(add_train_image_qs), 10)
+
         create_train()
         waiting_train_action_qs = TrainAction.objects.filter(state=1).order_by('-id')
         self.assertEqual(len(waiting_train_action_qs), 1)
