@@ -35,7 +35,7 @@ class CronBeforeTrainTestCase(APITestCase):
         util._add_image(self.client, '1000', '0')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 20)
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 1)
+        self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 1)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 22)  # 增加两个样本
         train_upc = TrainUpc.objects.get(upc='4711931005106')
@@ -44,7 +44,7 @@ class CronBeforeTrainTestCase(APITestCase):
         util._add_image(self.client, '500', '1')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 40)
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 2)
+        self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 22)  # 不增加样本
         train_upc = TrainUpc.objects.get(upc='4711931005106')
@@ -53,7 +53,7 @@ class CronBeforeTrainTestCase(APITestCase):
         util._add_image(self.client, '1000', '2')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 60)
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
+        self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 24)  # 再增加2样本
         train_upc = TrainUpc.objects.get(upc='4711931005106')
@@ -62,7 +62,7 @@ class CronBeforeTrainTestCase(APITestCase):
         util._add_image(self.client, '1000', '3', add_ground_truth=False)
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 80)
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 4)
+        self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 4)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 24)  # 不再增加样本
         train_upc = TrainUpc.objects.get(upc='4711931005106')
@@ -71,7 +71,7 @@ class CronBeforeTrainTestCase(APITestCase):
         util._add_image(self.client, '1000', '4')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 100)
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 5)
+        self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 5)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 26)  # 不再增加样本
         train_upc = TrainUpc.objects.get(upc='4711931005106')
@@ -79,14 +79,14 @@ class CronBeforeTrainTestCase(APITestCase):
 
     def test_create_train_TA(self):
         create_train()
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 1)
+        self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 1)
         self.assertEqual(len(TrainAction.objects.all()), 0)
 
         for i in range(100):
             util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
         create_train()
-        self.assertEqual(len(TaskLog.objects.filter(state=10)), 2)
-        train_action = TrainAction.objects.filter(action='TA').filter(state=1)[0]
+        self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
+        train_action = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_WAITING)[0]
         self.assertEqual(train_action.train_cnt, 2000)
         self.assertEqual(train_action.validation_cnt, int(2000 * 0.3))
         train_action_upcs_qs = train_action.upcs.all()
@@ -96,15 +96,15 @@ class CronBeforeTrainTestCase(APITestCase):
         my_ip = get_host_ip()
         if my_ip == '192.168.1.170':
             execute_train()
-            self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
-            train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
+            self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)
+            train_action = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_TRAINING)[0]
             time.sleep(1)
             self.assertEqual(train_action.ip, my_ip)
             self.assertTrue(common.get_train_pid(train_action) > 0)
             self.assertTrue(common.get_eval_pid(train_action) > 0)
             common.stop_train_ps(train_action)
 
-        train_action.state = 10
+        train_action.state = common.TRAIN_STATE_COMPLETE
         train_action.save()
         train_model = TrainModel.objects.create(
             train_action_id=train_action.pk,
@@ -121,8 +121,8 @@ class CronBeforeTrainTestCase(APITestCase):
             util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
         create_train()
 
-        train_action_ta = TrainAction.objects.filter(action='TA').filter(state=1)[0]
-        train_action_ta.state = 10
+        train_action_ta = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_WAITING)[0]
+        train_action_ta.state = common.TRAIN_STATE_COMPLETE
         train_action_ta.save()
 
         train_model = TrainModel.objects.create(
@@ -136,7 +136,7 @@ class CronBeforeTrainTestCase(APITestCase):
             util._add_train_image(self.client, upcs=['4711931005106'])
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action_ta.create_time)), 100)
         create_train()
-        train_action_tf_qs = TrainAction.objects.filter(action='TF').filter(state=1)
+        train_action_tf_qs = TrainAction.objects.filter(action='TF').filter(state=common.TRAIN_STATE_WAITING)
         self.assertEqual(len(train_action_tf_qs), 0)
 
         for i in range(10):
@@ -145,7 +145,7 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TrainImage.objects.all()), 2200)
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action_ta.create_time)), 200)
         create_train()
-        waiting_train_action_qs = TrainAction.objects.filter(state=1).order_by('-id')
+        waiting_train_action_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).order_by('-id')
         self.assertEqual(len(waiting_train_action_qs), 1)
         train_action_tf = waiting_train_action_qs[0]
         self.assertEqual(train_action_tf.action, 'TF')
@@ -157,7 +157,7 @@ class CronBeforeTrainTestCase(APITestCase):
         my_ip = get_host_ip()
         if my_ip == '192.168.1.170':
             execute_train()
-            train_action = TrainAction.objects.filter(action='TF').filter(state=5)[0]
+            train_action = TrainAction.objects.filter(action='TF').filter(state=common.TRAIN_STATE_TRAINING)[0]
             time.sleep(1)
             self.assertEqual(train_action.ip, my_ip)
             self.assertTrue(common.get_train_pid(train_action) > 0)
@@ -169,10 +169,10 @@ class CronBeforeTrainTestCase(APITestCase):
             util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
         create_train()
 
-        train_action = TrainAction.objects.filter(action='TA').filter(state=1)[0]
-        train_action.state = 10
+        train_action = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_WAITING)[0]
+        train_action.state = common.TRAIN_STATE_COMPLETE
         train_action.save()
-        self.assertEqual(len(TrainAction.objects.filter(state=10)), 1)
+        self.assertEqual(len(TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE)), 1)
 
         train_model = TrainModel.objects.create(
             train_action_id=train_action.pk,
@@ -187,7 +187,7 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action.create_time)), 10)
 
         create_train()
-        waiting_train_action_qs = TrainAction.objects.filter(state=1).order_by('-id')
+        waiting_train_action_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).order_by('-id')
         self.assertEqual(len(waiting_train_action_qs), 1)
         train_action_tc = waiting_train_action_qs[0]
         self.assertEqual(train_action_tc.action, 'TC')
@@ -199,7 +199,7 @@ class CronBeforeTrainTestCase(APITestCase):
         my_ip = get_host_ip()
         if my_ip == '192.168.1.173':
             execute_train()
-            train_action = TrainAction.objects.filter(action='TC').filter(state=5)[0]
+            train_action = TrainAction.objects.filter(action='TC').filter(state=common.TRAIN_STATE_TRAINING)[0]
             time.sleep(1)
             self.assertEqual(train_action.ip, my_ip)
             self.assertTrue(common.get_train_pid(train_action) > 0)
@@ -213,8 +213,8 @@ class CronBeforeTrainTestCase(APITestCase):
                 util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
             create_train()
             execute_train()
-            self.assertEqual(len(TaskLog.objects.filter(state=10)), 2)
-            train_action = TrainAction.objects.filter(action='TA').filter(state=5)[0]
+            self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
+            train_action = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_TRAINING)[0]
 
             # 增加1次eval_log
             EvalLog.objects.create(
@@ -223,7 +223,7 @@ class CronBeforeTrainTestCase(APITestCase):
                 checkpoint_step=100,
             )
             check_train()
-            self.assertEqual(len(TaskLog.objects.filter(state=10)), 3)
+            self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)
             train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk)
             self.assertEqual(len(train_model_qs), 1)
             self.assertEqual(train_model_qs[0].model_path, '')
@@ -236,12 +236,12 @@ class CronBeforeTrainTestCase(APITestCase):
                     checkpoint_step=1000+i*5000,
                 )
                 check_train()
-            self.assertEqual(len(TaskLog.objects.filter(state=10)), 12)
-            self.assertEqual(len(TaskLog.objects.filter(state=20)), 1)
+            self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 12)
+            self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_ERROR)), 1)
             train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')
             self.assertEqual(len(train_model_qs), 11)
             # self.assertEqual(train_model_qs[0].model_path, os.path.join(common.get_model_path(), str(train_model_qs[0].pk)))
-            # train_action_qs = TrainAction.objects.filter(action='TA').filter(state=10)
+            # train_action_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE)
             # self.assertEqual(len(train_action_qs), 1)
 
             common.stop_train_ps(train_action)

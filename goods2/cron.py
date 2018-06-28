@@ -20,7 +20,7 @@ def test():
 
 
 def check_device():
-    doing_qs = TaskLog.objects.filter(name='check_device').filter(state=1)
+    doing_qs = TaskLog.objects.filter(name='check_device').filter(state=common.TRAIN_STATE_WAITING)
     if len(doing_qs) > 0:
         return
     cur_task = TaskLog.objects.create(
@@ -35,11 +35,11 @@ def check_device():
     except Exception as e:
         logger.error('check_device: {}'.format(e))
         logger.error(traceback.format_exc())
-        cur_task.state = 20
+        cur_task.state = common.TASK_STATE_ERROR
         cur_task.message = e
         cur_task.save()
     else:
-        cur_task.state = 10
+        cur_task.state = common.TASK_STATE_COMPLETE
         cur_task.message = ret
         cur_task.save()
 
@@ -68,8 +68,8 @@ def _do_check_one_device(device, image_ground_truth_qs):
 
     precision = total_precision / 10
     truth_rate = total_truth_rate / 10
-    if device.state < 10 and truth_rate > 0.95:
-        device.state = 10
+    if device.state < common.DEVICE_STATE_COMMERCIAL and truth_rate > 0.95:
+        device.state = common.DEVICE_STATE_COMMERCIAL
         device.commercial_time = datetime.datetime.now()
         device.save()
     DeviceidPrecision.objects.create(
@@ -80,7 +80,7 @@ def _do_check_one_device(device, image_ground_truth_qs):
 
 
 def transfer_sample():
-    doing_qs = TaskLog.objects.filter(name='transfer_sample').filter(state=1)
+    doing_qs = TaskLog.objects.filter(name='transfer_sample').filter(state=common.TASK_STATE_DOING)
     if len(doing_qs) > 0:
         return
     cur_task = TaskLog.objects.create(
@@ -95,11 +95,11 @@ def transfer_sample():
     except Exception as e:
         logger.error('transfer_sample: {}'.format(e))
         logger.error(traceback.format_exc())
-        cur_task.state = 20
+        cur_task.state = common.TASK_STATE_ERROR
         cur_task.message = e
         cur_task.save()
     else:
-        cur_task.state = 10
+        cur_task.state = common.TASK_STATE_COMPLETE
         cur_task.message = ret
         cur_task.save()
 
@@ -196,7 +196,7 @@ def _do_transfer_sample():
 
 
 def create_train():
-    doing_qs = TaskLog.objects.filter(name='create_train').filter(state=1)
+    doing_qs = TaskLog.objects.filter(name='create_train').filter(state=common.TASK_STATE_DOING)
     if len(doing_qs) > 0:
         return
     cur_task = TaskLog.objects.create(
@@ -211,11 +211,11 @@ def create_train():
     except Exception as e:
         logger.error('create_train: {}'.format(e))
         logger.error(traceback.format_exc())
-        cur_task.state = 20
+        cur_task.state = common.TASK_STATE_ERROR
         cur_task.message = e
         cur_task.save()
     else:
-        cur_task.state = 10
+        cur_task.state = common.TASK_STATE_COMPLETE
         cur_task.message = ret
         cur_task.save()
 
@@ -223,30 +223,30 @@ def create_train():
 def _do_create_train():
     _do_create_train_ta()
     # TF & TC
-    last_t_qs = TrainAction.objects.filter(state=10).order_by('-complete_time')
+    last_t_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).order_by('-complete_time')
     if len(last_t_qs) > 0:
         last_t = last_t_qs[0]
         if last_t.action == 'TA':
             # 'TA'训练完即建立了新的主分支
-            doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=5).order_by('-id')
+            doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
             if len(doing_tf_qs)>0:
                 doing_tf = doing_tf_qs[0]
                 if doing_tf.create_time < last_t.complete_time:
                     # 退出TA之前的TF
-                    doing_tf.state = 9
+                    doing_tf.state = common.TRAIN_STATE_STOP
                     doing_tf.save()
-            doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=5).order_by('-id')
+            doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
             if len(doing_tc_qs)>0:
                 doing_tc = doing_tc_qs[0]
                 if doing_tc.create_time < last_t.complete_time:
                     # 退出TA之前的TC
-                    doing_tc.state = 9
+                    doing_tc.state = common.TRAIN_STATE_STOP
                     doing_tc.save()
 
 
         train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
-        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=5).order_by('-id')
-        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=5).order_by('-id')
+        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
+        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
         f_train_model = train_model_qs[0]
         f_train_upcs = last_t.upcs.all()
         train_upcs = TrainUpc.objects.all()
@@ -290,10 +290,10 @@ def _do_create_train():
 
 def _do_create_train_ta():
     # TA
-    doing_ta = TrainAction.objects.filter(action='TA').filter(state__lte=5)
+    doing_ta = TrainAction.objects.filter(action='TA').filter(state__lte=common.TRAIN_STATE_TRAINING)
     if len(doing_ta) == 0:
         last_ta = None
-        last_ta_qs = TrainAction.objects.filter(action='TA').filter(state=10).order_by('-id')
+        last_ta_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).order_by('-id')
         if len(last_ta_qs) > 0:
             last_ta = last_ta_qs[0]
 
@@ -343,7 +343,7 @@ def _create_train(action, f_model_id):
 
 
 def execute_train():
-    doing_qs = TaskLog.objects.filter(name='execute_train').filter(state=1)
+    doing_qs = TaskLog.objects.filter(name='execute_train').filter(state=common.TASK_STATE_DOING)
     if len(doing_qs) > 0:
         return
     cur_task = TaskLog.objects.create(
@@ -358,11 +358,11 @@ def execute_train():
     except Exception as e:
         logger.error('execute_train: {}'.format(e))
         logger.error(traceback.format_exc())
-        cur_task.state = 20
+        cur_task.state = common.TASK_STATE_ERROR
         cur_task.message = e
         cur_task.save()
     else:
-        cur_task.state = 10
+        cur_task.state = common.TASK_STATE_COMPLETE
         cur_task.message = ret
         cur_task.save()
 
@@ -370,35 +370,35 @@ def execute_train():
 def _do_execute_train():
     my_ip = get_host_ip()
     if my_ip == '192.168.1.170':
-        quit_train_qs = TrainAction.objects.filter(state=9).exclude(action='TC')
+        quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).exclude(action='TC')
         for quit_train in quit_train_qs:
             common.stop_train_ps(quit_train)
-            quit_train.state = 20
+            quit_train.state = common.TRAIN_STATE_COMPLETE_WITH_STOP
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
 
-        begin_train_qs = TrainAction.objects.filter(state=1).exclude(action='TC')
+        begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).exclude(action='TC')
         for begin_train in begin_train_qs:
             train_command, eval_command = _do_begin_train(begin_train)
             begin_train.ip = my_ip
             begin_train.train_command = train_command
             begin_train.eval_command = eval_command
-            begin_train.state = 5
+            begin_train.state = common.TRAIN_STATE_TRAINING
             begin_train.save()
     elif my_ip == '192.168.1.173':
-        quit_train_qs = TrainAction.objects.filter(state=9).filter(action='TC')
+        quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).filter(action='TC')
         for quit_train in quit_train_qs:
             common.stop_train_ps(quit_train)
-            quit_train.state = 20
+            quit_train.state = common.TRAIN_STATE_COMPLETE_WITH_STOP
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
-        begin_train_qs = TrainAction.objects.filter(state=1).filter(action='TC')
+        begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TC')
         for begin_train in begin_train_qs:
             train_command, eval_command = _do_begin_train(begin_train)
             begin_train.ip = my_ip
             begin_train.train_command = train_command
             begin_train.eval_command = eval_command
-            begin_train.state = 5
+            begin_train.state = common.TRAIN_STATE_TRAINING
             begin_train.save()
 
     return ''
@@ -470,7 +470,7 @@ def _do_begin_train(train_action):
 
 
 def check_train():
-    doing_qs = TaskLog.objects.filter(name='check_train').filter(state=1)
+    doing_qs = TaskLog.objects.filter(name='check_train').filter(state=common.TASK_STATE_DOING)
     if len(doing_qs) > 0:
         return
     cur_task = TaskLog.objects.create(
@@ -485,11 +485,11 @@ def check_train():
     except Exception as e:
         logger.error('check_train: {}'.format(e))
         logger.error(traceback.format_exc())
-        cur_task.state = 20
+        cur_task.state = common.TASK_STATE_ERROR
         cur_task.message = e
         cur_task.save()
     else:
-        cur_task.state = 10
+        cur_task.state = common.TASK_STATE_COMPLETE
         cur_task.message = ret
         cur_task.save()
 
@@ -497,11 +497,11 @@ def _do_check_train():
     my_ip = get_host_ip()
     ret = ''
     if my_ip == '192.168.1.170':
-        doing_train_qs = TrainAction.objects.filter(state=5).exclude(action='TC')
+        doing_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(ip=my_ip).exclude(action='TC')
         for check_train in doing_train_qs:
             _do_check_one_train(check_train)
     elif my_ip == '192.168.1.173':
-        doing_train_qs = TrainAction.objects.filter(state=5).filter(action='TC')
+        doing_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(ip=my_ip).filter(action='TC')
         for check_train in doing_train_qs:
             _do_check_one_train(check_train)
 
@@ -521,7 +521,7 @@ def _do_check_train():
 def _do_check_one_train(train_action):
     train_pid = common.get_train_pid(train_action)
     if train_pid == 0:
-        train_action.state=20
+        train_action.state=common.TRAIN_STATE_COMPLETE_WITH_ERROR
         train_action.save()
         logger.error('train process has been killed:{};'.format(train_action.pk))
         return 'train process has been killed:{};'.format(train_action.pk)
@@ -562,6 +562,8 @@ def _do_create_train_model(train_action, eval_log):
         count = 5
     elif train_action.action == 'TC':
         count = 3
+    else:
+        raise ValueError('Train action type error')
     train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')[:count]
     if len(train_model_qs) == count:
         min_precision = train_model_qs[0].precision
@@ -608,7 +610,8 @@ def _do_export_train(train_action, train_model):
         train_model.checkpoint_step = checkpoint_step
         train_model.model_path = model_path
         train_model.save()
-        train_action.state = 10
+        common.stop_train_ps(train_action)
+        train_action.state = common.TRAIN_STATE_COMPLETE
         train_action.complete_time = datetime.datetime.now()
         train_action.save()
     else:

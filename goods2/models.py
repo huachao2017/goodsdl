@@ -12,10 +12,10 @@ def image_upload_source(instance, filename):
 class Deviceid(models.Model):
     deviceid = models.CharField(max_length=20, default='0', unique=True)
     STATE_CHOICES = (
-        (0, u'testing'),
-        (10, u'commercial'),
+        (common.DEVICE_STATE_TESTING, u'testing'),
+        (common.DEVICE_STATE_COMMERCIAL, u'commercial'),
     )
-    state = models.IntegerField(choices=STATE_CHOICES, default=0)
+    state = models.IntegerField(choices=STATE_CHOICES, default=common.DEVICE_STATE_TESTING)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
     commercial_time = models.DateTimeField('testing finish time', auto_now_add=True)
@@ -96,13 +96,14 @@ class TrainAction(models.Model):
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
     train_path = models.CharField(max_length=200)
     STATE_CHOICES = (
-        (1, u'Waiting'),
-        (5, u'Training'),
-        (9, u'Stop'),
-        (10, u'Complete'),
-        (20, u'Complete with stop'),
+        (common.TRAIN_STATE_WAITING, u'Waiting'),
+        (common.TRAIN_STATE_TRAINING, u'Training'),
+        (common.TRAIN_STATE_STOP, u'Stop'),
+        (common.TRAIN_STATE_COMPLETE, u'Complete'),
+        (common.TRAIN_STATE_COMPLETE_WITH_STOP, u'Complete with stop'),
+        (common.TRAIN_STATE_COMPLETE_WITH_ERROR, u'Complete with error'),
     )
-    state = models.IntegerField(choices=STATE_CHOICES, default=1)
+    state = models.IntegerField(choices=STATE_CHOICES, default=common.TRAIN_STATE_WAITING)
     train_cnt = models.IntegerField(default=0)
     validation_cnt = models.IntegerField(default=0)
     desc = models.CharField(max_length=500, null=True)
@@ -161,11 +162,11 @@ class TaskLog(models.Model):
     name = models.CharField(max_length=50)
     ip = models.CharField(max_length=50, default='')
     STATE_CHOICES = (
-        (1, u'Doing'),
-        (10, u'Complete'),
-        (20, u'Error'),
+        (common.TASK_STATE_DOING, u'Doing'),
+        (common.TASK_STATE_COMPLETE, u'Complete'),
+        (common.TASK_STATE_ERROR, u'Error'),
     )
     message = models.CharField(max_length=500, default='')
-    state = models.IntegerField(choices=STATE_CHOICES, default=1)
+    state = models.IntegerField(choices=STATE_CHOICES, default=common.TASK_STATE_DOING)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)

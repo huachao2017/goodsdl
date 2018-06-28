@@ -91,7 +91,7 @@ class TrainActionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TrainAction
-        fields = ('pk', 'action', 'f_model', 'desc', 'train_path', 'create_time', 'update_time', 'ip', 'train_command', 'eval_command', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')
+        fields = ('pk', 'action', 'state', 'f_model', 'desc', 'train_path', 'create_time', 'update_time', 'ip', 'train_command', 'eval_command', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')
         read_only_fields = ('train_path', 'create_time', 'update_time', 'ip', 'train_command', 'eval_command', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')
 
 class TaskLogSerializer(serializers.ModelSerializer):

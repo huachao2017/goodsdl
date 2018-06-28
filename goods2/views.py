@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from goods2.dl import imagedetection
+from goods2 import common
 
 from goods2.serializers import *
 
@@ -54,7 +55,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         # 检测阶段
         ret = []
-        last_normal_train_qs = TrainAction.objects.filter(state=10).exclude(action='TC').order_by('-id')
+        last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).exclude(action='TC').order_by('-id')
         if len(last_normal_train_qs)>0:
             last_train = last_normal_train_qs[0]
             last_normal_train_model = TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
@@ -66,7 +67,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 image_id=serializer.instance.pk
             )
 
-            last_tc_train_qs = TrainAction.objects.filter(state=10).filter(action='TC').filter(update_time__gt=last_normal_train_model.create_time).order_by('-id')
+            last_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(action='TC').filter(complete_time__gt=last_normal_train_model.create_time).order_by('-id')
             if len(last_tc_train_qs)>0:
                 last_tc_train = last_tc_train_qs[0]
                 last_tc_train_model = TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
@@ -100,7 +101,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 输出结果
             ret = []
             for i in range(len(upcs)):
-                if device.state == 10:
+                if device.state < common.DEVICE_STATE_COMMERCIAL:
                     # 没有商用的不返回结果
                     ret.append(
                         {

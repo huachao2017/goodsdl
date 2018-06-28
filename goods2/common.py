@@ -1,24 +1,39 @@
 from django.conf import settings
 import os
 
-PREFIX = 'goods2'
+TRAIN_STATE_WAITING = 1
+TRAIN_STATE_TRAINING = 5
+TRAIN_STATE_STOP = 9
+TRAIN_STATE_COMPLETE = 10
+TRAIN_STATE_COMPLETE_WITH_STOP = 20
+TRAIN_STATE_COMPLETE_WITH_ERROR = 30
+
+TASK_STATE_DOING = 1
+TASK_STATE_COMPLETE = 10
+TASK_STATE_ERROR = 20
+
+DEVICE_STATE_TESTING = 0
+DEVICE_STATE_COMMERCIAL = 10
+
+
+_STORAGE_PREFIX = 'goods2'
 def get_dataset_dir(full_path = False):
     if full_path:
-        return os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, PREFIX)
+        return os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, _STORAGE_PREFIX)
     else:
-        return os.path.join(settings.DATASET_DIR_NAME, PREFIX)
+        return os.path.join(settings.DATASET_DIR_NAME, _STORAGE_PREFIX)
 
 def get_detect_dir(full_path = False):
     if full_path:
-        return os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, PREFIX)
+        return os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, _STORAGE_PREFIX)
     else:
-        return os.path.join(settings.DETECT_DIR_NAME, PREFIX)
+        return os.path.join(settings.DETECT_DIR_NAME, _STORAGE_PREFIX)
 
 def get_train_path():
-    return os.path.join(settings.TRAIN_ROOT, PREFIX)
+    return os.path.join(settings.TRAIN_ROOT, _STORAGE_PREFIX)
 
 def get_model_path():
-    return os.path.join(settings.MODEL_ROOT, PREFIX)
+    return os.path.join(settings.MODEL_ROOT, _STORAGE_PREFIX)
 
 def get_train_pid(train_action):
     train_dir = os.path.join(get_train_path(), str(train_action.pk))

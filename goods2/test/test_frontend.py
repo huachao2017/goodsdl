@@ -3,7 +3,7 @@ from rest_framework import status
 
 from django.test import override_settings
 from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid, DeviceidExclude
-from goods2.cron import check_device, transfer_sample, create_train, execute_train, check_train
+from goods2 import common
 import os
 
 from django.conf import settings
@@ -15,7 +15,7 @@ class FrontEndTestCase(APITestCase):
 
     def test_tasklog_create(self):
         task_log = TaskLog.objects.create(name='test', ip='test', message='')
-        task_log_qs = TaskLog.objects.filter(state=1)
+        task_log_qs = TaskLog.objects.filter(state=common.TASK_STATE_DOING)
         self.assertEqual(len(task_log_qs), 1)
 
     def test_tasklog_get(self):
@@ -38,7 +38,7 @@ class FrontEndTestCase(APITestCase):
         self.assertEqual(image.deviceid, '0')
         self.assertTrue(os.path.isfile(image.source.path))
         device = Deviceid.objects.get(deviceid=image.deviceid)
-        self.assertEqual(device.state, 0)
+        self.assertEqual(device.state, common.DEVICE_STATE_TESTING)
 
     def test_image_groundtruth_post(self):
         with open(os.path.join(settings.BASE_DIR, 'images/test_1.jpg'), mode='rb') as fp:
