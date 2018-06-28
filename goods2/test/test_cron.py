@@ -164,6 +164,7 @@ class CronBeforeTrainTestCase(APITestCase):
         train_action = TrainAction.objects.filter(action='TA').filter(state=1)[0]
         train_action.state = 10
         train_action.save()
+        self.assertEqual(len(TrainAction.objects.filter(state=10)), 1)
 
         train_model = TrainModel.objects.create(
             train_action_id=train_action.pk,
@@ -171,12 +172,14 @@ class CronBeforeTrainTestCase(APITestCase):
             precision=0.9,
             model_path='/test/a/'
         )
-        time.sleep(1)
         util._add_train_image(self.client, upcs=['6901668002525'])
         self.assertEqual(len(TrainImage.objects.all()), 2010)
         self.assertEqual(len(TrainUpc.objects.all()), 3)
         create_train()
-        train_action_tc = TrainAction.objects.filter(action='TC').filter(state=1)[0]
+        waiting_train_action_qs = TrainAction.objects.filter(state=1).order_by('-id')
+        self.assertEqual(len(waiting_train_action_qs), 1)
+        train_action_tc = waiting_train_action_qs[0]
+        self.assertEqual(train_action_tc.action, 'TC')
         self.assertEqual(train_action_tc.f_model.pk, train_model.pk)
         self.assertEqual(train_action_tc.train_cnt, 30)
         self.assertEqual(train_action_tc.validation_cnt, 30)
