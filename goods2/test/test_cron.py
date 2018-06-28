@@ -130,6 +130,7 @@ class CronBeforeTrainTestCase(APITestCase):
             precision=0.9,
             model_path='/test/a/'
         )
+
         for i in range(10):
             util._add_train_image(self.client, upcs=['4711931005106'])
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action_ta.create_time)), 100)
@@ -177,6 +178,7 @@ class CronBeforeTrainTestCase(APITestCase):
             precision=0.9,
             model_path='/test/a/'
         )
+        time.sleep(1)
         util._add_train_image(self.client, upcs=['6901668002525'])
         self.assertEqual(len(TrainImage.objects.all()), 2010)
         self.assertEqual(len(TrainUpc.objects.all()), 3)
