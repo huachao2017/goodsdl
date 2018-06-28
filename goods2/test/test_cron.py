@@ -6,6 +6,7 @@ from goods2.cron import transfer_sample, create_train, execute_train, check_trai
 import os
 import shutil
 import time
+import datetime
 from goods2 import common
 from goods2.test import util
 
@@ -221,6 +222,7 @@ class CronBeforeTrainTestCase(APITestCase):
                 train_action_id=train_action.pk,
                 precision=0.95,
                 checkpoint_step=100,
+                create_time=datetime.datetime.now()
             )
             check_train()
             self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)

@@ -11,6 +11,7 @@ from goods2 import convert_goods
 import datetime
 import subprocess
 import traceback
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 logger = logging.getLogger('cron')
 
@@ -526,6 +527,7 @@ def _do_check_one_train(train_action):
         logger.error('train process has been killed:{};'.format(train_action.pk))
         return 'train process has been killed:{};'.format(train_action.pk)
 
+    _syn_event_log(train_action)
     eval_log_qs = EvalLog.objects.filter(train_action_id=train_action.pk).order_by('-id')
 
     train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')
@@ -548,6 +550,31 @@ def _do_check_one_train(train_action):
             elif train_action.action == 'TC':
                 if step_interval>=500 or precision_interval>=0.01:
                     _do_create_train_model(train_action,eval_log_qs[0])
+
+
+def _syn_event_log(train_action):
+    eval_dir = os.path.join(train_action.train_path, 'eval_log')
+    if not os.path.isdir(eval_dir):
+        logger.error('not found eval log: {}'.format(eval_dir))
+        # FIXME need raise error
+        return
+    event_acc = EventAccumulator(eval_dir)
+    event_acc.Reload()
+    w_times, step_nums, vals = zip(*event_acc.Scalars('PASCAL/Precision/mAP'))
+
+    eval_log_qs = EvalLog.objects.filter(train_action_id=train_action.pk).order_by('-id')
+    last_eval_log = None
+    if len(eval_log_qs)>0:
+        last_eval_log = eval_log_qs[0]
+
+    for i in range(len(w_times)):
+        if last_eval_log.checkpoint_step < step_nums[i]:
+            EvalLog.objects.create(
+                train_action_id=train_action.pk,
+                precision=vals[i],
+                checkpoint_step=step_nums[i],
+                create_time=datetime.datetime.fromtimestamp(w_times[i])
+            )
 
 
 def _do_create_train_model(train_action, eval_log):

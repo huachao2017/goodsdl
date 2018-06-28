@@ -9,11 +9,6 @@ import tensorflow as tf
 from preprocessing import inception_preprocessing
 
 from dl.step2.utils import visualization_utils as vis_utils
-import django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
-django.setup()
-from goods2.models import EvalLog
-
 slim = tf.contrib.slim
 
 def extract_prediction_tensors(network_fn,
@@ -344,11 +339,6 @@ def repeated_checkpoint_run(tensor_dict,
   if not checkpoint_dirs:
     raise ValueError('`checkpoint_dirs` must have at least one entry.')
 
-  # FIXME 用目录去id
-  train_basename = os.path.basename(checkpoint_dirs[0])
-  if train_basename == '':
-      train_basename = os.path.basename(os.path.dirname(checkpoint_dirs[0]))
-  train_action_id = int(train_basename)
   last_evaluated_model_path = None
   number_of_evaluations = 0
   while True:
@@ -372,13 +362,6 @@ def repeated_checkpoint_run(tensor_dict,
                                                   master, save_graph,
                                                   save_graph_dir)
       write_metrics(metrics, global_step, summary_dir)
-      precision = metrics['PASCAL/Precision/mAP']  # FIXME hard code key
-      # add EvalLog
-      EvalLog.objects.create(
-          train_action_id=train_action_id,
-          precision=precision,
-          checkpoint_step=global_step,
-      )
     number_of_evaluations += 1
 
     if (max_number_of_evaluations and

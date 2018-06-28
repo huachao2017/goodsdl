@@ -127,7 +127,7 @@ class EvalLog(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="train_evals", on_delete=models.CASCADE)
     precision = models.FloatField(default=0.0)
     checkpoint_step = models.IntegerField(default=0)
-    create_time = models.DateTimeField('date created', auto_now_add=True)
+    create_time = models.DateTimeField('date created')
 
 
 class TrainModel(models.Model):
