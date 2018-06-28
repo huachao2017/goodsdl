@@ -132,6 +132,7 @@ class CronBeforeTrainTestCase(APITestCase):
         )
         for i in range(10):
             util._add_train_image(self.client, upcs=['4711931005106'])
+        self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action_ta.create_time)), 100)
         create_train()
         train_action_tf_qs = TrainAction.objects.filter(action='TF').filter(state=1)
         self.assertEqual(len(train_action_tf_qs), 0)
@@ -140,8 +141,12 @@ class CronBeforeTrainTestCase(APITestCase):
             util._add_train_image(self.client, upcs=['4711931005106'])
 
         self.assertEqual(len(TrainImage.objects.all()), 2200)
+        self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action_ta.create_time)), 200)
         create_train()
-        train_action_tf = TrainAction.objects.filter(action='TF').filter(state=1)[0]
+        waiting_train_action_qs = TrainAction.objects.filter(state=1).order_by('-id')
+        self.assertEqual(len(waiting_train_action_qs), 1)
+        train_action_tf = waiting_train_action_qs[0]
+        self.assertEqual(train_action_tf.action, 'TF')
         self.assertEqual(train_action_tf.f_model.pk, train_model.pk)
         self.assertEqual(train_action_tf.train_cnt, 800)
         self.assertEqual(train_action_tf.validation_cnt, 600)
@@ -175,8 +180,7 @@ class CronBeforeTrainTestCase(APITestCase):
         util._add_train_image(self.client, upcs=['6901668002525'])
         self.assertEqual(len(TrainImage.objects.all()), 2010)
         self.assertEqual(len(TrainUpc.objects.all()), 3)
-        add_train_image_qs = TrainImage.objects.filter(create_time__gt=train_action.create_time)
-        self.assertEqual(len(add_train_image_qs), 10)
+        self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action.create_time)), 10)
 
         create_train()
         waiting_train_action_qs = TrainAction.objects.filter(state=1).order_by('-id')
