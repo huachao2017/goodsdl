@@ -135,8 +135,8 @@ def sort_upc_to_scores(upc_to_scores):
     backitems = [[v[1], v[0]] for v in items]
     backitems.sort(reverse=True)
 
-    upcs = [backitems[i][0] for i in range(0, len(backitems))]
-    scores = [backitems[i][1] for i in range(0, len(backitems))]
+    upcs = [backitems[i][1] for i in range(0, len(backitems))]
+    scores = [backitems[i][0] for i in range(0, len(backitems))]
 
     return upcs, scores
 
