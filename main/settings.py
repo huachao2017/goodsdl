@@ -274,7 +274,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True  # 是否继承父类的log信息
         },  # handlers 来自于上面的 handlers 定义的内容
-        'goods2.cron': {  # The namespace of the logger above
+        'cron': {  # The namespace of the logger above
             'handlers': ['cron_log_file'],
             'level': 'DEBUG',
             'propagate': True,
