@@ -105,7 +105,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             if device.state >= common.DEVICE_STATE_COMMERCIAL:
                 # 没有商用的不返回结果
                 upc_to_scores = {}
-                time_decay = 1
+                decay = 1
                 image_qs = Image.objects.filter(identify=serializer.instance.identify).order_by('-id')
                 for image in image_qs:
                     image_result_qs = image.image_results.all()
@@ -113,10 +113,12 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                         upc = image_result.upc
                         score = image_result.score
                         if upc in upc_to_scores:
-                            upc_to_scores[upc] += upc_to_scores[upc] + score*time_decay
+                            upc_to_scores[upc] += upc_to_scores[upc] + score*decay
                         else:
-                            upc_to_scores[upc] = score*time_decay
-                    time_decay = time_decay*0.9 #前面次数衰减
+                            upc_to_scores[upc] = score*decay
+                    decay -= 0.1 #前面次数衰减
+                    if decay <= 0:
+                        break
 
                 upcs, scores = sort_upc_to_scores(upc_to_scores)
                 for i in range(len(upcs)):
