@@ -101,7 +101,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # 输出结果
             ret = []
             for i in range(len(upcs)):
-                if device.state < common.DEVICE_STATE_COMMERCIAL:
+                if device.state >= common.DEVICE_STATE_COMMERCIAL:
                     # 没有商用的不返回结果
                     ret.append(
                         {
