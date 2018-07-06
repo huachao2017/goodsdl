@@ -91,31 +91,54 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     else:
                         upc_to_scores[upcs2[i]] = scores2[i]
 
-                items = upc_to_scores.items()
-                backitems = [[v[1], v[0]] for v in items]
-                backitems.sort(reverse=True)
-
-                upcs = [backitems[i][0] for i in range(0, len(backitems))]
-                scores = [backitems[i][1] for i in range(0, len(backitems))]
+                upcs, scores = sort_upc_to_scores(upc_to_scores)
 
             # 输出结果
-            ret = []
             for i in range(len(upcs)):
-                if device.state >= common.DEVICE_STATE_COMMERCIAL:
-                    # 没有商用的不返回结果
-                    ret.append(
-                        {
-                            'upc': upcs[i],
-                            'score': scores[i],
-                        }
+                if i < 5: # 不超过5个
+                    ImageResult.objects.create(
+                        image_id=serializer.instance.pk,
+                        upc=upcs[i],
+                        score=scores[i]
                     )
-                ImageResult.objects.create(
-                    image_id=serializer.instance.pk,
-                    upc=upcs[i],
-                    score=scores[i]
-                )
+            ret = []
+            if device.state >= common.DEVICE_STATE_COMMERCIAL:
+                # 没有商用的不返回结果
+                upc_to_scores = {}
+                time_decay = 1
+                image_qs = Image.objects.filter(identify=serializer.instance.identify).order_by('-id')
+                for image in image_qs:
+                    image_result_qs = image.image_results.all()
+                    for image_result in image_result_qs:
+                        upc = image_result.upc
+                        score = image_result.score
+                        if upc in upc_to_scores:
+                            upc_to_scores[upc] += upc_to_scores[upc] + score*time_decay
+                        else:
+                            upc_to_scores[upc] = score*time_decay
+                    time_decay = time_decay*0.9 #前面次数衰减
+
+                upcs, scores = sort_upc_to_scores(upc_to_scores)
+                for i in range(len(upcs)):
+                    if i < 5:  # 不超过5个
+                        ret.append(
+                            {
+                                'upc': upcs[i],
+                                'score': scores[i],
+                            }
+                        )
 
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
+def sort_upc_to_scores(upc_to_scores):
+    items = upc_to_scores.items()
+    backitems = [[v[1], v[0]] for v in items]
+    backitems.sort(reverse=True)
+
+    upcs = [backitems[i][0] for i in range(0, len(backitems))]
+    scores = [backitems[i][1] for i in range(0, len(backitems))]
+
+    return upcs, scores
 
 
 class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):

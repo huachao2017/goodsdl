@@ -23,7 +23,7 @@ import math
 import tensorflow as tf
 
 from datasets import dataset_utils
-from goods2.models import TrainImage, TrainUpc, TrainActionUpcs, TrainAction, TrainModel
+from goods2.models import TrainImage, TrainUpc, TrainActionUpcs, TrainAction, TrainModel, DeviceidExclude
 # Seed for repeatability.
 _RANDOM_SEED = 42
 
@@ -120,7 +120,8 @@ def prepare_train_TA(train_action):
     upcs = sorted(upcs)
 
     training_filenames = []
-    train_images = TrainImage.objects.all()
+    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+    train_images = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
     for train_image in train_images:
         if train_image.upc in upcs:
             training_filenames.append(train_image.source.path)
@@ -141,7 +142,8 @@ def prepare_train_TF(train_action):
     validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
-    train_images = TrainImage.objects.all()
+    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+    train_images = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
     # 每类样本数
     upc_to_cnt = {}
     for upc in upcs:
@@ -207,7 +209,8 @@ def prepare_train_TC(train_action):
     validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
-    train_images = TrainImage.objects.all()
+    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+    train_images = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
 
     # 增加增量upc样本
     for train_image in train_images:

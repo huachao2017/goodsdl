@@ -299,15 +299,19 @@ def _do_create_train_ta():
             last_ta = last_ta_qs[0]
 
         if last_ta is None:
+            deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+            train_image_qs = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
+
             # 样本有2000个
-            train_image_qs = TrainImage.objects.all()
             if len(train_image_qs) >= 2000:
                 logger.info('create_train: TA,新增样本（{}）'.format(len(train_image_qs)))
                 _create_train('TA', None)
         else:
             # 间距达到7天或者新增样本超过2000个
             now = datetime.datetime.now()
-            train_image_qs = TrainImage.objects.filter(create_time__gt=last_ta.create_time)
+            deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+            train_image_qs = TrainImage.objects.filter(create_time__gt=last_ta.create_time).exclude(deviceid__in=deviceid_exclude_qs)
+
             if (now - last_ta.create_time).days >= 7 or len(train_image_qs) >= 2000:
                 logger.info('create_train: TA,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
                                                                         (now - last_ta.create_time).days))
