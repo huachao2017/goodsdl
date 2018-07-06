@@ -18,6 +18,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
         self.assertEqual(0,0)
 
     def test_image_post(self):
+        deviceid = '0'
         train_action = TrainAction.objects.create(
             action='TA',
             ip='192.168.1.170',
@@ -29,7 +30,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
             precision=0.999,
             model_path='/home/src/goodsdl/dl/model/75'
         )
-        response, upc = util._add_one_image(self.client, '0','111')
+        response, upc = util._add_one_image(self.client, deviceid,'111')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -44,6 +45,17 @@ class FrontEndAfterTrainTestCase(APITestCase):
         self.assertEqual(len(image_result_qs), 5)
         first_image_result = image_result_qs[0]
         self.assertEqual(first_image_result.upc, upc)
+
+        # test device to commercial
+        device = Deviceid.objects.get(deviceid=deviceid)
+        self.assertEqual(device.state, common.DEVICE_STATE_TESTING)
+        device.state = common.DEVICE_STATE_COMMERCIAL
+        device.save()
+
+        response, upc = util._add_one_image(self.client, deviceid,'111')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 5)
+        self.assertEqual(response.data[0]['upc'], upc)
 
     def test_image_groundtruth_post(self):
         self.assertEqual(0,0)
