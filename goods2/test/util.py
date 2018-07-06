@@ -43,7 +43,7 @@ def _add_image(client, deviceid, identify, add_ground_truth=True):
 
 def _add_one_image(client, deviceid, identify):
     dataset_root_path = os.path.join(settings.MEDIA_ROOT, 'dataset', 'step2')
-    upc = '4711931005106'
+    upc = '4711931007308'
 
     upc_path = os.path.join(dataset_root_path, upc)
     for filename in os.listdir(upc_path):
