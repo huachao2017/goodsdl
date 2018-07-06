@@ -30,7 +30,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
             precision=0.999,
             model_path='/home/src/goodsdl/dl/model/75'
         )
-        response, upc = util._add_one_image(self.client, deviceid, '111')
+        response, upc = util._add_one_image(self.client, deviceid, '111', use_index=0)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -52,7 +52,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
         device.state = common.DEVICE_STATE_COMMERCIAL
         device.save()
 
-        response, upc = util._add_one_image(self.client, deviceid,'111')
+        response, upc = util._add_one_image(self.client, deviceid, '111', use_index=1)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data), 5)
         self.assertEqual(response.data[0]['upc'], upc)
@@ -72,7 +72,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
             model_path='/home/src/goodsdl/dl/model/75'
         )
         for i in range(9):
-            response, upc = util._add_one_image(self.client, deviceid, identify)
+            response, upc = util._add_one_image(self.client, deviceid, identify, use_index=i)
 
         with open(os.path.join(settings.BASE_DIR, 'images/train_1.jpg'), mode='rb') as fp:
             self.client.post('/api2/image/', {'deviceid': deviceid, 'identify': identify, 'source': fp}, format='multipart')

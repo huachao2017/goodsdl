@@ -20,8 +20,8 @@ class CronBeforeTrainTestCase(APITestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(common.get_dataset_dir(True), True)
-        shutil.rmtree(common.get_train_path(), True)
-        shutil.rmtree(common.get_model_path(), True)
+        # shutil.rmtree(common.get_train_path(), True)
+        # shutil.rmtree(common.get_model_path(), True)
 
     def test_transfer_sample(self):
         # 排除deviceid=500
