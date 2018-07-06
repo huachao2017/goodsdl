@@ -54,7 +54,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             )
 
         # 检测阶段
-        ret = []
         last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).exclude(action='TC').order_by('-id')
         if len(last_normal_train_qs)>0:
             last_train = last_normal_train_qs[0]
@@ -101,34 +100,42 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                         upc=upcs[i],
                         score=scores[i]
                     )
-            ret = []
-            if device.state >= common.DEVICE_STATE_COMMERCIAL:
-                # 没有商用的不返回结果
-                upc_to_scores = {}
-                decay = 1
-                image_qs = Image.objects.filter(identify=serializer.instance.identify).order_by('-id')
-                for image in image_qs:
-                    image_result_qs = image.image_results.all()
-                    for image_result in image_result_qs:
-                        upc = image_result.upc
-                        score = image_result.score
-                        if upc in upc_to_scores:
-                            upc_to_scores[upc] += upc_to_scores[upc] + score*decay
-                        else:
-                            upc_to_scores[upc] = score*decay
-                    decay -= 0.1 #前面次数衰减
-                    if decay <= 0:
-                        break
 
-                upcs, scores = sort_upc_to_scores(upc_to_scores)
-                for i in range(len(upcs)):
-                    if i < 5:  # 不超过5个
-                        ret.append(
-                            {
-                                'upc': upcs[i],
-                                'score': scores[i],
-                            }
-                        )
+        ret = []
+        if device.state >= common.DEVICE_STATE_COMMERCIAL:
+            # 没有商用的不返回结果
+            upc_to_scores = {}
+            decay = 1
+            image_qs = Image.objects.filter(identify=serializer.instance.identify).order_by('-id')
+            for image in image_qs:
+                image_result_qs = image.image_results.all()
+                for image_result in image_result_qs:
+                    upc = image_result.upc
+                    score = image_result.score
+                    if upc in upc_to_scores:
+                        upc_to_scores[upc] += upc_to_scores[upc] + score*decay
+                    else:
+                        upc_to_scores[upc] = score*decay
+                decay -= 0.1 #前面次数衰减
+                if decay <= 0:
+                    break
+
+            upcs, scores = sort_upc_to_scores(upc_to_scores)
+            for i in range(len(upcs)):
+                if i < 5:  # 不超过5个
+                    ret.append(
+                        {
+                            'upc': upcs[i],
+                            'score': scores[i],
+                        }
+                    )
+        elif device.deviceid == '36':
+            ret = [
+                {'upc': '2000000000103', 'score': 0.99},
+                {'upc': '2000000000097', 'score': 0.99},
+                {'upc': '2000000000093', 'score': 0.99},
+                {'upc': '2000000000106', 'score': 0.99},
+            ]
 
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
