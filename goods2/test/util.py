@@ -48,13 +48,13 @@ def _add_one_image(client, deviceid, identify, use_index = 0):
     upc_path = os.path.join(dataset_root_path, upc)
     index = 0
     for filename in os.listdir(upc_path):
-        image_path = os.path.join(upc_path, filename)
-        with open(image_path, mode='rb') as fp:
-            response = client.post('/api2/image/',
-                                        {'deviceid': deviceid, 'identify': identify, 'source': fp},
-                                        format='multipart')
-
         if index == use_index:
-            return response, upc
+            image_path = os.path.join(upc_path, filename)
+            with open(image_path, mode='rb') as fp:
+                response = client.post('/api2/image/',
+                                            {'deviceid': deviceid, 'identify': identify, 'source': fp},
+                                            format='multipart')
+
+                return response, upc
 
         index += 1
