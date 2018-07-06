@@ -35,7 +35,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
     def create(self, request, *args, **kwargs):
         logger.info('begin detect image:{},{}'.format(request.data['deviceid'], request.data['identify']))
-        logger.info(request.data)
 
         try:
             serializer = self.get_serializer(data=request.data)
@@ -137,6 +136,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 {'upc': '2000000000106', 'score': 0.99},
             ]
 
+        logger.info(ret)
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
 def sort_upc_to_scores(upc_to_scores):
