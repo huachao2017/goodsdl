@@ -11,7 +11,7 @@ from goods2 import common
 
 from goods2.serializers import *
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("django2")
 
 
 class DefaultMixin:

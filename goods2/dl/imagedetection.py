@@ -5,7 +5,7 @@ import logging
 import time
 from goods2.dl.cnn import CNN
 
-logger = logging.getLogger("detect")
+logger = logging.getLogger("detect2")
 
 
 class ImageDetectorFactory:

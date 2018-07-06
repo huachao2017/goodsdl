@@ -6,7 +6,7 @@ from dl.util import get_labels_to_names
 from nets import nets_factory
 from dl import common
 
-logger = logging.getLogger("detect")
+logger = logging.getLogger("detect2")
 
 class CNN:
     def __init__(self, model_dir, model_name='nasnet_large'):
