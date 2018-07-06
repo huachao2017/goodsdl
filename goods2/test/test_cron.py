@@ -236,6 +236,7 @@ class CronBeforeTrainTestCase(APITestCase):
                     train_action_id=train_action.pk,
                     precision=0.998,
                     checkpoint_step=1000+i*5000,
+                    create_time=datetime.datetime.now()
                 )
                 check_train()
             self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 12)
