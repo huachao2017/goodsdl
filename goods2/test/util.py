@@ -41,3 +41,16 @@ def _add_image(client, deviceid, identify, add_ground_truth=True):
         if add_ground_truth:
             client.post('/api2/imagegroundtruth/', {'deviceid': deviceid, 'identify': upc + identify, 'upc': upc})
 
+def _add_one_image(client, deviceid, identify):
+    dataset_root_path = os.path.join(settings.MEDIA_ROOT, 'dataset', 'step2')
+    upc = '4711931005106'
+
+    upc_path = os.path.join(dataset_root_path, upc)
+    for filename in os.listdir(upc_path):
+        image_path = os.path.join(upc_path, filename)
+        with open(image_path, mode='rb') as fp:
+            response = client.post('/api2/image/',
+                                        {'deviceid': deviceid, 'identify': identify, 'source': fp},
+                                        format='multipart')
+
+        return response, upc
