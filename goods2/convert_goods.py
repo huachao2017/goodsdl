@@ -115,7 +115,8 @@ def prepare_train_TA(train_action):
     upcs = []
     train_upcs = TrainUpc.objects.all()
     for train_upc in train_upcs:
-        upcs.append(train_upc.upc)
+        if train_upc.cnt >= 20: # 大于等于20个样本才能进入训练
+            upcs.append(train_upc.upc)
 
     upcs = sorted(upcs)
 
@@ -204,6 +205,15 @@ def prepare_train_TC(train_action):
     for upc in upcs:
         if upc not in f_upcs:
             append_upcs.append(upc)
+
+    # 删除样本数过少的upc
+    for train_upc in train_upcs:
+        if train_upc.upc in append_upcs:
+            if train_upc.cnt < 20:
+                append_upcs.remove(train_upc.cnt)
+
+    if len(append_upcs) <= 0:
+        return None,None,None
 
     training_filenames = []
     validation_filenames = []

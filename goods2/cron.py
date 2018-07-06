@@ -328,6 +328,12 @@ def _create_train(action, f_model_id):
     train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
     # 数据准备
     names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action)
+
+    if names_to_labels is None:
+        train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
+        train_action.save()
+        return
+
     # 更新数据
     # 'upcs'
     for upc in names_to_labels:
