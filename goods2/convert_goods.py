@@ -210,7 +210,7 @@ def prepare_train_TC(train_action):
     for train_upc in train_upcs:
         if train_upc.upc in append_upcs:
             if train_upc.cnt < 20:
-                append_upcs.remove(train_upc.cnt)
+                append_upcs.remove(train_upc.upc)
 
     if len(append_upcs) <= 0:
         return None,None,None
