@@ -82,4 +82,4 @@ class FrontEndAfterTrainTestCase(APITestCase):
 
         image_ground_truth = ImageGroundTruth.objects.all()[0]
         self.assertEqual(image_ground_truth.truth_rate, 0.9)
-        self.assertTrue(image_ground_truth.total_precision>0.8)
+        self.assertTrue(image_ground_truth.precision>0.8)
