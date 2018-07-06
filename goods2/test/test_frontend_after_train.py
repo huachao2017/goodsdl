@@ -30,7 +30,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
             precision=0.999,
             model_path='/home/src/goodsdl/dl/model/75'
         )
-        response, upc = util._add_one_image(self.client, deviceid,'111')
+        response, upc = util._add_one_image(self.client, deviceid, '111')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -58,4 +58,28 @@ class FrontEndAfterTrainTestCase(APITestCase):
         self.assertEqual(response.data[0]['upc'], upc)
 
     def test_image_groundtruth_post(self):
-        self.assertEqual(0,0)
+        deviceid = '0'
+        identify = '111'
+        train_action = TrainAction.objects.create(
+            action='TA',
+            ip='192.168.1.170',
+            state=common.TRAIN_STATE_COMPLETE
+        )
+        train_model = TrainModel.objects.create(
+            train_action_id=train_action.pk,
+            checkpoint_step=243856,
+            precision=0.999,
+            model_path='/home/src/goodsdl/dl/model/75'
+        )
+        for i in range(9):
+            response, upc = util._add_one_image(self.client, deviceid, identify)
+
+        with open(os.path.join(settings.BASE_DIR, 'images/train_1.jpg'), mode='rb') as fp:
+            self.client.post('/api2/image/', {'deviceid': deviceid, 'identify': identify, 'source': fp}, format='multipart')
+
+        response = self.client.post('/api2/imagegroundtruth/', {'deviceid': deviceid, 'identify': identify, 'upc':upc})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        image_ground_truth = ImageGroundTruth.objects.all()[0]
+        self.assertEqual(image_ground_truth.truth_rate, 0.9)
+        self.assertTrue(image_ground_truth.total_precision>0.8)
