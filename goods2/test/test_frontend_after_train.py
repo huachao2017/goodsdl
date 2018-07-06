@@ -26,8 +26,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
         train_action = TrainAction.objects.create(
             action='TA',
             ip='192.168.1.170',
-            state=common.TRAIN_STATE_COMPLETE,
-            complete_time=datetime.datetime.now()
+            state=common.TRAIN_STATE_COMPLETE
         )
         train_model = TrainModel.objects.create(
             train_action_id=train_action.pk,
