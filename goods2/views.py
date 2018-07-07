@@ -1,5 +1,6 @@
 import logging
 import shutil
+import os
 
 from rest_framework import mixins
 from rest_framework import viewsets
@@ -223,6 +224,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         train_upc.cnt -= 1
         train_upc.save()
 
+        os.remove(instance.source.path)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
