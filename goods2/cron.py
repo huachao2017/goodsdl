@@ -303,7 +303,7 @@ def _do_create_train_ta():
             train_image_qs = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
 
             # 样本有2000个
-            if len(train_image_qs) >= 2000:
+            if len(train_image_qs) >= 200:
                 logger.info('create_train: TA,新增样本（{}）'.format(len(train_image_qs)))
                 _create_train('TA', None)
         else:
