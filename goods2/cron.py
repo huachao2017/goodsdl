@@ -519,16 +519,10 @@ def _do_check_train():
     return ret
 
 # 生成信号：
-# precsion达0.95后：
-# TA：距离上次生成超5000/step或精度上升超0.3%存一次
-# TF：距离上次生成超2000/step或精度上升超0.6%存一次
-# TC：距离上次生成超500/step或精度上升超1%存一次
-#
-# 训练结束信号（导出）：
-# precsion达0.95后：
-# TA：10次生成达0.998以上或精度提升小于0.2%后结束
-# TF：5次生成达0.995以上或精度提升小于0.3%后结束
-# TC：3次生成达0.99以上或精度提升小于0.5%后结束
+# precision达0.9后：
+# TA：step超过10000且有10次eval，最后一次和前10次精度上升小于0.3%
+# TF：step超过2000且有10次eval，最后一次和前10次精度上升小于0.6%
+# TC：step超过500且有5次eval，最后一次和前5次精度上升小于1%
 def _do_check_one_train(train_action):
     train_pid = common.get_train_pid(train_action)
     if train_pid == 0:
@@ -546,17 +540,17 @@ def _do_check_one_train(train_action):
         if train_action.action == 'TA':
             if len(eval_log_qs)>10:
                 precision_interval = last_eval_log.precision - eval_log_qs[10].precision
-            if last_eval_log.checkpoint_step>=20000 and precision_interval<=0.01:
+            if last_eval_log.checkpoint_step>=20000 and precision_interval<=0.003:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
         elif train_action.action == 'TF':
             if len(eval_log_qs)>10:
                 precision_interval = last_eval_log.precision - eval_log_qs[10].precision
-            if last_eval_log.checkpoint_step>=2000 and precision_interval<=0.06:
+            if last_eval_log.checkpoint_step>=2000 and precision_interval<=0.006:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
         elif train_action.action == 'TC':
             if len(eval_log_qs)>5:
                 precision_interval = last_eval_log.precision - eval_log_qs[5].precision
-            if last_eval_log.checkpoint_step>=500 and precision_interval<=0.1:
+            if last_eval_log.checkpoint_step>=500 and precision_interval<=0.01:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
 
 
