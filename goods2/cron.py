@@ -578,7 +578,7 @@ def _syn_event_log(train_action):
         last_eval_log = eval_log_qs[0]
 
     for i in range(len(w_times)):
-        if last_eval_log.checkpoint_step < step_nums[i]:
+        if last_eval_log is None or last_eval_log.checkpoint_step < step_nums[i]:
             EvalLog.objects.create(
                 train_action_id=train_action.pk,
                 precision=vals[i],
