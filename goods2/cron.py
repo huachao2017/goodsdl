@@ -109,12 +109,13 @@ def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
     train_image_qs = TrainImage.objects.filter(source_image_id__gt=0).order_by('-id')
     deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+    deviceid_commercial_qs = Deviceid.objects.filter(state=common.DEVICE_STATE_COMMERCIAL).values('deviceid')
     if len(train_image_qs) == 0:
-        image_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs)
+        image_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid__in=deviceid_commercial_qs)
     else:
         last_train_image = train_image_qs[0]
         last_image = Image.objects.get(id=last_train_image.source_image.pk)
-        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).exclude(
+        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid__in=deviceid_commercial_qs).exclude(
             image_ground_truth_id=last_image.image_ground_truth.pk)
 
     # 将Image列表转化为dict: key=identify，value=Image[]
