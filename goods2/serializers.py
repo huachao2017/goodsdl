@@ -12,7 +12,7 @@ class DeviceidSerializer(serializers.ModelSerializer):
     device_precisions = DeviceidPrecisionSerializer(many=True, read_only=True)
     class Meta:
         model = Deviceid
-        fields = ('pk', 'state', 'device_precisions', 'create_time', 'update_time', 'commercial_time')
+        fields = ('pk', 'deviceid', 'state', 'device_precisions', 'create_time', 'update_time', 'commercial_time')
         read_only_fields = ('create_time', 'update_time', 'commercial_time')
 
 class DeviceidExcludeSerializer(serializers.ModelSerializer):
