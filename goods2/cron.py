@@ -540,26 +540,24 @@ def _do_check_one_train(train_action):
     _syn_event_log(train_action)
     eval_log_qs = EvalLog.objects.filter(train_action_id=train_action.pk).order_by('-id')
 
-    train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')
-    last_train_model = None
-    if len(train_model_qs)>0:
-        last_train_model = train_model_qs[0]
-
-    if len(eval_log_qs)>0 and eval_log_qs[0].precision>=0.95:
-        if last_train_model is None:
-            _do_create_train_model(train_action, eval_log_qs[0])
-        else:
-            step_interval = eval_log_qs[0].checkpoint_step - last_train_model.checkpoint_step
-            precision_interval = eval_log_qs[0].precision - last_train_model.precision
-            if train_action.action == 'TA':
-                if step_interval>=5000 or precision_interval>=0.003:
-                    _do_create_train_model(train_action,eval_log_qs[0])
-            elif train_action.action == 'TF':
-                if step_interval>=2000 or precision_interval>=0.006:
-                    _do_create_train_model(train_action,eval_log_qs[0])
-            elif train_action.action == 'TC':
-                if step_interval>=500 or precision_interval>=0.01:
-                    _do_create_train_model(train_action,eval_log_qs[0])
+    if len(eval_log_qs)>0 and eval_log_qs[0].precision>=0.9:
+        last_eval_log = eval_log_qs[0]
+        precision_interval = 1
+        if train_action.action == 'TA':
+            if len(eval_log_qs)>10:
+                precision_interval = last_eval_log.precision - eval_log_qs[10].precision
+            if last_eval_log.checkpoint_step>=20000 and precision_interval<=0.01:
+                _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
+        elif train_action.action == 'TF':
+            if len(eval_log_qs)>10:
+                precision_interval = last_eval_log.precision - eval_log_qs[10].precision
+            if last_eval_log.checkpoint_step>=2000 and precision_interval<=0.06:
+                _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
+        elif train_action.action == 'TC':
+            if len(eval_log_qs)>5:
+                precision_interval = last_eval_log.precision - eval_log_qs[5].precision
+            if last_eval_log.checkpoint_step>=500 and precision_interval<=0.1:
+                _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
 
 
 def _syn_event_log(train_action):
@@ -587,38 +585,39 @@ def _syn_event_log(train_action):
             )
 
 
-def _do_create_train_model(train_action, eval_log):
+def _do_create_train_model(train_action, checkpoint_step, precision):
     cur_train_model = TrainModel.objects.create(
         train_action_id=train_action.pk,
-        checkpoint_step=eval_log.checkpoint_step,
-        precision=eval_log.precision,
+        checkpoint_step=checkpoint_step,
+        precision=precision,
     )
-    if train_action.action == 'TA':
-        count = 10
-    elif train_action.action == 'TF':
-        count = 5
-    elif train_action.action == 'TC':
-        count = 3
-    else:
-        raise ValueError('Train action type error')
-    train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')[:count]
-    if len(train_model_qs) == count:
-        min_precision = train_model_qs[0].precision
-        max_precision = train_model_qs[0].precision
-        for train_model in train_model_qs:
-            if min_precision > train_model.precision:
-                min_precision = train_model.precision
-            if max_precision < train_model.precision:
-                max_precision = train_model.precision
-        if train_action.action == 'TA':
-            if min_precision >= 0.998 or max_precision - min_precision < 0.002:
-                _do_export_train(train_action, cur_train_model)
-        elif train_action.action == 'TF':
-            if min_precision >= 0.995 or max_precision - min_precision < 0.003:
-                _do_export_train(train_action, cur_train_model)
-        elif train_action.action == 'TC':
-            if min_precision >= 0.99 or max_precision - min_precision < 0.005:
-                _do_export_train(train_action, cur_train_model)
+    _do_export_train(train_action, cur_train_model)
+    # if train_action.action == 'TA':
+    #     count = 10
+    # elif train_action.action == 'TF':
+    #     count = 5
+    # elif train_action.action == 'TC':
+    #     count = 3
+    # else:
+    #     raise ValueError('Train action type error')
+    # train_model_qs = TrainModel.objects.filter(train_action_id=train_action.pk).order_by('-id')[:count]
+    # if len(train_model_qs) == count:
+    #     min_precision = train_model_qs[0].precision
+    #     max_precision = train_model_qs[0].precision
+    #     for train_model in train_model_qs:
+    #         if min_precision > train_model.precision:
+    #             min_precision = train_model.precision
+    #         if max_precision < train_model.precision:
+    #             max_precision = train_model.precision
+    #     if train_action.action == 'TA':
+    #         if min_precision >= 0.998 or max_precision - min_precision < 0.002:
+    #             _do_export_train(train_action, cur_train_model)
+    #     elif train_action.action == 'TF':
+    #         if min_precision >= 0.995 or max_precision - min_precision < 0.003:
+    #             _do_export_train(train_action, cur_train_model)
+    #     elif train_action.action == 'TC':
+    #         if min_precision >= 0.99 or max_precision - min_precision < 0.005:
+    #             _do_export_train(train_action, cur_train_model)
     return cur_train_model
 
 
