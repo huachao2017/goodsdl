@@ -36,8 +36,16 @@ for filename in os.listdir('data/payment/'):
             payment_goods = one_payment[6].split(';')
             for goods_code in payment_goods:
                 if goods_code != '':
-                    print(int(goods_code))
-                    goods = Goods.objects.get(goods_code=int(goods_code))
+                    try:
+                        goods = Goods.objects.get(goods_code=int(goods_code))
+                    except Goods.DoesNotExist:
+                        print(int(goods_code))
+                        goods = Goods.objects.create(
+                            goods_code=int(goods_code),
+                            goods_name='unknown',
+                            price=0,
+                            upc='unknown',
+                        )
                     PaymentGoods.objects.create(
                         payment_id=payment.pk,
                         goods_id=goods.pk,
