@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'goods',
-    'goods2'
+    'goods2',
+    'goodscf'
 ]
 
 MIDDLEWARE = [
