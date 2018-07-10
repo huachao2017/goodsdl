@@ -23,7 +23,7 @@ with connection.cursor() as cursor:
     results = cursor.fetchall()
     users = [row[0] for row in results]
     goods = [row[1] for row in results]
-    rating = [1 if row[2]==1 else 2 for row in results]
+    rating = [row[2] for row in results]
 
 ratings_dict = {'itemID': goods,
                 'userID': users,
@@ -31,7 +31,7 @@ ratings_dict = {'itemID': goods,
 df = pd.DataFrame(ratings_dict)
 
 # A reader is still needed but only the rating_scale param is requiered.
-reader = Reader(rating_scale=(1, 2))
+reader = Reader(rating_scale=(1, max(rating)))
 
 # The columns must correspond to user id, item id and ratings (in that order).
 data = Dataset.load_from_df(df[['userID', 'itemID', 'rating']], reader)
