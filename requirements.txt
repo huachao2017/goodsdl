@@ -6,3 +6,5 @@ opencv_python
 mysqlclient
 gputil
 opencv-contrib-python
+scipy>=1.0.0
+scikit-surprise
