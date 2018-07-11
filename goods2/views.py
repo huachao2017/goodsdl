@@ -163,13 +163,15 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
         except ValidationError as e:
-            if 'identify' in e.detail:
-                if e.detail['identify'] == 'image ground truth with this identify already exists.':
-                    print(serializer.instance)
-                    #ImageGroundTruth.objects.get(identify=serializer.instance.)
+            try:
+                image_ground_truth = ImageGroundTruth.objects.get(identify=serializer.instance.identify)
+                image_ground_truth.upc = serializer.instance.upc
+                image_ground_truth.save()
+            except Exception as e:
+                logger.error(e)
+                raise e
 
-            logger.error(e)
-            raise e
+
         except Exception as e:
             logger.error(e)
             raise e
