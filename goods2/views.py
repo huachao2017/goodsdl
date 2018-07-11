@@ -4,6 +4,7 @@ import os
 
 from rest_framework import mixins
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -161,6 +162,9 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
+        except ValidationError as e:
+            logger.error(e.detail.code)
+            raise e
         except Exception as e:
             logger.error(type(e))
             logger.error(e)
