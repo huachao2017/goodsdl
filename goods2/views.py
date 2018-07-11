@@ -168,6 +168,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
                 image_ground_truth.upc = request.data['upc']
                 image_ground_truth.save()
                 serializer.instance = image_ground_truth
+                headers = self.get_success_headers(serializer.data)
             except Exception as e:
                 logger.error(e)
                 raise e
