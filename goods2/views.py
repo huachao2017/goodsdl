@@ -162,6 +162,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
         except Exception as e:
+            logger.error(type(e))
             logger.error(e)
             raise e
 
