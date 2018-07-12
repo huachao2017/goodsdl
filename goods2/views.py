@@ -162,21 +162,20 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
-        except ValidationError as e:
-            try:
-                image_ground_truth = ImageGroundTruth.objects.get(identify=request.data['identify'])
-                image_ground_truth.upc = request.data['upc']
-                image_ground_truth.save()
-                serializer.instance = image_ground_truth
-                headers = self.get_success_headers(serializer.data)
-            except Exception as e:
+        except Exception as e:
+            if isinstance(e, ValidationError):
+                try:
+                    image_ground_truth = ImageGroundTruth.objects.get(identify=request.data['identify'])
+                    image_ground_truth.upc = request.data['upc']
+                    image_ground_truth.save()
+                    serializer.instance = image_ground_truth
+                    headers = self.get_success_headers(serializer.data)
+                except Exception as e:
+                    logger.error(e)
+                    raise e
+            else:
                 logger.error(e)
                 raise e
-
-
-        except Exception as e:
-            logger.error(e)
-            raise e
 
         images = Image.objects.filter(identify=serializer.instance.identify).filter(deviceid=serializer.instance.deviceid)
         truth_image_result_cnt = 0
