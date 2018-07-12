@@ -8,7 +8,7 @@ django.setup()
 
 from goodscf.models import Goods, Payment, PaymentGoods
 
-goods_data= pd.read_csv('data/goods_0703.csv')
+goods_data= pd.read_csv('../data/goods_0703.csv')
 Goods.objects.all().delete()
 for goods in goods_data.values:
     Goods.objects.create(
@@ -21,8 +21,8 @@ for goods in goods_data.values:
 PaymentGoods.objects.all().delete()
 Payment.objects.all().delete()
 
-for filename in os.listdir('data/payment/'):
-    payment_data = pd.read_csv('data/payment/' + filename)
+for filename in os.listdir('../data/payment/'):
+    payment_data = pd.read_csv('../data/payment/' + filename)
     for one_payment in payment_data.values:
         if int(one_payment[4]) == 16201:
             payment = Payment.objects.create(
