@@ -19,3 +19,10 @@ class Goods(models.Model):
 class PaymentGoods(models.Model):
     payment = models.ForeignKey(Payment, related_name="goodss", on_delete=models.CASCADE)
     goods = models.ForeignKey(Goods, related_name="payments", on_delete=models.CASCADE )
+
+
+class UserGoods(models.Model):
+    openid = models.CharField(max_length=50, default='', db_index=True)
+    goods = models.ForeignKey(Goods, related_name="users", on_delete=models.CASCADE )
+    r_ui = models.FloatField()
+    est = models.FloatField()
