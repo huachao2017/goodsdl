@@ -21,10 +21,13 @@ for goods in goods_data.values:
 PaymentGoods.objects.all().delete()
 Payment.objects.all().delete()
 
+shopid = 587
 for filename in os.listdir('../data/payment/'):
     payment_data = pd.read_csv('../data/payment/' + filename)
+    count = 0
     for one_payment in payment_data.values:
-        if int(one_payment[4]) == 16201:
+        if int(one_payment[4]) == shopid:
+            count += 1
             payment = Payment.objects.create(
                 openid=one_payment[0],
                 orderid=one_payment[1],
@@ -39,7 +42,7 @@ for filename in os.listdir('../data/payment/'):
                     try:
                         goods = Goods.objects.get(goods_code=int(goods_code))
                     except Goods.DoesNotExist:
-                        print(int(goods_code))
+                        # print(int(goods_code))
                         goods = Goods.objects.create(
                             goods_code=int(goods_code),
                             goods_name='unknown',
@@ -50,3 +53,4 @@ for filename in os.listdir('../data/payment/'):
                         payment_id=payment.pk,
                         goods_id=goods.pk,
                     )
+    print(filename + ':' + str(count))
