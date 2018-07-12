@@ -165,6 +165,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
         except Exception as e:
             if isinstance(e, ValidationError):
                 try:
+                    logger.info(serializer.data)
                     image_ground_truth = ImageGroundTruth.objects.get(identify=request.data['identify'])
                     image_ground_truth.upc = request.data['upc']
                     image_ground_truth.save()
