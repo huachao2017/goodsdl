@@ -20,6 +20,6 @@ from goodscf import views
 
 router = DefaultRouter()
 urlpatterns = [
-    url(r'^api3/predict', views.Predict.as_view()),
+    url(r'^api3/predictuser', views.PredictUser.as_view()),
     url(r'^api3/', include(router.urls))
 ]
