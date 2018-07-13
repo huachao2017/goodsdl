@@ -28,6 +28,7 @@ class UsersViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
         for i in range(len(user_goods_est_qs)):
             ret['recommend'].append({
                 'goods_name':user_goods_est_qs[i].goods.goods_name,
+                'price':user_goods_est_qs[i].goods.price,
                 'rating':user_goods_est_qs[i].est,
             })
 
@@ -35,6 +36,7 @@ class UsersViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
         for i in range(len(user_goods_source_qs)):
             ret['source'].append({
                 'goods_name':user_goods_source_qs[i].goods.goods_name,
+                'price': user_goods_source_qs[i].goods.price,
                 'rating':user_goods_source_qs[i].r_ui,
                 'est': user_goods_source_qs[i].est,
             })
