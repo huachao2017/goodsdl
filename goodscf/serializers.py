@@ -5,4 +5,4 @@ from goodscf.models import Users
 class UsersSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Users
-        fields = ('pk', 'openid')
+        fields = ('url', 'openid')
