@@ -10,6 +10,9 @@ class Payment(models.Model):
 
     pay_time = models.DateTimeField('pay date')
 
+class Users(models.Model):
+    openid = models.CharField(max_length=50, default='', unique=True)
+
 class Goods(models.Model):
     goods_code = models.IntegerField(unique=True)
     goods_name = models.CharField(max_length=50)

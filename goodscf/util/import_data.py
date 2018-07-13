@@ -6,7 +6,7 @@ import datetime
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
 
-from goodscf.models import Goods, Payment, PaymentGoods
+from goodscf.models import Goods, Payment, PaymentGoods, Users
 
 goods_data= pd.read_csv('../data/goods_0703.csv')
 Goods.objects.all().delete()
@@ -54,3 +54,10 @@ for filename in os.listdir('../data/payment/'):
                         goods_id=goods.pk,
                     )
     print(filename + ':' + str(count))
+
+Users.objects.all().delete()
+openids = Payment.objects.all().values_list('openid',flat=True).distinct()
+for openid in openids:
+    Users.objects.create(
+        openid=openid
+    )
