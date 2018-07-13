@@ -16,7 +16,7 @@ class DefaultMixin:
     max_paginate_by = 100
 
 class UsersViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
-    queryset = Users.objects.order_by('-id')
+    queryset = Users.objects.order_by('id')
     serializer_class = UsersSerializer
 
     def retrieve(self, request, *args, **kwargs):
