@@ -30,17 +30,16 @@ with connection.cursor() as cursor:
     print(goods)
 y_names = list(range(len(goods)))
 
-data = np.zeros((len(users),len(goods)))
-normalize_data = np.zeros((len(users),len(goods)))
+data_r = np.zeros((len(users),len(goods)))
+data_est = np.zeros((len(users),len(goods)))
 with connection.cursor() as cursor:
-    cursor.execute('select p.openid,pg.goods_id,count(1) as cnt from goodscf_paymentgoods as pg LEFT JOIN goodscf_payment as p ON pg.payment_id=p.id group by pg.goods_id,p.openid')
+    cursor.execute('select openid,goods_id,r_ui,est from goodscf_usergoods')
     results = cursor.fetchall()
     for row in results:
         u_index = users.index(row[0])
         g_index = goods.index(row[1])
-        data[u_index][g_index] = row[2]
-        normalize_data[u_index][g_index] = 1
-    print(data)
+        data_r[u_index][g_index] = int(row[2])
+        data_est[u_index][g_index] = int(row[3]*10)
 
 
 # plt.imshow(data)
@@ -52,7 +51,7 @@ with connection.cursor() as cursor:
 #
 # data = df.values
 
-def plot(data, x_names, y_names):
+def plot(data):
     fig = plt.figure()
 
     ax = fig.add_subplot(111)
@@ -88,6 +87,5 @@ def normlize_plot(data):
 
     plt.show()
 
-
-plot(data,x_names,y_names)
-normlize_plot(normalize_data)
+plot(data_est)
+plot(data_r)
