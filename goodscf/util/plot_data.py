@@ -18,7 +18,7 @@ from django.db import connection
 # print(goods)
 
 with connection.cursor() as cursor:
-    cursor.execute('select distinct openid from goodscf_payment order by openid')
+    cursor.execute('select openid from goodscf_users order by id')
     results = cursor.fetchall()
     users = [row[0] for row in results]
 x_names = list(range(len(users)))
@@ -39,8 +39,23 @@ with connection.cursor() as cursor:
         u_index = users.index(row[0])
         g_index = goods.index(row[1])
         data_r[u_index][g_index] = int(row[2])
-        data_est[u_index][g_index] = int(row[3]*10)
+        data_est[u_index][g_index] = row[3]
 
+df_data = {}
+df_data['u/g'] = users
+for i in range(len(goods)):
+    df_data[i] = data_r[:, i]
+
+df = pd.DataFrame(df_data)
+df.to_csv('history.csv')
+
+df_data = {}
+df_data['u/g'] = users
+for i in range(len(goods)):
+    df_data[i] = data_est[:, i]
+
+df = pd.DataFrame(df_data)
+df.to_csv('recommend.csv')
 
 # plt.imshow(data)
 
@@ -51,41 +66,41 @@ with connection.cursor() as cursor:
 #
 # data = df.values
 
-def plot(data):
-    fig = plt.figure()
-
-    ax = fig.add_subplot(111)
-
-    cax = ax.matshow(data, vmin=0, vmax=np.max(data))
-    fig.colorbar(cax)
-    # x_ticks = np.arange(0,len(x_names),1)
-    # y_ticks = np.arange(0,len(y_names),1)
-    # ax.set_xticks(x_ticks)
-    # ax.set_yticks(y_ticks)
-
-    # ax.set_xticklabels(x_names)
-    #
-    # ax.set_yticklabels(y_names)
-
-    plt.show()
-
-def normlize_plot(data):
-    fig = plt.figure()
-
-    ax = fig.add_subplot(111)
-
-    cax = ax.matshow(data, vmin=0, vmax=1)
-    fig.colorbar(cax)
-    # x_ticks = np.arange(0,len(x_names),1)
-    # y_ticks = np.arange(0,len(y_names),1)
-    # ax.set_xticks(x_ticks)
-    # ax.set_yticks(y_ticks)
-
-    # ax.set_xticklabels(x_names)
-    #
-    # ax.set_yticklabels(y_names)
-
-    plt.show()
-
-plot(data_est)
-plot(data_r)
+# def plot(data):
+#     fig = plt.figure()
+#
+#     ax = fig.add_subplot(111)
+#
+#     cax = ax.matshow(data, vmin=0, vmax=np.max(data))
+#     fig.colorbar(cax)
+#     # x_ticks = np.arange(0,len(x_names),1)
+#     # y_ticks = np.arange(0,len(y_names),1)
+#     # ax.set_xticks(x_ticks)
+#     # ax.set_yticks(y_ticks)
+#
+#     # ax.set_xticklabels(x_names)
+#     #
+#     # ax.set_yticklabels(y_names)
+#
+#     plt.show()
+#
+# def normlize_plot(data):
+#     fig = plt.figure()
+#
+#     ax = fig.add_subplot(111)
+#
+#     cax = ax.matshow(data, vmin=0, vmax=1)
+#     fig.colorbar(cax)
+#     # x_ticks = np.arange(0,len(x_names),1)
+#     # y_ticks = np.arange(0,len(y_names),1)
+#     # ax.set_xticks(x_ticks)
+#     # ax.set_yticks(y_ticks)
+#
+#     # ax.set_xticklabels(x_names)
+#     #
+#     # ax.set_yticklabels(y_names)
+#
+#     plt.show()
+#
+# plot(data_est)
+# plot(data_r)
