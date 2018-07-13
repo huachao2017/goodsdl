@@ -21,6 +21,5 @@ from goodscf import views
 router = DefaultRouter()
 router.register(r'users', views.UsersViewSet)
 urlpatterns = [
-    url(r'^api3/predictuser', views.PredictUser.as_view()),
     url(r'^api3/', include(router.urls))
 ]
