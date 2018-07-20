@@ -397,7 +397,7 @@ def _do_execute_train():
             begin_train.eval_command = eval_command
             begin_train.state = common.TRAIN_STATE_TRAINING
             begin_train.save()
-    elif my_ip == '192.168.1.173':
+    elif my_ip == '192.168.1.73':
         quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).filter(action='TC')
         for quit_train in quit_train_qs:
             common.stop_train_ps(quit_train)
@@ -512,7 +512,7 @@ def _do_check_train():
         doing_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(ip=my_ip).exclude(action='TC')
         for check_train in doing_train_qs:
             _do_check_one_train(check_train)
-    elif my_ip == '192.168.1.173':
+    elif my_ip == '192.168.1.73':
         doing_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(ip=my_ip).filter(action='TC')
         for check_train in doing_train_qs:
             _do_check_one_train(check_train)

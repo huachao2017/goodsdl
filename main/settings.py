@@ -105,14 +105,14 @@ WSGI_APPLICATION = 'main.wsgi.application'
 # my_host_ip =  get_host_ip()
 #
 # # TODO need remove
-# if my_host_ip == '192.168.1.173':
+# if my_host_ip == '192.168.1.73':
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'goodsdl',
         'USER': 'root',
         'PASSWORD': 'iShehui',
-        'HOST': '192.168.1.173',
+        'HOST': '192.168.1.73',
         'PORT': '3306',
         'CHARSET': 'utf8',
         'COLLATION': 'utf8_general_ci',
