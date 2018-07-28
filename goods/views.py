@@ -126,7 +126,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        if serializer.instance.deviceid in ['290', '275']:
+        if serializer.instance.deviceid in ['290', '275', '2959']:
             pass
         else:
             last_images = Image.objects.filter(deviceid=serializer.instance.deviceid).filter(pk__lt=serializer.instance.pk).order_by('-create_time')[:5]
@@ -154,7 +154,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         aiinterval = .0
         # 正式应用区
-        if serializer.instance.deviceid in ['290', '275']: # 10类的演示
+        if serializer.instance.deviceid in ['290', '275', '2959']: # 10类的演示
             detector = imagedetection.ImageDetectorFactory.get_static_detector('10')
             step1_min_score_thresh = .5
             logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
