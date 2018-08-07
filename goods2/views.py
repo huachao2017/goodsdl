@@ -137,6 +137,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 {'upc': '2000000000093', 'score': 0.99},
                 {'upc': '2000000000106', 'score': 0.99},
             ]
+        elif device.deviceid == '3061':# 苹果
+            ret = [
+                {'upc': '2000000001540', 'score': 0.99},
+            ]
+        elif device.deviceid == '3062':# 香蕉
+            ret = [
+                {'upc': '2000000001541', 'score': 0.99},
+            ]
 
         logger.info(ret)
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
