@@ -139,11 +139,16 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             ]
         elif device.deviceid == '3061':# 苹果
             ret = [
-                {'upc': '2000000001540', 'score': 0.99},
+                {'upc': '2000000001540', 'score': 0.95},
+                {'upc': '3287583', 'score': 0.04},
+                {'upc': '3313222', 'score': 0.01},
             ]
         elif device.deviceid == '3062':# 香蕉
             ret = [
-                {'upc': '2000000001541', 'score': 0.99},
+                {'upc': '2000000001541', 'score': 0.95},
+                {'upc': '3960271', 'score': 0.03},
+                {'upc': '3283458', 'score': 0.01},
+                {'upc': '3283452', 'score': 0.01},
             ]
 
         logger.info(ret)
