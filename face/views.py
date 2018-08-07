@@ -60,4 +60,5 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         serializer.instance.image_path = image_path
         serializer.instance.save()
 
+        logger.info('end detect face:')
         return Response(serializer.instance.index, status=status.HTTP_201_CREATED, headers=headers)
