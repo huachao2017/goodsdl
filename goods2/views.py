@@ -139,7 +139,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             ]
         elif device.deviceid == '3061':# 苹果
             ret = [
-                {'upc': '2000000001540', 'score': 0.95},
+                {'upc': '2000000001540', 'score': 0.07},
+                {'upc': '2000000001598', 'score': 0.25},
                 {'upc': '3287583', 'score': 0.04},
                 {'upc': '3313222', 'score': 0.01},
             ]
