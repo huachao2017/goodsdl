@@ -13,16 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
-from django.contrib import admin
-from django.conf.urls.static import static
-from django.conf import settings
-from goods.urls import urlpatterns as goods_urlpatterns
-from goods2.urls import urlpatterns as goods2_urlpatterns
-from goodscf.urls import urlpatterns as goodscf_urlpatterns
-from face.urls import urlpatterns as face_urlpatterns
+from django.conf.urls import url, include
+from rest_framework.routers import DefaultRouter
 
+from face import views
 
+router = DefaultRouter()
+router.register(r'detect', views.ImageViewSet)
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-]+goods_urlpatterns+goods2_urlpatterns+goodscf_urlpatterns+face_urlpatterns+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    url(r'^face/', include(router.urls))
+]

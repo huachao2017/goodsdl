@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'goods',
     'goods2',
-    'goodscf'
+    'goodscf',
+    'face'
 ]
 
 MIDDLEWARE = [
@@ -215,6 +216,14 @@ LOGGING = {
             'backupCount': 50,  # 备份份数
             'formatter': 'standard'
         },  # 用于文件输出
+        'face_file_handler': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, "logs", 'face.log'),
+            'maxBytes': 1024 * 1024 * 50,  # 文件大小
+            'backupCount': 50,  # 备份份数
+            'formatter': 'standard'
+        },  # 用于文件输出
         'classify_file_handler': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
@@ -262,6 +271,11 @@ LOGGING = {
         },  # handlers 来自于上面的 handlers 定义的内容
         'detect2': {
             'handlers': ['console', 'detect2_file_handler'],
+            'level': 'DEBUG',
+            'propagate': True  # 是否继承父类的log信息
+        },  # handlers 来自于上面的 handlers 定义的内容
+        'face': {
+            'handlers': ['console', 'face_file_handler'],
             'level': 'DEBUG',
             'propagate': True  # 是否继承父类的log信息
         },  # handlers 来自于上面的 handlers 定义的内容
