@@ -57,6 +57,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         detector = facedetection.FaceDetectorFactory.get_static_detector()
         index = detector.detect(image_path)
         serializer.instance.index = json.dumps(index,cls=NumpyEncoder)
+        serializer.instance.image_path = image_path
         serializer.instance.save()
 
         return Response(serializer.instance.index, status=status.HTTP_201_CREATED, headers=headers)
