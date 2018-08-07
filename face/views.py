@@ -4,6 +4,7 @@ import os
 import datetime
 import urllib.request
 import numpy as np
+import tensorflow as tf
 
 from rest_framework import mixins
 from rest_framework import viewsets
@@ -47,6 +48,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         now = datetime.datetime.now()
         image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'face', now.strftime('%Y%m%d'))
+        if not tf.gfile.Exists(image_dir):
+            tf.gfile.MakeDirs(image_dir)
         image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%H%M%S')))
         logger.info(image_path)
         urllib.request.urlretrieve(serializer.instance.picurl, image_path)
