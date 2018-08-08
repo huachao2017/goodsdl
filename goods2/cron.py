@@ -147,7 +147,10 @@ def _do_transfer_sample():
                                                      os.path.basename(image.source.path))
                     train_source_path = '{}/{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.deviceid, image_ground_truth.upc,
                                                      os.path.basename(image.source.path))
-                    shutil.copy(image.source.path, train_source_path)
+                    try:
+                        shutil.copy(image.source.path, train_source_path)
+                    except:
+                        continue
                     TrainImage.objects.create(
                         deviceid=image_ground_truth.deviceid,
                         source=train_source,
