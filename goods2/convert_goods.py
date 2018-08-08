@@ -124,7 +124,11 @@ def prepare_train_TA(train_action, deviceid):
     train_images = TrainImage.objects.filter(deviceid=deviceid)
     for train_image in train_images:
         if train_image.upc in upcs:
-            training_filenames.append(train_image.source.path)
+            if os.path.isfile(train_image.source.path):
+                training_filenames.append(train_image.source.path)
+            else:
+                # FIXME 修订统计数量
+                pass
 
     return upcs, training_filenames, None
 
@@ -150,16 +154,17 @@ def prepare_train_TF(train_action, deviceid):
     max_cnt = 0
     for train_image in train_images:
         if train_image.upc in upcs:
-            if train_image.create_time > f_train.create_time:
-                # 根据f_train.create_time增加增量样本
-                training_filenames.append(train_image.source.path)
-                validation_filenames.append(train_image.source.path)
-                upc_to_cnt[train_image.upc] += 1
-                if max_cnt < upc_to_cnt[train_image.upc]:
-                    max_cnt = upc_to_cnt[train_image.upc]
-            else:
-                old_training_filenames_to_upc[train_image.source.path] = train_image.upc
-                old_training_filenames.append(train_image.source.path)
+            if os.path.isfile(train_image.source.path):
+                if train_image.create_time > f_train.create_time:
+                    # 根据f_train.create_time增加增量样本
+                    training_filenames.append(train_image.source.path)
+                    validation_filenames.append(train_image.source.path)
+                    upc_to_cnt[train_image.upc] += 1
+                    if max_cnt < upc_to_cnt[train_image.upc]:
+                        max_cnt = upc_to_cnt[train_image.upc]
+                else:
+                    old_training_filenames_to_upc[train_image.source.path] = train_image.upc
+                    old_training_filenames.append(train_image.source.path)
 
     random.shuffle(old_training_filenames)
 
@@ -222,9 +227,10 @@ def prepare_train_TC(train_action, deviceid):
     # 增加增量upc样本
     for train_image in train_images:
         if train_image.upc in append_upcs:
-            # 根据append_upcs增加增量样本
-            training_filenames.append(train_image.source.path)
-            validation_filenames.append(train_image.source.path)
+            if os.path.isfile(train_image.source.path):
+                # 根据append_upcs增加增量样本
+                training_filenames.append(train_image.source.path)
+                validation_filenames.append(train_image.source.path)
         else:
             old_training_filenames_to_upc[train_image.source.path] = train_image.upc
             old_training_filenames.append(train_image.source.path)
