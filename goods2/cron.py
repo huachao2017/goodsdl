@@ -317,20 +317,23 @@ def _do_create_train_ta():
         deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
         train_image_group_qs = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
 
-        # 样本有200个
-        if len(train_image_group_qs) > 0 and train_image_group_qs[0][1] >= 200:
-            logger.info('create_train: TA,新增样本（{}）'.format(train_image_group_qs[0][1]))
-            _create_train('TA', train_image_group_qs[0][0], None)
-        # else:
-        #     # 间距达到7天或者新增样本超过200个
-        #     now = datetime.datetime.now()
-        #     deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-        #     train_image_group_qs = TrainImage.objects.filter(create_time__gt=last_ta.create_time).exclude(deviceid__in=deviceid_exclude_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
-        #
-        #     if (now - last_ta.create_time).days >= 7 or len(train_image_qs) >= 200:
-        #         logger.info('create_train: TA,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
-        #                                                                 (now - last_ta.create_time).days))
-        #         _create_train('TA', train_image_group_qs[0][0],None)
+        # 新增样本有200个
+        last_ta_group_list = list(zip(*last_ta_group_qs))
+        now = datetime.datetime.now()
+        for train_image_group in train_image_group_qs:
+            deviceid = train_image_group[0]
+            if deviceid in last_ta_group_list[0]:
+                index = last_ta_group_list[0].index(deviceid)
+                last_time = last_ta_group_list[1][index]
+                train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
+                if (now - last_time).days >= 7 or len(train_image_qs) >= 1000:
+                    logger.info('create_train: TA,新增样本（{}）'.format(len(train_image_qs)))
+                    _create_train('TA', deviceid, None)
+                    return
+            elif train_image_group[1] >= 200:
+                logger.info('create_train: TA,新增样本（{}）'.format(train_image_group[1]))
+                _create_train('TA', deviceid, None)
+                return
 
 
 def _create_train(action, deviceid, f_model_id):
