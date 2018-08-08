@@ -108,109 +108,110 @@ def transfer_sample():
 
 def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
-    train_image_qs = TrainImage.objects.filter(deviceid=485).filter(source_image_id__gt=0).order_by('-id')
+    train_image_max_qs = TrainImage.objects.filter(source_image_id__gt=0).values_list('deviceid').annotate(ct=Max('create_time')).order_by('-ct')
     deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-    if len(train_image_qs) == 0:
-        image_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid=485) # FIXME
-    else:
-        last_train_image = train_image_qs[0]
-        last_image = Image.objects.get(id=last_train_image.source_image.pk)
-        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid=485).filter(
-            create_time__gt=last_image.create_time)
+    image_group_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(image_ground_truth_id__gt=0).values_list('deviceid').annotate(cnt=Count('id')).order_by('cnt')
 
-    logger.info('transfer image length: {}'.format(len(image_qs)))
-    # 将Image列表转化为dict: key=identify，value=Image[]
-    identify_to_images = {}
-    for image in image_qs:
-        # 去除没有确定upc的
-        if image.image_ground_truth is not None:
+    logger.info('transfer image device length: {}'.format(len(image_group_qs)))
+
+    total_example_cnt = 0
+    train_image_group_list = list(zip(*train_image_max_qs))
+    for image_group in image_group_qs:
+        deviceid = image_group[0]
+        if deviceid in train_image_group_list[0]:
+            index = train_image_group_list[0].index(deviceid)
+            image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
+        else:
+            image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0)
+        # 将Image列表转化为dict: key=identify，value=Image[]
+        identify_to_images = {}
+        for image in image_qs:
             if image.identify in identify_to_images:
                 identify_to_images[image.identify].append(image)
             else:
                 identify_to_images[image.identify] = [image, ]
 
-    total_example_cnt = 0
-    for identify in identify_to_images:
-        # 处理同一个identify的Image[]
-        false_example = False
-        true_max_score = 0
-        true_image = None
-        image_ground_truth = None
-        example_cnt = 0
-        for image in identify_to_images[identify]:
-            image_ground_truth = image.image_ground_truth
-            image_result_qs = image.image_results.filter(upc=image_ground_truth.upc)
-            if len(image_result_qs) == 0:
-                # false example 只加一个
-                if not false_example:
-                    train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.deviceid, image_ground_truth.upc,
-                                                     os.path.basename(image.source.path))
-                    train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.deviceid,
+        for identify in identify_to_images:
+            # 处理同一个identify的Image[]
+            false_example = False
+            true_max_score = 0
+            true_image = None
+            image_ground_truth = None
+            example_cnt = 0
+            for image in identify_to_images[identify]:
+                image_ground_truth = image.image_ground_truth
+                image_result_qs = image.image_results.filter(upc=image_ground_truth.upc)
+                if len(image_result_qs) == 0:
+                    # false example 只加一个
+                    if not false_example:
+                        train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), deviceid, image_ground_truth.upc,
+                                                         os.path.basename(image.source.path))
+                        train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), deviceid,
+                                                             image_ground_truth.upc)
+                        if not tf.gfile.Exists(train_source_dir):
+                            tf.gfile.MakeDirs(train_source_dir)
+                        train_source_path = '{}/{}'.format(train_source_dir, os.path.basename(image.source.path))
+                        try:
+                            shutil.copy(image.source.path, train_source_path)
+                        except:
+                            continue
+                        TrainImage.objects.create(
+                            deviceid=deviceid,
+                            source=train_source,
+                            upc=image_ground_truth.upc,
+                            source_image_id=image.pk,
+                            source_from=2,
+                            score=0.0,
+                        )
+                        example_cnt += 1
+                        total_example_cnt += 1
+                        false_example = True
+                        logger.info('transfer_sample: add one false example')
+                else:
+                    # true example 加score最高的一个
+                    image_result = image_result_qs[0]
+                    if image_result.score > true_max_score:
+                        true_max_score = image_result.score
+                        true_image = image
+
+            if true_image is not None:
+                train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), deviceid, image_ground_truth.upc,
+                                                    os.path.basename(true_image.source.path))
+                train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), deviceid,
                                                          image_ground_truth.upc)
-                    if not tf.gfile.Exists(train_source_dir):
-                        tf.gfile.MakeDirs(train_source_dir)
-                    train_source_path = '{}/{}'.format(train_source_dir, os.path.basename(image.source.path))
-                    try:
-                        shutil.copy(image.source.path, train_source_path)
-                    except:
-                        continue
-                    TrainImage.objects.create(
-                        deviceid=image_ground_truth.deviceid,
-                        source=train_source,
-                        upc=image_ground_truth.upc,
-                        source_image_id=image.pk,
-                        source_from=2,
-                        score=0.0,
-                    )
-                    example_cnt += 1
-                    total_example_cnt += 1
-                    false_example = True
-                    logger.info('transfer_sample: add one false example')
-            else:
-                # true example 加score最高的一个
-                image_result = image_result_qs[0]
-                if image_result.score > true_max_score:
-                    true_max_score = image_result.score
-                    true_image = image
-
-        if true_image is not None:
-            train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.deviceid, image_ground_truth.upc,
-                                                os.path.basename(true_image.source.path))
-            train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.deviceid,
-                                                     image_ground_truth.upc)
-            if not tf.gfile.Exists(train_source_dir):
-                tf.gfile.MakeDirs(train_source_dir)
-            train_source_path = '{}/{}'.format(train_source_dir,os.path.basename(true_image.source.path))
-            try:
-                shutil.copy(true_image.source.path, train_source_path)
-            except:
-                continue
-            TrainImage.objects.create(
-                deviceid=true_image.deviceid,
-                source=train_source,
-                upc=image_ground_truth.upc,
-                source_image_id=true_image.pk,
-                source_from=2,
-                score=true_max_score,
-            )
-            example_cnt += 1
-            total_example_cnt += 1
-            logger.info('transfer_sample: add one true example')
-
-        if false_example or true_image is not None:
-            # add or update TrainUpc
-            train_upc_qs = TrainUpc.objects.filter(deviceid=image_ground_truth.deviceid).filter(
-                upc=image_ground_truth.upc)
-            if len(train_upc_qs) > 0:
-                train_upc = train_upc_qs[0]
-                train_upc.cnt += 1
-                train_upc.save()
-            else:
-                TrainUpc.objects.create(
+                if not tf.gfile.Exists(train_source_dir):
+                    tf.gfile.MakeDirs(train_source_dir)
+                train_source_path = '{}/{}'.format(train_source_dir,os.path.basename(true_image.source.path))
+                try:
+                    shutil.copy(true_image.source.path, train_source_path)
+                except:
+                    continue
+                TrainImage.objects.create(
+                    deviceid=deviceid,
+                    source=train_source,
                     upc=image_ground_truth.upc,
-                    deviceid=image_ground_truth.deviceid,
-                    cnt=1,
+                    source_image_id=true_image.pk,
+                    source_from=2,
+                    score=true_max_score,
                 )
+                example_cnt += 1
+                total_example_cnt += 1
+                logger.info('transfer_sample: add one true example')
+
+            if false_example or true_image is not None:
+                # add or update TrainUpc
+                train_upc_qs = TrainUpc.objects.filter(deviceid=deviceid).filter(
+                    upc=image_ground_truth.upc)
+                if len(train_upc_qs) > 0:
+                    train_upc = train_upc_qs[0]
+                    train_upc.cnt += 1
+                    train_upc.save()
+                else:
+                    TrainUpc.objects.create(
+                        upc=image_ground_truth.upc,
+                        deviceid=deviceid,
+                        cnt=1,
+                    )
 
     return '成功转化{}个样本'.format(total_example_cnt)
 

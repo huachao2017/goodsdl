@@ -165,6 +165,9 @@ def prepare_train_TF(train_action, deviceid):
                 else:
                     old_training_filenames_to_upc[train_image.source.path] = train_image.upc
                     old_training_filenames.append(train_image.source.path)
+            else:
+                # FIXME 修订统计数量
+                pass
 
     random.shuffle(old_training_filenames)
 
@@ -231,6 +234,9 @@ def prepare_train_TC(train_action, deviceid):
                 # 根据append_upcs增加增量样本
                 training_filenames.append(train_image.source.path)
                 validation_filenames.append(train_image.source.path)
+            else:
+                # FIXME
+                pass
         else:
             old_training_filenames_to_upc[train_image.source.path] = train_image.upc
             old_training_filenames.append(train_image.source.path)
