@@ -9,7 +9,7 @@ from dl import common
 logger = logging.getLogger("detect2")
 
 class CNN:
-    def __init__(self, model_dir, model_name='nasnet_large'):
+    def __init__(self, model_dir, model_name='nasnet_mobile'):
         self.model_dir = model_dir
         self.model_name = model_name
         self._pre_graph = None
