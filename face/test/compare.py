@@ -110,6 +110,7 @@ def load_and_preprocess_data(image_dir_path, image_size, limit=-1):
         else:
             continue
         aligned = misc.imresize(img, (image_size, image_size), interp='bilinear')
+        # misc.imsave('{}_s.png'.format(example),aligned)
         prewhitened = facenet.prewhiten(aligned)
         img_list.append(prewhitened)
         image_names.append(image_name)
