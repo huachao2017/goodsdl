@@ -115,9 +115,10 @@ def _do_transfer_sample():
     else:
         last_train_image = train_image_qs[0]
         last_image = Image.objects.get(id=last_train_image.source_image.pk)
-        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid=485).exclude( # FIXME
-            image_ground_truth_id=last_image.image_ground_truth.pk)
+        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid=485).filter(
+            create_time__gt=last_image.create_time)
 
+    logger.info('transfer image length: {}'.format(len(image_qs)))
     # 将Image列表转化为dict: key=identify，value=Image[]
     identify_to_images = {}
     for image in image_qs:
