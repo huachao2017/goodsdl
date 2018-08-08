@@ -145,8 +145,11 @@ def _do_transfer_sample():
                 if not false_example:
                     train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.deviceid, image_ground_truth.upc,
                                                      os.path.basename(image.source.path))
-                    train_source_path = '{}/{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.deviceid, image_ground_truth.upc,
-                                                     os.path.basename(image.source.path))
+                    train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.deviceid,
+                                                         image_ground_truth.upc)
+                    if not tf.gfile.Exists(train_source_dir):
+                        tf.gfile.MakeDirs(train_source_dir)
+                    train_source_path = '{}/{}'.format(train_source_dir, os.path.basename(true_image.source.path))
                     try:
                         shutil.copy(image.source.path, train_source_path)
                     except:
@@ -178,7 +181,10 @@ def _do_transfer_sample():
             if not tf.gfile.Exists(train_source_dir):
                 tf.gfile.MakeDirs(train_source_dir)
             train_source_path = '{}/{}'.format(train_source_dir,os.path.basename(true_image.source.path))
-            shutil.copy(true_image.source.path, train_source_path)
+            try:
+                shutil.copy(true_image.source.path, train_source_path)
+            except:
+                continue
             TrainImage.objects.create(
                 deviceid=true_image.deviceid,
                 source=train_source,
