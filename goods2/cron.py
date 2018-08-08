@@ -108,7 +108,7 @@ def transfer_sample():
 
 def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
-    train_image_qs = TrainImage.objects.filter(source_image_id__gt=0).order_by('-id')
+    train_image_qs = TrainImage.objects.filter(deviceid=485).filter(source_image_id__gt=0).order_by('-id')
     deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
     if len(train_image_qs) == 0:
         image_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid=485) # FIXME
