@@ -101,11 +101,14 @@ def load_and_preprocess_data(image_dir_path, image_size, limit=-1):
     for image_name in os.listdir(image_dir_path):
         image_path = os.path.join(image_dir_path, image_name)
         example, ext = os.path.splitext(image_path)
-        if ext != ".jpg":
-            continue
         if limit > 0 and cnt >= limit:
             break
-        img = misc.imread(os.path.expanduser(image_path), mode='RGB')
+        if ext == ".jpg":
+            img = misc.imread(os.path.expanduser(image_path), mode='RGB')
+        elif ext == ".png":
+            img = misc.imread(os.path.expanduser(image_path), mode='RGB')
+        else:
+            continue
         aligned = misc.imresize(img, (image_size, image_size), interp='bilinear')
         prewhitened = facenet.prewhiten(aligned)
         img_list.append(prewhitened)
