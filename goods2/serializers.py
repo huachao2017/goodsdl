@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, TrainActionDevices, ImageTrainModel, TaskLog
+from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, ImageTrainModel, TaskLog
 
 
 class DeviceidPrecisionSerializer(serializers.ModelSerializer):
@@ -60,7 +60,7 @@ class TrainImageSerializer(serializers.ModelSerializer):
 class TrainUpcSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainUpc
-        fields = ('pk', 'upc', 'cnt', 'create_time', 'update_time')
+        fields = ('pk', 'deviceid', 'upc', 'cnt', 'create_time', 'update_time')
         read_only_fields = ('create_time', 'update_time',)
 
 
@@ -69,13 +69,6 @@ class TrainActionUpcsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainActionUpcs
         fields = ('pk', 'upc', 'cnt')
-
-
-class TrainActionDevicesSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = TrainActionDevices
-        fields = ('pk', 'train_deviceid', 'train_action')
 
 
 class TrainModelSerializer(serializers.ModelSerializer):
@@ -87,12 +80,11 @@ class TrainModelSerializer(serializers.ModelSerializer):
 
 class TrainActionSerializer(serializers.ModelSerializer):
     upcs = TrainActionUpcsSerializer(many=True, read_only=True)
-    devices = TrainActionDevicesSerializer(many=True, read_only=True)
 
     class Meta:
         model = TrainAction
-        fields = ('pk', 'action', 'state', 'f_model', 'desc', 'train_path', 'create_time', 'update_time', 'ip', 'train_command', 'eval_command', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')
-        read_only_fields = ('train_path', 'create_time', 'update_time', 'ip', 'train_command', 'eval_command', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs', 'devices')
+        fields = ('pk', 'action', 'state', 'deviceid', 'f_model', 'desc', 'train_path', 'create_time', 'update_time', 'ip', 'train_command', 'eval_command', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs')
+        read_only_fields = ('train_path', 'create_time', 'update_time', 'ip', 'train_command', 'eval_command', 'complete_time', 'train_cnt', 'validation_cnt', 'upcs')
 
 class TaskLogSerializer(serializers.ModelSerializer):
     class Meta:

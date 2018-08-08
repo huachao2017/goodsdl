@@ -59,7 +59,7 @@ class ImageResult(models.Model):
 
 def train_image_upload_source(instance, filename):
     now = datetime.datetime.now()
-    ret = '{}/{}/{}_{}_{}'.format(common.get_dataset_dir(), instance.upc, instance.deviceid, str(now.time()),
+    ret = '{}/{}/{}/{}_{}'.format(common.get_dataset_dir(), instance.deviceid, instance.upc, str(now.time()),
                                   filename)
     return ret
 
@@ -81,7 +81,8 @@ class TrainImage(models.Model):
 
 
 class TrainUpc(models.Model):
-    upc = models.CharField(max_length=20, unique=True)
+    deviceid = models.CharField(max_length=20, default='',db_index=True)
+    upc = models.CharField(max_length=20, db_index=True)
     cnt = models.IntegerField(default=1)
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
@@ -93,6 +94,8 @@ class TrainAction(models.Model):
         (u'TF', u'Train Funiture'),
         (u'TC', u'Train Add Class'),
     )
+
+    deviceid = models.CharField(max_length=20, default='',db_index=True)
     action = models.CharField(max_length=5, choices=ACTION_CHOICES)
     train_path = models.CharField(max_length=200)
     STATE_CHOICES = (
@@ -151,11 +154,6 @@ class TrainActionUpcs(models.Model):
     train_upc = models.ForeignKey(TrainUpc, related_name="trains", on_delete=models.CASCADE)
     upc = models.CharField(max_length=20, db_index=True)
     cnt = models.IntegerField(default=1)
-
-
-class TrainActionDevices(models.Model):
-    train_action = models.ForeignKey(TrainAction, related_name="devices", on_delete=models.CASCADE)
-    train_deviceid = models.CharField(max_length=20, default='')
 
 
 class TaskLog(models.Model):

@@ -111,7 +111,7 @@ def _remove_tfrecord_ifexists(output_dir):
             tf.gfile.Remove(output_filename)
 
 
-def prepare_train_TA(train_action):
+def prepare_train_TA(train_action, deviceid):
     upcs = []
     train_upcs = TrainUpc.objects.all()
     for train_upc in train_upcs:
@@ -121,15 +121,14 @@ def prepare_train_TA(train_action):
     upcs = sorted(upcs)
 
     training_filenames = []
-    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-    train_images = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
+    train_images = TrainImage.objects.filter(deviceid=deviceid)
     for train_image in train_images:
         if train_image.upc in upcs:
             training_filenames.append(train_image.source.path)
 
     return upcs, training_filenames, None
 
-def prepare_train_TF(train_action):
+def prepare_train_TF(train_action, deviceid):
     upcs = []
     train_upcs = TrainUpc.objects.all()
     f_model = TrainModel.objects.get(id=train_action.f_model.pk)
@@ -143,8 +142,7 @@ def prepare_train_TF(train_action):
     validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
-    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-    train_images = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
+    train_images = TrainImage.objects.filter(deviceid=deviceid)
     # 每类样本数
     upc_to_cnt = {}
     for upc in upcs:
@@ -180,7 +178,7 @@ def prepare_train_TF(train_action):
     return upcs, training_filenames, validation_filenames
 
 
-def prepare_train_TC(train_action):
+def prepare_train_TC(train_action, deviceid):
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
@@ -219,8 +217,7 @@ def prepare_train_TC(train_action):
     validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
-    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-    train_images = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
+    train_images = TrainImage.objects.filter(deviceid=deviceid)
 
     # 增加增量upc样本
     for train_image in train_images:
@@ -252,17 +249,17 @@ def prepare_train_TC(train_action):
 
     return upcs, training_filenames, validation_filenames
 
-def prepare_train(train_action):
+def prepare_train(train_action,deviceid):
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
     if train_action.action == 'TA':
-        upcs, training_filenames, validation_filenames = prepare_train_TA(train_action)
+        upcs, training_filenames, validation_filenames = prepare_train_TA(train_action, deviceid)
     elif train_action.action == 'TF':
-        upcs, training_filenames, validation_filenames = prepare_train_TF(train_action)
+        upcs, training_filenames, validation_filenames = prepare_train_TF(train_action, deviceid)
     elif train_action.action == 'TC':
-        upcs, training_filenames, validation_filenames = prepare_train_TC(train_action)
+        upcs, training_filenames, validation_filenames = prepare_train_TC(train_action, deviceid)
     else:
         raise ValueError('error parameter')
 

@@ -55,7 +55,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             )
 
         # 检测阶段
-        last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).exclude(action='TC').order_by('-id')
+        last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
         if len(last_normal_train_qs)>0:
             last_train = last_normal_train_qs[0]
             last_normal_train_model = TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
@@ -67,7 +67,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 image_id=serializer.instance.pk
             )
 
-            last_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(action='TC').filter(complete_time__gt=last_normal_train_model.create_time).order_by('-id')
+            last_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=serializer.instance.deviceid).filter(action='TC').filter(complete_time__gt=last_normal_train_model.create_time).order_by('-id')
             if len(last_tc_train_qs)>0:
                 last_tc_train = last_tc_train_qs[0]
                 last_tc_train_model = TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
@@ -234,13 +234,16 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         # add or update TrainUpc
-        try:
-            train_upc = TrainUpc.objects.get(upc=serializer.instance.upc)
+        train_upc_qs = TrainUpc.objects.filter(deviceid=serializer.instance.deviceid).filter(
+            upc=serializer.instance.upc)
+        if len(train_upc_qs) > 0:
+            train_upc = train_upc_qs[0]
             train_upc.cnt += 1
             train_upc.save()
-        except TrainUpc.DoesNotExist as e:
+        else:
             TrainUpc.objects.create(
                 upc=serializer.instance.upc,
+                deviceid = serializer.instance.deviceid,
                 cnt=1,
             )
 
@@ -248,7 +251,9 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        train_upc = TrainUpc.objects.get(upc=instance.upc)
+        train_upc_qs = TrainUpc.objects.filter(deviceid=instance.deviceid).filter(
+            upc=instance.upc)
+        train_upc = train_upc_qs[0]
         train_upc.cnt -= 1
         train_upc.save()
 

@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+from django.db.models import Max, Count
 from django.conf import settings
 import tensorflow as tf
 from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
@@ -109,13 +110,12 @@ def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
     train_image_qs = TrainImage.objects.filter(source_image_id__gt=0).order_by('-id')
     deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-    deviceid_commercial_qs = Deviceid.objects.filter(state=common.DEVICE_STATE_COMMERCIAL).values('deviceid')
     if len(train_image_qs) == 0:
-        image_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid__in=deviceid_commercial_qs)
+        image_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid=485) # FIXME
     else:
         last_train_image = train_image_qs[0]
         last_image = Image.objects.get(id=last_train_image.source_image.pk)
-        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid__in=deviceid_commercial_qs).exclude(
+        image_qs = Image.objects.filter(id__gt=last_image.pk).exclude(deviceid__in=deviceid_exclude_qs).filter(deviceid=485).exclude( # FIXME
             image_ground_truth_id=last_image.image_ground_truth.pk)
 
     # 将Image列表转化为dict: key=identify，value=Image[]
@@ -142,12 +142,13 @@ def _do_transfer_sample():
             if len(image_result_qs) == 0:
                 # false example 只加一个
                 if not false_example:
-                    train_source = '{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.upc,
+                    train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.deviceid, image_ground_truth.upc,
                                                      os.path.basename(image.source.path))
-                    train_source_path = '{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.upc,
+                    train_source_path = '{}/{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.deviceid, image_ground_truth.upc,
                                                      os.path.basename(image.source.path))
                     shutil.copy(image.source.path, train_source_path)
                     TrainImage.objects.create(
+                        deviceid=image_ground_truth.deviceid,
                         source=train_source,
                         upc=image_ground_truth.upc,
                         source_image_id=image.pk,
@@ -166,12 +167,14 @@ def _do_transfer_sample():
                     true_image = image
 
         if true_image is not None:
-            train_source = '{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.upc,
-                                             os.path.basename(true_image.source.path))
-            train_source_path = '{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.upc,
-                                             os.path.basename(true_image.source.path))
+            train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), image_ground_truth.deviceid, image_ground_truth.upc,
+                                                os.path.basename(true_image.source.path))
+            train_source_path = '{}/{}/{}/{}'.format(common.get_dataset_dir(True), image_ground_truth.deviceid,
+                                                     image_ground_truth.upc,
+                                                     os.path.basename(true_image.source.path))
             shutil.copy(true_image.source.path, train_source_path)
             TrainImage.objects.create(
+                deviceid=true_image.deviceid,
                 source=train_source,
                 upc=image_ground_truth.upc,
                 source_image_id=true_image.pk,
@@ -184,14 +187,17 @@ def _do_transfer_sample():
 
         if false_example or true_image is not None:
             # add or update TrainUpc
-            try:
-                train_upc = TrainUpc.objects.get(upc=image_ground_truth.upc)
-                train_upc.cnt += example_cnt
+            train_upc_qs = TrainUpc.objects.filter(deviceid=image_ground_truth.deviceid).filter(
+                upc=image_ground_truth.upc)
+            if len(train_upc_qs) > 0:
+                train_upc = train_upc_qs[0]
+                train_upc.cnt += 1
                 train_upc.save()
-            except TrainUpc.DoesNotExist as e:
+            else:
                 TrainUpc.objects.create(
                     upc=image_ground_truth.upc,
-                    cnt=example_cnt,
+                    deviceid=image_ground_truth.deviceid,
+                    cnt=1,
                 )
 
     return '成功转化{}个样本'.format(total_example_cnt)
@@ -225,68 +231,68 @@ def create_train():
 def _do_create_train():
     _do_create_train_ta()
     # TF & TC
-    last_t_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).order_by('-complete_time')
-    if len(last_t_qs) > 0:
-        last_t = last_t_qs[0]
-        if last_t.action == 'TA':
-            # 'TA'训练完即建立了新的主分支
-            doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-            if len(doing_tf_qs)>0:
-                doing_tf = doing_tf_qs[0]
-                if doing_tf.create_time < last_t.complete_time:
-                    # 退出TA之前的TF
-                    doing_tf.state = common.TRAIN_STATE_STOP
-                    doing_tf.save()
-            doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-            if len(doing_tc_qs)>0:
-                doing_tc = doing_tc_qs[0]
-                if doing_tc.create_time < last_t.complete_time:
-                    # 退出TA之前的TC
-                    doing_tc.state = common.TRAIN_STATE_STOP
-                    doing_tc.save()
-
-
-        train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
-        doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-        doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-        f_train_model = train_model_qs[0]
-        f_train_upcs = last_t.upcs.all()
-        train_upcs = TrainUpc.objects.all()
-
-        upcs = []
-        for train_upc in train_upcs:
-            upcs.append(train_upc.upc)
-
-        upcs = sorted(upcs)
-
-        f_upcs = []
-        for train_upc in f_train_upcs:
-            f_upcs.append(train_upc.upc)
-
-        # 根据train_upcs和f_train_upcs进行样本筛选
-        append_upcs = []
-        for upc in upcs:
-            if upc not in f_upcs:
-                append_upcs.append(upc)
-
-        train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
-        if len(append_upcs) > 0:
-            if len(doing_tc_qs) == 0 and len(train_image_qs) >= 10:
-                # if len(doing_tf_qs) > 0:
-                    # 退出正在训练的TF
-                    # doing_tf = doing_tf_qs[0]
-                    # doing_tf.state = 9
-                    # doing_tf.save()
-                logger.info('create_train: TC,新增类（{}）,新增样本（{}）'.format(len(append_upcs), len(train_image_qs)))
-                _create_train('TC', f_train_model.pk)
-        else:
-            if len(doing_tf_qs) == 0:
-                now = datetime.datetime.now()
-                if (now - last_t.create_time).days >= 1 or len(train_image_qs) >= 200:
-                    logger.info('create_train: TF,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
-                                                                            (now - last_t.create_time).days))
-                    _create_train('TF', f_train_model.pk)
-
+    # last_t_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).order_by('-complete_time')
+    # if len(last_t_qs) > 0:
+    #     last_t = last_t_qs[0]
+    #     if last_t.action == 'TA':
+    #         # 'TA'训练完即建立了新的主分支
+    #         doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
+    #         if len(doing_tf_qs)>0:
+    #             doing_tf = doing_tf_qs[0]
+    #             if doing_tf.create_time < last_t.complete_time:
+    #                 # 退出TA之前的TF
+    #                 doing_tf.state = common.TRAIN_STATE_STOP
+    #                 doing_tf.save()
+    #         doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
+    #         if len(doing_tc_qs)>0:
+    #             doing_tc = doing_tc_qs[0]
+    #             if doing_tc.create_time < last_t.complete_time:
+    #                 # 退出TA之前的TC
+    #                 doing_tc.state = common.TRAIN_STATE_STOP
+    #                 doing_tc.save()
+    #
+    #
+    #     train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
+    #     doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
+    #     doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
+    #     f_train_model = train_model_qs[0]
+    #     f_train_upcs = last_t.upcs.all()
+    #     train_upcs = TrainUpc.objects.all()
+    #
+    #     upcs = []
+    #     for train_upc in train_upcs:
+    #         upcs.append(train_upc.upc)
+    #
+    #     upcs = sorted(upcs)
+    #
+    #     f_upcs = []
+    #     for train_upc in f_train_upcs:
+    #         f_upcs.append(train_upc.upc)
+    #
+    #     # 根据train_upcs和f_train_upcs进行样本筛选
+    #     append_upcs = []
+    #     for upc in upcs:
+    #         if upc not in f_upcs:
+    #             append_upcs.append(upc)
+    #
+    #     train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
+    #     if len(append_upcs) > 0:
+    #         if len(doing_tc_qs) == 0 and len(train_image_qs) >= 10:
+    #             # if len(doing_tf_qs) > 0:
+    #                 # 退出正在训练的TF
+    #                 # doing_tf = doing_tf_qs[0]
+    #                 # doing_tf.state = 9
+    #                 # doing_tf.save()
+    #             logger.info('create_train: TC,新增类（{}）,新增样本（{}）'.format(len(append_upcs), len(train_image_qs)))
+    #             _create_train('TC', f_train_model.pk)
+    #     else:
+    #         if len(doing_tf_qs) == 0:
+    #             now = datetime.datetime.now()
+    #             if (now - last_t.create_time).days >= 1 or len(train_image_qs) >= 200:
+    #                 logger.info('create_train: TF,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
+    #                                                                         (now - last_t.create_time).days))
+    #                 _create_train('TF', f_train_model.pk)
+    #
     return ''
 
 
@@ -294,41 +300,37 @@ def _do_create_train_ta():
     # TA
     doing_ta = TrainAction.objects.filter(action='TA').filter(state__lte=common.TRAIN_STATE_TRAINING)
     if len(doing_ta) == 0:
-        last_ta = None
-        last_ta_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).order_by('-id')
-        if len(last_ta_qs) > 0:
-            last_ta = last_ta_qs[0]
+        last_ta_group_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(Max('create_time'))
+        deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+        train_image_group_qs = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
 
-        if last_ta is None:
-            deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-            train_image_qs = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs)
-
-            # 样本有2000个
-            if len(train_image_qs) >= 200:
-                logger.info('create_train: TA,新增样本（{}）'.format(len(train_image_qs)))
-                _create_train('TA', None)
-        else:
-            # 间距达到7天或者新增样本超过2000个
-            now = datetime.datetime.now()
-            deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-            train_image_qs = TrainImage.objects.filter(create_time__gt=last_ta.create_time).exclude(deviceid__in=deviceid_exclude_qs)
-
-            if (now - last_ta.create_time).days >= 7 or len(train_image_qs) >= 2000:
-                logger.info('create_train: TA,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
-                                                                        (now - last_ta.create_time).days))
-                _create_train('TA', None)
+        # 样本有200个
+        if len(train_image_group_qs) > 0 and train_image_group_qs[0][1] >= 200:
+            logger.info('create_train: TA,新增样本（{}）'.format(train_image_group_qs[0][1]))
+            _create_train('TA', train_image_group_qs[0][0], None)
+        # else:
+        #     # 间距达到7天或者新增样本超过200个
+        #     now = datetime.datetime.now()
+        #     deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
+        #     train_image_group_qs = TrainImage.objects.filter(create_time__gt=last_ta.create_time).exclude(deviceid__in=deviceid_exclude_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
+        #
+        #     if (now - last_ta.create_time).days >= 7 or len(train_image_qs) >= 200:
+        #         logger.info('create_train: TA,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
+        #                                                                 (now - last_ta.create_time).days))
+        #         _create_train('TA', train_image_group_qs[0][0],None)
 
 
-def _create_train(action, f_model_id):
+def _create_train(action, deviceid, f_model_id):
     train_action = TrainAction.objects.create(
         action=action,
+        deviceid=deviceid,
         f_model_id=f_model_id,
         desc=''
     )
 
     train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
     # 数据准备
-    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action)
+    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action, deviceid)
 
     if names_to_labels is None:
         train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
@@ -429,7 +431,7 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
-            'nasnet_large',
+            'nasnet_mobile',
             1,
             8,
             '0',
@@ -444,7 +446,7 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
-            'nasnet_large',
+            'nasnet_mobile',
             1,
             8,
             '1',
@@ -458,7 +460,7 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
-            'nasnet_large',
+            'nasnet_mobile',
             1,
             8,
             '0',
@@ -521,9 +523,9 @@ def _do_check_train():
 
 # 生成信号：
 # precision达0.9后：
-# TA：step超过10000且有10次eval，最后一次和前10次精度上升小于0.3%
-# TF：step超过2000且有10次eval，最后一次和前10次精度上升小于0.6%
-# TC：step超过500且有5次eval，最后一次和前5次精度上升小于1%
+# TA：step超过5000且有5次eval，最后一次和前10次精度上升小于0.5%
+# TF：step超过1000且有5次eval，最后一次和前10次精度上升小于1%
+# TC：step超过500且有3次eval，最后一次和前5次精度上升小于1%
 def _do_check_one_train(train_action):
     train_pid = common.get_train_pid(train_action)
     if train_pid == 0:
@@ -539,18 +541,18 @@ def _do_check_one_train(train_action):
         last_eval_log = eval_log_qs[0]
         precision_interval = 1
         if train_action.action == 'TA':
-            if len(eval_log_qs)>10:
-                precision_interval = last_eval_log.precision - eval_log_qs[10].precision
-            if last_eval_log.checkpoint_step>=20000 and precision_interval<=0.003:
-                _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
-        elif train_action.action == 'TF':
-            if len(eval_log_qs)>10:
-                precision_interval = last_eval_log.precision - eval_log_qs[10].precision
-            if last_eval_log.checkpoint_step>=2000 and precision_interval<=0.006:
-                _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
-        elif train_action.action == 'TC':
             if len(eval_log_qs)>5:
                 precision_interval = last_eval_log.precision - eval_log_qs[5].precision
+            if last_eval_log.checkpoint_step>=5000 and precision_interval<=0.005:
+                _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
+        elif train_action.action == 'TF':
+            if len(eval_log_qs)>5:
+                precision_interval = last_eval_log.precision - eval_log_qs[5].precision
+            if last_eval_log.checkpoint_step>=1000 and precision_interval<=0.01:
+                _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
+        elif train_action.action == 'TC':
+            if len(eval_log_qs)>3:
+                precision_interval = last_eval_log.precision - eval_log_qs[3].precision
             if last_eval_log.checkpoint_step>=500 and precision_interval<=0.01:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
 
