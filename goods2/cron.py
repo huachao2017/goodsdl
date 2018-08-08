@@ -149,7 +149,7 @@ def _do_transfer_sample():
                                                          image_ground_truth.upc)
                     if not tf.gfile.Exists(train_source_dir):
                         tf.gfile.MakeDirs(train_source_dir)
-                    train_source_path = '{}/{}'.format(train_source_dir, os.path.basename(true_image.source.path))
+                    train_source_path = '{}/{}'.format(train_source_dir, os.path.basename(image.source.path))
                     try:
                         shutil.copy(image.source.path, train_source_path)
                     except:
