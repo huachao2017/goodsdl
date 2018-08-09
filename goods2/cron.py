@@ -310,7 +310,7 @@ def _do_create_train_ta():
         now = datetime.datetime.now()
         for train_image_group in train_image_group_qs:
             deviceid = train_image_group[0]
-            if deviceid in last_ta_group_list[0]:
+            if len(last_ta_group_qs)>0 and deviceid in last_ta_group_list[0]:
                 index = last_ta_group_list[0].index(deviceid)
                 last_time = last_ta_group_list[1][index]
                 train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
