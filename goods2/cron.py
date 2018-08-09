@@ -115,12 +115,13 @@ def _do_transfer_sample():
     logger.info('transfer image device length: {}'.format(len(image_group_qs)))
 
     total_example_cnt = 0
-    train_image_group_list = list(zip(*train_image_max_qs))
     for image_group in image_group_qs:
         deviceid = image_group[0]
-        if deviceid in train_image_group_list[0]:
-            index = train_image_group_list[0].index(deviceid)
-            image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
+        if len(train_image_max_qs)>0:
+            train_image_group_list = list(zip(*train_image_max_qs))
+            if deviceid in train_image_group_list[0]:
+                index = train_image_group_list[0].index(deviceid)
+                image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
         else:
             image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0)
         # 将Image列表转化为dict: key=identify，value=Image[]
