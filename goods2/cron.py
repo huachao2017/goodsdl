@@ -122,6 +122,8 @@ def _do_transfer_sample():
             if deviceid in train_image_group_list[0]:
                 index = train_image_group_list[0].index(deviceid)
                 image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
+            else:
+                continue
         else:
             image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0)
         # 将Image列表转化为dict: key=identify，value=Image[]
