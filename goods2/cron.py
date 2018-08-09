@@ -4,7 +4,7 @@ import shutil
 from django.db.models import Max, Count
 from django.conf import settings
 import tensorflow as tf
-from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageResult, ImageGroundTruth, TrainImage, TrainUpc, TaskLog, TrainAction, TrainActionUpcs, \
+from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageResult, ImageGroundTruth, TrainImage, TaskLog, TrainAction, TrainActionUpcs, \
     TrainModel, EvalLog
 from . import common
 import socket
@@ -198,21 +198,6 @@ def _do_transfer_sample():
                 total_example_cnt += 1
                 logger.info('transfer_sample: add one true example')
 
-            if false_example or true_image is not None:
-                # add or update TrainUpc
-                train_upc_qs = TrainUpc.objects.filter(deviceid=deviceid).filter(
-                    upc=image_ground_truth.upc)
-                if len(train_upc_qs) > 0:
-                    train_upc = train_upc_qs[0]
-                    train_upc.cnt += 1
-                    train_upc.save()
-                else:
-                    TrainUpc.objects.create(
-                        upc=image_ground_truth.upc,
-                        deviceid=deviceid,
-                        cnt=1,
-                    )
-
     return '成功转化{}个样本'.format(total_example_cnt)
 
 
@@ -356,12 +341,10 @@ def _create_train(action, deviceid, f_model_id):
     # 更新数据
     # 'upcs'
     for upc in names_to_labels:
-        train_upc = TrainUpc.objects.get(upc=upc)
         TrainActionUpcs.objects.create(
             train_action_id=train_action.pk,
-            train_upc=train_upc,
             upc=upc,
-            cnt=train_upc.cnt,
+            cnt=len(training_filenames),
         )
     train_action.train_cnt = len(training_filenames)
     train_action.validation_cnt = len(validation_filenames)

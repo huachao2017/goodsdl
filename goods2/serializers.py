@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageGroundTruth, ImageResult, TrainImage, TrainUpc, TrainAction, TrainModel, TrainActionUpcs, ImageTrainModel, TaskLog
+from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageGroundTruth, ImageResult, TrainImage, TrainAction, TrainModel, TrainActionUpcs, ImageTrainModel, TaskLog
 
 
 class DeviceidPrecisionSerializer(serializers.ModelSerializer):
@@ -55,13 +55,6 @@ class TrainImageSerializer(serializers.ModelSerializer):
         model = TrainImage
         fields = ('pk', 'deviceid', 'source', 'upc', 'source_from', 'score', 'source_image', 'create_time', 'update_time')
         read_only_fields = ('source_image', 'create_time', 'update_time')
-
-
-class TrainUpcSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TrainUpc
-        fields = ('pk', 'deviceid', 'upc', 'cnt', 'create_time', 'update_time')
-        read_only_fields = ('create_time', 'update_time',)
 
 
 class TrainActionUpcsSerializer(serializers.ModelSerializer):

@@ -80,14 +80,6 @@ class TrainImage(models.Model):
     update_time = models.DateTimeField('date updated', auto_now=True)
 
 
-class TrainUpc(models.Model):
-    deviceid = models.CharField(max_length=20, default='',db_index=True)
-    upc = models.CharField(max_length=20, db_index=True)
-    cnt = models.IntegerField(default=1)
-    create_time = models.DateTimeField('date created', auto_now_add=True)
-    update_time = models.DateTimeField('date updated', auto_now=True)
-
-
 class TrainAction(models.Model):
     ACTION_CHOICES = (
         (u'TA', u'Train All Dataset'),
@@ -151,7 +143,6 @@ class ImageTrainModel(models.Model):
 
 class TrainActionUpcs(models.Model):
     train_action = models.ForeignKey(TrainAction, related_name="upcs", on_delete=models.CASCADE)
-    train_upc = models.ForeignKey(TrainUpc, related_name="trains", on_delete=models.CASCADE)
     upc = models.CharField(max_length=20, db_index=True)
     cnt = models.IntegerField(default=1)
 

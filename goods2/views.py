@@ -233,38 +233,16 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        # add or update TrainUpc
-        train_upc_qs = TrainUpc.objects.filter(deviceid=serializer.instance.deviceid).filter(
-            upc=serializer.instance.upc)
-        if len(train_upc_qs) > 0:
-            train_upc = train_upc_qs[0]
-            train_upc.cnt += 1
-            train_upc.save()
-        else:
-            TrainUpc.objects.create(
-                upc=serializer.instance.upc,
-                deviceid = serializer.instance.deviceid,
-                cnt=1,
-            )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        train_upc_qs = TrainUpc.objects.filter(deviceid=instance.deviceid).filter(
-            upc=instance.upc)
-        train_upc = train_upc_qs[0]
-        train_upc.cnt -= 1
-        train_upc.save()
 
         os.remove(instance.source.path)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class TrainUpcViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
-    queryset = TrainUpc.objects.order_by('-id')
-    serializer_class = TrainUpcSerializer
 
 class TrainActionViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                       viewsets.GenericViewSet):

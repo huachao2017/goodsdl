@@ -23,7 +23,7 @@ import math
 import tensorflow as tf
 
 from datasets import dataset_utils
-from goods2.models import TrainImage, TrainUpc, TrainActionUpcs, TrainAction, TrainModel, DeviceidExclude
+from goods2.models import TrainImage, TrainActionUpcs, TrainAction, TrainModel, DeviceidExclude
 from django.db.models import Count
 # Seed for repeatability.
 _RANDOM_SEED = 42
@@ -132,13 +132,12 @@ def prepare_train_TA(train_action, deviceid):
     return upcs, training_filenames, None
 
 def prepare_train_TF(train_action, deviceid):
-    # FIXME 弃用train_upcs
-    upcs = []
-    train_upcs = TrainUpc.objects.filter(deviceid=deviceid)
     f_model = TrainModel.objects.get(id=train_action.f_model.pk)
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
-    for train_upc in train_upcs:
-        upcs.append(train_upc.upc)
+    train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+    upcs = []
+    for train_upc_group in train_upc_group_qs:
+        upcs.append(train_upc_group[0])
 
     upcs = sorted(upcs)
 
@@ -186,19 +185,18 @@ def prepare_train_TF(train_action, deviceid):
 
 
 def prepare_train_TC(train_action, deviceid):
-    # FIXME 弃用train_upcs
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
-    train_upcs = TrainUpc.objects.all()
     f_model = TrainModel.objects.get(id=train_action.f_model.pk)
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
     f_train_upcs = f_train.upcs.all()
 
+    train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
     upcs = []
-    for train_upc in train_upcs:
-        upcs.append(train_upc.upc)
+    for train_upc_group in train_upc_group_qs:
+        upcs.append(train_upc_group[0])
 
     upcs = sorted(upcs)
 
@@ -213,10 +211,10 @@ def prepare_train_TC(train_action, deviceid):
             append_upcs.append(upc)
 
     # 删除样本数过少的upc
-    for train_upc in train_upcs:
-        if train_upc.upc in append_upcs:
-            if train_upc.cnt < 10:
-                append_upcs.remove(train_upc.upc)
+    for train_upc_group in train_upc_group_qs:
+        if train_upc_group[0] in append_upcs:
+            if train_upc_group[1] < 10:
+                append_upcs.remove(train_upc_group[0])
 
     if len(append_upcs) <= 0:
         return None,None,None
@@ -229,16 +227,16 @@ def prepare_train_TC(train_action, deviceid):
 
     # 增加增量upc样本
     for train_image in train_images:
-        if train_image.upc in append_upcs:
-            if os.path.isfile(train_image.source.path):
+        if os.path.isfile(train_image.source.path):
+            if train_image.upc in append_upcs:
                 # 根据append_upcs增加增量样本
                 training_filenames.append(train_image.source.path)
                 validation_filenames.append(train_image.source.path)
             else:
-                TrainImage.objects.get(id=train_image.pk).delete()
+                old_training_filenames_to_upc[train_image.source.path] = train_image.upc
+                old_training_filenames.append(train_image.source.path)
         else:
-            old_training_filenames_to_upc[train_image.source.path] = train_image.upc
-            old_training_filenames.append(train_image.source.path)
+            TrainImage.objects.get(id=train_image.pk).delete()
 
 
     random.shuffle(old_training_filenames)

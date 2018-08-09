@@ -24,7 +24,6 @@ router.register(r'deviceexclude', views.DeviceidExcludeViewSet)
 router.register(r'image', views.ImageViewSet)
 router.register(r'imagegroundtruth', views.ImageGroundTruthViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
-router.register(r'trainupc', views.TrainUpcViewSet)
 
 router.register(r'trainaction', views.TrainActionViewSet)
 router.register(r'trainmodel', views.TrainModelViewSet)

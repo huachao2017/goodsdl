@@ -2,7 +2,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
 from django.test import override_settings
-from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, Deviceid, DeviceidExclude
+from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, Deviceid, DeviceidExclude
 from goods2 import common
 import os
 
@@ -72,9 +72,6 @@ class FrontEndTestCase(APITestCase):
         train_image_qs = TrainImage.objects.filter(upc='111')
         train_image = train_image_qs[0]
         self.assertEqual(train_image.source_from, 1)
-        train_upc_qs = TrainUpc.objects.filter(upc='111')
-        self.assertEqual(len(train_upc_qs), 1)
-        self.assertEqual(train_upc_qs[0].cnt, 1)
 
     def test_deviceid_exclude_post(self):
         response = self.client.post('/api2/deviceexclude/',{'deviceid': '500'})

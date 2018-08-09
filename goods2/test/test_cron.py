@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 
 from django.test import override_settings
-from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainUpc, TrainAction, TrainModel, EvalLog
+from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, TrainAction, TrainModel, EvalLog
 from goods2.cron import transfer_sample, create_train, execute_train, check_train, get_host_ip
 import os
 import shutil
@@ -30,8 +30,6 @@ class CronBeforeTrainTestCase(APITestCase):
 
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 20)
-        train_upc = TrainUpc.objects.get(upc='4711931005106')
-        self.assertEqual(train_upc.cnt, 10)
 
         util._add_image(self.client, '1000', '0')
         transfer_sample()
@@ -39,8 +37,6 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 1)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 22)  # 增加两个样本
-        train_upc = TrainUpc.objects.get(upc='4711931005106')
-        self.assertEqual(train_upc.cnt, 11)
 
         util._add_image(self.client, '500', '1')
         transfer_sample()
@@ -48,8 +44,6 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 22)  # 不增加样本
-        train_upc = TrainUpc.objects.get(upc='4711931005106')
-        self.assertEqual(train_upc.cnt, 11)
 
         util._add_image(self.client, '1000', '2')
         transfer_sample()
@@ -57,8 +51,6 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 24)  # 再增加2样本
-        train_upc = TrainUpc.objects.get(upc='4711931005106')
-        self.assertEqual(train_upc.cnt, 12)
 
         util._add_image(self.client, '1000', '3', add_ground_truth=False)
         transfer_sample()
@@ -66,8 +58,6 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 4)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 24)  # 不再增加样本
-        train_upc = TrainUpc.objects.get(upc='4711931005106')
-        self.assertEqual(train_upc.cnt, 12)
 
         util._add_image(self.client, '1000', '4')
         transfer_sample()
@@ -75,8 +65,6 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 5)
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 26)  # 不再增加样本
-        train_upc = TrainUpc.objects.get(upc='4711931005106')
-        self.assertEqual(train_upc.cnt, 13)
 
     def test_create_train_TA(self):
         create_train()
@@ -184,7 +172,6 @@ class CronBeforeTrainTestCase(APITestCase):
         time.sleep(1)
         util._add_train_image(self.client, upcs=['6901668002525'])
         self.assertEqual(len(TrainImage.objects.all()), 2010)
-        self.assertEqual(len(TrainUpc.objects.all()), 3)
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action.create_time)), 10)
 
         create_train()
