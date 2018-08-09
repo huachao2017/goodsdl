@@ -109,6 +109,7 @@ def transfer_sample():
 def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
     train_image_max_qs = TrainImage.objects.filter(source_image_id__gt=0).values_list('deviceid').annotate(ct=Max('create_time')).order_by('-ct')
+    train_image_group_list = list(zip(*train_image_max_qs))
     deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
     image_group_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(image_ground_truth_id__gt=0).values_list('deviceid').annotate(cnt=Count('id')).order_by('cnt')
 
@@ -117,13 +118,9 @@ def _do_transfer_sample():
     total_example_cnt = 0
     for image_group in image_group_qs:
         deviceid = image_group[0]
-        if len(train_image_max_qs)>0:
-            train_image_group_list = list(zip(*train_image_max_qs))
-            if deviceid in train_image_group_list[0]:
-                index = train_image_group_list[0].index(deviceid)
-                image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
-            else:
-                continue
+        if len(train_image_max_qs)>0 and deviceid in train_image_group_list[0]:
+            index = train_image_group_list[0].index(deviceid)
+            image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
         else:
             image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0)
         # 将Image列表转化为dict: key=identify，value=Image[]
