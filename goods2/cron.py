@@ -112,7 +112,7 @@ def _do_transfer_sample():
     train_image_group_list = list(zip(*train_image_max_qs))
     image_group_qs = Image.objects.filter(image_ground_truth_id__gt=0).values_list('deviceid').annotate(cnt=Count('id')).order_by('cnt')
 
-    logger.info('transfer image device length: {}'.format(len(image_group_qs)))
+    logger.info('transfer image device count: {}'.format(len(image_group_qs)))
 
     total_example_cnt = 0
     for image_group in image_group_qs:
@@ -165,7 +165,7 @@ def _do_transfer_sample():
                         example_cnt += 1
                         total_example_cnt += 1
                         false_example = True
-                        logger.info('transfer_sample: add one false example')
+                        logger.info('[{}]transfer_sample: add one false example'.format(deviceid))
                 else:
                     # true example 加score最高的一个
                     image_result = image_result_qs[0]
@@ -195,8 +195,9 @@ def _do_transfer_sample():
                 )
                 example_cnt += 1
                 total_example_cnt += 1
-                logger.info('transfer_sample: add one true example')
+                logger.info('[{}]transfer_sample: add one true example'.format(deviceid))
 
+    logger.info('成功转化{}个样本'.format(total_example_cnt))
     return '成功转化{}个样本'.format(total_example_cnt)
 
 
@@ -299,8 +300,9 @@ def _do_create_train_ta():
     if len(doing_ta) == 0:
         last_ta_group_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(Max('create_time'))
         deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
-        train_image_group_qs = TrainImage.objects.exclude(deviceid__in=deviceid_train_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
+        train_image_group_qs = TrainImage.objects.filter(deviceid__in=deviceid_train_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
 
+        logger.info('create TA train device count: {}'.format(len(train_image_group_qs)))
         # 新增样本有200个
         last_ta_group_list = list(zip(*last_ta_group_qs))
         now = datetime.datetime.now()
@@ -311,11 +313,11 @@ def _do_create_train_ta():
                 last_time = last_ta_group_list[1][index]
                 train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
                 if (now - last_time).days >= 7 or len(train_image_qs) >= 1000:
-                    logger.info('create_train: TA,新增样本（{}）'.format(len(train_image_qs)))
+                    logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, len(train_image_qs)))
                     _create_train('TA', deviceid, None)
                     return
             elif train_image_group[1] >= 200:
-                logger.info('create_train: TA,新增样本（{}）'.format(train_image_group[1]))
+                logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, train_image_group[1]))
                 _create_train('TA', deviceid, None)
                 return
 
@@ -337,13 +339,17 @@ def _create_train(action, deviceid, f_model_id):
         train_action.save()
         return
 
+    train_image_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(
+        cnt=Count('id')).order_by('-cnt')
+    train_image_group_list = list(zip(*train_image_group_qs))
     # 更新数据
     # 'upcs'
     for upc in names_to_labels:
+        index = train_image_group_list[0].index(upc)
         TrainActionUpcs.objects.create(
             train_action_id=train_action.pk,
             upc=upc,
-            cnt=len(training_filenames),
+            cnt=train_image_group_list[1][index],
         )
     train_action.train_cnt = len(training_filenames)
     train_action.validation_cnt = len(validation_filenames)
