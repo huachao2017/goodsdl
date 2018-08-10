@@ -23,7 +23,7 @@ import math
 import tensorflow as tf
 
 from datasets import dataset_utils
-from goods2.models import TrainImage, TrainActionUpcs, TrainAction, TrainModel, DeviceidExclude
+from goods2.models import TrainImage, TrainActionUpcs, TrainAction, TrainModel
 from django.db.models import Count
 # Seed for repeatability.
 _RANDOM_SEED = 42

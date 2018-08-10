@@ -20,7 +20,7 @@ class Deviceid(models.Model):
     update_time = models.DateTimeField('date updated', auto_now=True)
     commercial_time = models.DateTimeField('testing finish time', auto_now_add=True)
 
-class DeviceidExclude(models.Model):
+class DeviceidTrain(models.Model):
     deviceid = models.CharField(max_length=20, default='0', unique=True)
     create_time = models.DateTimeField('date created', auto_now_add=True)
 

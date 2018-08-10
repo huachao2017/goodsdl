@@ -2,7 +2,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
 from django.test import override_settings
-from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, Deviceid, DeviceidExclude
+from goods2.models import TaskLog, Image, ImageGroundTruth, TrainImage, Deviceid, DeviceidTrain
 from goods2 import common
 import os
 
@@ -73,9 +73,9 @@ class FrontEndTestCase(APITestCase):
         train_image = train_image_qs[0]
         self.assertEqual(train_image.source_from, 1)
 
-    def test_deviceid_exclude_post(self):
-        response = self.client.post('/api2/deviceexclude/',{'deviceid': '500'})
+    def test_deviceid_train_post(self):
+        response = self.client.post('/api2/devicetrain/',{'deviceid': '500'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        device_exclude = DeviceidExclude.objects.get(deviceid='500')
+        device_exclude = DeviceidTrain.objects.get(deviceid='500')
         self.assertEqual(device_exclude.deviceid, '500')
 

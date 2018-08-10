@@ -2,7 +2,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
 from django.test import override_settings
-from goods2.models import TaskLog, Image, ImageGroundTruth, TrainAction, TrainModel, ImageTrainModel, TrainImage, Deviceid, DeviceidExclude
+from goods2.models import TaskLog, Image, ImageGroundTruth, TrainAction, TrainModel, ImageTrainModel, TrainImage, Deviceid
 from goods2.cron import check_device
 import os
 import datetime

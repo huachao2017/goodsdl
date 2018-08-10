@@ -25,9 +25,9 @@ class DeviceidViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = Deviceid.objects.order_by('-id')
     serializer_class = DeviceidSerializer
 
-class DeviceidExcludeViewSet(DefaultMixin, viewsets.ModelViewSet):
-    queryset = DeviceidExclude.objects.order_by('-id')
-    serializer_class = DeviceidExcludeSerializer
+class DeviceidTrainViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = DeviceidTrain.objects.order_by('-id')
+    serializer_class = DeviceidTrainSerializer
 
 
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,

@@ -4,7 +4,7 @@ import shutil
 from django.db.models import Max, Count
 from django.conf import settings
 import tensorflow as tf
-from goods2.models import Deviceid, DeviceidPrecision, DeviceidExclude, Image, ImageResult, ImageGroundTruth, TrainImage, TaskLog, TrainAction, TrainActionUpcs, \
+from goods2.models import Deviceid, DeviceidPrecision, DeviceidTrain, Image, ImageResult, ImageGroundTruth, TrainImage, TaskLog, TrainAction, TrainActionUpcs, \
     TrainModel, EvalLog
 from . import common
 import socket
@@ -110,8 +110,7 @@ def _do_transfer_sample():
     # 查找需要转化的来自前端检测的Image
     train_image_max_qs = TrainImage.objects.filter(source_image_id__gt=0).values_list('deviceid').annotate(ct=Max('create_time')).order_by('-ct')
     train_image_group_list = list(zip(*train_image_max_qs))
-    deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-    image_group_qs = Image.objects.exclude(deviceid__in=deviceid_exclude_qs).filter(image_ground_truth_id__gt=0).values_list('deviceid').annotate(cnt=Count('id')).order_by('cnt')
+    image_group_qs = Image.objects.filter(image_ground_truth_id__gt=0).values_list('deviceid').annotate(cnt=Count('id')).order_by('cnt')
 
     logger.info('transfer image device length: {}'.format(len(image_group_qs)))
 
@@ -299,8 +298,8 @@ def _do_create_train_ta():
     doing_ta = TrainAction.objects.filter(action='TA').filter(state__lte=common.TRAIN_STATE_TRAINING)
     if len(doing_ta) == 0:
         last_ta_group_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(Max('create_time'))
-        deviceid_exclude_qs = DeviceidExclude.objects.all().values('deviceid')
-        train_image_group_qs = TrainImage.objects.exclude(deviceid__in=deviceid_exclude_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
+        deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
+        train_image_group_qs = TrainImage.objects.exclude(deviceid__in=deviceid_train_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
 
         # 新增样本有200个
         last_ta_group_list = list(zip(*last_ta_group_qs))
