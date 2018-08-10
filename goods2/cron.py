@@ -31,9 +31,9 @@ def check_device():
     )
 
     try:
-        logger.info('check_device: begin task')
+        logger.debug('check_device: begin task')
         ret = _do_check_device()
-        logger.info('check_device: end task')
+        logger.debug('check_device: end task')
     except Exception as e:
         logger.error('check_device: {}'.format(e))
         logger.error(traceback.format_exc())
@@ -91,9 +91,9 @@ def transfer_sample():
     )
 
     try:
-        logger.info('transfer_sample: begin task')
+        logger.debug('transfer_sample: begin task')
         ret = _do_transfer_sample()
-        logger.info('transfer_sample: end task')
+        logger.debug('transfer_sample: end task')
     except Exception as e:
         logger.error('transfer_sample: {}'.format(e))
         logger.error(traceback.format_exc())
@@ -211,9 +211,9 @@ def create_train():
     )
 
     try:
-        logger.info('create_train: begin task')
+        logger.debug('create_train: begin task')
         ret = _do_create_train()
-        logger.info('create_train: end task')
+        logger.debug('create_train: end task')
     except Exception as e:
         logger.error('create_train: {}'.format(e))
         logger.error(traceback.format_exc())
@@ -332,7 +332,7 @@ def _create_train(action, deviceid, f_model_id):
 
     train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
     # 数据准备
-    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action, deviceid)
+    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action)
 
     if names_to_labels is None:
         train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
@@ -370,9 +370,9 @@ def execute_train():
     )
 
     try:
-        logger.info('execute_train: begin task')
+        logger.debug('execute_train: begin task')
         ret = _do_execute_train()
-        logger.info('execute_train: end task')
+        logger.debug('execute_train: end task')
     except Exception as e:
         logger.error('execute_train: {}'.format(e))
         logger.error(traceback.format_exc())
@@ -437,7 +437,7 @@ def _do_begin_train(train_action):
             train_action.train_cnt,
             'nasnet_mobile',
             1,
-            8,
+            64,
             '0',
             checkpoint_path,
             train_action.action
@@ -452,7 +452,7 @@ def _do_begin_train(train_action):
             train_action.train_cnt,
             'nasnet_mobile',
             1,
-            8,
+            64,
             '1',
             checkpoint_path,
             train_action.action
@@ -466,7 +466,7 @@ def _do_begin_train(train_action):
             train_action.train_cnt,
             'nasnet_mobile',
             1,
-            8,
+            64,
             '0',
             train_action.action
         )
@@ -480,7 +480,7 @@ def _do_begin_train(train_action):
         train_action.train_path,
         os.path.join(train_action.train_path, 'eval_log'),
         train_action.validation_cnt,
-        'nasnet_large',
+        'nasnet_mobile',
         train_action.action,
     )
     subprocess.call(eval_command, shell=True)
@@ -497,9 +497,9 @@ def check_train():
     )
 
     try:
-        logger.info('check_train: begin task')
+        logger.debug('check_train: begin task')
         ret = _do_check_train()
-        logger.info('check_train: end task')
+        logger.debug('check_train: end task')
     except Exception as e:
         logger.error('check_train: {}'.format(e))
         logger.error(traceback.format_exc())

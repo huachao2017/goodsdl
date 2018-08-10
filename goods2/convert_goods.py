@@ -112,7 +112,8 @@ def _remove_tfrecord_ifexists(output_dir):
             tf.gfile.Remove(output_filename)
 
 
-def prepare_train_TA(train_action, deviceid):
+def prepare_train_TA(train_action):
+    deviceid = train_action.deviceid
     logger.info('[{}]prepare_train_TA'.format(deviceid))
     training_filenames = []
     train_images = TrainImage.objects.filter(deviceid=deviceid)
@@ -131,7 +132,8 @@ def prepare_train_TA(train_action, deviceid):
 
     return upcs, training_filenames, None
 
-def prepare_train_TF(train_action, deviceid):
+def prepare_train_TF(train_action):
+    deviceid = train_action.deviceid
     logger.info('[{}]prepare_train_TF'.format(deviceid))
     f_model = TrainModel.objects.get(id=train_action.f_model.pk)
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
@@ -185,7 +187,8 @@ def prepare_train_TF(train_action, deviceid):
     return upcs, training_filenames, validation_filenames
 
 
-def prepare_train_TC(train_action, deviceid):
+def prepare_train_TC(train_action):
+    deviceid = train_action.deviceid
     logger.info('[{}]prepare_train_TC'.format(deviceid))
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
@@ -260,17 +263,17 @@ def prepare_train_TC(train_action, deviceid):
 
     return upcs, training_filenames, validation_filenames
 
-def prepare_train(train_action,deviceid):
+def prepare_train(train_action):
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
 
     if train_action.action == 'TA':
-        upcs, training_filenames, validation_filenames = prepare_train_TA(train_action, deviceid)
+        upcs, training_filenames, validation_filenames = prepare_train_TA(train_action)
     elif train_action.action == 'TF':
-        upcs, training_filenames, validation_filenames = prepare_train_TF(train_action, deviceid)
+        upcs, training_filenames, validation_filenames = prepare_train_TF(train_action)
     elif train_action.action == 'TC':
-        upcs, training_filenames, validation_filenames = prepare_train_TC(train_action, deviceid)
+        upcs, training_filenames, validation_filenames = prepare_train_TC(train_action)
     else:
         raise ValueError('error parameter')
 
