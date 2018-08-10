@@ -120,9 +120,9 @@ def _do_transfer_sample():
         deviceid = image_group[0]
         if len(train_image_max_qs)>0 and deviceid in train_image_group_list[0]:
             index = train_image_group_list[0].index(deviceid)
-            image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
+            image_qs = Image.objects.filter(deviceid=deviceid).filter(image_ground_truth_id__gt=0).filter(create_time__gt=train_image_group_list[1][index])
         else:
-            image_qs = Image.objects.exclude(deviceid=deviceid).filter(image_ground_truth_id__gt=0)
+            image_qs = Image.objects.filter(deviceid=deviceid).filter(image_ground_truth_id__gt=0)
         # 将Image列表转化为dict: key=identify，value=Image[]
         identify_to_images = {}
         for image in image_qs:
