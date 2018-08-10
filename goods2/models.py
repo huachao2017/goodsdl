@@ -65,7 +65,7 @@ def train_image_upload_source(instance, filename):
 
 
 class TrainImage(models.Model):
-    deviceid = models.CharField(max_length=20, default='')
+    deviceid = models.CharField(max_length=20, default='', db_index=True)
     source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     upc = models.CharField(max_length=20, db_index=True)
     source_image = models.ForeignKey('Image', related_name="trainimages", default=None, null=True,
