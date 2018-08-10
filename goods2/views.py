@@ -103,7 +103,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     )
 
         ret = []
-        if device.state >= common.DEVICE_STATE_COMMERCIAL:
+        if device.deviceid == '485' or device.state >= common.DEVICE_STATE_COMMERCIAL:
             # 没有商用的不返回结果
             upc_to_scores = {}
             decay = 1
@@ -123,7 +123,11 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
             upcs, scores = sort_upc_to_scores(upc_to_scores)
             for i in range(len(upcs)):
-                if i < 5:  # 不超过5个
+                if i < 5 :  # 不超过5个
+
+                    # '485'演示机做特殊处理
+                    if device.deviceid=='485' and scores[i]<0.9:
+                        break
                     ret.append(
                         {
                             'upc': upcs[i],
