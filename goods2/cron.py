@@ -549,7 +549,7 @@ def _do_check_one_train(train_action):
         if train_action.action == 'TA':
             if len(eval_log_qs)>5:
                 precision_interval = last_eval_log.precision - eval_log_qs[5].precision
-            if last_eval_log.checkpoint_step>=5000 and precision_interval<=0.005:
+            if last_eval_log.checkpoint_step>=2000 and precision_interval<=0.005:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
         elif train_action.action == 'TF':
             if len(eval_log_qs)>5:
