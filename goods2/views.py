@@ -190,12 +190,15 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
                     image_ground_truth.save()
                     serializer.instance = image_ground_truth
                     headers = self.get_success_headers(serializer.data)
+                    logger.info('update image ground truth:{},{}'.format(serializer.data['identify'], serializer.data['upc']))
                 except Exception as e:
                     logger.error(e)
                     raise e
             else:
                 logger.error(e)
                 raise e
+        else:
+            logger.info('create image ground truth:{},{}'.format(serializer.data['identify'], serializer.data['upc']))
 
         images = Image.objects.filter(identify=serializer.instance.identify).filter(deviceid=serializer.instance.deviceid)
         truth_image_result_cnt = 0
