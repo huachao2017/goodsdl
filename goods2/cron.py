@@ -478,7 +478,7 @@ def _do_begin_train(train_action):
               ' > /root/eval_{}.out 2>&1 &'.format(
         settings.BASE_DIR,
         train_action.train_path,
-        common.get_dataset_dir(True),
+        os.path.join(common.get_dataset_dir(True),train_action.deviceid),
         train_action.train_path,
         os.path.join(train_action.train_path, 'eval_log'),
         train_action.validation_cnt,
