@@ -154,7 +154,7 @@ def _do_transfer_sample():
                             shutil.copy(image.source.path, train_source_path)
                         except:
                             continue
-                        TrainImage.objects.create(
+                        train_image = TrainImage.objects.create(
                             deviceid=deviceid,
                             source=train_source,
                             upc=image_ground_truth.upc,
@@ -162,6 +162,8 @@ def _do_transfer_sample():
                             source_from=2,
                             score=0.0,
                         )
+                        train_image.create_time = image_ground_truth.create_time
+                        train_image.save()
                         example_cnt += 1
                         total_example_cnt += 1
                         false_example = True
