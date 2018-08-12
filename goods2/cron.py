@@ -437,9 +437,9 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
-            'nasnet_mobile',
+            'nasnet_large',
             1,
-            64,
+            8,
             '0',
             checkpoint_path,
             train_action.action
@@ -452,9 +452,9 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
-            'nasnet_mobile',
+            'nasnet_large',
             1,
-            64,
+            8,
             '1',
             checkpoint_path,
             train_action.action
@@ -466,9 +466,9 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_path,
             train_action.train_cnt,
-            'nasnet_mobile',
+            'nasnet_large',
             1,
-            64,
+            8,
             '0',
             train_action.action
         )
@@ -482,7 +482,7 @@ def _do_begin_train(train_action):
         train_action.train_path,
         os.path.join(train_action.train_path, 'eval_log'),
         train_action.validation_cnt,
-        'nasnet_mobile',
+        'nasnet_large',
         train_action.action,
     )
     subprocess.call(eval_command, shell=True)
