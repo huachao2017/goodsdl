@@ -127,7 +127,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 if i < 5 :  # 不超过5个
 
                     # '485'演示机做特殊处理
-                    if device.deviceid=='485' and scores[i]<0.9:
+                    if device.deviceid=='485' and scores[i]<0.8:
                         break
                     ret.append(
                         {
