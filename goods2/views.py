@@ -36,7 +36,6 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
     serializer_class = ImageSerializer
 
     def create(self, request, *args, **kwargs):
-        logger.info('begin detect image:{},{}'.format(request.data['deviceid'], request.data['identify']))
 
         try:
             serializer = self.get_serializer(data=request.data)
@@ -57,6 +56,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # 检测阶段
         last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
         if len(last_normal_train_qs)>0:
+            logger.info('begin detect image:{},{}'.format(serializer.instance.deviceid, serializer.instance.identify))
             last_train = last_normal_train_qs[0]
             last_normal_train_model = TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
             detector = imagedetection.ImageDetectorFactory.get_static_detector(
