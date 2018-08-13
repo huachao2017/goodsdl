@@ -265,3 +265,12 @@ class TrainModelViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
 class TaskLogViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TaskLog.objects.order_by('-id')
     serializer_class = TaskLogSerializer
+
+class CreateTrain(APIView):
+    def get(self, request):
+        deviceid = request.query_params['deviceid']
+        from goods2.cron import do_create_train
+
+        train_action = do_create_train('TA', deviceid, None)
+
+        return Response(train_action, status=status.HTTP_201_CREATED)

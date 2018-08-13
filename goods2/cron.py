@@ -285,14 +285,14 @@ def _do_create_train():
     #                 # doing_tf.state = 9
     #                 # doing_tf.save()
     #             logger.info('create_train: TC,新增类（{}）,新增样本（{}）'.format(len(append_upcs), len(train_image_qs)))
-    #             _create_train('TC', f_train_model.pk)
+    #             do_create_train('TC', f_train_model.pk)
     #     else:
     #         if len(doing_tf_qs) == 0:
     #             now = datetime.datetime.now()
     #             if (now - last_t.create_time).days >= 1 or len(train_image_qs) >= 200:
     #                 logger.info('create_train: TF,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
     #                                                                         (now - last_t.create_time).days))
-    #                 _create_train('TF', f_train_model.pk)
+    #                 do_create_train('TF', f_train_model.pk)
     #
     return ''
 
@@ -317,15 +317,15 @@ def _do_create_train_ta():
                 train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
                 if (now - last_time).days >= 7 or len(train_image_qs) >= 1000:
                     logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, len(train_image_qs)))
-                    _create_train('TA', deviceid, None)
+                    do_create_train('TA', deviceid, None)
                     return
             elif train_image_group[1] >= 200:
                 logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, train_image_group[1]))
-                _create_train('TA', deviceid, None)
+                do_create_train('TA', deviceid, None)
                 return
 
 
-def _create_train(action, deviceid, f_model_id):
+def do_create_train(action, deviceid, f_model_id):
     train_action = TrainAction.objects.create(
         action=action,
         deviceid=deviceid,
@@ -361,6 +361,7 @@ def _create_train(action, deviceid, f_model_id):
         pass
 
     train_action.save()
+    return train_action
 
 
 def execute_train():
