@@ -86,7 +86,6 @@ class CNN:
         upcs = []
         scores = []
         type_to_probability = probabilities[0]
-        logger.debug(probabilities)
         sorted_inds = [j[0] for j in sorted(enumerate(-type_to_probability), key=lambda x: x[1])]
 
         for i in range(min(len(self.labels_to_names), 5)):

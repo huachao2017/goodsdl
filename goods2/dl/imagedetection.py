@@ -54,6 +54,7 @@ class ImageDetector:
         time1 = time.time()
 
         upcs, scores = self.cnn.detect(image_np)
+        logger.debug(scores)
 
         time2 = time.time()
         logger.info('detect: %s, %.2f, %.2f, %.2f' %(image_instance.deviceid, time2-time0, time1-time0, time2-time1))
