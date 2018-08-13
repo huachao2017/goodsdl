@@ -88,7 +88,7 @@ class CNN:
         type_to_probability = probabilities[0]
         sorted_inds = [j[0] for j in sorted(enumerate(-type_to_probability), key=lambda x: x[1])]
 
-        for i in range(5):
+        for i in range(min(len(self.labels_to_names), 5)):
             upcs.append(self.labels_to_names[sorted_inds[i]])
             scores.append(type_to_probability[sorted_inds[i]])
         return upcs, scores
