@@ -209,7 +209,7 @@ LOGGING = {
             'formatter': 'standard'
         },  # 用于文件输出
         'detect2_file_handler': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, "logs", 'detect2.log'),
             'maxBytes': 1024 * 1024 * 50,  # 文件大小
