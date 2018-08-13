@@ -231,7 +231,11 @@ def create_train():
 
 def _do_create_train():
     _do_create_train_ta()
+    # FIXME 暂时不开启TF和TC
+    return
     # TF & TC
+    doing_tf = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING)
+    doing_tc = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING)
     last_t_group_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(ct=Max('complete_time')).order_by('ct')
     for last_t_group in last_t_group_qs:
         deviceid = last_t_group[0]
@@ -257,7 +261,7 @@ def _do_create_train():
                 append_upcs.append(upc)
 
         train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
-        if len(append_upcs) > 0:
+        if len(doing_tc)==0 and len(append_upcs) > 0:
             if len(train_image_qs) >= 10:
                 # if len(doing_tf_qs) > 0:
                     # 退出正在训练的TF
@@ -266,7 +270,7 @@ def _do_create_train():
                     # doing_tf.save()
                 logger.info('[{}]create_train: TC,新增类（{}）,新增样本（{}）'.format(deviceid, len(append_upcs), len(train_image_qs)))
                 do_create_train('TC', deviceid, f_train_model.pk)
-        else:
+        elif len(doing_tf)==0 and len(append_upcs) == 0:
             now = datetime.datetime.now()
             if (now - last_t.complete_time).days >= 1 or len(train_image_qs) >= 200:
                 logger.info('[{}]create_train: TF,新增样本（{}）,间距天数（{}）'.format(deviceid, len(train_image_qs),
