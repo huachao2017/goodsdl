@@ -13,6 +13,7 @@ import datetime
 import subprocess
 import traceback
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+import numpy as np
 
 logger = logging.getLogger('cron')
 
@@ -527,6 +528,14 @@ def _do_check_train():
 
     return ret
 
+
+def get_max_precision_interval(eval_log_qs, history_cnt=5):
+    history_precisions = np.array((eval_log_qs[1].precision))
+    for i in range(history_cnt-1):
+        history_precisions = np.append(history_precisions,eval_log_qs[i+2].precision)
+    return np.max(np.abs(history_precisions-eval_log_qs[0].precision))
+
+
 # 生成信号：
 # precision达0.9后：
 # TA：step超过5000且有5次eval，最后一次和前10次精度上升小于0.5%
@@ -548,17 +557,17 @@ def _do_check_one_train(train_action):
         precision_interval = 1
         if train_action.action == 'TA':
             if len(eval_log_qs)>5:
-                precision_interval = last_eval_log.precision - eval_log_qs[5].precision
+                precision_interval = get_max_precision_interval(eval_log_qs)
             if last_eval_log.checkpoint_step>=2000 and precision_interval<=0.005:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
         elif train_action.action == 'TF':
             if len(eval_log_qs)>5:
-                precision_interval = last_eval_log.precision - eval_log_qs[5].precision
+                precision_interval = get_max_precision_interval(eval_log_qs)
             if last_eval_log.checkpoint_step>=1000 and precision_interval<=0.01:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
         elif train_action.action == 'TC':
             if len(eval_log_qs)>3:
-                precision_interval = last_eval_log.precision - eval_log_qs[3].precision
+                precision_interval = get_max_precision_interval(eval_log_qs,history_cnt=3)
             if last_eval_log.checkpoint_step>=500 and precision_interval<=0.01:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
 
