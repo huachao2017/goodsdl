@@ -384,7 +384,7 @@ def _do_execute_train():
 
         training_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TA').filter(ip=my_ip).order_by('id')
         if len(training_ta_train_qs) <= 0:
-            begin_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TA').filter(ip=my_ip).order_by('id')
+            begin_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TA').order_by('id')
             for begin_train in begin_ta_train_qs:
                 train_command, eval_command = _do_begin_train(begin_train)
                 update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
@@ -394,7 +394,7 @@ def _do_execute_train():
         training_tf_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TF').filter(ip=my_ip).order_by('id')
         if len(training_tf_train_qs) <= 0:
             begin_tf_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(
-                action='TF').filter(ip=my_ip).order_by('id')
+                action='TF').order_by('id')
             for begin_train in begin_tf_train_qs:
                 train_command, eval_command = _do_begin_train(begin_train)
                 update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
@@ -409,7 +409,7 @@ def _do_execute_train():
             quit_train.save()
         training_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TC').filter(ip=my_ip).order_by('id')
         if len(training_tc_train_qs) <= 0:
-            begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TC').filter(ip=my_ip).order_by('id')
+            begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TC').order_by('id')
             for begin_train in begin_train_qs:
                 train_command, eval_command = _do_begin_train(begin_train)
                 update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
