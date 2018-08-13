@@ -58,7 +58,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # 检测阶段
         last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
         if len(last_normal_train_qs)>0:
-            logger.info('begin detect image:{},{}'.format(serializer.instance.deviceid, serializer.instance.identify))
+            logger.info('[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
             last_train = last_normal_train_qs[0]
             last_normal_train_model = TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
             detector = imagedetection.ImageDetectorFactory.get_static_detector(
@@ -193,7 +193,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
                     image_ground_truth.save()
                     serializer.instance = image_ground_truth
                     headers = self.get_success_headers(serializer.data)
-                    logger.info('update image ground truth:{},{}'.format(serializer.data['identify'], serializer.data['upc']))
+                    logger.info('[{}]update image ground truth:{},{}'.format(serializer.data['deviceid'], serializer.data['identify'], serializer.data['upc']))
                 except Exception as e:
                     logger.error(e)
                     raise e
@@ -201,7 +201,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
                 logger.error(e)
                 raise e
         else:
-            logger.info('create image ground truth:{},{}'.format(serializer.data['identify'], serializer.data['upc']))
+            logger.info('[{}]create image ground truth:{},{}'.format(serializer.data['deviceid'], serializer.data['identify'], serializer.data['upc']))
 
         images = Image.objects.filter(identify=serializer.instance.identify).filter(deviceid=serializer.instance.deviceid)
         truth_image_result_cnt = 0
