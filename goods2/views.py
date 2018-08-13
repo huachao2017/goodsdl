@@ -106,7 +106,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         if device.deviceid == '485' or device.state >= common.DEVICE_STATE_COMMERCIAL:
             # 没有商用的不返回结果
             upc_to_scores = {}
-            decay = 1
+            weight = 0.5
             image_qs = Image.objects.filter(identify=serializer.instance.identify).order_by('-id')
             for image in image_qs:
                 image_result_qs = image.image_results.all()
@@ -114,14 +114,15 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     upc = image_result.upc
                     score = image_result.score
                     if upc in upc_to_scores:
-                        upc_to_scores[upc] += upc_to_scores[upc] + score*decay
+                        upc_to_scores[upc] = upc_to_scores[upc]*(1-weight) + score*weight
                     else:
-                        upc_to_scores[upc] = score*decay
-                decay -= 0.1 #前面次数衰减
-                if decay <= 0:
+                        upc_to_scores[upc] = score
+                weight -= 0.05 #前面次数衰减
+                if weight <= 0:
                     break
 
             upcs, scores = sort_upc_to_scores(upc_to_scores)
+            logger.info(scores)
             for i in range(len(upcs)):
                 if i < 5 :  # 不超过5个
 
