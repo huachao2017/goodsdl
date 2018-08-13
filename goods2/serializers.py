@@ -67,8 +67,8 @@ class TrainActionUpcsSerializer(serializers.ModelSerializer):
 class TrainModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainModel
-        fields = ('pk', 'model_path', 'checkpoint_prefix', 'precision', 'create_time')
-        read_only_fields = ('model_path', 'checkpoint_prefix', 'precision', 'create_time', )
+        fields = ('pk', 'model_path', 'checkpoint_step', 'precision', 'create_time')
+        read_only_fields = ('model_path', 'checkpoint_step', 'precision', 'create_time', )
 
 
 class TrainActionSerializer(serializers.ModelSerializer):
