@@ -53,6 +53,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 deviceid=serializer.instance.deviceid,
             )
 
+        upcs = []
+        scores = []
         # 检测阶段
         last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
         if len(last_normal_train_qs)>0:
@@ -105,23 +107,23 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         ret = []
         if device.deviceid == '485' or device.state >= common.DEVICE_STATE_COMMERCIAL:
             # 没有商用的不返回结果
-            upc_to_scores = {}
-            weight = 0.5
-            image_qs = Image.objects.filter(identify=serializer.instance.identify).order_by('-id')
-            for image in image_qs:
-                image_result_qs = image.image_results.all()
-                for image_result in image_result_qs:
-                    upc = image_result.upc
-                    score = image_result.score
-                    if upc in upc_to_scores:
-                        upc_to_scores[upc] = upc_to_scores[upc]*(1-weight) + score*weight
-                    else:
-                        upc_to_scores[upc] = score
-                weight -= 0.05 #前面次数衰减
-                if weight <= 0:
-                    break
-
-            upcs, scores = sort_upc_to_scores(upc_to_scores)
+            # upc_to_scores = {}
+            # weight = 0.5
+            # image_qs = Image.objects.filter(identify=serializer.instance.identify).order_by('-id')
+            # for image in image_qs:
+            #     image_result_qs = image.image_results.all()
+            #     for image_result in image_result_qs:
+            #         upc = image_result.upc
+            #         score = image_result.score
+            #         if upc in upc_to_scores:
+            #             upc_to_scores[upc] = upc_to_scores[upc]*(1-weight) + score*weight
+            #         else:
+            #             upc_to_scores[upc] = score
+            #     weight -= 0.05 #前面次数衰减
+            #     if weight <= 0:
+            #         break
+            #
+            # upcs, scores = sort_upc_to_scores(upc_to_scores)
             logger.info(scores)
             for i in range(len(upcs)):
                 if i < 5 :  # 不超过5个
