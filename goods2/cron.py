@@ -232,68 +232,47 @@ def create_train():
 def _do_create_train():
     _do_create_train_ta()
     # TF & TC
-    # last_t_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).order_by('-complete_time')
-    # if len(last_t_qs) > 0:
-    #     last_t = last_t_qs[0]
-    #     if last_t.action == 'TA':
-    #         # 'TA'训练完即建立了新的主分支
-    #         doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-    #         if len(doing_tf_qs)>0:
-    #             doing_tf = doing_tf_qs[0]
-    #             if doing_tf.create_time < last_t.complete_time:
-    #                 # 退出TA之前的TF
-    #                 doing_tf.state = common.TRAIN_STATE_STOP
-    #                 doing_tf.save()
-    #         doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-    #         if len(doing_tc_qs)>0:
-    #             doing_tc = doing_tc_qs[0]
-    #             if doing_tc.create_time < last_t.complete_time:
-    #                 # 退出TA之前的TC
-    #                 doing_tc.state = common.TRAIN_STATE_STOP
-    #                 doing_tc.save()
-    #
-    #
-    #     train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
-    #     doing_tf_qs = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-    #     doing_tc_qs = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING).order_by('-id')
-    #     f_train_model = train_model_qs[0]
-    #     f_train_upcs = last_t.upcs.all()
-    #     train_upcs = TrainUpc.objects.all()
-    #
-    #     upcs = []
-    #     for train_upc in train_upcs:
-    #         upcs.append(train_upc.upc)
-    #
-    #     upcs = sorted(upcs)
-    #
-    #     f_upcs = []
-    #     for train_upc in f_train_upcs:
-    #         f_upcs.append(train_upc.upc)
-    #
-    #     # 根据train_upcs和f_train_upcs进行样本筛选
-    #     append_upcs = []
-    #     for upc in upcs:
-    #         if upc not in f_upcs:
-    #             append_upcs.append(upc)
-    #
-    #     train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
-    #     if len(append_upcs) > 0:
-    #         if len(doing_tc_qs) == 0 and len(train_image_qs) >= 10:
-    #             # if len(doing_tf_qs) > 0:
-    #                 # 退出正在训练的TF
-    #                 # doing_tf = doing_tf_qs[0]
-    #                 # doing_tf.state = 9
-    #                 # doing_tf.save()
-    #             logger.info('create_train: TC,新增类（{}）,新增样本（{}）'.format(len(append_upcs), len(train_image_qs)))
-    #             do_create_train('TC', f_train_model.pk)
-    #     else:
-    #         if len(doing_tf_qs) == 0:
-    #             now = datetime.datetime.now()
-    #             if (now - last_t.create_time).days >= 1 or len(train_image_qs) >= 200:
-    #                 logger.info('create_train: TF,新增样本（{}）,间距天数（{}）'.format(len(train_image_qs),
-    #                                                                         (now - last_t.create_time).days))
-    #                 do_create_train('TF', f_train_model.pk)
-    #
+    last_t_group_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(ct=Max('complete_time')).order_by('ct')
+    for last_t_group in last_t_group_qs:
+        deviceid = last_t_group[0]
+        last_t = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=deviceid).order_by('-complete_time')[0]
+
+        train_model_qs = TrainModel.objects.filter(train_action_id=last_t.pk).exclude(model_path='').order_by('-id')
+        f_train_model = train_model_qs[0]
+        f_train_upcs = last_t.upcs.all()
+        train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+        upcs = []
+        for train_upc_group in train_upc_group_qs:
+            upcs.append(train_upc_group[0])
+        upcs = sorted(upcs)
+
+        f_upcs = []
+        for train_upc in f_train_upcs:
+            f_upcs.append(train_upc.upc)
+
+        # 根据train_upcs和f_train_upcs进行样本筛选
+        append_upcs = []
+        for upc in upcs:
+            if upc not in f_upcs:
+                append_upcs.append(upc)
+
+        train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
+        if len(append_upcs) > 0:
+            if len(train_image_qs) >= 10:
+                # if len(doing_tf_qs) > 0:
+                    # 退出正在训练的TF
+                    # doing_tf = doing_tf_qs[0]
+                    # doing_tf.state = 9
+                    # doing_tf.save()
+                logger.info('[{}]create_train: TC,新增类（{}）,新增样本（{}）'.format(deviceid, len(append_upcs), len(train_image_qs)))
+                do_create_train('TC', deviceid, f_train_model.pk)
+        else:
+            now = datetime.datetime.now()
+            if (now - last_t.complete_time).days >= 1 or len(train_image_qs) >= 200:
+                logger.info('[{}]create_train: TF,新增样本（{}）,间距天数（{}）'.format(deviceid, len(train_image_qs),
+                                                                        (now - last_t.complete_time).days))
+                do_create_train('TF', deviceid, f_train_model.pk)
+
     return ''
 
 
@@ -399,14 +378,24 @@ def _do_execute_train():
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
 
-        begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).exclude(action='TC')
-        for begin_train in begin_train_qs:
-            train_command, eval_command = _do_begin_train(begin_train)
-            begin_train.ip = my_ip
-            begin_train.train_command = train_command
-            begin_train.eval_command = eval_command
-            begin_train.state = common.TRAIN_STATE_TRAINING
-            begin_train.save()
+        training_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TA').order_by('id')
+        if len(training_ta_train_qs) <= 0:
+            begin_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TA').order_by('id')
+            for begin_train in begin_ta_train_qs:
+                train_command, eval_command = _do_begin_train(begin_train)
+                update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
+                # only can do one
+                break
+
+        training_tf_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TF').order_by('id')
+        if len(training_tf_train_qs) <= 0:
+            begin_tf_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(
+                action='TF').order_by('id')
+            for begin_train in begin_tf_train_qs:
+                train_command, eval_command = _do_begin_train(begin_train)
+                update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
+                # only can do one
+                break
     elif my_ip == '192.168.1.73':
         quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).filter(action='TC')
         for quit_train in quit_train_qs:
@@ -414,16 +403,24 @@ def _do_execute_train():
             quit_train.state = common.TRAIN_STATE_COMPLETE_WITH_STOP
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
-        begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TC')
-        for begin_train in begin_train_qs:
-            train_command, eval_command = _do_begin_train(begin_train)
-            begin_train.ip = my_ip
-            begin_train.train_command = train_command
-            begin_train.eval_command = eval_command
-            begin_train.state = common.TRAIN_STATE_TRAINING
-            begin_train.save()
+        training_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TC').order_by('id')
+        if len(training_tc_train_qs) <= 0:
+            begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TC').order_by('id')
+            for begin_train in begin_train_qs:
+                train_command, eval_command = _do_begin_train(begin_train)
+                update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
+                # only can do one
+                break
 
     return ''
+
+
+def update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip):
+    begin_train.ip = my_ip
+    begin_train.train_command = train_command
+    begin_train.eval_command = eval_command
+    begin_train.state = common.TRAIN_STATE_TRAINING
+    begin_train.save()
 
 
 def _do_begin_train(train_action):
@@ -663,6 +660,13 @@ def _do_export_train(train_action, train_model):
         train_action.state = common.TRAIN_STATE_COMPLETE
         train_action.complete_time = datetime.datetime.now()
         train_action.save()
+        if train_action.action == 'TA':
+            # 'TA'训练完即建立了新的主分支
+            old_doing_qs = TrainAction.objects.filter(action__in=['TF', 'TC']).filter(deviceid=train_action.deviceid).filter(state__lte=common.TRAIN_STATE_TRAINING).filter(create_time__lte=train_action.complete_time)
+            for old_doing in old_doing_qs:
+                old_doing.state = common.TRAIN_STATE_STOP
+                old_doing.save()
+
     else:
         raise ValueError('checkpoint_model_path is None')
 
