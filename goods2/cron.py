@@ -463,6 +463,7 @@ def _do_begin_train(train_action):
             train_action.action
         )
     else:
+        # FIXME 暂时不开启TF和TC
         train_command = 'nohup python3 {}/goods2/dl/train.py --dataset_split_name=train --dataset_dir={} --train_dir={} --example_num={} --model_name={} --num_clones={} --batch_size={} --CUDA_VISIBLE_DEVICES={}' \
                   ' > /root/train_{}.out 2>&1 &'.format(
             settings.BASE_DIR,
@@ -470,9 +471,9 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_cnt,
             'nasnet_large',
-            1,
+            2,
             8,
-            '0',
+            '0,1',
             train_action.action
         )
     subprocess.call(train_command, shell=True)
