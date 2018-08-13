@@ -276,4 +276,4 @@ class CreateTrain(APIView):
 
         train_action = do_create_train(action, deviceid, None)
 
-        return Response(train_action, status=status.HTTP_201_CREATED)
+        return Response([], status=status.HTTP_201_CREATED)
