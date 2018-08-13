@@ -375,41 +375,41 @@ def execute_train():
 def _do_execute_train():
     my_ip = get_host_ip()
     if my_ip == '192.168.1.170':
-        quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).exclude(action='TC')
+        quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).exclude(action='TC').filter(ip=my_ip)
         for quit_train in quit_train_qs:
             common.stop_train_ps(quit_train)
             quit_train.state = common.TRAIN_STATE_COMPLETE_WITH_STOP
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
 
-        training_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TA').order_by('id')
+        training_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TA').filter(ip=my_ip).order_by('id')
         if len(training_ta_train_qs) <= 0:
-            begin_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TA').order_by('id')
+            begin_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TA').filter(ip=my_ip).order_by('id')
             for begin_train in begin_ta_train_qs:
                 train_command, eval_command = _do_begin_train(begin_train)
                 update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
                 # only can do one
                 break
 
-        training_tf_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TF').order_by('id')
+        training_tf_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TF').filter(ip=my_ip).order_by('id')
         if len(training_tf_train_qs) <= 0:
             begin_tf_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(
-                action='TF').order_by('id')
+                action='TF').filter(ip=my_ip).order_by('id')
             for begin_train in begin_tf_train_qs:
                 train_command, eval_command = _do_begin_train(begin_train)
                 update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
                 # only can do one
                 break
     elif my_ip == '192.168.1.73':
-        quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).filter(action='TC')
+        quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).filter(action='TC').filter(ip=my_ip)
         for quit_train in quit_train_qs:
             common.stop_train_ps(quit_train)
             quit_train.state = common.TRAIN_STATE_COMPLETE_WITH_STOP
             quit_train.complete_time = datetime.datetime.now()
             quit_train.save()
-        training_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TC').order_by('id')
+        training_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TC').filter(ip=my_ip).order_by('id')
         if len(training_tc_train_qs) <= 0:
-            begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TC').order_by('id')
+            begin_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_WAITING).filter(action='TC').filter(ip=my_ip).order_by('id')
             for begin_train in begin_train_qs:
                 train_command, eval_command = _do_begin_train(begin_train)
                 update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip)
