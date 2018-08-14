@@ -126,17 +126,14 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # upcs, scores = sort_upc_to_scores(upc_to_scores)
             logger.info(scores)
             for i in range(len(upcs)):
-                if i < 5 :  # 不超过5个
-
-                    # '485'演示机做特殊处理
-                    if device.deviceid=='485' and scores[i]<0.95:
-                        break
-                    ret.append(
-                        {
-                            'upc': upcs[i],
-                            'score': scores[i],
-                        }
-                    )
+                if scores[i]<0.3:
+                    break
+                ret.append(
+                    {
+                        'upc': upcs[i],
+                        'score': scores[i],
+                    }
+                )
         elif device.deviceid == '36':
             ret = [
                 {'upc': '2000000000103', 'score': 0.99},
