@@ -126,34 +126,30 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # upcs, scores = sort_upc_to_scores(upc_to_scores)
             logger.info(scores)
             for i in range(len(upcs)):
-                if scores[i]<0.3:
-                    break
-                ret.append(
-                    {
-                        'upc': upcs[i],
-                        'score': scores[i],
-                    }
-                )
+                if scores[i]>=0.3:
+                    ret.append(
+                        {
+                            'upc': upcs[i],
+                            'score': scores[i],
+                        }
+                    )
         elif device.deviceid == '36':
             ret = [
                 {'upc': '2000000000103', 'score': 0.99},
                 {'upc': '2000000000097', 'score': 0.99},
-                {'upc': '2000000000093', 'score': 0.99},
-                {'upc': '2000000000106', 'score': 0.99},
+                {'upc': '2000000000093', 'score': 0.99}
             ]
         elif device.deviceid == '3061':# 苹果
             ret = [
                 {'upc': '2000000001540', 'score': 0.07},
                 {'upc': '2000000001598', 'score': 0.25},
                 {'upc': '3287583', 'score': 0.04},
-                {'upc': '3313222', 'score': 0.01},
             ]
         elif device.deviceid == '3062':# 香蕉
             ret = [
                 {'upc': '2000000001541', 'score': 0.95},
                 {'upc': '3960271', 'score': 0.03},
                 {'upc': '3283458', 'score': 0.01},
-                {'upc': '3283452', 'score': 0.01},
             ]
 
         logger.info('[{}]detect result: {}'.format(serializer.instance.deviceid, ret))
