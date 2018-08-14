@@ -260,7 +260,9 @@ def _do_create_train():
             if upc not in f_upcs:
                 append_upcs.append(upc)
 
-        train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time)
+        # 只计算注册训练的设备
+        deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
+        train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time).filter(deviceid__in=deviceid_train_qs)
         if len(doing_tc)==0 and len(append_upcs) > 0:
             if len(train_image_qs) >= 10:
                 # if len(doing_tf_qs) > 0:
@@ -285,6 +287,7 @@ def _do_create_train_ta():
     doing_ta = TrainAction.objects.filter(action='TA').filter(state__lte=common.TRAIN_STATE_TRAINING)
     if len(doing_ta) == 0:
         last_ta_group_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(Max('create_time'))
+        # 只计算注册训练的设备
         deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
         train_image_group_qs = TrainImage.objects.filter(deviceid__in=deviceid_train_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
 
@@ -298,7 +301,7 @@ def _do_create_train_ta():
                 index = last_ta_group_list[0].index(deviceid)
                 last_time = last_ta_group_list[1][index]
                 train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
-                if (now - last_time).days >= 7 or len(train_image_qs) >= 1000:
+                if (now - last_time).days >= 7 or len(train_image_qs) >= 500:
                     logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, len(train_image_qs)))
                     do_create_train('TA', deviceid, None)
                     return
