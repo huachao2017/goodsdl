@@ -129,7 +129,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 if i < 5 :  # 不超过5个
 
                     # '485'演示机做特殊处理
-                    if device.deviceid=='485' and scores[i]<0.8:
+                    if device.deviceid=='485' and scores[i]<0.95:
                         break
                     ret.append(
                         {
@@ -159,7 +159,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 {'upc': '3283452', 'score': 0.01},
             ]
 
-        logger.info(ret)
+        logger.info('[{}]detect result: {}'.format(serializer.instance.deviceid, ret))
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
 def sort_upc_to_scores(upc_to_scores):
