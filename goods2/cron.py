@@ -145,12 +145,12 @@ def _do_transfer_sample():
                     # false example 只加一个
                     if not false_example:
                         train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), deviceid, image_ground_truth.upc,
-                                                         os.path.basename(image.source.path))
+                                                         'image_'+os.path.basename(image.source.path))
                         train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), deviceid,
                                                              image_ground_truth.upc)
                         if not tf.gfile.Exists(train_source_dir):
                             tf.gfile.MakeDirs(train_source_dir)
-                        train_source_path = '{}/{}'.format(train_source_dir, os.path.basename(image.source.path))
+                        train_source_path = '{}/{}'.format(train_source_dir, 'image_'+os.path.basename(image.source.path))
                         try:
                             shutil.copy(image.source.path, train_source_path)
                         except:
@@ -178,12 +178,12 @@ def _do_transfer_sample():
 
             if true_image is not None:
                 train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), deviceid, image_ground_truth.upc,
-                                                    os.path.basename(true_image.source.path))
+                                                    'image_' +os.path.basename(true_image.source.path))
                 train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), deviceid,
                                                          image_ground_truth.upc)
                 if not tf.gfile.Exists(train_source_dir):
                     tf.gfile.MakeDirs(train_source_dir)
-                train_source_path = '{}/{}'.format(train_source_dir,os.path.basename(true_image.source.path))
+                train_source_path = '{}/{}'.format(train_source_dir,'image_'+os.path.basename(true_image.source.path))
                 try:
                     shutil.copy(true_image.source.path, train_source_path)
                 except:
