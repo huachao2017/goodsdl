@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from goods2 import common
 
-def _add_train_image(client, upcs, one_upc_cnt = 10):
+def _add_train_image(client, deviceid, upcs, one_upc_cnt = 10):
     # 上传2类图片各10张
     dataset_root_path = os.path.join(settings.MEDIA_ROOT, 'dataset', 'step2')
 
@@ -12,7 +12,7 @@ def _add_train_image(client, upcs, one_upc_cnt = 10):
         for filename in os.listdir(upc_path):
             image_path = os.path.join(upc_path, filename)
             with open(image_path, mode='rb') as fp:
-                response = client.post('/api2/trainimage/', {'deviceid': '1000', 'upc': upc, 'source': fp},
+                response = client.post('/api2/trainimage/', {'deviceid': deviceid, 'upc': upc, 'source': fp},
                                        format='multipart')
 
             index += 1

@@ -50,11 +50,17 @@ class FrontEndTestCase(APITestCase):
         self.assertEqual(len(image_qs), 2)
         response = self.client.post('/api2/imagegroundtruth/', {'deviceid': '0', 'identify': '1111', 'upc': '111'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        response = self.client.post('/api2/imagegroundtruth/', {'deviceid': '0', 'identify': '1111', 'upc': '111'})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
         image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid='0').filter(identify='1111')
         self.assertEqual(image_ground_truth_qs[0].cnt, 2)
+        self.assertEqual(image_ground_truth_qs[0].upc, '111')
+        self.assertEqual(image_ground_truth_qs[0].truth_rate, 0.0)
+        self.assertEqual(image_ground_truth_qs[0].precision, 0.0)
+
+        response = self.client.post('/api2/imagegroundtruth/', {'deviceid': '0', 'identify': '1111', 'upc': '222'})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid='0').filter(identify='1111')
+        self.assertEqual(image_ground_truth_qs[0].cnt, 2)
+        self.assertEqual(image_ground_truth_qs[0].upc, '222')
         self.assertEqual(image_ground_truth_qs[0].truth_rate, 0.0)
         self.assertEqual(image_ground_truth_qs[0].precision, 0.0)
 

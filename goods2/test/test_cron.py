@@ -25,45 +25,44 @@ class CronBeforeTrainTestCase(APITestCase):
 
     def test_transfer_sample(self):
         # 排除deviceid=500
-        self.client.post('/api2/deviceexclude/', {'deviceid': '500'})
-        util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
+        util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106', '4714221811227'])
 
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 20)
 
-        util._add_image(self.client, '1000', '0')
+        util._add_image(self.client, '1000', '0', True)
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 20)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 1)
-        train_image_qs = TrainImage.objects.all()
+        train_image_qs = TrainImage.objects.filter(deviceid='1000')
         self.assertEqual(len(train_image_qs), 22)  # 增加两个样本
 
         util._add_image(self.client, '500', '1')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 40)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
-        train_image_qs = TrainImage.objects.all()
-        self.assertEqual(len(train_image_qs), 22)  # 不增加样本
+        train_image_qs = TrainImage.objects.filter(deviceid='500')
+        self.assertEqual(len(train_image_qs), 2)  # 不增加样本
 
         util._add_image(self.client, '1000', '2')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 60)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)
-        train_image_qs = TrainImage.objects.all()
+        train_image_qs = TrainImage.objects.filter(deviceid='1000')
         self.assertEqual(len(train_image_qs), 24)  # 再增加2样本
 
         util._add_image(self.client, '1000', '3', add_ground_truth=False)
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 80)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 4)
-        train_image_qs = TrainImage.objects.all()
+        train_image_qs = TrainImage.objects.filter(deviceid='1000')
         self.assertEqual(len(train_image_qs), 24)  # 不再增加样本
 
         util._add_image(self.client, '1000', '4')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 100)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 5)
-        train_image_qs = TrainImage.objects.all()
+        train_image_qs = TrainImage.objects.filter(deviceid='1000')
         self.assertEqual(len(train_image_qs), 26)  # 不再增加样本
 
     def test_create_train_TA(self):
@@ -72,12 +71,12 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(len(TrainAction.objects.all()), 0)
 
         for i in range(100):
-            util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
+            util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106', '4714221811227'])
         create_train()
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
         train_action = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_WAITING)[0]
         self.assertEqual(train_action.train_cnt, 2000)
-        self.assertEqual(train_action.validation_cnt, int(2000 * 0.3))
+        self.assertEqual(train_action.validation_cnt, int(2000 * 0.5))
         train_action_upcs_qs = train_action.upcs.all()
         self.assertEqual(len(train_action_upcs_qs), 2)
         self.assertEqual(train_action_upcs_qs[0].cnt, 1000)
@@ -107,7 +106,7 @@ class CronBeforeTrainTestCase(APITestCase):
 
     def test_create_train_TF_from_TA(self):
         for i in range(100):
-            util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
+            util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106', '4714221811227'])
         create_train()
 
         train_action_ta = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_WAITING)[0]
@@ -122,14 +121,14 @@ class CronBeforeTrainTestCase(APITestCase):
         )
 
         for i in range(10):
-            util._add_train_image(self.client, upcs=['4711931005106'])
+            util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106'])
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action_ta.create_time)), 100)
         create_train()
         train_action_tf_qs = TrainAction.objects.filter(action='TF').filter(state=common.TRAIN_STATE_WAITING)
         self.assertEqual(len(train_action_tf_qs), 0)
 
         for i in range(10):
-            util._add_train_image(self.client, upcs=['4711931005106'])
+            util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106'])
 
         self.assertEqual(len(TrainImage.objects.all()), 2200)
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action_ta.create_time)), 200)
@@ -155,7 +154,7 @@ class CronBeforeTrainTestCase(APITestCase):
 
     def test_create_train_TC_from_TA(self):
         for i in range(100):
-            util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
+            util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106', '4714221811227'])
         create_train()
 
         train_action = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_WAITING)[0]
@@ -170,7 +169,7 @@ class CronBeforeTrainTestCase(APITestCase):
             model_path='/test/a/'
         )
         time.sleep(1)
-        util._add_train_image(self.client, upcs=['6901668002525'])
+        util._add_train_image(self.client, deviceid='1000', upcs=['6901668002525'])
         self.assertEqual(len(TrainImage.objects.all()), 2010)
         self.assertEqual(len(TrainImage.objects.filter(create_time__gt=train_action.create_time)), 10)
 
@@ -198,7 +197,7 @@ class CronBeforeTrainTestCase(APITestCase):
         my_ip = get_host_ip()
         if my_ip == '192.168.1.170':
             for i in range(100):
-                util._add_train_image(self.client, upcs=['4711931005106', '4714221811227'])
+                util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106', '4714221811227'])
             create_train()
             execute_train()
             self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
