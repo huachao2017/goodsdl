@@ -558,21 +558,21 @@ def _do_check_one_train(train_action):
     _syn_event_log(train_action)
     eval_log_qs = EvalLog.objects.filter(train_action_id=train_action.pk).order_by('-id')
 
-    if len(eval_log_qs)>0 and eval_log_qs[0].precision>=0.9:
+    if len(eval_log_qs)>0 and eval_log_qs[0].precision>=0.95:
         last_eval_log = eval_log_qs[0]
         precision_interval = 1
         if train_action.action == 'TA':
-            if len(eval_log_qs)>10:
-                precision_interval = get_max_precision_interval(eval_log_qs, history_cnt=10)
+            if len(eval_log_qs)>5 and eval_log_qs[5].precision>=0.99:
+                precision_interval = get_max_precision_interval(eval_log_qs, history_cnt=5)
             if last_eval_log.checkpoint_step>=10000 and precision_interval<=0.002:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
         elif train_action.action == 'TF':
-            if len(eval_log_qs)>5:
+            if len(eval_log_qs)>5 and eval_log_qs[5].precision>=0.98:
                 precision_interval = get_max_precision_interval(eval_log_qs)
             if last_eval_log.checkpoint_step>=1000 and precision_interval<=0.005:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
         elif train_action.action == 'TC':
-            if len(eval_log_qs)>5:
+            if len(eval_log_qs)>5 and eval_log_qs[5].precision>=0.98:
                 precision_interval = get_max_precision_interval(eval_log_qs)
             if last_eval_log.checkpoint_step>=500 and precision_interval<=0.01:
                 _do_create_train_model(train_action, last_eval_log.checkpoint_step,last_eval_log.precision)
