@@ -67,7 +67,7 @@ class FrontEndTestCase(APITestCase):
         image_qs = Image.objects.filter(identify='1111')
         last_image = image_qs[0]
         image_ground_truth = last_image.image_ground_truth
-        self.assertEqual(image_ground_truth.upc, '111')
+        self.assertEqual(image_ground_truth.upc, '222')
 
     def test_train_image_post(self):
         with open(os.path.join(settings.BASE_DIR, 'images/test_1.jpg'), mode='rb') as fp:

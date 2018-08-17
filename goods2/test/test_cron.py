@@ -19,7 +19,8 @@ from django.conf import settings
 class CronBeforeTrainTestCase(APITestCase):
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(common.get_dataset_dir(True), True)
+        pass
+        # shutil.rmtree(common.get_dataset_dir(True), True)
         # shutil.rmtree(common.get_train_path(), True)
         # shutil.rmtree(common.get_model_path(), True)
 
@@ -30,27 +31,29 @@ class CronBeforeTrainTestCase(APITestCase):
         train_image_qs = TrainImage.objects.all()
         self.assertEqual(len(train_image_qs), 20)
 
-        util._add_image(self.client, '1000', '0', True)
+        util._add_image(self.client, '1000', '0', add_ground_truth=True)
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 20)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 1)
         train_image_qs = TrainImage.objects.filter(deviceid='1000')
         self.assertEqual(len(train_image_qs), 22)  # 增加两个样本
 
-        util._add_image(self.client, '500', '1')
+        util._add_image(self.client, '500', '1', add_ground_truth=True)
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 40)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 2)
         train_image_qs = TrainImage.objects.filter(deviceid='500')
         self.assertEqual(len(train_image_qs), 2)  # 不增加样本
 
-        util._add_image(self.client, '1000', '2')
+        time.sleep(1)
+        util._add_image(self.client, '1000', '2', add_ground_truth=True)
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 60)
         self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)
         train_image_qs = TrainImage.objects.filter(deviceid='1000')
         self.assertEqual(len(train_image_qs), 24)  # 再增加2样本
 
+        time.sleep(1)
         util._add_image(self.client, '1000', '3', add_ground_truth=False)
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 80)
@@ -58,6 +61,7 @@ class CronBeforeTrainTestCase(APITestCase):
         train_image_qs = TrainImage.objects.filter(deviceid='1000')
         self.assertEqual(len(train_image_qs), 24)  # 不再增加样本
 
+        time.sleep(1)
         util._add_image(self.client, '1000', '4')
         transfer_sample()
         self.assertEqual(len(Image.objects.all()), 100)

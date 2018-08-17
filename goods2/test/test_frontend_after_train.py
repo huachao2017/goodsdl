@@ -21,6 +21,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
         deviceid = '0'
         train_action = TrainAction.objects.create(
             action='TA',
+            deviceid=deviceid,
             ip='192.168.1.170',
             state=common.TRAIN_STATE_COMPLETE
         )
@@ -62,6 +63,7 @@ class FrontEndAfterTrainTestCase(APITestCase):
         identify = '111'
         train_action = TrainAction.objects.create(
             action='TA',
+            deviceid=deviceid,
             ip='192.168.1.170',
             state=common.TRAIN_STATE_COMPLETE
         )
