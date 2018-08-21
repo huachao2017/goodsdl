@@ -113,7 +113,7 @@ DATABASES = {
         'NAME': 'goodsdl',
         'USER': 'root',
         'PASSWORD': 'iShehui',
-        'HOST': '192.168.1.73',
+        'HOST': '192.168.1.172',
         'PORT': '3306',
         'CHARSET': 'utf8',
         'COLLATION': 'utf8_general_ci',
