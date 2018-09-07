@@ -230,11 +230,10 @@ def create_train():
 
 
 def _do_create_train():
-    _do_create_train_ta()
-    # FIXME 暂时不开启TF和TC
-    return
+    doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING)
+    if len(doing_ta_tf) == 0:
+        _do_create_train_ta()
     # TF & TC
-    doing_tf = TrainAction.objects.filter(action='TF').filter(state__lte=common.TRAIN_STATE_TRAINING)
     doing_tc = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING)
     last_t_group_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(ct=Max('complete_time')).order_by('ct')
     for last_t_group in last_t_group_qs:
@@ -264,7 +263,9 @@ def _do_create_train():
         deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
         train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time).filter(deviceid__in=deviceid_train_qs)
         if len(doing_tc)==0 and len(append_upcs) > 0:
-            if len(train_image_qs) >= 10:
+            if len(train_image_qs) >= 20:
+                pass
+                # FIXME 暂时不开启TC
                 # if len(doing_tf_qs) > 0:
                     # 退出正在训练的TF
                     # doing_tf = doing_tf_qs[0]
@@ -272,43 +273,41 @@ def _do_create_train():
                     # doing_tf.save()
                 logger.info('[{}]create_train: TC,新增类（{}）,新增样本（{}）'.format(deviceid, len(append_upcs), len(train_image_qs)))
                 do_create_train('TC', deviceid, f_train_model.pk)
-        elif len(doing_tf)==0 and len(append_upcs) == 0:
-            now = datetime.datetime.now()
-            if (now - last_t.complete_time).days >= 1 or len(train_image_qs) >= 200:
+        elif len(doing_ta_tf) == 0 and len(append_upcs) == 0:
+            # now = datetime.datetime.now()
+            # if (now - last_t.complete_time).days >= 1 or len(train_image_qs) >= 50:
+            if len(train_image_qs) >= 50:
                 logger.info('[{}]create_train: TF,新增样本（{}）,间距天数（{}）'.format(deviceid, len(train_image_qs),
-                                                                        (now - last_t.complete_time).days))
+                                                                    (now - last_t.complete_time).days))
                 do_create_train('TF', deviceid, f_train_model.pk)
 
     return ''
 
 
 def _do_create_train_ta():
-    # TA
-    doing_ta = TrainAction.objects.filter(action='TA').filter(state__lte=common.TRAIN_STATE_TRAINING)
-    if len(doing_ta) == 0:
-        last_ta_group_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(Max('create_time'))
-        # 只计算注册训练的设备
-        deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
-        train_image_group_qs = TrainImage.objects.filter(deviceid__in=deviceid_train_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
+    last_ta_group_qs = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(Max('create_time'))
+    # 只计算注册训练的设备
+    deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
+    train_image_group_qs = TrainImage.objects.filter(deviceid__in=deviceid_train_qs).values_list('deviceid').annotate(cnt=Count('id')).order_by('-cnt')
 
-        logger.info('create TA train device count: {}'.format(len(train_image_group_qs)))
-        # 新增样本有200个
-        last_ta_group_list = list(zip(*last_ta_group_qs))
-        now = datetime.datetime.now()
-        for train_image_group in train_image_group_qs:
-            deviceid = train_image_group[0]
-            if len(last_ta_group_qs)>0 and deviceid in last_ta_group_list[0]:
-                index = last_ta_group_list[0].index(deviceid)
-                last_time = last_ta_group_list[1][index]
-                train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
-                if (now - last_time).days >= 7 or len(train_image_qs) >= 500:
-                    logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, len(train_image_qs)))
-                    do_create_train('TA', deviceid, None)
-                    return
-            elif train_image_group[1] >= 200:
-                logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, train_image_group[1]))
+    logger.info('create TA train device count: {}'.format(len(train_image_group_qs)))
+    # 新增样本有200个
+    last_ta_group_list = list(zip(*last_ta_group_qs))
+    now = datetime.datetime.now()
+    for train_image_group in train_image_group_qs:
+        deviceid = train_image_group[0]
+        if len(last_ta_group_qs)>0 and deviceid in last_ta_group_list[0]:
+            index = last_ta_group_list[0].index(deviceid)
+            last_time = last_ta_group_list[1][index]
+            train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
+            if (now - last_time).days >= 7 or len(train_image_qs) >= 500:
+                logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, len(train_image_qs)))
                 do_create_train('TA', deviceid, None)
                 return
+        elif train_image_group[1] >= 200:
+            logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, train_image_group[1]))
+            do_create_train('TA', deviceid, None)
+            return
 
 
 def do_create_train(action, deviceid, f_model_id):
@@ -459,9 +458,9 @@ def _do_begin_train(train_action):
             train_action.train_path,
             train_action.train_cnt,
             'nasnet_large',
-            1,
+            2,
             8,
-            '1',
+            '0,1',
             checkpoint_path,
             train_action.action
         )
