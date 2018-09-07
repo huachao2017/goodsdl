@@ -300,7 +300,7 @@ def _do_create_train_ta():
             index = last_ta_group_list[0].index(deviceid)
             last_time = last_ta_group_list[1][index]
             train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
-            if (now - last_time).days >= 7 or len(train_image_qs) >= 500:
+            if (now - last_time).days >= 7 or len(train_image_qs) >= 50: # FIXME use 50
                 logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, len(train_image_qs)))
                 do_create_train('TA', deviceid, None)
                 return
