@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from goods2.dl import imagedetection
 from goods2 import common
@@ -229,7 +230,19 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImage.objects.order_by('-id')
     serializer_class = TrainImageSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('deviceid',)
+    filter_fields = ('deviceid', 'upc')
+
+    @action(methods=['get'], detail=False)
+    def upc_list(self, request):
+        if 'deviceid' in request.query_params:
+            deviceid = request.query_params['deviceid']
+            upcs = TrainImage.objects.filter(deviceid=deviceid).values('upc').distinct()
+        else:
+            upcs = TrainImage.objects.values('upc').distinct()
+        ret = []
+        for upc in upcs:
+            ret.append(upc['upc'])
+        return Response(ret)
 
     def create(self, request, *args, **kwargs):
         if 'source_from' not in request.data:
