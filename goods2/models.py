@@ -45,6 +45,7 @@ class ImageGroundTruth(models.Model):
 class Image(models.Model):
     image_ground_truth = models.ForeignKey(ImageGroundTruth, related_name="ground_truth_images", default=None,
                                            null=True, on_delete=models.SET_NULL)
+    upc = models.CharField(max_length=20, default='')
     deviceid = models.CharField(max_length=20, default='0', db_index=True)
     identify = models.CharField(max_length=64, db_index=True)
     source = models.ImageField(max_length=200, upload_to=image_upload_source)

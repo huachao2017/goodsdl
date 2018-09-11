@@ -32,12 +32,39 @@ class DeviceidTrainViewSet(DefaultMixin, viewsets.ModelViewSet):
     serializer_class = DeviceidTrainSerializer
 
 
+class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
+    queryset = Image.objects.exclude(image_ground_truth_id=None).order_by('-id')
+    serializer_class = UserImageSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('deviceid', 'upc')
+
+    @action(methods=['get'], detail=False)
+    def upc_list(self, request):
+        # TODO repair data
+        if 'deviceid' in request.query_params:
+            deviceid = request.query_params['deviceid']
+            upcs = Image.objects.filter(deviceid=deviceid).values('upc').distinct()
+        else:
+            upcs = Image.objects.values('upc').distinct()
+        ret = []
+        for upc in upcs:
+            ret.append(upc['upc'])
+        return Response(ret)
+
+    @action(methods=['put'], detail=True)
+    def add_to_train(self, request, pk=None):
+        instance = self.get_object()
+
+        # TODO add transfer
+        ret = []
+        return Response(ret)
+
+
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
     serializer_class = ImageSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('deviceid',)
 
     def create(self, request, *args, **kwargs):
 
@@ -212,6 +239,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
             else:
                 false_image_result_cnt += 1
             image.image_ground_truth=serializer.instance
+            image.upc = serializer.instance.upc
             image.save()
 
         serializer.instance.cnt = len(images)
