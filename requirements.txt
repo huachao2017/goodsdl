@@ -1,6 +1,7 @@
 fabric3
 django
 djangorestframework
+django-filter
 django-crontab
 opencv_python
 mysqlclient

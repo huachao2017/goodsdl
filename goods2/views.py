@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
 from goods2.dl import imagedetection
 from goods2 import common
 
@@ -34,6 +35,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
     serializer_class = ImageSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('deviceid',)
 
     def create(self, request, *args, **kwargs):
 
@@ -225,6 +228,8 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
 class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainImage.objects.order_by('-id')
     serializer_class = TrainImageSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('deviceid',)
 
     def create(self, request, *args, **kwargs):
         if 'source_from' not in request.data:
