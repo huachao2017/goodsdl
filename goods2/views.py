@@ -41,7 +41,6 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
 
     @action(methods=['get'], detail=False)
     def upc_list(self, request):
-        # TODO repair data
         if 'deviceid' in request.query_params:
             deviceid = request.query_params['deviceid']
             upcs = Image.objects.filter(deviceid=deviceid).values('upc').distinct()
@@ -55,10 +54,28 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
     @action(methods=['put'], detail=True)
     def add_to_train(self, request, pk=None):
         instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # TODO add transfer
-        ret = []
-        return Response(ret)
+        train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), instance.deviceid, instance.upc,
+                                            'image_' + os.path.basename(instance.source.path))
+        train_source_dir = '{}/{}/{}'.format(common.get_dataset_dir(True), instance.deviceid,
+                                             instance.upc)
+        import tensorflow as tf
+        if not tf.gfile.Exists(train_source_dir):
+            tf.gfile.MakeDirs(train_source_dir)
+        train_source_path = '{}/{}'.format(train_source_dir, 'image_' + os.path.basename(instance.source.path))
+        shutil.copy(instance.source.path, train_source_path)
+        TrainImage.objects.create(
+            deviceid=instance.deviceid,
+            source=train_source,
+            upc=instance.upc,
+            source_image_id=instance.pk,
+            source_from=2,
+            score=1.0,
+        )
+        return Response(serializer.data)
+
 
 
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
