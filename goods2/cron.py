@@ -233,6 +233,7 @@ def _do_create_train():
     doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING)
     if len(doing_ta_tf) == 0:
         _do_create_train_ta()
+    doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING)
     # TF & TC
     doing_tc = TrainAction.objects.filter(action='TC').filter(state__lte=common.TRAIN_STATE_TRAINING)
     last_t_group_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).values_list('deviceid').annotate(ct=Max('complete_time')).order_by('ct')
