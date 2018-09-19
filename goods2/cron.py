@@ -274,7 +274,7 @@ def _do_create_train():
                 logger.info('[{}]create_train: TC,新增类（{}）,新增样本（{}）'.format(deviceid, len(append_upcs), len(train_image_qs)))
                 do_create_train('TC', deviceid, f_train_model.pk)
         elif len(doing_ta_tf) == 0 and len(append_upcs) == 0:
-            # now = datetime.datetime.now()
+            now = datetime.datetime.now()
             # if (now - last_t.complete_time).days >= 1 or len(train_image_qs) >= 50:
             if len(train_image_qs) >= 50:
                 logger.info('[{}]create_train: TF,新增样本（{}）,间距天数（{}）'.format(deviceid, len(train_image_qs),
@@ -300,7 +300,8 @@ def _do_create_train_ta():
             index = last_ta_group_list[0].index(deviceid)
             last_time = last_ta_group_list[1][index]
             train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_time)
-            if (now - last_time).days >= 7 or len(train_image_qs) >= 50: # FIXME use 50
+            # if (now - last_time).days >= 7 or len(train_image_qs) >= 200:
+            if len(train_image_qs) >= 200:
                 logger.info('[{}]create_train: TA,新增样本（{}）'.format(deviceid, len(train_image_qs)))
                 do_create_train('TA', deviceid, None)
                 return
