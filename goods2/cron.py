@@ -261,8 +261,7 @@ def _do_create_train():
                 append_upcs.append(upc)
 
         # 只计算注册训练的设备
-        deviceid_train_qs = DeviceidTrain.objects.all().values('deviceid')
-        train_image_qs = TrainImage.objects.filter(create_time__gt=last_t.create_time).filter(deviceid__in=deviceid_train_qs)
+        train_image_qs = TrainImage.objects.filter(deviceid=deviceid).filter(create_time__gt=last_t.create_time)
         if len(doing_tc)==0 and len(append_upcs) > 0:
             if len(train_image_qs) >= 20:
                 pass
