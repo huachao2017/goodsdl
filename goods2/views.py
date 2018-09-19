@@ -40,6 +40,14 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
     filter_fields = ('deviceid', 'upc')
 
     @action(methods=['get'], detail=False)
+    def device_list(self, request):
+        devices = Image.objects.values('deviceid').distinct()
+        ret = []
+        for deviceid in devices:
+            ret.append(deviceid['deviceid'])
+        return Response(ret)
+
+    @action(methods=['get'], detail=False)
     def upc_list(self, request):
         if 'deviceid' in request.query_params:
             deviceid = request.query_params['deviceid']
@@ -276,6 +284,14 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     serializer_class = TrainImageSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('deviceid', 'upc')
+
+    @action(methods=['get'], detail=False)
+    def device_list(self, request):
+        devices = TrainImage.objects.values('deviceid').distinct()
+        ret = []
+        for deviceid in devices:
+            ret.append(deviceid['deviceid'])
+        return Response(ret)
 
     @action(methods=['get'], detail=False)
     def upc_list(self, request):
