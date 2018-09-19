@@ -161,7 +161,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                     )
 
         ret = []
-        if device.deviceid == '485' or device.state >= common.DEVICE_STATE_COMMERCIAL:
+        if device.deviceid in ['485','200'] or device.state >= common.DEVICE_STATE_COMMERCIAL:
             # 没有商用的不返回结果
             # upc_to_scores = {}
             # weight = 0.5
