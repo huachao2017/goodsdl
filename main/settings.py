@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'goods',
     'goods2',
     'goodscf',
-    'face'
+    'face',
+    'arm'
 ]
 
 MIDDLEWARE = [
