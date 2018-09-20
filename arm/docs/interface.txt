@@ -1,13 +1,15 @@
 1、检测桌面商品接口：http://ai.fastxbox.cn/arm/detect/
 post入参：
-rgb_source  file
-depth_source file
+rgb_source  file                                  -- rgb图
+depth_source file                                 -- 深度图
+table_z  int                                      -- 桌面标定的z值
 返回201：
 [
     {
         "x": 11                                   -- 中心x（图片坐标系，左上角(0,0)向右为正）
         "y": 22                                   -- 中心y（图片坐标系，左上角(0,0)向下为正）
         "z": 50                                   -- 中心z（深度图坐标系）
+        "angle": 45                               -- -90度至90度，顺时针为正
         "box":
             {
                 "xmin": 37,                       -- 左上角横坐标
@@ -21,6 +23,7 @@ depth_source file
         "x": 11                                   -- 中心x（图片坐标系）
         "y": 22                                   -- 中心y（图片坐标系）
         "z": 50                                   -- 中心z（深度图坐标系）
+        "angle": 45                               -- -90度至90度，顺时针为正
         "box":
             {
                 "xmin": 37,                       -- 左上角横坐标
