@@ -62,8 +62,8 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
     @action(methods=['put'], detail=True)
     def add_to_train(self, request, pk=None):
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # serializer = self.get_serializer(instance, data=request.data)
+        # serializer.is_valid(raise_exception=True)
 
         train_source = '{}/{}/{}/{}'.format(common.get_dataset_dir(), instance.deviceid, instance.upc,
                                             'image_' + os.path.basename(instance.source.path))
@@ -82,7 +82,7 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
             source_from=2,
             score=1.0,
         )
-        return Response(serializer.data)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 
