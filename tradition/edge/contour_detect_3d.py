@@ -340,6 +340,7 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
 
     suppression_minrectes = _non_max_suppression_minrect(concate_minrectes, overlapthresh, debug=(debug_type>1),source_image=rgb_img, output_dir=output_dir)
     ret_minrectes = []
+    ret_boxes = []
     ret_z = []
     for minrect in suppression_minrectes:
         ret_z.append(table_z) # FIXME
@@ -347,9 +348,14 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
             ret_minrectes.append(((minrect[0][0],minrect[0][1]),(minrect[1][1],minrect[1][0]),90 + minrect[2]))
         else:
             ret_minrectes.append(minrect)
+    for minrect in ret_minrectes:
+        points = cv2.boxPoints(minrect)
+        x, y, w, h = cv2.boundingRect(points)
+        ret_boxes.append([x,y,x+w,y+h])
 
     if debug_type > 0 and len(ret_minrectes)>0:
         output = rgb_img
+        index = 0
         for minrect in ret_minrectes:
             points = cv2.boxPoints(minrect)
             points = np.int0(points)
@@ -362,23 +368,24 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
                      (int(minrect[0][0]) + r, int(minrect[0][1]) - r), (0, 0, 255), thickness)
             font = cv2.FONT_HERSHEY_SIMPLEX
 
-            cv2.putText(output, '%d,%d,%.2f' % (minrect[0][0],minrect[0][1],minrect[2]), (0, 20), font, 0.8, (255, 255, 255), 2)
+            index += 1
+            cv2.putText(output, '%d,%d,%.2f' % (minrect[0][0],minrect[0][1],minrect[2]), (0, 20*index), font, 0.8, (255, 255, 255), 2)
         output_path = os.path.join(output_dir, '_output_'+image_name)
         cv2.imwrite(output_path, output)
 
     # scores = np.ones((len(concate_minrectes)))
-    return ret_minrectes, ret_z
+    return ret_minrectes, ret_z, ret_boxes
 
 
 def _inner_find_one(rgb_path, depth_path, table_z, output_dir, debug_type=2):
     time0 = time.time()
-    min_rectes, z= find_contour(rgb_path, depth_path, table_z,output_dir=output_dir, debug_type=debug_type, overlapthresh=.7)
+    min_rectes, z, boxes= find_contour(rgb_path, depth_path, table_z,output_dir=output_dir, debug_type=debug_type, overlapthresh=.7)
     # _,boxes,_ = find_contour(image_path, output_dir=output_dir,debug_type=1)
     time1 = time.time()
     print('%s:%.2f, %d' % (rgb_path, time1 - time0, len(min_rectes)))
     index = 0
     for min_rect in min_rectes:
-        print('center: %d,%d; w*h:%d,%d; theta:%d; z:%d' %(min_rect[0][0],min_rect[0][1],min_rect[1][0],min_rect[1][1],min_rect[2], z[index]))
+        print('center: %d,%d; w*h:%d,%d; theta:%d; z:%d, boxes: x1:%d, y1:%d, x2:%d, y2:%d' %(min_rect[0][0],min_rect[0][1],min_rect[1][0],min_rect[1][1],min_rect[2], z[index], boxes[index][0], boxes[index][1], boxes[index][2], boxes[index][3]))
         index += 1
 
 if __name__ == "__main__":

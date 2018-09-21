@@ -46,7 +46,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         headers = self.get_success_headers(serializer.data)
 
         now = datetime.datetime.now()
-        min_rectes, z = find_contour(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, serializer.instance.table_z)
+        min_rectes, z, boxes = find_contour(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, serializer.instance.table_z)
         ret = []
         index = 0
         for min_rect in min_rectes:
@@ -57,7 +57,12 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                 'y': min_rect[0][1],
                 'z': z[index],
                 'angle': min_rect[2],
-                'box': {}, # TODO
+                'box': {
+                    'xmin':boxes[index][0],
+                    'ymin': boxes[index][1],
+                    'xmax': boxes[index][2],
+                    'ymax': boxes[index][3],
+                },
                 'upc': "1", # TODO
             }
             ret.append(one)
