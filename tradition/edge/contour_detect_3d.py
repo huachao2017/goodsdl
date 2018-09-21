@@ -369,7 +369,7 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
             font = cv2.FONT_HERSHEY_SIMPLEX
 
             index += 1
-            cv2.putText(output, '%d,%d,%.2f' % (minrect[0][0],minrect[0][1],minrect[2]), (0, 20*index), font, 0.8, (255, 255, 255), 2)
+            cv2.putText(output, '%d,%d,%.2f' % (minrect[0][0],minrect[0][1],minrect[2]), (0, 12*index), font, 0.4, (255, 255, 255), 1)
         output_path = os.path.join(output_dir, '_output_'+image_name)
         cv2.imwrite(output_path, output)
 
