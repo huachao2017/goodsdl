@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from arm.serializers import *
+from tradition.edge.contour_detect_3d import find_contour
 logger = logging.getLogger("arm")
 from django.conf import settings
 
@@ -45,7 +46,22 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         headers = self.get_success_headers(serializer.data)
 
         now = datetime.datetime.now()
+        min_rectes, z = find_contour(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, serializer.instance.table_z)
         ret = []
+        index = 0
+        for min_rect in min_rectes:
+            logger.info('center: %d,%d; w*h:%d,%d; theta:%d; z:%d' % (
+            min_rect[0][0], min_rect[0][1], min_rect[1][0], min_rect[1][1], min_rect[2], z[index]))
+            one = {
+                'x': min_rect[0][0],
+                'y': min_rect[0][1],
+                'z': z[index],
+                'angle': min_rect[2],
+                'box': {}, # TODO
+                'upc': "1", # TODO
+            }
+            ret.append(one)
+            index += 1
         serializer.instance.result = json.dumps(ret, cls=NumpyEncoder)
         serializer.instance.save()
 
