@@ -12,7 +12,7 @@ from rest_framework import status
 
 from arm.serializers import *
 from tradition.edge.contour_detect_3d import find_contour
-logger = logging.getLogger("arm")
+logger = logging.getLogger("django")
 from django.conf import settings
 
 # Create your views here.
