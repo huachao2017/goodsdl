@@ -50,8 +50,9 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         ret = []
         index = 0
         for min_rect in min_rectes:
-            logger.info('center: %d,%d; w*h:%d,%d; theta:%d; z:%d' % (
-            min_rect[0][0], min_rect[0][1], min_rect[1][0], min_rect[1][1], min_rect[2], z[index]))
+            logger.info('center: %d,%d; w*h:%d,%d; theta:%d; z:%d, boxes: x1:%d, y1:%d, x2:%d, y2:%d' % (
+            min_rect[0][0], min_rect[0][1], min_rect[1][0], min_rect[1][1], min_rect[2], z[index], boxes[index][0],
+            boxes[index][1], boxes[index][2], boxes[index][3]))
             one = {
                 'x': min_rect[0][0],
                 'y': min_rect[0][1],
