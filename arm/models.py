@@ -13,6 +13,6 @@ def image_upload_source(instance, filename):
 class ArmImage(models.Model):
     rgb_source = models.ImageField(max_length=200, upload_to=image_upload_source)
     depth_source = models.ImageField(max_length=200, upload_to=image_upload_source)
-    tabel_z = models.IntegerField(default=0)
+    table_z = models.IntegerField(default=0)
     result = models.TextField()
     create_time = models.DateTimeField('date created', auto_now_add=True,db_index=True)
