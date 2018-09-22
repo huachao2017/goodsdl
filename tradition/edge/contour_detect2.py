@@ -305,29 +305,22 @@ def _non_max_suppression_minrect(min_rectes, overlapThresh, debug = False, sourc
         ret_min_rectes.append(min_rectes[index])
     return ret_min_rectes
 
-def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 120, morphology = False, overlapthresh=.3):
-    image_dir, image_name = os.path.split(input_path)
+def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, thresh_x = 120, morphology = False, overlapthresh=.3):
+    image_dir, image_name = os.path.split(rgb_path)
     if output_dir is None:
         output_dir = image_dir
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
     # step0: read image
-    img = cv2.imread(input_path)
+    rgb_img = cv2.imread(rgb_path)
 
-    # img = fish_eye_dis(img)
-    # output_path = os.path.join(output_dir, '_dis_'+image_name)
-    # cv2.imwrite(output_path, img)
-    #
-    # return img, [], []
+    all_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all', overlapthresh=overlapthresh)
+    r_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='r', overlapthresh=overlapthresh)
+    g_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='g', overlapthresh=overlapthresh)
+    b_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='b', overlapthresh=overlapthresh)
 
-    area_img = img
-    all_minrectes = _find_minrect(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all', overlapthresh=overlapthresh)
-    r_minrectes = _find_minrect(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='r', overlapthresh=overlapthresh)
-    g_minrectes = _find_minrect(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='g', overlapthresh=overlapthresh)
-    b_minrectes = _find_minrect(area_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='b', overlapthresh=overlapthresh)
-
-    if debug_type > 0:
+    if debug_type > 1:
         print('{},{},{},{}'.format(len(all_minrectes),len(r_minrectes),len(g_minrectes),len(b_minrectes)))
 
     concate_minrectes = []
@@ -336,7 +329,7 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 120, morp
     concate_minrectes.extend(g_minrectes)
     concate_minrectes.extend(b_minrectes)
     if debug_type > 1 and len(concate_minrectes)>0:
-        drawing_contours = np.zeros(img.shape, np.uint8)
+        drawing_contours = np.zeros(rgb_img.shape, np.uint8)
         for minrect in concate_minrectes:
             points = cv2.boxPoints(minrect)
             points = np.int0(points)
@@ -345,16 +338,24 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 120, morp
         output_path = os.path.join(output_dir, '_contour_' + image_name)
         cv2.imwrite(output_path, drawing_contours)
 
-    suppression_minrectes = _non_max_suppression_minrect(concate_minrectes, overlapthresh, debug=(debug_type>1),source_image=img, output_dir=output_dir)
+    suppression_minrectes = _non_max_suppression_minrect(concate_minrectes, overlapthresh, debug=(debug_type>1),source_image=rgb_img, output_dir=output_dir)
     ret_minrectes = []
+    ret_boxes = []
+    ret_z = []
     for minrect in suppression_minrectes:
+        ret_z.append(table_z) # FIXME
         if minrect[1][0]>minrect[1][1]:
             ret_minrectes.append(((minrect[0][0],minrect[0][1]),(minrect[1][1],minrect[1][0]),90 + minrect[2]))
         else:
             ret_minrectes.append(minrect)
+    for minrect in ret_minrectes:
+        points = cv2.boxPoints(minrect)
+        x, y, w, h = cv2.boundingRect(points)
+        ret_boxes.append([x,y,x+w,y+h])
 
     if debug_type > 0 and len(ret_minrectes)>0:
-        output = img
+        output = rgb_img
+        index = 0
         for minrect in ret_minrectes:
             points = cv2.boxPoints(minrect)
             points = np.int0(points)
@@ -367,22 +368,25 @@ def find_contour(input_path, output_dir=None, debug_type=1, thresh_x = 120, morp
                      (int(minrect[0][0]) + r, int(minrect[0][1]) - r), (0, 0, 255), thickness)
             font = cv2.FONT_HERSHEY_SIMPLEX
 
-            cv2.putText(output, '%d,%d,%.2f' % (minrect[0][0],minrect[0][1],minrect[2]), (0, 20), font, 0.8, (255, 255, 255), 2)
+            index += 1
+            cv2.putText(output, '%d,%d,%.2f' % (minrect[0][0],minrect[0][1],minrect[2]), (0, 12*index), font, 0.4, (255, 255, 255), 1)
         output_path = os.path.join(output_dir, '_output_'+image_name)
         cv2.imwrite(output_path, output)
 
     # scores = np.ones((len(concate_minrectes)))
-    return ret_minrectes
+    return ret_minrectes, ret_z, ret_boxes
 
 
-def _inner_find_one(image_path, output_dir, debug_type=2):
+def _inner_find_one(rgb_path, depth_path, table_z, output_dir, debug_type=2):
     time0 = time.time()
-    min_rectes = find_contour(image_path, output_dir=output_dir, debug_type=debug_type, overlapthresh=.7)
+    min_rectes, z, boxes= find_contour(rgb_path, depth_path, table_z,output_dir=output_dir, debug_type=debug_type, overlapthresh=.7)
     # _,boxes,_ = find_contour(image_path, output_dir=output_dir,debug_type=1)
     time1 = time.time()
-    print('%s:%.2f, %d' %(image_path,time1-time0, len(min_rectes)))
+    print('%s:%.2f, %d' % (rgb_path, time1 - time0, len(min_rectes)))
+    index = 0
     for min_rect in min_rectes:
-        print('center:%d,%d;w*h:%d,%d;theta:%d' %(min_rect[0][0],min_rect[0][1],min_rect[1][0],min_rect[1][1],min_rect[2]))
+        print('center: %d,%d; w*h:%d,%d; theta:%d; z:%d, boxes: x1:%d, y1:%d, x2:%d, y2:%d' %(min_rect[0][0],min_rect[0][1],min_rect[1][0],min_rect[1][1],min_rect[2], z[index], boxes[index][0], boxes[index][1], boxes[index][2], boxes[index][3]))
+        index += 1
 
 if __name__ == "__main__":
     # Enter the input image file
@@ -397,11 +401,13 @@ if __name__ == "__main__":
                 os.remove(tmp_path)
 
     # for test
-    image_path = os.path.join(image_dir, "6_1.jpg")
-    _inner_find_one(image_path, output_dir,  debug_type=1)
+    image_path = os.path.join(image_dir, "t_2.jpg")
+    _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
+    image_path = os.path.join(image_dir, "t_2_s.jpg")
+    _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
 
-    image_path = os.path.join(image_dir, "6.jpg")
-    _inner_find_one(image_path, output_dir,  debug_type=1)
+    # image_path = os.path.join(image_dir, "6.jpg")
+    # _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
 
 
     # image_path = os.path.join(image_dir, "4_1.jpg")
