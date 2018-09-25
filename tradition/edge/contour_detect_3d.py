@@ -116,7 +116,7 @@ def _find_minrect(img, image_name, output_dir=None, debug_type=0, thresh_x = 120
         # print('%d,%d,%d,%d' %(leftmost,rightmost,topmost,bottommost))
         # return
         area = (bottommost-topmost) * (rightmost-leftmost)
-        if area < max_area/100: # 去除面积过小的物体
+        if area < max_area/200: # 去除面积过小的物体
             continue
         # if area > max_area*.9: # 去除面积过大的物体
         #     continue
@@ -312,11 +312,16 @@ def _get_mask_image(rgb_img, depth_path, table_z, image_name, output_dir=None, d
     if depth_path:
         depth_source_img = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
         depth_img = depth_source_img[:, :, 0] + depth_source_img[:, :, 1] * 256 + depth_source_img[:, :, 2] * 256 * 256
-        depth_img = np.expand_dims(depth_img,2)
-        depth_img = depth_img.repeat(3,axis=2)
-        mask_code = np.zeros(rgb_img.shape, np.uint8)
-        mask_rgb_img = np.where(depth_img>table_z, mask_code, rgb_img)
-        mask_rgb_img = np.where(mask_rgb_img < 10, mask_code, mask_rgb_img)
+        depth_mask_code = np.full(depth_img.shape, table_z)
+        mask_depth_img = np.where(depth_img>table_z, depth_mask_code, depth_img)
+        mask_depth_img = np.where(mask_depth_img < 10, depth_mask_code, mask_depth_img)
+        mask_depth_img = table_z - mask_depth_img
+        mask_depth_img = np.where(mask_depth_img < 20, np.zeros(depth_img.shape), mask_depth_img)
+        # print(mask_depth_img)
+        mask_depth_img = np.expand_dims(mask_depth_img,2)
+        mask_depth_img = mask_depth_img.repeat(3,axis=2)
+        rgb_mask_code = np.zeros(rgb_img.shape, np.uint8)
+        mask_rgb_img = np.where(mask_depth_img>0, rgb_img, rgb_mask_code)
         if debug_type > 0:
             output_path = os.path.join(output_dir, '_mask_' + image_name)
             cv2.imwrite(output_path, mask_rgb_img)
@@ -411,9 +416,9 @@ if __name__ == "__main__":
                 os.remove(tmp_path)
 
     # for test
-    rgb_path = os.path.join(image_dir, "02.jpg")
-    depth_path = os.path.join(image_dir, "02_d.png")
-    _inner_find_one(rgb_path, depth_path, 1235,output_dir,  debug_type=1)
+    rgb_path = os.path.join(image_dir, "03.jpg")
+    depth_path = os.path.join(image_dir, "03_d.png")
+    _inner_find_one(rgb_path, depth_path, 1230,output_dir,  debug_type=1)
 
 
     if cv2.waitKey(0) == 27:
