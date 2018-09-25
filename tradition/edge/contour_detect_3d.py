@@ -40,33 +40,33 @@ def _find_minrect(img, image_name, output_dir=None, debug_type=0, thresh_x = 120
 
 
     # 双向滤波比较不错
-    # blur = cv2.bilateralFilter(blur, 3, 30, 30)
-    # blur = cv2.split(blur)[0]
-    # blur = cv2.equalizeHist(blur)
-    # blur = cv2.GaussianBlur(blur, (5, 5), 0)
+    # sharpen = cv2.bilateralFilter(sharpen, 3, 30, 30)
+    # sharpen = cv2.split(sharpen)[0]
+    # sharpen = cv2.equalizeHist(sharpen)
+    # sharpen = cv2.GaussianBlur(sharpen, (5, 5), 0)
     if debug_type>1:
         sharpen_path = os.path.join(output_dir, channel+'_'+'sharpen_'+image_name)
         cv2.imwrite(sharpen_path, sharpen)
 
     # step2: sobel caculate edges
-    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     x = cv2.Sobel(sharpen, cv2.CV_64F, 1, 0, ksize=-1)
     y = cv2.Sobel(sharpen, cv2.CV_64F, 0, 1, ksize=-1)
     edges = cv2.subtract(x, y)
     edges = cv2.convertScaleAbs(edges)
-    # absX = cv2.convertScaleAbs(x)  # 转回uint8
-    # absY = cv2.convertScaleAbs(y)
-    #
-    # edges = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
-    # edges = cv2.bilateralFilter(edges, 5, 75, 75)
-    # edges = cv2.GaussianBlur(edges, (5, 5), 0)
-    # edges = cv2.dilate(edges, kernel)
-    # edges = cv2.dilate(edges, kernel)
-    # edges = cv2.dilate(edges, kernel)
-    # edges = cv2.erode(edges, kernel)
-    # edges = cv2.erode(edges, kernel)
-    # edges = cv2.erode(edges, kernel)
-    # edges = cv2.GaussianBlur(edges, (9, 9),0)
+    absX = cv2.convertScaleAbs(x)  # 转回uint8
+    absY = cv2.convertScaleAbs(y)
+
+    edges = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
+    edges = cv2.bilateralFilter(edges, 5, 75, 75)
+    edges = cv2.GaussianBlur(edges, (5, 5), 0)
+    edges = cv2.dilate(edges, kernel)
+    edges = cv2.dilate(edges, kernel)
+    edges = cv2.dilate(edges, kernel)
+    edges = cv2.erode(edges, kernel)
+    edges = cv2.erode(edges, kernel)
+    edges = cv2.erode(edges, kernel)
+    edges = cv2.GaussianBlur(edges, (9, 9),0)
     if debug_type>1:
         edges_path = os.path.join(output_dir, channel+'_'+'edges_'+image_name)
         cv2.imwrite(edges_path, edges)
@@ -420,10 +420,15 @@ if __name__ == "__main__":
                 os.remove(tmp_path)
 
     # for test
-    rgb_path = os.path.join(image_dir, "03.jpg")
-    depth_path = os.path.join(image_dir, "03_d.png")
-    _inner_find_one(rgb_path, depth_path, 1230,output_dir,  is_mask=False, debug_type=1)
+    # rgb_path = os.path.join(image_dir, "03.jpg")
+    # depth_path = os.path.join(image_dir, "03_d.png")
+    # _inner_find_one(rgb_path, depth_path, 1230,output_dir,  is_mask=False, debug_type=1)
 
+    test_dir = os.path.join(image_dir,'test')
+    if os.path.isdir(test_dir):
+        for image in os.listdir(test_dir):
+            image_path = os.path.join(test_dir,image)
+            _inner_find_one(image_path, None, 1230, output_dir, is_mask=False, debug_type=2)
 
     if cv2.waitKey(0) == 27:
         cv2.destroyAllWindows()
