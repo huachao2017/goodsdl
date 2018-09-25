@@ -15,7 +15,7 @@ def _find_minrect(img, image_name, output_dir=None, debug_type=0, thresh_x = 120
     # step1: blur image
     max_area = source.shape[0] * source.shape[1]
     # Apply gaussian blur to the grayscale image
-    # blur = cv2.pyrMeanShiftFiltering(source, 31, 91)
+    # source = cv2.pyrMeanShiftFiltering(source, 31, 91)
     sharpen = source
     # blur = cv2.pyrMeanShiftFiltering(source, 21, 51)
     # kernel_sharpen = np.array([[-1,-1,-1,-1,-1],
@@ -49,7 +49,7 @@ def _find_minrect(img, image_name, output_dir=None, debug_type=0, thresh_x = 120
         cv2.imwrite(sharpen_path, sharpen)
 
     # step2: sobel caculate edges
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
     x = cv2.Sobel(sharpen, cv2.CV_64F, 1, 0, ksize=-1)
     y = cv2.Sobel(sharpen, cv2.CV_64F, 0, 1, ksize=-1)
     edges = cv2.subtract(x, y)
