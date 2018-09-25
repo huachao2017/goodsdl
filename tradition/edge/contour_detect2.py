@@ -289,7 +289,8 @@ def _non_max_suppression_minrect(min_rectes, overlapThresh, debug = False, sourc
                 points = np.int0(points)
                 color = np.random.randint(0, 255, (3)).tolist()  # Select a random color
                 cv2.drawContours(drawing_contours, [points], 0, color, 1)
-                cv2.drawContours(drawing_contours, [np.asarray(intersection,np.int0)], 0, color, 1)
+                if intersection is not None:
+                    cv2.drawContours(drawing_contours, [np.asarray(intersection,np.int)], 0, color, 1)
                 output_path = os.path.join(output_dir, 'intersection_%d_%d.jpg' % (j, i))
                 cv2.imwrite(output_path, drawing_contours)
 
@@ -401,8 +402,8 @@ if __name__ == "__main__":
                 os.remove(tmp_path)
 
     # for test
-    image_path = os.path.join(image_dir, "03.jpg")
-    _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
+    image_path = os.path.join(image_dir, "04.jpg")
+    _inner_find_one(image_path, '', 50,output_dir,  debug_type=2)
     # image_path = os.path.join(image_dir, "t_2_s.jpg")
     # _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
 

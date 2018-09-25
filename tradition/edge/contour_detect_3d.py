@@ -289,7 +289,8 @@ def _non_max_suppression_minrect(min_rectes, overlapThresh, debug = False, sourc
                 points = np.int0(points)
                 color = np.random.randint(0, 255, (3)).tolist()  # Select a random color
                 cv2.drawContours(drawing_contours, [points], 0, color, 1)
-                cv2.drawContours(drawing_contours, [np.asarray(intersection,np.int0)], 0, color, 1)
+                if intersection is not None:
+                    cv2.drawContours(drawing_contours, [np.asarray(intersection,np.int0)], 0, color, 1)
                 output_path = os.path.join(output_dir, 'intersection_%d_%d.jpg' % (j, i))
                 cv2.imwrite(output_path, drawing_contours)
 
@@ -328,7 +329,7 @@ def _get_mask_image(rgb_img, depth_path, table_z, image_name, output_dir=None, d
 
     return mask_rgb_img
 
-def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, thresh_x = 120, morphology = False, overlapthresh=.3):
+def find_contour(rgb_path, depth_path, table_z,is_mask=True, output_dir=None, debug_type=1, thresh_x = 120, morphology = False, overlapthresh=.3):
     image_dir, image_name = os.path.split(rgb_path)
     if output_dir is None:
         output_dir = image_dir
@@ -337,7 +338,10 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
 
     # step0: read image
     rgb_img = cv2.imread(rgb_path)
-    mask_rgb_img = _get_mask_image(rgb_img, depth_path, table_z, image_name, output_dir, debug_type)
+    if is_mask:
+        mask_rgb_img = _get_mask_image(rgb_img, depth_path, table_z, image_name, output_dir, debug_type)
+    else:
+        mask_rgb_img = rgb_img
 
     concate_minrectes = _find_minrect(mask_rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all', overlapthresh=overlapthresh)
     if debug_type > 1:
@@ -392,9 +396,9 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
     return ret_minrectes, ret_z, ret_boxes
 
 
-def _inner_find_one(rgb_path, depth_path, table_z, output_dir, debug_type=2):
+def _inner_find_one(rgb_path, depth_path, table_z, output_dir, is_mask = True,debug_type=2):
     time0 = time.time()
-    min_rectes, z, boxes= find_contour(rgb_path, depth_path, table_z,output_dir=output_dir, debug_type=debug_type, overlapthresh=.7)
+    min_rectes, z, boxes= find_contour(rgb_path, depth_path, table_z,is_mask=is_mask, output_dir=output_dir, debug_type=debug_type, overlapthresh=.7)
     # _,boxes,_ = find_contour(image_path, output_dir=output_dir,debug_type=1)
     time1 = time.time()
     print('%s:%.2f, %d' % (rgb_path, time1 - time0, len(min_rectes)))
@@ -418,7 +422,7 @@ if __name__ == "__main__":
     # for test
     rgb_path = os.path.join(image_dir, "03.jpg")
     depth_path = os.path.join(image_dir, "03_d.png")
-    _inner_find_one(rgb_path, depth_path, 1230,output_dir,  debug_type=1)
+    _inner_find_one(rgb_path, depth_path, 1230,output_dir,  is_mask=False, debug_type=1)
 
 
     if cv2.waitKey(0) == 27:
