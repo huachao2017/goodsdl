@@ -305,6 +305,24 @@ def _non_max_suppression_minrect(min_rectes, overlapThresh, debug = False, sourc
         ret_min_rectes.append(min_rectes[index])
     return ret_min_rectes
 
+
+def _get_mask_image(rgb_img, depth_path, table_z, image_name, output_dir=None, debug_type=1):
+
+    mask_rgb_img = rgb_img
+    if depth_path:
+        depth_source_img = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
+        depth_img = depth_source_img[:, :, 0] + depth_source_img[:, :, 1] * 256 + depth_source_img[:, :, 2] * 256 * 256
+        depth_img = np.expand_dims(depth_img,2)
+        depth_img = depth_img.repeat(3,axis=2)
+        mask_code = np.zeros(rgb_img.shape, np.uint8)
+        mask_rgb_img = np.where(depth_img>table_z, mask_code, rgb_img)
+        mask_rgb_img = np.where(mask_rgb_img < 10, mask_code, mask_rgb_img)
+        if debug_type > 0:
+            output_path = os.path.join(output_dir, '_mask_' + image_name)
+            cv2.imwrite(output_path, mask_rgb_img)
+
+    return mask_rgb_img
+
 def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, thresh_x = 120, morphology = False, overlapthresh=.3):
     image_dir, image_name = os.path.split(rgb_path)
     if output_dir is None:
@@ -314,22 +332,14 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
 
     # step0: read image
     rgb_img = cv2.imread(rgb_path)
+    mask_rgb_img = _get_mask_image(rgb_img, depth_path, table_z, image_name, output_dir, debug_type)
 
-    all_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all', overlapthresh=overlapthresh)
-    r_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='r', overlapthresh=overlapthresh)
-    g_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='g', overlapthresh=overlapthresh)
-    b_minrectes = _find_minrect(rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='b', overlapthresh=overlapthresh)
-
+    concate_minrectes = _find_minrect(mask_rgb_img, image_name, output_dir, debug_type=debug_type, thresh_x=thresh_x, morphology=morphology, channel='all', overlapthresh=overlapthresh)
     if debug_type > 1:
-        print('{},{},{},{}'.format(len(all_minrectes),len(r_minrectes),len(g_minrectes),len(b_minrectes)))
+        print('{}'.format(len(concate_minrectes)))
 
-    concate_minrectes = []
-    concate_minrectes.extend(all_minrectes)
-    concate_minrectes.extend(r_minrectes)
-    concate_minrectes.extend(g_minrectes)
-    concate_minrectes.extend(b_minrectes)
     if debug_type > 1 and len(concate_minrectes)>0:
-        drawing_contours = np.zeros(rgb_img.shape, np.uint8)
+        drawing_contours = np.zeros(mask_rgb_img.shape, np.uint8)
         for minrect in concate_minrectes:
             points = cv2.boxPoints(minrect)
             points = np.int0(points)
@@ -338,7 +348,7 @@ def find_contour(rgb_path, depth_path, table_z,output_dir=None, debug_type=1, th
         output_path = os.path.join(output_dir, '_contour_' + image_name)
         cv2.imwrite(output_path, drawing_contours)
 
-    suppression_minrectes = _non_max_suppression_minrect(concate_minrectes, overlapthresh, debug=(debug_type>1),source_image=rgb_img, output_dir=output_dir)
+    suppression_minrectes = _non_max_suppression_minrect(concate_minrectes, overlapthresh, debug=(debug_type>1),source_image=mask_rgb_img, output_dir=output_dir)
     ret_minrectes = []
     ret_boxes = []
     ret_z = []
@@ -397,27 +407,14 @@ if __name__ == "__main__":
     if os.path.isdir(output_dir):
         for image in os.listdir(output_dir):
             tmp_path = os.path.join(output_dir, image)
-            if os.path.splitext(tmp_path)[-1] == '.jpg':
+            if os.path.splitext(tmp_path)[-1] == '.png' or os.path.splitext(tmp_path)[-1] == '.jpg':
                 os.remove(tmp_path)
 
     # for test
-    image_path = os.path.join(image_dir, "6_1.jpg")
-    _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
+    rgb_path = os.path.join(image_dir, "01.jpg")
+    depth_path = os.path.join(image_dir, "01_d.png")
+    _inner_find_one(rgb_path, depth_path, 1230,output_dir,  debug_type=1)
 
-    image_path = os.path.join(image_dir, "6.jpg")
-    _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
-
-
-    # image_path = os.path.join(image_dir, "4_1.jpg")
-    # _inner_find_one(image_path, output_dir, debug_type=2)
-    # image_path = os.path.join(image_dir, "7.jpg")
-    # _inner_find_one(image_path, output_dir, area=(69,86,901,516), debug_type=2)
-    # image_path = os.path.join(image_dir, "8.jpg")
-    # _inner_find_one(image_path, output_dir, area=(69,86,901,516), debug_type=2)
-    # image_path = os.path.join(image_dir, "9.jpg")
-    # _inner_find_one(image_path, output_dir, area=(69,86,901,516), debug_type=2)
-    # image_path = os.path.join(image_dir, "11.jpg")
-    # _inner_find_one(image_path, output_dir, area=(69,86,901,516), debug_type=2)
 
     if cv2.waitKey(0) == 27:
         cv2.destroyAllWindows()

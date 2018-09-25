@@ -401,10 +401,10 @@ if __name__ == "__main__":
                 os.remove(tmp_path)
 
     # for test
-    image_path = os.path.join(image_dir, "t_2.jpg")
+    image_path = os.path.join(image_dir, "01.jpg")
     _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
-    image_path = os.path.join(image_dir, "t_2_s.jpg")
-    _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
+    # image_path = os.path.join(image_dir, "t_2_s.jpg")
+    # _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
 
     # image_path = os.path.join(image_dir, "6.jpg")
     # _inner_find_one(image_path, '', 50,output_dir,  debug_type=1)
