@@ -411,9 +411,9 @@ if __name__ == "__main__":
                 os.remove(tmp_path)
 
     # for test
-    rgb_path = os.path.join(image_dir, "01.jpg")
-    depth_path = os.path.join(image_dir, "01_d.png")
-    _inner_find_one(rgb_path, depth_path, 1230,output_dir,  debug_type=1)
+    rgb_path = os.path.join(image_dir, "02.jpg")
+    depth_path = os.path.join(image_dir, "02_d.png")
+    _inner_find_one(rgb_path, depth_path, 1235,output_dir,  debug_type=1)
 
 
     if cv2.waitKey(0) == 27:
