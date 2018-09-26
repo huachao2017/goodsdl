@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from arm.serializers import *
-from tradition.edge.contour_detect_3d import find_contour
+from tradition.edge.contour_detect_3d import Contour_3d
 logger = logging.getLogger("django")
 from django.conf import settings
 
@@ -46,7 +46,8 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         headers = self.get_success_headers(serializer.data)
 
         now = datetime.datetime.now()
-        min_rectes, z, boxes = find_contour(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, 1230,is_mask=False) # FIXME serializer.instance.table_z)
+        detect = Contour_3d(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, 1230) # FIXME serializer.instance.table_z)
+        min_rectes, z, boxes = detect.find_contour(False)
         ret = []
         index = 0
         for min_rect in min_rectes:
