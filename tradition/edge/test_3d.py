@@ -1,6 +1,11 @@
 import os
 import cv2
 import time
+import django
+from django.conf import settings
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
+django.setup()
+from arm.models import ArmImage
 from tradition.edge.contour_detect_3d import Contour_3d
 
 
@@ -37,10 +42,17 @@ if __name__ == "__main__":
     # _inner_find_one(rgb_path, depth_path, 1230,output_dir,  is_mask=False, debug_type=1)
 
     test_dir = os.path.join(image_dir,'test')
+    path_prefix = '\\\\192.168.1.170/Image/'
+
     if os.path.isdir(test_dir):
-        for image in os.listdir(test_dir):
-            image_path = os.path.join(test_dir,image)
-            _inner_find_one(image_path, image_path, 1230, output_dir, is_mask=False, debug_type=2)
+      arm_image_qs = ArmImage.objects.order_by('-id')[:10]
+      for arm_image in arm_image_qs:
+        image_path = path_prefix+str(arm_image.rgb_source)
+        depth_path = path_prefix+str(arm_image.depth_source)
+        # print(image_path)
+        # image_path = os.path.join(test_dir,image)
+        # _inner_find_one(image_path, depth_path, 1230, output_dir, is_mask=False, debug_type=2) # 不用掩码检测
+        _inner_find_one(image_path, depth_path, 1230, output_dir, is_mask=True, debug_type=2)   # 用掩码后检测
 
     if cv2.waitKey(0) == 27:
         cv2.destroyAllWindows()
