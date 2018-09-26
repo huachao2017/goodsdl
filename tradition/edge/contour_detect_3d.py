@@ -88,6 +88,8 @@ class Contour_3d:
         self.rgb_img = cv2.imread(rgb_path)
         self.mask_rgb_img = self.rgb_img
         self.depth_img = cv2.imread(depth_path)
+        self.depth_data = self.depth_img[:, :, 0] + self.depth_img[:, :, 1] * 256 + self.depth_img[:, :, 2] * 256 * 256
+
         self.output_dir = output_dir
         self.debug_type = debug_type
         self.thresh_x = thresh_x
@@ -95,14 +97,11 @@ class Contour_3d:
 
     def _solve_mask_image(self):
 
-        depth_source_img = self.depth_img
-        depth_img = depth_source_img[:, :, 0] + depth_source_img[:, :, 1] * 256 + depth_source_img[:, :,
-                                                                                  2] * 256 * 256
-        depth_mask_code = np.full(depth_img.shape, self.table_z)
-        mask_depth_img = np.where(depth_img > self.table_z, depth_mask_code, depth_img)
+        depth_mask_code = np.full(self.depth_data.shape, self.table_z)
+        mask_depth_img = np.where(self.depth_data > self.table_z, depth_mask_code, self.depth_data)
         mask_depth_img = np.where(mask_depth_img < 10, depth_mask_code, mask_depth_img)
         mask_depth_img = self.table_z - mask_depth_img
-        mask_depth_img = np.where(mask_depth_img < 20, np.zeros(depth_img.shape), mask_depth_img)
+        mask_depth_img = np.where(mask_depth_img < 20, np.zeros(self.depth_data.shape), mask_depth_img)
         # print(mask_depth_img)
         mask_depth_img = np.expand_dims(mask_depth_img, 2)
         mask_depth_img = mask_depth_img.repeat(3, axis=2)
@@ -113,6 +112,21 @@ class Contour_3d:
             cv2.imwrite(output_path, self.mask_rgb_img)
 
         return self.mask_rgb_img
+
+    def _get_min_z(self,points):
+        mask_points_img = np.zeros(self.depth_img.shape)
+        cv2.drawContours(mask_points_img, [points], 0, (255,255,255), cv2.FILLED)
+        if self.debug_type > 1:
+            output_path = os.path.join(self.output_dir, 'depth_mask_' + self.image_name)
+            cv2.imwrite(output_path, mask_points_img)
+
+        mask_points_data = mask_points_img[:,:,0]
+        mask_depth_data = np.where(mask_points_data > 0, self.depth_data, self.table_z)
+        mask_depth_data = np.where(mask_depth_data < 10, self.table_z, mask_depth_data)
+        min_z = np.min(mask_depth_data)
+        print(min_z)
+
+        return self.table_z-min_z
 
     def _non_max_suppression_minrect(self,min_rectes):
         # if there are no boxes, return an empty list
@@ -362,15 +376,17 @@ class Contour_3d:
         ret_boxes = []
         ret_z = []
         for minrect in suppression_minrectes:
-            ret_z.append(self.table_z) # FIXME
+            # 做长宽转换并修订角度
             if minrect[1][0]>minrect[1][1]:
                 ret_minrectes.append(((minrect[0][0],minrect[0][1]),(minrect[1][1],minrect[1][0]),90 + minrect[2]))
             else:
                 ret_minrectes.append(minrect)
         for minrect in ret_minrectes:
             points = cv2.boxPoints(minrect)
+            points = np.int0(points)
             x, y, w, h = cv2.boundingRect(points)
             ret_boxes.append([x,y,x+w,y+h])
+            ret_z.append(self._get_min_z(points))
 
         if self.debug_type > 0 and len(ret_minrectes)>0:
             output = self.rgb_img
@@ -388,7 +404,7 @@ class Contour_3d:
                 font = cv2.FONT_HERSHEY_SIMPLEX
 
                 index += 1
-                cv2.putText(output, '%d,%d,%.2f' % (minrect[0][0],minrect[0][1],minrect[2]), (0, 12*index), font, 0.4, (255, 255, 255), 1)
+                cv2.putText(output, '%d,%d,%.2f,%d' % (minrect[0][0],minrect[0][1],minrect[2],ret_z[index-1]), (0, 12*index), font, 0.4, (255, 255, 255), 1)
             output_path = os.path.join(self.output_dir, '_output_'+self.image_name)
             cv2.imwrite(output_path, output)
 
