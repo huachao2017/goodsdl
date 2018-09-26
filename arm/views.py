@@ -1,7 +1,7 @@
 import logging
 import json
 import os
-import datetime
+import time
 import urllib.request
 import numpy as np
 
@@ -39,13 +39,14 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
 
     def create(self, request, *args, **kwargs):
         logger.info('begin detect arm:')
+        time0 = time.time()
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        now = datetime.datetime.now()
+        time1 = time.time()
         detect = Contour_3d(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, 1230) # FIXME serializer.instance.table_z)
         min_rectes, z, boxes = detect.find_contour(False)
         ret = []
@@ -72,5 +73,6 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         serializer.instance.result = json.dumps(ret, cls=NumpyEncoder)
         serializer.instance.save()
 
-        logger.info('end detect arm:')
+        time2 = time.time()
+        logger.info('end detect arm: %.2f, %.2f, %.2f' % (time2-time0, time1-time0, time2-time1))
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
