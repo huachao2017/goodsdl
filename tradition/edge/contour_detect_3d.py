@@ -61,12 +61,12 @@ def _rotated_rectangle_intersection_area(s_rect,m_rect,debug=False):
 
     c = Point(x / len_p, y / len_p)
 
-    if debug:
-        print('source:{}'.format(''.join(map(str,p))))
+    # if debug:
+    #     print('source:{}'.format(''.join(map(str,p))))
 
     pp = sorted(p, key=functools.cmp_to_key(lambda x, y: cmp(x, y, c)))
-    if debug:
-        print('sorted:{}'.format(''.join(map(str,pp))))
+    # if debug:
+    #     print('sorted:{}'.format(''.join(map(str,pp))))
     r = np.full((len_p, 2), 0.0, dtype='float32')
     for i in range(len(pp)):
         r[i][0] = pp[i].x
@@ -112,6 +112,8 @@ class Contour_3d:
             output_path = os.path.join(self.output_dir, '_mask_' + self.image_name)
             cv2.imwrite(output_path, self.mask_rgb_img)
 
+        return self.mask_rgb_img
+
     def _non_max_suppression_minrect(self,min_rectes):
         # if there are no boxes, return an empty list
         if len(min_rectes) == 0:
@@ -137,11 +139,11 @@ class Contour_3d:
             last = len(idxs) - 1
             i = idxs[last]
             pick.append(i)
-            if self.debug_type>1:
-                print('main:index:%d, center:%d,%d;w*h:%d,%d;theta:%d' % (i,
-                                                                          min_rectes[i][0][0], min_rectes[i][0][1],
-                                                                          min_rectes[i][1][0], min_rectes[i][1][1],
-                                                                          min_rectes[i][2]))
+            # if self.debug_type>1:
+            #     print('main:index:%d, center:%d,%d;w*h:%d,%d;theta:%d' % (i,
+            #                                                               min_rectes[i][0][0], min_rectes[i][0][1],
+            #                                                               min_rectes[i][1][0], min_rectes[i][1][1],
+            #                                                               min_rectes[i][2]))
 
             need_del = []
             for index in range(last):
@@ -151,15 +153,15 @@ class Contour_3d:
 
                 # compute the ratio of overlap
                 overlap = intersection_area / area[j]
-                if self.debug_type>1:
-                    print('%d,%d,%.2f' % (j, i, overlap))
+                # if self.debug_type>1:
+                #     print('%d,%d,%.2f' % (j, i, overlap))
                 if overlap > self.overlapthresh:
                     need_del.append(index)
                 elif self.debug_type>1:
-                    print('comp:index:%d, center:%d,%d;w*h:%d,%d;theta:%d' % (j,
-                                                                              min_rectes[j][0][0], min_rectes[j][0][1],
-                                                                              min_rectes[j][1][0], min_rectes[j][1][1],
-                                                                              min_rectes[j][2]))
+                    # print('comp:index:%d, center:%d,%d;w*h:%d,%d;theta:%d' % (j,
+                    #                                                           min_rectes[j][0][0], min_rectes[j][0][1],
+                    #                                                           min_rectes[j][1][0], min_rectes[j][1][1],
+                    #                                                           min_rectes[j][2]))
                     drawing_contours = np.zeros(self.rgb_img.shape, np.uint8)
                     points = cv2.boxPoints(min_rectes[j])
                     points = np.int0(points)
@@ -177,8 +179,8 @@ class Contour_3d:
             # delete all indexes from the index list that have
             idxs = np.delete(idxs, np.concatenate(([last], np.asarray(need_del))))
 
-        if self.debug_type>1:
-            print(pick)
+        # if self.debug_type>1:
+        #     print(pick)
         # return only the bounding boxes that were picked using the
         # integer data type
         ret_min_rectes = []
@@ -267,7 +269,7 @@ class Contour_3d:
 
         # step4: Detect contours
         _, contours, _ = cv2.findContours(thresh2, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        print('find contours: {}'.format(len(contours)))
+        # print('find contours: {}'.format(len(contours)))
         # print('first contour: {}'.format(contours[0]))
 
         # step5: contour filter with area
@@ -342,8 +344,8 @@ class Contour_3d:
             mask_rgb_img = self.rgb_img
 
         concate_minrectes = self._find_2d_minrect()
-        if self.debug_type > 1:
-            print('{}'.format(len(concate_minrectes)))
+        # if self.debug_type > 1:
+        #     print('{}'.format(len(concate_minrectes)))
 
         if self.debug_type > 1 and len(concate_minrectes)>0:
             drawing_contours = np.zeros(mask_rgb_img.shape, np.uint8)
