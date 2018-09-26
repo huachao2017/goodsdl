@@ -5,7 +5,7 @@ from arm import common
 # Create your models here.
 
 def image_upload_source(instance, filename):
-    now = instance.create_time
+    now = datetime.datetime.now()
     return '{}/{}/{}/{}_{}_{}'.format(common.get_detect_dir(), now.strftime('%Y%m'),
                                          now.strftime('%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
