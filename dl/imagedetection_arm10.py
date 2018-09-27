@@ -138,7 +138,7 @@ class ImageDetector:
                         break
                 index += 1
 
-            if index >= len(boxes.shape[0]):
+            if index >= boxes.shape[0]:
                 types.append(0)
             else:
                 types.append(classes[index])
