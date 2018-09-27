@@ -14,7 +14,7 @@ from arm.serializers import *
 from tradition.edge.contour_detect_3d import Contour_3d
 logger = logging.getLogger("django")
 from django.conf import settings
-from arm import imagedetection_old10
+from dl import imagedetection_arm10
 
 # Create your views here.
 class DefaultMixin:
@@ -52,7 +52,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
 
         time1 = time.time()
         if len(min_rectes)>0:
-            detector = imagedetection_old10.ImageDetectorFactory.get_static_detector()
+            detector = imagedetection_arm10.ImageDetectorFactory.get_static_detector()
             step1_min_score_thresh = .5
             types = detector.detect(serializer.instance.rgb_source.path, boxes)
 
