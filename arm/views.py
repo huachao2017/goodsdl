@@ -14,6 +14,7 @@ from arm.serializers import *
 from tradition.edge.contour_detect_3d import Contour_3d
 logger = logging.getLogger("django")
 from django.conf import settings
+from arm import imagedetection_old10
 
 # Create your views here.
 class DefaultMixin:
@@ -46,9 +47,15 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        time1 = time.time()
         detect = Contour_3d(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, 1230) # FIXME serializer.instance.table_z)
         min_rectes, z, boxes = detect.find_contour(False)
+
+        time1 = time.time()
+        if len(min_rectes)>0:
+            detector = imagedetection_old10.ImageDetectorFactory.get_static_detector()
+            step1_min_score_thresh = .5
+            types = detector.detect(serializer.instance.rgb_source.path, boxes)
+
         ret = []
         index = 0
         for min_rect in min_rectes:
@@ -66,7 +73,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                     'xmax': boxes[index][2],
                     'ymax': boxes[index][3],
                 },
-                'upc': "1", # TODO
+                'upc': types[index],
             }
             ret.append(one)
             index += 1
