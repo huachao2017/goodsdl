@@ -131,8 +131,8 @@ class ImageDetector:
                 ymax=min(ymax1,ymax2)
 
                 if xmin < xmax and ymin < ymax:
-                    area = (xmax-xmin)*(ymin-ymin)
-                    area1 = (xmax1-xmin1)*(ymin1-ymin1)
+                    area = (xmax-xmin)*(ymax-ymin)
+                    area1 = (xmax1-xmin1)*(ymax1-ymin1)
                     if area/area1 > 0.5:
                         index = j
                         break
