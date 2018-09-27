@@ -35,17 +35,11 @@ table_z  int                                      -- 桌面标定的z值
     },
 ]
 
-
-upc:
-[
-1:'香海鱼豆腐',
-2:'亲嘴豆皮',
-3:'多力多玉米片',
-4:'焙朗早餐饼',
-5:'康师傅妙芙（巧克力味）',
-6:'法丽兹曲奇（抹茶慕斯）',
-7:'百奇（巧克力味）',
-8:'三元纯牛奶',
-9:'雪碧（瓶装）',
-10:'可口可乐（听装）',
-]
+2、后台上传训练图片接口：http://ai.fastxbox.cn/arm/traingoods/
+post入参：
+deviceid  string                                  -- 暂时送100000
+rgb_source  file                                  -- rgb图
+depth_source file                                 -- 深度图
+table_z  int                                      -- 桌面标定的z值
+upc   string
+返回201

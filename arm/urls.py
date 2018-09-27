@@ -20,6 +20,7 @@ from arm import views
 
 router = DefaultRouter()
 router.register(r'detect', views.ArmImageViewSet)
+router.register(r'armtrain', views.ArmTrainImageViewSet)
 urlpatterns = [
     url(r'^arm/', include(router.urls))
 ]
