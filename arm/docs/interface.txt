@@ -43,3 +43,10 @@ depth_source file                                 -- 深度图
 table_z  int                                      -- 桌面标定的z值
 upc   string
 返回201
+
+1:苹果
+2:香蕉
+3:胡萝卜
+4:可口可乐
+5:雪碧
+6:荔枝饮料

@@ -6,6 +6,7 @@ import urllib.request
 import numpy as np
 import shutil
 from PIL import Image
+import tensorflow as tf
 
 from rest_framework import mixins
 from rest_framework import viewsets
@@ -14,10 +15,9 @@ from rest_framework import status
 
 from arm.serializers import *
 from tradition.edge.contour_detect_3d import Contour_3d
-from goods2.models import TrainImage
+from goods2.models import TrainImage, TrainAction, TrainModel
 logger = logging.getLogger("django")
-from django.conf import settings
-from dl import imagedetection_arm10
+from arm.dl import imagedetection
 
 from goods2 import common as goods2_common
 from arm import common
@@ -57,17 +57,40 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         min_rectes, z, boxes = detect.find_contour(False)
 
         time1 = time.time()
+        detector = None
+        image = None
+        tmp_dir = None
         if len(min_rectes)>0:
-            detector = imagedetection_arm10.ImageDetectorFactory.get_static_detector()
-            step1_min_score_thresh = .5
-            types = detector.detect(serializer.instance.rgb_source.path, boxes)
+            # 准备阶段
+            last_normal_train_qs = TrainAction.objects.filter(state=goods2_common.TRAIN_STATE_COMPLETE).filter(
+                deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
+            if len(last_normal_train_qs) > 0:
+                logger.info(
+                    '[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
+                last_train = last_normal_train_qs[0]
+                last_normal_train_model = \
+                TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
+                detector = imagedetection.ImageDetectorFactory.get_static_detector(
+                    last_normal_train_model)
+                image = Image.open(serializer.instance.rgb_source.path)
+                tmp_dir = '{}/tmp'.format(os.path.dirname(serializer.instance.rgb_source.path))
+                if not tf.gfile.Exists(tmp_dir):
+                    tf.gfile.MakeDirs(tmp_dir)
 
         ret = []
         index = 0
         for min_rect in min_rectes:
-            logger.info('center: %d,%d; w*h:%d,%d; theta:%d; z:%d, boxes: x1:%d, y1:%d, x2:%d, y2:%d, type:%d' % (
+            # 检测类型
+            upcs = [0,]
+            scores = [0,]
+            if detector is not None:
+                oneimage = image.crop((boxes[index][0], boxes[index][1], boxes[index][2], boxes[index][3]))
+                one_image_path = os.path.join(tmp_dir,'%d.jpg' % (index))
+                oneimage.save(one_image_path, 'JPEG')
+                upcs, scores = detector.detect(one_image_path)
+            logger.info('center: %d,%d; w*h:%d,%d; theta:%d; z:%d, boxes: x1:%d, y1:%d, x2:%d, y2:%d, type:%d, score:%.2f' % (
             min_rect[0][0], min_rect[0][1], min_rect[1][0], min_rect[1][1], min_rect[2], z[index], boxes[index][0],
-            boxes[index][1], boxes[index][2], boxes[index][3], types[index]))
+            boxes[index][1], boxes[index][2], boxes[index][3], upcs[0], scores[0]))
             one = {
                 'x': min_rect[0][0],
                 'y': min_rect[0][1],
@@ -79,7 +102,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                     'xmax': boxes[index][2],
                     'ymax': boxes[index][3],
                 },
-                'upc': types[index],
+                'upc': upcs[0],
             }
             ret.append(one)
             index += 1
@@ -111,7 +134,6 @@ class ArmTrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
             train_source_dir = '{}/{}/{}'.format(goods2_common.get_dataset_dir(True), serializer.instance.deviceid,
                                                  serializer.instance.upc)
 
-            import tensorflow as tf
             if not tf.gfile.Exists(train_source_dir):
                 tf.gfile.MakeDirs(train_source_dir)
             train_source_path = '{}/{}'.format(train_source_dir, 'arm_' + os.path.basename(serializer.instance.rgb_source.path))
