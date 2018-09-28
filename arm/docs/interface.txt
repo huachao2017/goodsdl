@@ -35,7 +35,7 @@ table_z  int                                      -- 桌面标定的z值
     },
 ]
 
-2、后台上传训练图片接口：http://ai.fastxbox.cn/arm/traingoods/
+2、后台上传训练图片接口：http://ai.fastxbox.cn/arm/armtrain/
 post入参：
 deviceid  string                                  -- 暂时送100000
 rgb_source  file                                  -- rgb图
