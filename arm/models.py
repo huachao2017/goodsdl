@@ -25,7 +25,7 @@ class ArmImage(models.Model):
 
 
 class ArmTrainImage(models.Model):
-    deviceid = models.CharField(max_length=20, default='100000', unique=True)
+    deviceid = models.CharField(max_length=20, default='100000')
     rgb_source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     depth_source = models.ImageField(max_length=200, upload_to=train_image_upload_source)
     table_z = models.IntegerField(default=0)
