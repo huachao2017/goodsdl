@@ -231,7 +231,7 @@ class Contour_3d:
             cv2.imwrite(sharpen_path, sharpen)
 
         # step2: sobel caculate edges
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         x = cv2.Sobel(sharpen, cv2.CV_64F, 1, 0, ksize=-1)
         y = cv2.Sobel(sharpen, cv2.CV_64F, 0, 1, ksize=-1)
         edges = cv2.subtract(x, y)
@@ -248,7 +248,7 @@ class Contour_3d:
         edges = cv2.erode(edges, kernel)
         edges = cv2.erode(edges, kernel)
         edges = cv2.erode(edges, kernel)
-        edges = cv2.GaussianBlur(edges, (9, 9), 0)
+        edges = cv2.GaussianBlur(edges, (5, 5), 0)
         if self.debug_type > 1:
             edges_path = os.path.join(self.output_dir, 'edges_' + self.image_name)
             cv2.imwrite(edges_path, edges)
