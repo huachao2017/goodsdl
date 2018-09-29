@@ -300,8 +300,8 @@ class Contour_3d:
             area = (bottommost - topmost) * (rightmost - leftmost)
             if area < max_area / 200:  # 去除面积过小的物体
                 continue
-            if area > max_area * .2:  # 去除面积过大的物体
-                continue
+            # if area > max_area * .2:  # 去除面积过大的物体
+            #     continue
             area_to_contour[area] = cnt
             # print(tuple(cnt[cnt[:, :, 0].argmin()][0]))
             # print(tuple(cnt[cnt[:, :, 0].argmax()][0]))
