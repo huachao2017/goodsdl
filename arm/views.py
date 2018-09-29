@@ -83,9 +83,10 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
             scores = [0,]
             if detector is not None:
                 oneimage = image.crop((boxes[index][0], boxes[index][1], boxes[index][2], boxes[index][3]))
-                one_image_path = os.path.join(tmp_dir,'%d.jpg' % (index))
+                one_image_path = os.path.join(tmp_dir,'%d_%d.jpg' % (serializer.instance.pk, index))
                 oneimage.save(one_image_path, 'JPEG')
                 upcs, scores = detector.detect(one_image_path)
+                shutil.move(one_image_path,os.path.join(tmp_dir,'%d_%d_%s.jpg' % (serializer.instance.pk, index, upcs[0])))
             logger.info('center: %d,%d; w*h:%d,%d; theta:%d; z:%d, boxes: x1:%d, y1:%d, x2:%d, y2:%d, type:%s, score:%.2f' % (
             min_rect[0][0], min_rect[0][1], min_rect[1][0], min_rect[1][1], min_rect[2], z[index], boxes[index][0],
             boxes[index][1], boxes[index][2], boxes[index][3], upcs[0], scores[0]))
