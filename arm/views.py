@@ -65,8 +65,6 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
             last_normal_train_qs = TrainAction.objects.filter(state=goods2_common.TRAIN_STATE_COMPLETE).filter(
                 deviceid='100000').exclude(action='TC').order_by('-id')
             if len(last_normal_train_qs) > 0:
-                logger.info(
-                    '[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
                 last_train = last_normal_train_qs[0]
                 last_normal_train_model = \
                 TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
