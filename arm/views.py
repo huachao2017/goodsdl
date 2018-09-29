@@ -63,7 +63,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         if len(min_rectes)>0:
             # 准备阶段
             last_normal_train_qs = TrainAction.objects.filter(state=goods2_common.TRAIN_STATE_COMPLETE).filter(
-                deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
+                deviceid='100000').exclude(action='TC').order_by('-id')
             if len(last_normal_train_qs) > 0:
                 logger.info(
                     '[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
