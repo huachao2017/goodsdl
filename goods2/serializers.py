@@ -53,7 +53,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ('pk', 'deviceid', 'identify', 'source', 'image_ground_truth', 'image_results', 'train_models', 'create_time')
+        fields = ('pk', 'deviceid', 'identify', 'source', 'image_ground_truth', 'image_results', 'train_models', 'is_train', 'create_time')
         read_only_fields = ('create_time',)
 
 

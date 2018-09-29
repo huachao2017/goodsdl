@@ -34,7 +34,7 @@ class DeviceidTrainViewSet(DefaultMixin, viewsets.ModelViewSet):
 
 class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
-    queryset = Image.objects.exclude(image_ground_truth_id=None).order_by('-id')
+    queryset = Image.objects.exclude(image_ground_truth_id=None).filter(is_train=False).order_by('-id')
     serializer_class = UserImageSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('deviceid', 'upc')
@@ -74,6 +74,8 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
             tf.gfile.MakeDirs(train_source_dir)
         train_source_path = '{}/{}'.format(train_source_dir, 'image_' + os.path.basename(instance.source.path))
         shutil.copy(instance.source.path, train_source_path)
+        instance.is_train = True
+        instance.save()
         TrainImage.objects.create(
             deviceid=instance.deviceid,
             source=train_source,
