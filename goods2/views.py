@@ -34,7 +34,7 @@ class DeviceidTrainViewSet(DefaultMixin, viewsets.ModelViewSet):
 
 
 class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                   viewsets.GenericViewSet):
+                   viewsets.GenericViewSet, mixins.DestroyModelMixin):
     queryset = Image.objects.exclude(image_ground_truth_id=None).filter(is_train=False).order_by('-id')
     serializer_class = UserImageSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -87,6 +87,14 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
         )
         return Response(util.wrap_ret([]), status=status.HTTP_200_OK)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            os.remove(instance.source.path)
+        except:
+            pass
+        self.perform_destroy(instance)
+        return Response(util.wrap_ret(None), status=status.HTTP_200_OK)
 
 
 class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
