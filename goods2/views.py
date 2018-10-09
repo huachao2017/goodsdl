@@ -85,7 +85,7 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
             source_from=2,
             score=1.0,
         )
-        return Response(util.wrap_ret([]), status=status.HTTP_204_NO_CONTENT)
+        return Response(util.wrap_ret([]), status=status.HTTP_200_OK)
 
 
 
@@ -328,7 +328,7 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         except:
             pass
         self.perform_destroy(instance)
-        return Response(util.wrap_ret(None), status=status.HTTP_204_NO_CONTENT)
+        return Response(util.wrap_ret(None), status=status.HTTP_200_OK)
 
 
 class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
