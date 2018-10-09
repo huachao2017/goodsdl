@@ -323,8 +323,10 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-
-        os.remove(instance.source.path)
+        try:
+            os.remove(instance.source.path)
+        except:
+            pass
         self.perform_destroy(instance)
         return Response(util.wrap_ret(None), status=status.HTTP_204_NO_CONTENT)
 
