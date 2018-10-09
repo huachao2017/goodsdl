@@ -333,15 +333,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')
     serializer_class = TrainActionSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('deviceid')
-
-    @action(methods=['get'], detail=False)
-    def device_list(self, request):
-        devices = TrainAction.objects.values('deviceid').distinct()
-        ret = []
-        for deviceid in devices:
-            ret.append(deviceid['deviceid'])
-        return Response(ret)
+    filter_fields = ('deviceid',)
 
 class TrainModelViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TrainModel.objects.order_by('-id')
