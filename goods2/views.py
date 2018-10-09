@@ -347,9 +347,10 @@ class TaskLogViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
 
 class CreateTrain(APIView):
     def get(self, request):
-        action = request.query_params['action']
-        if action not in ['TA', 'TF', 'TC']:
+        if 'action' not in request.query_params:
             action = 'TA'
+        else:
+            action = request.query_params['action']
         deviceid = request.query_params['deviceid']
         from goods2.cron import do_create_train
 
