@@ -12,6 +12,7 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from goods2.dl import imagedetection
 from goods2 import common
+from goods2 import util
 
 from goods2.serializers import *
 
@@ -84,7 +85,7 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
             source_from=2,
             score=1.0,
         )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(util.wrap_ret([]), status=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -325,14 +326,22 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
 
         os.remove(instance.source.path)
         self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(util.wrap_ret(None), status=status.HTTP_204_NO_CONTENT)
 
 
-class TrainActionViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                      viewsets.GenericViewSet):
+class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = TrainAction.objects.order_by('-id')
     serializer_class = TrainActionSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('deviceid')
 
+    @action(methods=['get'], detail=False)
+    def device_list(self, request):
+        devices = TrainAction.objects.values('deviceid').distinct()
+        ret = []
+        for deviceid in devices:
+            ret.append(deviceid['deviceid'])
+        return Response(ret)
 
 class TrainModelViewSet(DefaultMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TrainModel.objects.order_by('-id')
@@ -346,13 +355,13 @@ class CreateTrain(APIView):
     def get(self, request):
         action = request.query_params['action']
         if action not in ['TA', 'TF', 'TC']:
-            raise ValueError('action must be one of (TA, TF, TC)')
+            action = 'TA'
         deviceid = request.query_params['deviceid']
         from goods2.cron import do_create_train
 
         train_action = do_create_train(action, deviceid, None)
 
-        return Response([], status=status.HTTP_201_CREATED)
+        return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
 
 class ClearData(APIView):
     def get(self, request):

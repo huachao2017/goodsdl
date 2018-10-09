@@ -26,7 +26,7 @@ router.register(r'image', views.ImageViewSet)
 router.register(r'imagegroundtruth', views.ImageGroundTruthViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
 
-router.register(r'trainaction', views.TrainActionViewSet)
+router.register(r'train', views.TrainActionViewSet)
 router.register(r'trainmodel', views.TrainModelViewSet)
 router.register(r'tasklog', views.TaskLogViewSet)
 urlpatterns = [
