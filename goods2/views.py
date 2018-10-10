@@ -363,6 +363,7 @@ class CreateTrain(APIView):
         from goods2.cron import do_create_train
 
         train_action = do_create_train(action, deviceid, None)
+        logger.info('[{}]create_train by menu: {}'.format(deviceid, action))
 
         return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
 
