@@ -271,8 +271,8 @@ def _do_create_train():
                     # doing_tf = doing_tf_qs[0]
                     # doing_tf.state = 9
                     # doing_tf.save()
-                logger.info('[{}]create_train: TC,新增类（{}）,新增样本（{}）'.format(deviceid, len(append_upcs), len(train_image_qs)))
-                do_create_train('TC', deviceid, f_train_model.pk)
+                # logger.info('[{}]create_train: TC,新增类（{}）,新增样本（{}）'.format(deviceid, len(append_upcs), len(train_image_qs)))
+                # do_create_train('TC', deviceid, f_train_model.pk)
         elif len(doing_ta_tf) == 0 and len(append_upcs) == 0:
             now = datetime.datetime.now()
             # if (now - last_t.complete_time).days >= 1 or len(train_image_qs) >= 50:
