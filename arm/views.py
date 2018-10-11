@@ -127,7 +127,7 @@ class ArmTrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         detect = Contour_3d(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, serializer.instance.table_z-10)
         min_rectes, z, boxes = detect.find_contour(False)
 
-        if len(boxes) == 1:
+        if len(boxes) >= 1:
 
             train_source = '{}/{}/{}/{}'.format(goods2_common.get_dataset_dir(), serializer.instance.deviceid, serializer.instance.upc,
                                                 'arm_' + os.path.basename(serializer.instance.rgb_source.path))
