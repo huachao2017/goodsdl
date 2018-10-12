@@ -82,7 +82,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
             deleted_rgb = '{}/{}'.format(deleted_dir, os.path.basename(serializer.instance.rgb_source.path))
             shutil.move(serializer.instance.rgb_source.path, deleted_rgb)
             deleted_depth = '{}/{}'.format(deleted_dir, os.path.basename(serializer.instance.depth_source.path))
-            shutil.move(serializer.instance.rgb_source.path, deleted_depth)
+            shutil.move(serializer.instance.depth_source.path, deleted_depth)
 
         ret = []
         index = 0
