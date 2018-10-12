@@ -298,7 +298,7 @@ class Contour_3d:
             # print('%d,%d,%d,%d' %(leftmost,rightmost,topmost,bottommost))
             # return
             area = (bottommost - topmost) * (rightmost - leftmost)
-            if area < max_area / 200:  # 去除面积过小的物体
+            if area < max_area / 100:  # 去除面积过小的物体
                 continue
             # if area > max_area * .2:  # 去除面积过大的物体
             #     continue
