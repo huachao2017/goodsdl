@@ -75,6 +75,14 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                 tmp_dir = '{}/tmp'.format(os.path.dirname(serializer.instance.rgb_source.path))
                 if not tf.gfile.Exists(tmp_dir):
                     tf.gfile.MakeDirs(tmp_dir)
+        else:
+            deleted_dir = '{}/deleted'.format(os.path.dirname(serializer.instance.rgb_source.path))
+            if not tf.gfile.Exists(deleted_dir):
+                tf.gfile.MakeDirs(deleted_dir)
+            deleted_rgb = '{}/{}'.format(deleted_dir, os.path.basename(serializer.instance.rgb_source.path))
+            shutil.move(serializer.instance.rgb_source.path, deleted_rgb)
+            deleted_depth = '{}/{}'.format(deleted_dir, os.path.basename(serializer.instance.depth_source.path))
+            shutil.move(serializer.instance.rgb_source.path, deleted_depth)
 
         ret = []
         index = 0
