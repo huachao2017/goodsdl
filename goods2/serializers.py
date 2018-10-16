@@ -40,9 +40,10 @@ class ImageTrainModelSerializer(serializers.ModelSerializer):
 
 
 class UserImageSerializer(serializers.ModelSerializer):
+    image_results = ImageResultSerializer(many=True, read_only=True)
     class Meta:
         model = Image
-        fields = ('pk', 'deviceid', 'source', 'upc', 'create_time')
+        fields = ('pk', 'deviceid', 'source', 'upc', 'image_results', 'create_time')
         read_only_fields = ('create_time',)
 
 
