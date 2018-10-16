@@ -50,6 +50,7 @@ class Image(models.Model):
     identify = models.CharField(max_length=64, db_index=True)
     source = models.ImageField(max_length=200, upload_to=image_upload_source)
     is_train = models.BooleanField(default=False)
+    is_hand = models.BooleanField(default=False)
     create_time = models.DateTimeField('date created', auto_now_add=True, db_index=True)
 
 

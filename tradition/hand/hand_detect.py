@@ -38,11 +38,12 @@ class HandDetect(object):
 
     # Find contours of the filtered frame
     _, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    if len(contours) <= 0:
+    cnts = self.find_max_hand(contours)
+    if cnts is None:
       return False
 
     if self.debug_type > 0:
-      self.show_hand(self.find_max_hand(contours))
+      self.show_hand(cnts)
     return True
 
 
@@ -52,15 +53,18 @@ class HandDetect(object):
     # cv2.imshow('Dilation',median)
 
     # Find Max contour area (Assume that hand is in the frame)
-    max_area = 100
-    ci = 0
+    image_size = self.image.shape[0] * self.image.shape[1]
+    max_area = int(image_size/50)
+    ci = -1
     for i in range(len(contours)):
       cnt = contours[i]
       area = cv2.contourArea(cnt)
       if (area > max_area):
         max_area = area
         ci = i
-    return contours[ci]
+    if ci >= 0:
+      return contours[ci]
+    return None
 
   def show_hand(self, cnts):
 

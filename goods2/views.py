@@ -13,6 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from goods2.dl import imagedetection
 from goods2 import common
 from goods2 import util
+from tradition.hand.hand_detect import HandDetect
 
 from goods2.serializers import *
 
@@ -35,7 +36,7 @@ class DeviceidTrainViewSet(DefaultMixin, viewsets.ModelViewSet):
 
 class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet, mixins.DestroyModelMixin):
-    queryset = Image.objects.exclude(image_ground_truth_id=None).filter(is_train=False).order_by('-id')
+    queryset = Image.objects.exclude(image_ground_truth_id=None).filter(is_train=False).filter(is_hand=False).order_by('-id')
     serializer_class = UserImageSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('deviceid', 'upc')
@@ -120,56 +121,16 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                 deviceid=serializer.instance.deviceid,
             )
 
-        upcs = []
-        scores = []
-        # 检测阶段
-        last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
-        if len(last_normal_train_qs)>0:
-            logger.info('[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
-            last_train = last_normal_train_qs[0]
-            last_normal_train_model = TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
-            detector = imagedetection.ImageDetectorFactory.get_static_detector(
-                last_normal_train_model)
-            upcs, scores = detector.detect(serializer.instance)
-            ImageTrainModel.objects.create(
-                train_model_id=last_normal_train_model.pk,
-                image_id=serializer.instance.pk
-            )
+        # hand_detect = HandDetect(serializer.instance.source.path, debug_type=1)
+        # is_hand = hand_detect.detect()
+        # if is_hand:
+        #     serializer.instance.is_hand = True
+        #     serializer.instance.save()
+        #     logger.info('[{}]detect result: {}'.format(serializer.instance.deviceid, 'has hand'))
+        #     return Response([], status=status.HTTP_201_CREATED, headers=headers)
 
-            last_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(deviceid=serializer.instance.deviceid).filter(action='TC').filter(complete_time__gt=last_normal_train_model.create_time).order_by('-id')
-            if len(last_tc_train_qs)>0:
-                last_tc_train = last_tc_train_qs[0]
-                last_tc_train_model = TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
-                detector2 = imagedetection.ImageDetectorFactory.get_static_detector(
-                    last_tc_train_model)
-                upcs2, scores2 = detector2.detect(serializer.instance)
-                ImageTrainModel.objects.create(
-                    train_model_id=last_tc_train_model.pk,
-                    image_id=serializer.instance.pk
-                )
-                # 联合计算
-                upc_to_scores = {}
-                for i in range(len(upcs)):
-                    if upcs[i] in upc_to_scores:
-                        upc_to_scores[upcs[i]] = upc_to_scores[upcs[i]]*0.5 + scores[i]*0.5
-                    else:
-                        upc_to_scores[upcs[i]] = scores[i]
-                for i in range(len(upcs2)):
-                    if upcs2[i] in upc_to_scores:
-                        upc_to_scores[upcs2[i]] = upc_to_scores[upcs2[i]]*0.5 + scores2[i]*0.5
-                    else:
-                        upc_to_scores[upcs2[i]] = scores2[i]
+        scores, upcs = self.ai_detect(serializer)
 
-                upcs, scores = sort_upc_to_scores(upc_to_scores)
-
-            # 输出结果
-            for i in range(len(upcs)):
-                if i < 5: # 不超过5个
-                    ImageResult.objects.create(
-                        image_id=serializer.instance.pk,
-                        upc=upcs[i],
-                        score=scores[i]
-                    )
 
         ret = []
         if device.deviceid in ['485','200'] or device.state >= common.DEVICE_STATE_COMMERCIAL:
@@ -221,6 +182,65 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         logger.info('[{}]detect result: {}'.format(serializer.instance.deviceid, ret))
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
+    def ai_detect(self, serializer):
+        upcs = []
+        scores = []
+        # 检测阶段
+        last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(
+            deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
+        if len(last_normal_train_qs) > 0:
+            logger.info('[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
+            last_train = last_normal_train_qs[0]
+            last_normal_train_model = \
+            TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
+            detector = imagedetection.ImageDetectorFactory.get_static_detector(
+                last_normal_train_model)
+            upcs, scores = detector.detect(serializer.instance)
+            ImageTrainModel.objects.create(
+                train_model_id=last_normal_train_model.pk,
+                image_id=serializer.instance.pk
+            )
+
+            last_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(
+                deviceid=serializer.instance.deviceid).filter(action='TC').filter(
+                complete_time__gt=last_normal_train_model.create_time).order_by('-id')
+            if len(last_tc_train_qs) > 0:
+                last_tc_train = last_tc_train_qs[0]
+                last_tc_train_model = \
+                TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
+                detector2 = imagedetection.ImageDetectorFactory.get_static_detector(
+                    last_tc_train_model)
+                upcs2, scores2 = detector2.detect(serializer.instance)
+                ImageTrainModel.objects.create(
+                    train_model_id=last_tc_train_model.pk,
+                    image_id=serializer.instance.pk
+                )
+                # 联合计算
+                upc_to_scores = {}
+                for i in range(len(upcs)):
+                    if upcs[i] in upc_to_scores:
+                        upc_to_scores[upcs[i]] = upc_to_scores[upcs[i]] * 0.5 + scores[i] * 0.5
+                    else:
+                        upc_to_scores[upcs[i]] = scores[i]
+                for i in range(len(upcs2)):
+                    if upcs2[i] in upc_to_scores:
+                        upc_to_scores[upcs2[i]] = upc_to_scores[upcs2[i]] * 0.5 + scores2[i] * 0.5
+                    else:
+                        upc_to_scores[upcs2[i]] = scores2[i]
+
+                upcs, scores = sort_upc_to_scores(upc_to_scores)
+
+            # 输出结果
+            for i in range(len(upcs)):
+                if i < 5:  # 不超过5个
+                    ImageResult.objects.create(
+                        image_id=serializer.instance.pk,
+                        upc=upcs[i],
+                        score=scores[i]
+                    )
+        return scores, upcs
+
 
 def sort_upc_to_scores(upc_to_scores):
     items = upc_to_scores.items()
