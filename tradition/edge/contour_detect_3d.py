@@ -75,7 +75,7 @@ def _rotated_rectangle_intersection_area(s_rect,m_rect,debug=False):
     return (r2,r)
 
 class Contour_3d:
-    def __init__(self, rgb_path, depth_path, table_z, output_dir=None, debug_type=1, thresh_x = 120, overlapthresh=.3):
+    def __init__(self, rgb_path, depth_path, table_z, output_dir=None, debug_type=1, thresh_x = 10, overlapthresh=.3):
         image_dir, image_name = os.path.split(rgb_path)
         if output_dir is None:
             output_dir = image_dir
@@ -202,56 +202,58 @@ class Contour_3d:
             ret_min_rectes.append(min_rectes[index])
         return ret_min_rectes
 
-    def _find_2d_minrect(self):
+    def _find_2d_minrect(self, solve = False):
         # param@debug_type:0,not debug; 1,store bbox file; 2,store middle caculate file; 3,show window
         source = self.mask_rgb_img.copy()
-
-        # step1: blur image
         max_area = source.shape[0] * source.shape[1]
-        # Apply gaussian blur to the grayscale image
-        # source = cv2.pyrMeanShiftFiltering(source, 31, 91)
-        sharpen = source
-        # blur = cv2.pyrMeanShiftFiltering(source, 21, 51)
-        # kernel_sharpen = np.array([[-1,-1,-1,-1,-1],
-        #                            [-1,2,2,2,-1],
-        #                            [-1,2,8,2,-1],
-        #                            [-2,2,2,2,-1],
-        #                            [-1,-1,-1,-1,-1]])/8.0
-        # kernel_sharpen = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
-        # sharpen = cv2.filter2D(sharpen, -1, kernel_sharpen)
-        sharpen = cv2.cvtColor(sharpen, cv2.COLOR_BGR2GRAY)
 
-        # 双向滤波比较不错
-        # sharpen = cv2.bilateralFilter(sharpen, 3, 30, 30)
-        # sharpen = cv2.split(sharpen)[0]
-        # sharpen = cv2.equalizeHist(sharpen)
-        # sharpen = cv2.GaussianBlur(sharpen, (5, 5), 0)
-        if self.debug_type > 1:
-            sharpen_path = os.path.join(self.output_dir, 'sharpen_' + self.image_name)
-            cv2.imwrite(sharpen_path, sharpen)
+        if solve:
+            # step1: blur image
+            # Apply gaussian blur to the grayscale image
+            source = cv2.pyrMeanShiftFiltering(source, 31, 91)
+            sharpen = source
+            # blur = cv2.pyrMeanShiftFiltering(source, 21, 51)
+            # kernel_sharpen = np.array([[-1,-1,-1,-1,-1],
+            #                            [-1,2,2,2,-1],
+            #                            [-1,2,8,2,-1],
+            #                            [-2,2,2,2,-1],
+            #                            [-1,-1,-1,-1,-1]])/8.0
+            # kernel_sharpen = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+            # sharpen = cv2.filter2D(sharpen, -1, kernel_sharpen)
 
-        # step2: sobel caculate edges
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        x = cv2.Sobel(sharpen, cv2.CV_64F, 1, 0, ksize=-1)
-        y = cv2.Sobel(sharpen, cv2.CV_64F, 0, 1, ksize=-1)
-        edges = cv2.subtract(x, y)
-        edges = cv2.convertScaleAbs(edges)
-        absX = cv2.convertScaleAbs(x)  # 转回uint8
-        absY = cv2.convertScaleAbs(y)
+            # 双向滤波比较不错
+            # sharpen = cv2.bilateralFilter(sharpen, 3, 30, 30)
+            # sharpen = cv2.split(sharpen)[0]
+            # sharpen = cv2.equalizeHist(sharpen)
+            # sharpen = cv2.GaussianBlur(sharpen, (5, 5), 0)
+            if self.debug_type > 1:
+                sharpen_path = os.path.join(self.output_dir, 'sharpen_' + self.image_name)
+                cv2.imwrite(sharpen_path, sharpen)
 
-        edges = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
-        edges = cv2.bilateralFilter(edges, 5, 75, 75)
-        edges = cv2.GaussianBlur(edges, (5, 5), 0)
-        edges = cv2.dilate(edges, kernel)
-        edges = cv2.dilate(edges, kernel)
-        edges = cv2.dilate(edges, kernel)
-        edges = cv2.erode(edges, kernel)
-        edges = cv2.erode(edges, kernel)
-        edges = cv2.erode(edges, kernel)
-        edges = cv2.GaussianBlur(edges, (5, 5), 0)
-        if self.debug_type > 1:
-            edges_path = os.path.join(self.output_dir, 'edges_' + self.image_name)
-            cv2.imwrite(edges_path, edges)
+            # step2: sobel caculate edges
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+            x = cv2.Sobel(sharpen, cv2.CV_64F, 1, 0, ksize=-1)
+            y = cv2.Sobel(sharpen, cv2.CV_64F, 0, 1, ksize=-1)
+            edges = cv2.subtract(x, y)
+            edges = cv2.convertScaleAbs(edges)
+            absX = cv2.convertScaleAbs(x)  # 转回uint8
+            absY = cv2.convertScaleAbs(y)
+
+            edges = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
+            edges = cv2.bilateralFilter(edges, 5, 75, 75)
+            edges = cv2.GaussianBlur(edges, (5, 5), 0)
+            edges = cv2.dilate(edges, kernel)
+            edges = cv2.dilate(edges, kernel)
+            edges = cv2.dilate(edges, kernel)
+            edges = cv2.erode(edges, kernel)
+            edges = cv2.erode(edges, kernel)
+            edges = cv2.erode(edges, kernel)
+            edges = cv2.GaussianBlur(edges, (5, 5), 0)
+            if self.debug_type > 1:
+                edges_path = os.path.join(self.output_dir, 'edges_' + self.image_name)
+                cv2.imwrite(edges_path, edges)
+        else:
+            edges = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
 
         # step3: binary edges
         _, thresh1 = cv2.threshold(edges, self.thresh_x, 255, cv2.THRESH_BINARY)

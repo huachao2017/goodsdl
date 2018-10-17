@@ -51,8 +51,12 @@ if __name__ == "__main__":
         depth_path = path_prefix+str(arm_image.depth_source)
         # print(image_path)
         # image_path = os.path.join(test_dir,image)
-        _inner_find_one(image_path, depth_path, 1230, output_dir, is_mask=False, debug_type=2) # 不用掩码检测
-        # _inner_find_one(image_path, depth_path, 1230, output_dir, is_mask=True, debug_type=2)   # 用掩码后检测
+        if os.path.isfile(image_path) and os.path.isfile(depth_path):
+          _inner_find_one(image_path, depth_path, 1230, output_dir, is_mask=False, debug_type=2) # 不用掩码检测
+        else:
+          print('image file not exist: %s:%s' % (image_path, depth_path))
+
+          # _inner_find_one(image_path, depth_path, 1230, output_dir, is_mask=True, debug_type=2)   # 用掩码后检测
 
     if cv2.waitKey(0) == 27:
         cv2.destroyAllWindows()
