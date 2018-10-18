@@ -53,13 +53,13 @@ def _do_check_device():
         device_precision_qs = device.device_precisions.order_by('-id')
         if len(device_precision_qs) == 0:
             image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid=device.deviceid).order_by('-id')
-            if len(image_ground_truth_qs) >= 10:
-                _do_check_one_device(device, image_ground_truth_qs[:10])
+            if len(image_ground_truth_qs)>0:
+                _do_check_one_device(device, image_ground_truth_qs)
         else:
             last_device_precision = device_precision_qs[0]
             image_ground_truth_qs = ImageGroundTruth.objects.filter(deviceid=device.deviceid).filter(create_time__gt=last_device_precision.create_time).order_by('-id')
-            if len(image_ground_truth_qs) >= 10:
-                _do_check_one_device(device, image_ground_truth_qs[:10])
+            if len(image_ground_truth_qs) > 0:
+                _do_check_one_device(device, image_ground_truth_qs)
 
 
 def _do_check_one_device(device, image_ground_truth_qs):
@@ -69,8 +69,8 @@ def _do_check_one_device(device, image_ground_truth_qs):
         total_truth_rate += image_group_truth.truth_rate
         total_precision += image_group_truth.precision
 
-    precision = total_precision / 10
-    truth_rate = total_truth_rate / 10
+    precision = total_precision /len(image_ground_truth_qs)
+    truth_rate = total_truth_rate / len(image_ground_truth_qs)
     if device.state < common.DEVICE_STATE_COMMERCIAL and truth_rate > 0.95:
         device.state = common.DEVICE_STATE_COMMERCIAL
         device.commercial_time = datetime.datetime.now()
