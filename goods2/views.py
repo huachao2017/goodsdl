@@ -97,7 +97,7 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        print(serializer.data)
+        logger.info(serializer.data)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
