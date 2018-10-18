@@ -317,7 +317,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
         false_image_result_cnt = 0
         total_precision = 0.0
         for image in images:
-            truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc)
+            truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc).filter(score_gt=0.5)
             if len(truth_image_result_qs)>0:
                 truth_image_result_cnt += 1
                 total_precision += truth_image_result_qs[0].score
@@ -329,7 +329,10 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
 
         serializer.instance.cnt = len(images)
         if truth_image_result_cnt+false_image_result_cnt > 0:
-            serializer.instance.truth_rate = truth_image_result_cnt/(truth_image_result_cnt+false_image_result_cnt)
+            if truth_image_result_cnt>0:
+                serializer.instance.truth_rate = 1.0
+            else:
+                serializer.instance.truth_rate = 0.0
             serializer.instance.precision = total_precision/(truth_image_result_cnt+false_image_result_cnt)
         else:
             serializer.instance.truth_rate = 0.0
