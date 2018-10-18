@@ -94,7 +94,24 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            logger.info(serializer.data[0])
+            # logger.info(len(serializer.data))
+            groundtruthpk_to_cnt = {}
+            remove_indexes = []
+            for i in range(len(serializer.data)):
+                index = len(serializer.data)-i-1
+                one = serializer.data[index]
+                groundtruthpk = one['image_ground_truth']['pk']
+                if groundtruthpk in groundtruthpk_to_cnt:
+                    if groundtruthpk_to_cnt[groundtruthpk] >= 5:
+                        remove_indexes.append(index)
+                    else:
+                        groundtruthpk_to_cnt[groundtruthpk] += 1
+                else:
+                    groundtruthpk_to_cnt[groundtruthpk] = 1
+            # logger.info(len(remove_indexes))
+            for index in remove_indexes:
+                serializer._data.pop(index) # _data is the real data
+            # logger.info(len(serializer.data))
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
