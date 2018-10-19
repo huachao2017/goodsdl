@@ -361,8 +361,12 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         devices = TrainImage.objects.values('deviceid').distinct()
         ret = {}
         for deviceid in devices:
-            logger.info(deviceid['deviceid'])
-            device = Deviceid.objects.get(deviceid=deviceid['deviceid'])
+            try:
+                device = Deviceid.objects.get(deviceid=deviceid['deviceid'])
+            except Deviceid.DoesNotExist as e:
+                device = Deviceid.objects.create(
+                    deviceid=deviceid['deviceid'],
+                )
             precision_qs = device.device_precisions.order_by('-id')
             if len(precision_qs)>0:
               ret[deviceid['deviceid']] = precision_qs[0].truth_rate
