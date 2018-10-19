@@ -357,6 +357,19 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
         return Response(ret)
 
     @action(methods=['get'], detail=False)
+    def device_to_precision(self, request):
+        devices = TrainImage.objects.values('deviceid').distinct()
+        ret = {}
+        for deviceid in devices:
+            device = Deviceid.objects.get(deviceid=deviceid['deviceid'])
+            precision_qs = device.device_precisions.order_by('-id')
+            if len(precision_qs)>0:
+              ret[deviceid['deviceid']] = precision_qs[0].truth_rate
+            else:
+              ret[deviceid['deviceid']] = 0.0
+        return Response(ret)
+
+    @action(methods=['get'], detail=False)
     def upc_list(self, request):
         if 'deviceid' in request.query_params:
             deviceid = request.query_params['deviceid']
