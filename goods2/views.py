@@ -334,7 +334,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
         false_image_result_cnt = 0
         total_precision = 0.0
         for image in images:
-            truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc).filter(score_gt=0.5)
+            truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc).filter(score__gt=0.5)
             if len(truth_image_result_qs)>0:
                 truth_image_result_cnt += 1
                 total_precision += truth_image_result_qs[0].score
