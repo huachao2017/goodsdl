@@ -350,6 +350,45 @@ def do_create_train(action, deviceid, f_model_id):
     return train_action
 
 
+def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
+    train_action = TrainAction.objects.create(
+        action=action,
+        deviceid=deviceid,
+        f_model_id=f_model_id,
+        desc=''
+    )
+
+    train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
+    # 数据准备
+    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train_bind(train_action, bind_deviceid_list)
+
+    if names_to_labels is None:
+        train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
+        train_action.save()
+        return
+
+    train_image_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(
+        cnt=Count('id')).order_by('-cnt')
+    train_image_group_list = list(zip(*train_image_group_qs))
+    # 更新数据
+    # 'upcs'
+    for upc in names_to_labels:
+        index = train_image_group_list[0].index(upc)
+        TrainActionUpcs.objects.create(
+            train_action_id=train_action.pk,
+            upc=upc,
+            cnt=train_image_group_list[1][index],
+        )
+    train_action.train_cnt = len(training_filenames)
+    train_action.validation_cnt = len(validation_filenames)
+    # 'devcice'
+    if train_action.action == 'TC':
+        pass
+
+    train_action.save()
+    return train_action
+
+
 def execute_train():
     doing_qs = TaskLog.objects.filter(name='execute_train').filter(state=common.TASK_STATE_DOING)
     if len(doing_qs) > 0:

@@ -216,58 +216,75 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         upcs = []
         scores = []
         # 检测阶段
-        last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(
-            deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
-        if len(last_normal_train_qs) > 0:
-            logger.info('[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
-            last_train = last_normal_train_qs[0]
-            last_normal_train_model = \
-            TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
-            detector = imagedetection.ImageDetectorFactory.get_static_detector(
-                last_normal_train_model)
-            upcs, scores = detector.detect(serializer.instance)
-            ImageTrainModel.objects.create(
-                train_model_id=last_normal_train_model.pk,
-                image_id=serializer.instance.pk
-            )
-
-            last_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(
-                deviceid=serializer.instance.deviceid).filter(action='TC').filter(
-                complete_time__gt=last_normal_train_model.create_time).order_by('-id')
-            if len(last_tc_train_qs) > 0:
-                last_tc_train = last_tc_train_qs[0]
-                last_tc_train_model = \
-                TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
-                detector2 = imagedetection.ImageDetectorFactory.get_static_detector(
-                    last_tc_train_model)
-                upcs2, scores2 = detector2.detect(serializer.instance)
+        if serializer.instance.deviceid in common.good_neighbour_bind_deviceid_list:
+            # 好邻居联合计算
+            last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(
+                deviceid__in=common.good_neighbour_bind_deviceid_list).exclude(action='TC').order_by('-id')
+            if len(last_normal_train_qs) > 0:
+                logger.info('[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
+                last_train = last_normal_train_qs[0]
+                last_normal_train_model = \
+                TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
+                detector = imagedetection.ImageDetectorFactory.get_static_detector(
+                    last_normal_train_model)
+                upcs, scores = detector.detect(serializer.instance)
                 ImageTrainModel.objects.create(
-                    train_model_id=last_tc_train_model.pk,
+                    train_model_id=last_normal_train_model.pk,
                     image_id=serializer.instance.pk
                 )
-                # 联合计算
-                upc_to_scores = {}
-                for i in range(len(upcs)):
-                    if upcs[i] in upc_to_scores:
-                        upc_to_scores[upcs[i]] = upc_to_scores[upcs[i]] * 0.5 + scores[i] * 0.5
-                    else:
-                        upc_to_scores[upcs[i]] = scores[i]
-                for i in range(len(upcs2)):
-                    if upcs2[i] in upc_to_scores:
-                        upc_to_scores[upcs2[i]] = upc_to_scores[upcs2[i]] * 0.5 + scores2[i] * 0.5
-                    else:
-                        upc_to_scores[upcs2[i]] = scores2[i]
+        else:
+            last_normal_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(
+                deviceid=serializer.instance.deviceid).exclude(action='TC').order_by('-id')
+            if len(last_normal_train_qs) > 0:
+                logger.info('[{}]begin detect image:{}'.format(serializer.instance.deviceid, serializer.instance.identify))
+                last_train = last_normal_train_qs[0]
+                last_normal_train_model = \
+                TrainModel.objects.filter(train_action_id=last_train.pk).exclude(model_path='').order_by('-id')[0]
+                detector = imagedetection.ImageDetectorFactory.get_static_detector(
+                    last_normal_train_model)
+                upcs, scores = detector.detect(serializer.instance)
+                ImageTrainModel.objects.create(
+                    train_model_id=last_normal_train_model.pk,
+                    image_id=serializer.instance.pk
+                )
 
-                upcs, scores = sort_upc_to_scores(upc_to_scores)
+            # last_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_COMPLETE).filter(
+            #     deviceid=serializer.instance.deviceid).filter(action='TC').filter(
+            #     complete_time__gt=last_normal_train_model.create_time).order_by('-id')
+            # if len(last_tc_train_qs) > 0:
+            #     last_tc_train = last_tc_train_qs[0]
+            #     last_tc_train_model = \
+            #     TrainModel.objects.filter(train_action_id=last_tc_train.pk).exclude(model_path='').order_by('-id')[0]
+            #     detector2 = imagedetection.ImageDetectorFactory.get_static_detector(
+            #         last_tc_train_model)
+            #     upcs2, scores2 = detector2.detect(serializer.instance)
+            #     ImageTrainModel.objects.create(
+            #         train_model_id=last_tc_train_model.pk,
+            #         image_id=serializer.instance.pk
+            #     )
+            #     # 联合计算
+            #     upc_to_scores = {}
+            #     for i in range(len(upcs)):
+            #         if upcs[i] in upc_to_scores:
+            #             upc_to_scores[upcs[i]] = upc_to_scores[upcs[i]] * 0.5 + scores[i] * 0.5
+            #         else:
+            #             upc_to_scores[upcs[i]] = scores[i]
+            #     for i in range(len(upcs2)):
+            #         if upcs2[i] in upc_to_scores:
+            #             upc_to_scores[upcs2[i]] = upc_to_scores[upcs2[i]] * 0.5 + scores2[i] * 0.5
+            #         else:
+            #             upc_to_scores[upcs2[i]] = scores2[i]
+            #
+            #     upcs, scores = sort_upc_to_scores(upc_to_scores)
 
-            # 输出结果
-            for i in range(len(upcs)):
-                if i < 5:  # 不超过5个
-                    ImageResult.objects.create(
-                        image_id=serializer.instance.pk,
-                        upc=upcs[i],
-                        score=scores[i]
-                    )
+        # 输出结果
+        for i in range(len(upcs)):
+            if i < 5:  # 不超过5个
+                ImageResult.objects.create(
+                    image_id=serializer.instance.pk,
+                    upc=upcs[i],
+                    score=scores[i]
+                )
         return scores, upcs
 
 
@@ -430,15 +447,28 @@ class CreateTrain(APIView):
         else:
             action = request.query_params['action']
         deviceid = request.query_params['deviceid']
-        doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(deviceid=deviceid).filter(state__lte=common.TRAIN_STATE_TRAINING)
-        if len(doing_ta_tf) == 0:
-            from goods2.cron import do_create_train
+        if deviceid in common.good_neighbour_bind_deviceid_list:
+            # 好邻居联合计算
+            doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(deviceid__in=common.good_neighbour_bind_deviceid_list).filter(
+                state__lte=common.TRAIN_STATE_TRAINING)
+            if len(doing_ta_tf) == 0:
+                from goods2.cron import do_create_train_bind
 
-            train_action = do_create_train(action, deviceid, None)
-            logger.info('[{}]create_train by menu: {}'.format(deviceid, action))
-            return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
+                train_action = do_create_train_bind(action, deviceid, None, common.good_neighbour_bind_deviceid_list)
+                logger.info('[{}]create_train by menu: {}'.format(deviceid, action))
+                return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
+            else:
+                return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(deviceid=deviceid).filter(state__lte=common.TRAIN_STATE_TRAINING)
+            if len(doing_ta_tf) == 0:
+                from goods2.cron import do_create_train
+
+                train_action = do_create_train(action, deviceid, None)
+                logger.info('[{}]create_train by menu: {}'.format(deviceid, action))
+                return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
+            else:
+                return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ClearData(APIView):
     def get(self, request):

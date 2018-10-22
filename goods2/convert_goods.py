@@ -112,12 +112,16 @@ def _remove_tfrecord_ifexists(output_dir):
             tf.gfile.Remove(output_filename)
 
 
-def prepare_train_TA(train_action):
+def prepare_train_TA(train_action, bind_deviceid_list=None):
     deviceid = train_action.deviceid
     logger.info('[{}]prepare_train_TA'.format(deviceid))
     training_filenames = []
-    train_images = TrainImage.objects.filter(deviceid=deviceid)
-    train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+    if bind_deviceid_list is None:
+        train_images = TrainImage.objects.filter(deviceid=deviceid)
+        train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+    else:
+        train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list)
+        train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(cnt=Count('id'))
     upcs = []
     for train_upc_group in train_upc_group_qs:
         if train_upc_group[1] >= 10: # 大于等于10个样本才能进入训练
@@ -132,12 +136,18 @@ def prepare_train_TA(train_action):
 
     return upcs, training_filenames, None
 
-def prepare_train_TF(train_action):
+def prepare_train_TF(train_action, bind_deviceid_list=None):
     deviceid = train_action.deviceid
     logger.info('[{}]prepare_train_TF'.format(deviceid))
     f_model = TrainModel.objects.get(id=train_action.f_model.pk)
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
-    train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+    if bind_deviceid_list is None:
+        train_images = TrainImage.objects.filter(deviceid=deviceid)
+        train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+    else:
+        train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list)
+        train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(cnt=Count('id'))
+
     upcs = []
     for train_upc_group in train_upc_group_qs:
         upcs.append(train_upc_group[0])
@@ -148,7 +158,6 @@ def prepare_train_TF(train_action):
     validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
-    train_images = TrainImage.objects.filter(deviceid=deviceid)
     # 每类样本数
     upc_to_cnt = {}
     for upc in upcs:
@@ -187,7 +196,7 @@ def prepare_train_TF(train_action):
     return upcs, training_filenames, validation_filenames
 
 
-def prepare_train_TC(train_action):
+def prepare_train_TC(train_action, bind_deviceid_list=None):
     deviceid = train_action.deviceid
     logger.info('[{}]prepare_train_TC'.format(deviceid))
     output_dir = train_action.train_path
@@ -198,7 +207,12 @@ def prepare_train_TC(train_action):
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
     f_train_upcs = f_train.upcs.all()
 
-    train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+    if bind_deviceid_list is None:
+        train_images = TrainImage.objects.filter(deviceid=deviceid)
+        train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+    else:
+        train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list)
+        train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(cnt=Count('id'))
     upcs = []
     for train_upc_group in train_upc_group_qs:
         upcs.append(train_upc_group[0])
@@ -228,7 +242,6 @@ def prepare_train_TC(train_action):
     validation_filenames = []
     old_training_filenames_to_upc = {}
     old_training_filenames = []
-    train_images = TrainImage.objects.filter(deviceid=deviceid)
 
     # 增加增量upc样本
     for train_image in train_images:
@@ -286,6 +299,45 @@ def prepare_train(train_action):
     random.shuffle(training_filenames)
     if validation_filenames is None:
         #validation_filenames = training_filenames[int(0.5 * len(training_filenames)):]
+        validation_filenames = training_filenames
+
+    # First, convert the training and validation sets.
+    _convert_dataset('train', training_filenames, names_to_labels,
+                     output_dir)
+    _convert_dataset('validation', validation_filenames, names_to_labels,
+                     output_dir)
+
+    # Second, write the labels file:
+    labels_to_names = dict(zip(range(len(upcs)), upcs))
+    dataset_utils.write_label_file(labels_to_names, output_dir)
+
+    logger.info('Finished converting the goods dataset!')
+    return names_to_labels, training_filenames, validation_filenames
+
+
+def prepare_train_bind(train_action,bind_deviceid_list):
+    output_dir = train_action.train_path
+    if not tf.gfile.Exists(output_dir):
+        tf.gfile.MakeDirs(output_dir)
+
+    if train_action.action == 'TA':
+        upcs, training_filenames, validation_filenames = prepare_train_TA(train_action, bind_deviceid_list=bind_deviceid_list)
+    elif train_action.action == 'TF':
+        upcs, training_filenames, validation_filenames = prepare_train_TF(train_action, bind_deviceid_list=bind_deviceid_list)
+    elif train_action.action == 'TC':
+        upcs, training_filenames, validation_filenames = prepare_train_TC(train_action, bind_deviceid_list=bind_deviceid_list)
+    else:
+        raise ValueError('error parameter')
+
+    if upcs is None or len(upcs) == 0:
+        return None, None, None
+
+    names_to_labels = dict(zip(upcs, range(len(upcs))))
+    # Divide into train and test:
+    random.seed(_RANDOM_SEED)
+    random.shuffle(training_filenames)
+    if validation_filenames is None:
+        # validation_filenames = training_filenames[int(0.5 * len(training_filenames)):]
         validation_filenames = training_filenames
 
     # First, convert the training and validation sets.

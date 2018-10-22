@@ -15,6 +15,8 @@ TASK_STATE_ERROR = 20
 DEVICE_STATE_TESTING = 0
 DEVICE_STATE_COMMERCIAL = 10
 
+good_neighbour_bind_deviceid_list = ['2286','2995','2996','2294','2296','3135','3136','3137','3138','3139','3213']
+
 
 _STORAGE_PREFIX = 'goods2'
 def get_dataset_dir(full_path = False):
