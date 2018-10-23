@@ -455,7 +455,7 @@ class CreateTrain(APIView):
                 from goods2.cron import do_create_train_bind
 
                 train_action = do_create_train_bind(action, deviceid, None, common.good_neighbour_bind_deviceid_list)
-                logger.info('[{}]create_train by menu: {}'.format(deviceid, action))
+                logger.info('[{}]create_train_bind by menu: {}'.format(deviceid, action))
                 return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
             else:
                 return Response(status=status.HTTP_204_NO_CONTENT)
