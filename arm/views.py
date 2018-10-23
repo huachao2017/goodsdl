@@ -114,10 +114,6 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                 },
                 'upc': upcs[0],
             }
-            # only for test TODO
-            cur = datetime.datetime.now()
-            if cur.day == 22 and cur.hour <=18:
-                one['upc'] = '1'
             ret.append(one)
             index += 1
         serializer.instance.result = json.dumps(ret, cls=NumpyEncoder)
