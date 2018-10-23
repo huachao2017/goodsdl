@@ -367,7 +367,7 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
         train_action.save()
         return
 
-    train_image_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(
+    train_image_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(
         cnt=Count('id')).order_by('-cnt')
     train_image_group_list = list(zip(*train_image_group_qs))
     # 更新数据
