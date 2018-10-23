@@ -110,11 +110,12 @@ def visualize_detection_results(result_dict,
       detection_sample_image_path = None
       if source_dataset_dir:
           detection_image_dir=os.path.join(source_dataset_dir, labels_to_names[detection_class_label])
-          for image_name in os.listdir(detection_image_dir):
-              if not os.path.isfile(os.path.join(detection_image_dir, image_name)):
-                  continue
-              detection_sample_image_path = os.path.join(detection_image_dir, image_name)
-              break
+          if os.path.isdir(detection_image_dir):
+            for image_name in os.listdir(detection_image_dir):
+                if not os.path.isfile(os.path.join(detection_image_dir, image_name)):
+                    continue
+                detection_sample_image_path = os.path.join(detection_image_dir, image_name)
+                break
 
       vis_utils.visualize_false_on_image_array(
           image,
