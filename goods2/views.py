@@ -88,34 +88,34 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
         )
         return Response(util.wrap_ret([]), status=status.HTTP_200_OK)
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            # logger.info(len(serializer.data))
-            groundtruthpk_to_cnt = {}
-            remove_indexes = []
-            for i in range(len(serializer.data)):
-                index = len(serializer.data)-i-1
-                one = serializer.data[index]
-                groundtruthpk = one['image_ground_truth']['pk']
-                if groundtruthpk in groundtruthpk_to_cnt:
-                    if groundtruthpk_to_cnt[groundtruthpk] >= 5:
-                        remove_indexes.append(index)
-                    else:
-                        groundtruthpk_to_cnt[groundtruthpk] += 1
-                else:
-                    groundtruthpk_to_cnt[groundtruthpk] = 1
-            # logger.info(len(remove_indexes))
-            for index in remove_indexes:
-                serializer._data.pop(index) # _data is the real data
-            # logger.info(len(serializer.data))
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.filter_queryset(self.get_queryset())
+    #
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = self.get_serializer(page, many=True)
+    #         # logger.info(len(serializer.data))
+    #         groundtruthpk_to_cnt = {}
+    #         remove_indexes = []
+    #         for i in range(len(serializer.data)):
+    #             index = len(serializer.data)-i-1
+    #             one = serializer.data[index]
+    #             groundtruthpk = one['image_ground_truth']['pk']
+    #             if groundtruthpk in groundtruthpk_to_cnt:
+    #                 if groundtruthpk_to_cnt[groundtruthpk] >= 5:
+    #                     remove_indexes.append(index)
+    #                 else:
+    #                     groundtruthpk_to_cnt[groundtruthpk] += 1
+    #             else:
+    #                 groundtruthpk_to_cnt[groundtruthpk] = 1
+    #         # logger.info(len(remove_indexes))
+    #         for index in remove_indexes:
+    #             serializer._data.pop(index) # _data is the real data
+    #         # logger.info(len(serializer.data))
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
