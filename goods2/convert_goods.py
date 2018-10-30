@@ -298,8 +298,12 @@ def prepare_train(train_action):
     random.seed(_RANDOM_SEED)
     random.shuffle(training_filenames)
     if validation_filenames is None:
-        #validation_filenames = training_filenames[int(0.5 * len(training_filenames)):]
-        validation_filenames = training_filenames
+        ratio = 1
+        training_filenames_cnt = len(training_filenames)
+        if training_filenames_cnt > 1000:
+            ratio = max(0.1, 1 - (training_filenames_cnt-1000)/5000)
+        validation_filenames = training_filenames[int(ratio * training_filenames_cnt):]
+        # validation_filenames = training_filenames
 
     # First, convert the training and validation sets.
     _convert_dataset('train', training_filenames, names_to_labels,
