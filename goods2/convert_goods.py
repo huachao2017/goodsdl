@@ -301,7 +301,7 @@ def prepare_train(train_action):
         ratio = 1
         training_filenames_cnt = len(training_filenames)
         if training_filenames_cnt > 1000:
-            ratio = max(0.2, 1 - (training_filenames_cnt-1000)/5000)
+            ratio = max(0.1, 1 - (training_filenames_cnt-1000)/10000)
         validation_filenames = training_filenames[:int(ratio * training_filenames_cnt)]
         # validation_filenames = training_filenames
 
@@ -344,7 +344,7 @@ def prepare_train_bind(train_action,bind_deviceid_list):
         ratio = 1
         training_filenames_cnt = len(training_filenames)
         if training_filenames_cnt > 1000:
-            ratio = max(0.2, 1 - (training_filenames_cnt-1000)/5000)
+            ratio = max(0.1, 1 - (training_filenames_cnt-1000)/10000)
         validation_filenames = training_filenames[:int(ratio * training_filenames_cnt)]
         #validation_filenames = training_filenames
 
