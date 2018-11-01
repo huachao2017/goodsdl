@@ -55,7 +55,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        z_deviation = 10 # 60 # 10
+        z_deviation = 0 #10 # 60 # 10
         detect = Contour_3d(serializer.instance.rgb_source.path, serializer.instance.depth_source.path, serializer.instance.table_z-z_deviation)
         min_rectes, z, boxes = detect.find_contour(False)
 
