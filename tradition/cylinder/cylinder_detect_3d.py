@@ -89,20 +89,60 @@ class Cylinder_3d:
 
         _, thresh = cv2.threshold(mask_img, 225, 255, cv2.THRESH_BINARY)
         if self.debug_type > 1:
-            thresh_path = os.path.join(self.output_dir, 'thresh_' + self.image_name)
+            thresh_path = os.path.join(self.output_dir, 'thresh1_' + self.image_name)
             cv2.imwrite(thresh_path, thresh)
 
-        # 计算直线
-        lines = cv2.HoughLinesP(thresh, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=5)
-        lines1 = lines[:, 0, :]  # 提取为二维
-        if self.debug_type > 1:
-            lines_img = self.gray_img.copy()
-            for x1, y1, x2, y2 in lines1[:]:
-                cv2.line(lines_img, (x1, y1), (x2, y2), (255, 0, 0), 1)
-            lines_path = os.path.join(self.output_dir, 'lines_' + self.image_name)
-            cv2.imwrite(lines_path, lines_img)
+        _, contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        drawing_contours = np.zeros(self.gray_img.shape, np.uint8)
+        min_rect = None
+        for cnt in contours:
+            leftmost = cnt[cnt[:, :, 0].argmin()][0][0]
+            rightmost = cnt[cnt[:, :, 0].argmax()][0][0]
+            topmost = cnt[cnt[:, :, 1].argmin()][0][1]
+            bottommost = cnt[cnt[:, :, 1].argmax()][0][1]
+            area = (bottommost - topmost) * (rightmost - leftmost)
+            if area < 20:  # 去除面积过小的物体
+                continue
+            # color = np.random.randint(0, 255, (3)).tolist()
+            cv2.drawContours(drawing_contours, [cnt], 0, 128, 1)
 
-        return lines1
+            min_rect = cv2.minAreaRect(cnt)
+            points = cv2.boxPoints(min_rect)
+            points = np.int0(points)
+            minrect = cv2.drawContours(drawing_contours, [points], 0, 255, 1)
+
+        if self.debug_type > 1:
+            # contour_path = os.path.join(self.output_dir, 'contour_' + self.image_name)
+            # cv2.imwrite(contour_path, drawing_contours)
+            minrect_path = os.path.join(self.output_dir, 'minrect_' + self.image_name)
+            cv2.imwrite(minrect_path, drawing_contours)
+
+        print(min_rect)
+        # kernel2 = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        # erode = cv2.erode(thresh,kernel=kernel)
+        # if self.debug_type > 1:
+        #     erode_path = os.path.join(self.output_dir, 'erode2_' + self.image_name)
+        #     cv2.imwrite(erode_path, erode)
+        #
+        # thresh = cv2.Canny(erode,225,255,apertureSize=3)
+        # # _, thresh = cv2.threshold(mask_img, 225, 255, cv2.THRESH_BINARY)
+        # if self.debug_type > 1:
+        #     thresh_path = os.path.join(self.output_dir, 'thresh2_' + self.image_name)
+        #     cv2.imwrite(thresh_path, thresh)
+        #
+        # # 计算直线
+        # lines = cv2.HoughLinesP(thresh, 1, np.pi / 180, 50, minLineLength=30, maxLineGap=2)
+        # # lines = cv2.HoughLines(thresh, 1, np.pi / 180, 30, 0, 0 )
+        # print(lines.shape)
+        # lines1 = lines[:, 0, :]  # 提取为二维
+        # if self.debug_type > 1:
+        #     lines_img = self.gray_img.copy()
+        #     for x1, y1, x2, y2 in lines1[:]:
+        #         cv2.line(lines_img, (x1, y1), (x2, y2), (255, 0, 0), 1)
+        #     lines_path = os.path.join(self.output_dir, 'lines_' + self.image_name)
+        #     cv2.imwrite(lines_path, lines_img)
+
+        return min_rect
 
     def _get_target_z(self,points):
         mask_points_img = np.zeros(self.depth_img.shape)
