@@ -183,7 +183,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # upcs, scores = sort_upc_to_scores(upc_to_scores)
             logger.info(scores)
             for i in range(len(upcs)):
-                if scores[i]>=0.3 or (i>0 and scores[0]<0.85):
+                if scores[i]>=0.3 or (i>0 and scores[0]<=0.85):
                     ret.append(
                         {
                             'upc': upcs[i],
@@ -332,13 +332,12 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
         images = Image.objects.filter(identify=serializer.instance.identify).filter(deviceid=serializer.instance.deviceid)
         truth_image_result_cnt = 0
         false_image_result_cnt = 0
-        total_precision = 0.0
         for image in images:
-            truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc).filter(score__gt=0.5)
+            truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc).filter(score__gt=0.85)
             if len(truth_image_result_qs)>0:
                 truth_image_result_cnt += 1
-                total_precision += truth_image_result_qs[0].score
-            else:
+            false_image_result_qs = image.image_results.exclude(upc=serializer.instance.upc).filter(score__gt=0.85)
+            if len(false_image_result_qs)>0:
                 false_image_result_cnt += 1
             image.image_ground_truth=serializer.instance
             image.upc = serializer.instance.upc
@@ -348,11 +347,12 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
         if truth_image_result_cnt+false_image_result_cnt > 0:
             if truth_image_result_cnt>0:
                 serializer.instance.truth_rate = 1.0
+                serializer.instance.precision = 1.0
             else:
                 serializer.instance.truth_rate = 0.0
-            serializer.instance.precision = total_precision/(truth_image_result_cnt+false_image_result_cnt)
+                serializer.instance.precision = 0.0
         else:
-            serializer.instance.truth_rate = 0.0
+            serializer.instance.truth_rate = 1.0
             serializer.instance.precision = 0.0
         serializer.instance.save()
 
