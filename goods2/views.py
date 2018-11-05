@@ -183,7 +183,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # upcs, scores = sort_upc_to_scores(upc_to_scores)
             logger.info(scores)
             for i in range(len(upcs)):
-                if scores[i]>=0.3:
+                if scores[i]>=0.3 or (i>0 and scores[0]<0.85):
                     ret.append(
                         {
                             'upc': upcs[i],
