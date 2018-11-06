@@ -162,7 +162,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
         ret = []
-        if device.deviceid in ['485','200'] or device.state >= common.DEVICE_STATE_COMMERCIAL:
+        if True: #device.deviceid in ['485','200'] or device.state >= common.DEVICE_STATE_COMMERCIAL:
             # 没有商用的不返回结果
             # upc_to_scores = {}
             # weight = 0.5
@@ -181,7 +181,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             #         break
             #
             # upcs, scores = sort_upc_to_scores(upc_to_scores)
-            logger.info(scores)
+            # logger.info(scores)
             for i in range(len(upcs)):
                 if scores[i]>=0.3 or (i>0 and scores[0]<=0.85):
                     ret.append(
@@ -190,24 +190,24 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
                             'score': scores[i],
                         }
                     )
-        elif device.deviceid == '36':
-            ret = [
-                {'upc': '2000000000103', 'score': 0.99},
-                {'upc': '2000000000097', 'score': 0.99},
-                {'upc': '2000000000093', 'score': 0.99}
-            ]
-        elif device.deviceid == '3061':# 苹果
-            ret = [
-                {'upc': '2000000001540', 'score': 0.07},
-                {'upc': '2000000001598', 'score': 0.25},
-                {'upc': '3287583', 'score': 0.04},
-            ]
-        elif device.deviceid == '3062':# 香蕉
-            ret = [
-                {'upc': '2000000001541', 'score': 0.95},
-                {'upc': '3960271', 'score': 0.03},
-                {'upc': '3283458', 'score': 0.01},
-            ]
+        # elif device.deviceid == '36':
+        #     ret = [
+        #         {'upc': '2000000000103', 'score': 0.99},
+        #         {'upc': '2000000000097', 'score': 0.99},
+        #         {'upc': '2000000000093', 'score': 0.99}
+        #     ]
+        # elif device.deviceid == '3061':# 苹果
+        #     ret = [
+        #         {'upc': '2000000001540', 'score': 0.07},
+        #         {'upc': '2000000001598', 'score': 0.25},
+        #         {'upc': '3287583', 'score': 0.04},
+        #     ]
+        # elif device.deviceid == '3062':# 香蕉
+        #     ret = [
+        #         {'upc': '2000000001541', 'score': 0.95},
+        #         {'upc': '3960271', 'score': 0.03},
+        #         {'upc': '3283458', 'score': 0.01},
+        #     ]
 
         logger.info('[{}]detect result: {}'.format(serializer.instance.deviceid, ret))
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
