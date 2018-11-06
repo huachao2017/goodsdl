@@ -9,7 +9,7 @@ from goods2.models import Image
 
 if __name__ == "__main__":
 
-  path_prefix = '\\\\192.168.1.170/Image/'
+  path_prefix = '\\\\192.168.1.60/Image/'
 
   goods2_image_qs = Image.objects.order_by('-id')
   for image in goods2_image_qs:

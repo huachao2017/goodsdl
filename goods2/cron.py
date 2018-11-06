@@ -416,7 +416,7 @@ def execute_train():
 
 def _do_execute_train():
     my_ip = get_host_ip()
-    if my_ip == '192.168.1.170':
+    if my_ip == '192.168.1.60':
         quit_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_STOP).exclude(action='TC').filter(ip=my_ip)
         for quit_train in quit_train_qs:
             common.stop_train_ps(quit_train)
@@ -562,7 +562,7 @@ def check_train():
 def _do_check_train():
     my_ip = get_host_ip()
     ret = ''
-    if my_ip == '192.168.1.170':
+    if my_ip == '192.168.1.60':
         doing_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(ip=my_ip).exclude(action='TC')
         for check_train in doing_train_qs:
             _do_check_one_train(check_train)

@@ -86,7 +86,7 @@ class CronBeforeTrainTestCase(APITestCase):
         self.assertEqual(train_action_upcs_qs[0].cnt, 1000)
 
         my_ip = get_host_ip()
-        if my_ip == '192.168.1.170':
+        if my_ip == '192.168.1.60':
             execute_train()
             self.assertEqual(len(TaskLog.objects.filter(state=common.TASK_STATE_COMPLETE)), 3)
             train_action = TrainAction.objects.filter(action='TA').filter(state=common.TRAIN_STATE_TRAINING)[0]
@@ -147,7 +147,7 @@ class CronBeforeTrainTestCase(APITestCase):
         train_action_tf_upcs_qs = train_action_tf.upcs.filter(upc='4711931005106')
         self.assertEqual(train_action_tf_upcs_qs[0].cnt, 1200)
         my_ip = get_host_ip()
-        if my_ip == '192.168.1.170':
+        if my_ip == '192.168.1.60':
             execute_train()
             train_action = TrainAction.objects.filter(action='TF').filter(state=common.TRAIN_STATE_TRAINING)[0]
             time.sleep(1)
@@ -199,7 +199,7 @@ class CronBeforeTrainTestCase(APITestCase):
 
     def test_check_train(self):
         my_ip = get_host_ip()
-        if my_ip == '192.168.1.170':
+        if my_ip == '192.168.1.60':
             for i in range(100):
                 util._add_train_image(self.client, deviceid='1000', upcs=['4711931005106', '4714221811227'])
             create_train()

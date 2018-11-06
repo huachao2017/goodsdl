@@ -377,7 +377,7 @@ def test_match_all():
     upc_to_image_path = {}
     for sample in samples:
         image_path = sample.source.path
-        image_path = image_path.replace(settings.MEDIA_ROOT, '\\\\192.168.1.170\Image')
+        image_path = image_path.replace(settings.MEDIA_ROOT, '\\\\192.168.1.60\Image')
         # image_path = image_path.replace('\\','/')
         # image_path = '\\' + image_path
         if os.path.isfile(image_path):
@@ -408,7 +408,7 @@ def test_match_one(test_image_path):
     upc_to_image_path = {}
     for sample in samples:
         image_path = sample.source.path
-        image_path = image_path.replace(settings.MEDIA_ROOT, '\\\\192.168.1.170\Image')
+        image_path = image_path.replace(settings.MEDIA_ROOT, '\\\\192.168.1.60\Image')
         # image_path = image_path.replace('\\','/')
         # image_path = '\\' + image_path
         if os.path.isfile(image_path):

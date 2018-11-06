@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # _inner_find_one(rgb_path, depth_path, 1230,output_dir,  is_mask=False, debug_type=1)
 
     test_dir = os.path.join(image_dir,'test')
-    path_prefix = '\\\\192.168.1.170/Image/'
+    path_prefix = '\\\\192.168.1.60/Image/'
 
     if os.path.isdir(test_dir):
       arm_image_qs = ArmImage.objects.order_by('-id')[:10]
