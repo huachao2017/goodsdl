@@ -22,6 +22,7 @@ import math
 
 import tensorflow as tf
 
+from django.conf import settings
 from datasets import dataset_utils
 from goods2.models import TrainImage, TrainActionUpcs, TrainAction, TrainModel
 from django.db.models import Count
@@ -116,23 +117,36 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
     deviceid = train_action.deviceid
     logger.info('[{}]prepare_train_TA'.format(deviceid))
     training_filenames = []
-    if bind_deviceid_list is None:
-        train_images = TrainImage.objects.filter(deviceid=deviceid)
-        train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
-    else:
-        train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list)
-        train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(cnt=Count('id'))
     upcs = []
-    for train_upc_group in train_upc_group_qs:
-        if train_upc_group[1] >= 10: # 大于等于10个样本才能进入训练
-            upcs.append(train_upc_group[0])
+    if deviceid != '100000':
+        # 使用数据库添加样本
+        if bind_deviceid_list is None:
+            train_images = TrainImage.objects.filter(deviceid=deviceid)
+            train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+        else:
+            train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list)
+            train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(cnt=Count('id'))
+        for train_upc_group in train_upc_group_qs:
+            if train_upc_group[1] >= 10: # 大于等于10个样本才能进入训练
+                upcs.append(train_upc_group[0])
+        for train_image in train_images:
+            if train_image.upc in upcs:
+                if os.path.isfile(train_image.source.path):
+                    training_filenames.append(train_image.source.path)
+                else:
+                    TrainImage.objects.get(id=train_image.pk).delete()
+    else:
+        # 使用目录添加样本
+        train_image_dir = os.path.join(settings.MEDIA_ROOT,'goods2',deviceid)
+        for upc in os.listdir(train_image_dir):
+            upc_dir = os.path.join(train_image_dir, upc)
+            if os.path.isdir(upc_dir):
+                upcs.append(upc)
+                for filename in os.listdir(upc_dir):
+                    image_file_path = os.path.join(upc_dir, filename)
+                    if os.path.isfile(image_file_path):
+                        training_filenames.append(image_file_path)
     upcs = sorted(upcs)
-    for train_image in train_images:
-        if train_image.upc in upcs:
-            if os.path.isfile(train_image.source.path):
-                training_filenames.append(train_image.source.path)
-            else:
-                TrainImage.objects.get(id=train_image.pk).delete()
 
     return upcs, training_filenames, None
 
