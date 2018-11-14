@@ -350,6 +350,30 @@ def do_create_train(action, deviceid, f_model_id):
     return train_action
 
 
+def do_test_train(action):
+    deviceid = '3540'
+    train_action = TrainAction.objects.create(
+        action=action,
+        deviceid=deviceid,
+        desc=''
+    )
+
+    train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
+    # 数据准备
+    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_test_train(train_action)
+
+    if names_to_labels is None:
+        train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
+        train_action.save()
+        return
+
+    train_action.train_cnt = len(training_filenames)
+    train_action.validation_cnt = len(validation_filenames)
+    train_action.deviceid = '103540' # 修订为测试训练deviceid, 不干扰原训练样本
+    train_action.save()
+    return train_action
+
+
 def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     train_action = TrainAction.objects.create(
         action=action,

@@ -32,5 +32,6 @@ router.register(r'tasklog', views.TaskLogViewSet)
 urlpatterns = [
     url(r'^api2/cleardata', views.ClearData.as_view()),
     url(r'^api2/createtrain', views.CreateTrain.as_view()),
+    url(r'^api2/testtrain', views.TestTrain.as_view()),
     url(r'^api2/', include(router.urls))
 ]

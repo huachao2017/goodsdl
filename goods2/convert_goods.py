@@ -360,3 +360,51 @@ def prepare_train_bind(train_action,bind_deviceid_list):
 
     logger.info('Finished converting the goods dataset!')
     return names_to_labels, training_filenames, validation_filenames
+
+
+def prepare_test_train(train_action):
+    output_dir = train_action.train_path
+    if not tf.gfile.Exists(output_dir):
+        tf.gfile.MakeDirs(output_dir)
+
+    logger.info('[{}]prepare_test_train_TA'.format(train_action.deviceid))
+    training_filenames = []
+    validation_filenames = []
+    train_images = TrainImage.objects.filter(deviceid=train_action.deviceid)
+    upcs = ['20416478', '20416447']
+    upcs = sorted(upcs)
+
+    test_train_image_dir_dir = None
+    # add validation_filenames
+    for train_image in train_images:
+        if train_image.upc in upcs:
+            if os.path.isfile(train_image.source.path):
+                test_train_image_dir_dir = os.path.dirname(os.path.dirname(train_image.source.path))
+                validation_filenames.append(train_image.source.path)
+    # add training_filenames 根据指定目录去生成
+    test_train_image_dir = os.path.join(test_train_image_dir_dir,'test')
+    for upc in upcs:
+        train_upc_dir = os.path.join(test_train_image_dir,upc)
+        for filename in os.listdir(train_upc_dir):
+            image_path = os.path.join(train_upc_dir,filename)
+            if os.path.isfile(image_path):
+                training_filenames.append(image_path)
+
+    names_to_labels = dict(zip(upcs, range(len(upcs))))
+    # Divide into train and test:
+    random.seed(_RANDOM_SEED)
+    random.shuffle(training_filenames)
+
+    # First, convert the training and validation sets.
+    _convert_dataset('train', training_filenames, names_to_labels,
+                     output_dir)
+    _convert_dataset('validation', validation_filenames, names_to_labels,
+                     output_dir)
+
+    # Second, write the labels file:
+    labels_to_names = dict(zip(range(len(upcs)), upcs))
+    dataset_utils.write_label_file(labels_to_names, output_dir)
+
+    logger.info('Finished converting the goods dataset!')
+    return names_to_labels, training_filenames, validation_filenames
+

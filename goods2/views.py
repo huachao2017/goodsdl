@@ -470,6 +470,22 @@ class CreateTrain(APIView):
             else:
                 return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class TestTrain(APIView):
+    def get(self, request):
+        action = 'TA'
+        doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(
+            state__lte=common.TRAIN_STATE_TRAINING)
+        if len(doing_ta_tf) == 0:
+            from goods2.cron import do_test_train
+
+            train_action = do_test_train(action)
+            logger.info('begin test_train')
+            return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ClearData(APIView):
     def get(self, request):
         deviceid = request.query_params['deviceid']
