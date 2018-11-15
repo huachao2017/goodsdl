@@ -137,7 +137,7 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
                     TrainImage.objects.get(id=train_image.pk).delete()
     else:
         # 使用目录添加样本
-        train_image_dir = os.path.join(settings.MEDIA_ROOT,'goods2',deviceid)
+        train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2',deviceid)
         for upc in os.listdir(train_image_dir):
             upc_dir = os.path.join(train_image_dir, upc)
             if os.path.isdir(upc_dir):
