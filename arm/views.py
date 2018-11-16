@@ -15,6 +15,7 @@ from rest_framework import status
 
 from arm.serializers import *
 from tradition.edge.contour_detect_3d import Contour_3d
+from tradition.cylinder.cylinder_detect_3d import Cylinder_3d
 from goods2.models import TrainImage, TrainAction, TrainModel
 logger = logging.getLogger("django")
 from arm.dl import imagedetection
@@ -121,6 +122,42 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
 
         time2 = time.time()
         logger.info('end detect arm: %.2f, %.2f, %.2f' % (time2-time0, time1-time0, time2-time1))
+        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class ArmCylinderImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                      viewsets.GenericViewSet):
+    queryset = ArmImage.objects.order_by('-id')
+    serializer_class = ArmImageSerializer
+
+    def create(self, request, *args, **kwargs):
+        logger.info('begin detect arm cylinder:')
+        time0 = time.time()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        z_deviation = 0  # 10 # 60 # 10
+        detect = Cylinder_3d(serializer.instance.rgb_source.path, serializer.instance.depth_source.path,
+                             serializer.instance.table_x,serializer.instance.table_y,
+                            serializer.instance.table_z - z_deviation)
+        alpha, beta, x, y, z = detect.find_cylinder()
+
+        ret = {
+            'x': x,
+            'y': y,
+            'z': z,
+            'alpha': alpha,
+            'beta': beta
+        }
+
+        serializer.instance.result = json.dumps(ret, cls=NumpyEncoder)
+        serializer.instance.save()
+
+
+        logger.info('end detect arm: x=%d, y=%d, z=%d, alpha=%.2f, beta=%.2f' % (x,y,z,alpha,beta))
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
 
 

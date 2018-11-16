@@ -35,7 +35,24 @@ table_z  int                                      -- 桌面标定的z值
     },
 ]
 
-2、后台上传训练图片接口：http://ai.fastxbox.cn/arm/armtrain/
+
+2、检测火炮位置接口：http://ai.fastxbox.cn/arm/detect_cylinder/
+post入参：
+rgb_source  file                                  -- rgb图
+depth_source file                                 -- 深度图
+table_x  int                                      -- 摄像头原点x在rgb图中位置
+table_y  int                                      -- 摄像头原点y在rgb图中位置
+table_z  int                                      -- 桌面标定的z值
+返回201：
+{
+    "x": 11                                   -- 中心x（图片坐标系，左上角(0,0)向右为正）
+    "y": 22                                   -- 中心y（图片坐标系，左上角(0,0)向下为正）
+    "z": 50                                   -- 中心z（深度图坐标系）
+    "alpha": 45                               -- 0至180度，沿着x轴转动角度
+    "beta":  45                               -- 0度至360度，沿着y/z平面转动角度
+}
+
+3、后台上传训练图片接口：http://ai.fastxbox.cn/arm/armtrain/
 post入参：
 deviceid  string                                  -- 暂时送100000
 rgb_source  file                                  -- rgb图

@@ -9,9 +9,9 @@ from arm.models import ArmImage
 from tradition.cylinder.cylinder_detect_3d import Cylinder_3d
 
 
-def _inner_find_one(rgb_path, depth_path, table_z, output_dir, debug_type=2):
+def _inner_find_one(rgb_path, depth_path, table_x, table_y, table_z, output_dir, debug_type=2):
   time0 = time.time()
-  one = Cylinder_3d(rgb_path, depth_path, table_z, output_dir, debug_type=debug_type)
+  one = Cylinder_3d(rgb_path, depth_path, table_x, table_y, table_z, output_dir, debug_type=debug_type)
   location = one.find_cylinder()
   # _,boxes,_ = find_contour(image_path, output_dir=output_dir,debug_type=1)
   time1 = time.time()
@@ -34,5 +34,5 @@ if __name__ == "__main__":
     # for test
     rgb_path = os.path.join(image_dir, "2.jpg")
     depth_path = os.path.join(image_dir, "2.png")
-    _inner_find_one(rgb_path, depth_path, 1230, output_dir, debug_type=2)
+    _inner_find_one(rgb_path, depth_path, 100, 100, 1230, output_dir, debug_type=2)
 

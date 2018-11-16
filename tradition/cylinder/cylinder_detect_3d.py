@@ -10,7 +10,7 @@ import functools
 
 
 class Cylinder_3d:
-    def __init__(self, rgb_path, depth_path, table_z, output_dir=None, debug_type=1, thresh_white = 100):
+    def __init__(self, rgb_path, depth_path, table_x, table_y, table_z, output_dir=None, debug_type=1, thresh_white = 100):
         image_dir, image_name = os.path.split(rgb_path)
         if output_dir is None:
             output_dir = image_dir
@@ -19,6 +19,8 @@ class Cylinder_3d:
 
 
         self.image_name = image_name
+        self.table_x = table_x
+        self.table_y = table_y
         self.table_z = table_z
         self.rgb_img = cv2.imread(rgb_path)
         self.gray_img = cv2.cvtColor(self.rgb_img, cv2.COLOR_BGR2GRAY)
@@ -209,6 +211,6 @@ class Cylinder_3d:
         x = None
         y = None
         z = None
-        return [alpha, beta, x, y, z]
+        return alpha, beta, x, y, z
 
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from arm.models import ArmImage, ArmTrainImage
+from arm.models import ArmImage, ArmTrainImage, ArmCylinderImage
 
 class ArmImageSerializer(serializers.ModelSerializer):
 
@@ -7,6 +7,13 @@ class ArmImageSerializer(serializers.ModelSerializer):
         model = ArmImage
         fields = ('pk', 'rgb_source', 'depth_source', 'table_z')
         read_only_fields = ('result','create_time',)
+
+
+class ArmCylinderImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArmCylinderImage
+        fields = ('pk', 'rgb_source', 'depth_source', 'table_x', 'table_y', 'table_z')
+        read_only_fields = ('result', 'create_time',)
 
 
 class ArmTrainImageSerializer(serializers.ModelSerializer):
