@@ -94,7 +94,7 @@ class Cylinder_3d:
 
         _, contours, _ = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         drawing_contours = np.zeros(self.gray_img.shape, np.uint8)
-        min_rect = None
+        points = None
         for cnt in contours:
             leftmost = cnt[cnt[:, :, 0].argmin()][0][0]
             rightmost = cnt[cnt[:, :, 0].argmax()][0][0]
@@ -103,21 +103,47 @@ class Cylinder_3d:
             area = (bottommost - topmost) * (rightmost - leftmost)
             if area < 20:  # 去除面积过小的物体
                 continue
+            if area > 0.8*self.gray_img.shape[0]*self.gray_img.shape[1]:  # 去除面积过大的物体
+                continue
             # color = np.random.randint(0, 255, (3)).tolist()
             cv2.drawContours(drawing_contours, [cnt], 0, 128, 1)
 
             min_rect = cv2.minAreaRect(cnt)
             points = cv2.boxPoints(min_rect)
             points = np.int0(points)
-            minrect = cv2.drawContours(drawing_contours, [points], 0, 255, 1)
+            cv2.drawContours(drawing_contours, [points], 0, 255, 1)
+
+        # print(points)
+        if points is None:
+            return None,None
+        edge1 = math.pow(points[0][0]-points[1][0],2) + math.pow(points[0][1]-points[1][1],2)
+        edge2 = math.pow(points[1][0]-points[2][0],2) + math.pow(points[1][1]-points[2][1],2)
+        if edge1>edge2:
+            point0_x = int((points[1][0] + points[2][0]) / 2)
+            point0_y = int((points[1][1] + points[2][1]) / 2)
+            point1_x = int((points[0][0] + points[3][0]) / 2)
+            point1_y = int((points[0][1] + points[3][1]) / 2)
+        else:
+            point0_x = int((points[0][0] + points[1][0]) / 2)
+            point0_y = int((points[0][1] + points[1][1]) / 2)
+            point1_x = int((points[2][0] + points[3][0]) / 2)
+            point1_y = int((points[2][1] + points[3][1]) / 2)
 
         if self.debug_type > 1:
             # contour_path = os.path.join(self.output_dir, 'contour_' + self.image_name)
             # cv2.imwrite(contour_path, drawing_contours)
+            r = 3
+            thickness = 2
+            cv2.line(drawing_contours, (int(point0_x) - r, int(point0_y) - r),
+                     (int(point0_x) + r, int(point0_y) + r), 255, thickness)
+            cv2.line(drawing_contours, (int(point0_x) - r, int(point0_y) + r),
+                     (int(point0_x) + r, int(point0_y) - r), 255, thickness)
+            cv2.line(drawing_contours, (int(point1_x) - r, int(point1_y) - r),
+                     (int(point1_x) + r, int(point1_y) + r), 255, thickness)
+            cv2.line(drawing_contours, (int(point1_x) - r, int(point1_y) + r),
+                     (int(point1_x) + r, int(point1_y) - r), 255, thickness)
             minrect_path = os.path.join(self.output_dir, 'minrect_' + self.image_name)
             cv2.imwrite(minrect_path, drawing_contours)
-
-        print(min_rect)
         # kernel2 = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
         # erode = cv2.erode(thresh,kernel=kernel)
         # if self.debug_type > 1:
@@ -142,35 +168,47 @@ class Cylinder_3d:
         #     lines_path = os.path.join(self.output_dir, 'lines_' + self.image_name)
         #     cv2.imwrite(lines_path, lines_img)
 
-        return min_rect
+        print(self.depth_data.shape)
+        return (point0_x,point0_y,self.depth_data[point0_y,point0_x]),(point1_x,point1_y,self.depth_data[point1_y,point1_x])
 
-    def _get_target_z(self,points):
-        mask_points_img = np.zeros(self.depth_img.shape)
-        cv2.drawContours(mask_points_img, [points], 0, (255,255,255), cv2.FILLED)
-        if self.debug_type > 1:
-            output_path = os.path.join(self.output_dir, 'depth_mask_' + self.image_name)
-            cv2.imwrite(output_path, mask_points_img)
+    def _get_point_z(self,point):
+        return self.depth_data[point[0],point[1]]
 
-        mask_points_data = mask_points_img[:,:,0]
-        mask_depth_data = np.where(mask_points_data > 0, self.depth_data, self.table_z)
-        mask_depth_data = np.where(mask_depth_data < 10, self.table_z, mask_depth_data)
-        min_z = np.min(mask_depth_data)
-        print(min_z)
-
-        return self.table_z-min_z
+    def _caculate_angle(self, x, y):
+        Lx = np.sqrt(x.dot(x))
+        Ly = np.sqrt(y.dot(y))
+        cos_angle = x.dot(y)/(Lx*Ly)
+        angle = np.arccos(cos_angle)
+        angle2 = angle*360/2/np.pi
+        return angle2
 
     def find_cylinder(self):
 
         # 寻找标定点
-        points = self._find_lines()
+        point0,point1 = self._find_lines()
+        print(point0)
+        print(point1)
 
-        # 计算圆柱体姿态和上圆心位置
-        alpha = None
-        beta = None
-        gama = None
+        # 计算圆柱体姿态
+        if point0[2]>point1[2]:
+            x0 = point1[0] - point0[0]
+            y0 = point0[1] - point1[1]
+            z0 = point0[2] - point1[2]
+        else:
+            x0 = point0[0] - point1[0]
+            y0 = point1[1] - point0[1]
+            z0 = point1[2] - point0[2]
+
+        print(x0,y0,z0)
+
+        beta = self._caculate_angle(np.array([x0,y0,z0]),np.array([0,abs(y0),abs(z0)]))
+        alpha = self._caculate_angle(np.array([0,y0,z0]),np.array([0,abs(y0),0]))
+        print(alpha,beta)
+
+        # 计算圆心位置
         x = None
         y = None
         z = None
-        return [alpha, beta, gama, x, y, z]
+        return [alpha, beta, x, y, z]
 
 
