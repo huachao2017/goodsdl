@@ -142,6 +142,13 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
             if os.path.isfile(image_file_path):
                 training_filenames.append(image_file_path)
         upcs.append('hand')
+        # 增加塑料袋样本
+        bag_train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2', 'bag')
+        for filename in os.listdir(bag_train_image_dir):
+            image_file_path = os.path.join(bag_train_image_dir, filename)
+            if os.path.isfile(image_file_path):
+                training_filenames.append(image_file_path)
+        upcs.append('bag')
 
     else:
         # 使用目录添加样本
