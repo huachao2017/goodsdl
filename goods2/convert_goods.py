@@ -135,6 +135,14 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
                     training_filenames.append(train_image.source.path)
                 else:
                     TrainImage.objects.get(id=train_image.pk).delete()
+        # 增加手部样本
+        hand_train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2', 'hand')
+        for filename in os.listdir(hand_train_image_dir):
+            image_file_path = os.path.join(hand_train_image_dir, filename)
+            if os.path.isfile(image_file_path):
+                training_filenames.append(image_file_path)
+        upcs.append('hand')
+
     else:
         # 使用目录添加样本
         train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2',deviceid)
