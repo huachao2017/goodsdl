@@ -322,6 +322,8 @@ def do_create_train(action, deviceid, f_model_id):
     train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
     # 数据准备
     names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train(train_action)
+    train_action = TrainAction.objects.get(pk=train_action.pk)
+    train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
 
     if names_to_labels is None:
         train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
@@ -385,6 +387,8 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
     # 数据准备
     names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train_bind(train_action, bind_deviceid_list)
+    train_action = TrainAction.objects.get(pk=train_action.pk)
+    train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
 
     if names_to_labels is None:
         train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
