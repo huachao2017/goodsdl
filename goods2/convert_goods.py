@@ -344,7 +344,7 @@ def prepare_train(train_action):
     labels_to_names = dict(zip(range(len(upcs)), upcs))
     dataset_utils.write_label_file(labels_to_names, output_dir)
 
-    logger.info('Finished converting the goods dataset!')
+    logger.info('Finished converting the goods dataset:({},{},{})'.format(len(names_to_labels), len(training_filenames), len(validation_filenames)))
     return names_to_labels, training_filenames, validation_filenames
 
 
@@ -387,7 +387,7 @@ def prepare_train_bind(train_action,bind_deviceid_list):
     labels_to_names = dict(zip(range(len(upcs)), upcs))
     dataset_utils.write_label_file(labels_to_names, output_dir)
 
-    logger.info('Finished converting the goods dataset!')
+    logger.info('Finished converting the goods dataset:({},{},{})'.format(len(names_to_labels), len(training_filenames), len(validation_filenames)))
     return names_to_labels, training_filenames, validation_filenames
 
 
