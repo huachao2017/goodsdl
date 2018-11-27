@@ -337,6 +337,9 @@ def do_create_train(action, deviceid, f_model_id):
     # 更新数据
     # 'upcs'
     for upc in names_to_labels:
+        # FIXME hand and bag not in database
+        if upc in ['hand','bag']:
+            continue
         index = train_image_group_list[0].index(upc)
         TrainActionUpcs.objects.create(
             train_action_id=train_action.pk,
@@ -345,9 +348,9 @@ def do_create_train(action, deviceid, f_model_id):
         )
     train_action.train_cnt = len(training_filenames)
     train_action.validation_cnt = len(validation_filenames)
-    # 'devcice'
-    if train_action.action == 'TC':
-        pass
+    # 'device'
+    # if train_action.action == 'TC':
+    #     pass
 
     logger.info('update_train_after_create')
     train_action.save()
@@ -389,7 +392,6 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
     # 数据准备
     names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train_bind(train_action, bind_deviceid_list)
-    logger.info('test1')
     train_action = TrainAction.objects.get(pk=train_action.pk)
     train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
 
@@ -404,8 +406,10 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     train_image_group_list = list(zip(*train_image_group_qs))
     # 更新数据
     # 'upcs'
-    logger.info('test2')
     for upc in names_to_labels:
+        # FIXME hand and bag not in database
+        if upc in ['hand','bag']:
+            continue
         index = train_image_group_list[0].index(upc)
         TrainActionUpcs.objects.create(
             train_action_id=train_action.pk,
@@ -414,10 +418,9 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
         )
     train_action.train_cnt = len(training_filenames)
     train_action.validation_cnt = len(validation_filenames)
-    # 'devcice'
-    logger.info('test3')
-    if train_action.action == 'TC':
-        pass
+    # 'device'
+    # if train_action.action == 'TC':
+    #     pass
 
     logger.info('update_train_after_create')
     train_action.save()
