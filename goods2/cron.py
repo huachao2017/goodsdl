@@ -327,6 +327,7 @@ def do_create_train(action, deviceid, f_model_id):
 
     if names_to_labels is None:
         train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
+        logger.info('update_train_after_error_create')
         train_action.save()
         return
 
@@ -348,6 +349,7 @@ def do_create_train(action, deviceid, f_model_id):
     if train_action.action == 'TC':
         pass
 
+    logger.info('update_train_after_create')
     train_action.save()
     return train_action
 
@@ -392,6 +394,7 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
 
     if names_to_labels is None:
         train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
+        logger.info('update_train_after_error_create')
         train_action.save()
         return
 
@@ -413,6 +416,7 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     if train_action.action == 'TC':
         pass
 
+    logger.info('update_train_after_create')
     train_action.save()
     return train_action
 
@@ -450,6 +454,7 @@ def _do_execute_train():
             common.stop_train_ps(quit_train)
             quit_train.state = common.TRAIN_STATE_COMPLETE_WITH_STOP
             quit_train.complete_time = datetime.datetime.now()
+            logger.info('update_train_after_quit')
             quit_train.save()
 
         training_ta_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TA').filter(ip=my_ip).order_by('id')
@@ -476,6 +481,7 @@ def _do_execute_train():
             common.stop_train_ps(quit_train)
             quit_train.state = common.TRAIN_STATE_COMPLETE_WITH_STOP
             quit_train.complete_time = datetime.datetime.now()
+            logger.info('update_train_after_quit')
             quit_train.save()
         training_tc_train_qs = TrainAction.objects.filter(state=common.TRAIN_STATE_TRAINING).filter(action='TC').filter(ip=my_ip).order_by('id')
         if len(training_tc_train_qs) <= 0:
@@ -495,6 +501,7 @@ def update_begin_train_after_execute(begin_train, train_command, eval_command, m
         begin_train.train_command = train_command
         begin_train.eval_command = eval_command
         begin_train.state = common.TRAIN_STATE_TRAINING
+        logger.info('update_train_after_execute')
         begin_train.save()
 
 
@@ -623,6 +630,7 @@ def _do_check_one_train(train_action):
     train_pid = common.get_train_pid(train_action)
     if train_pid == 0:
         train_action.state=common.TRAIN_STATE_COMPLETE_WITH_ERROR
+        logger.info('update_train_after_error_complete')
         train_action.save()
         logger.error('train process has been killed:{};'.format(train_action.pk))
         return 'train process has been killed:{};'.format(train_action.pk)
@@ -740,6 +748,7 @@ def _do_export_train(train_action, train_model):
         common.stop_train_ps(train_action)
         train_action.state = common.TRAIN_STATE_COMPLETE
         train_action.complete_time = datetime.datetime.now()
+        logger.info('update_train_after_complete')
         train_action.save()
         if train_action.action == 'TA':
             # 'TA'训练完即建立了新的主分支
