@@ -404,6 +404,7 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     train_image_group_list = list(zip(*train_image_group_qs))
     # 更新数据
     # 'upcs'
+    logger.info('test2')
     for upc in names_to_labels:
         index = train_image_group_list[0].index(upc)
         TrainActionUpcs.objects.create(
@@ -414,6 +415,7 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     train_action.train_cnt = len(training_filenames)
     train_action.validation_cnt = len(validation_filenames)
     # 'devcice'
+    logger.info('test3')
     if train_action.action == 'TC':
         pass
 
