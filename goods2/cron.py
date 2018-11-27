@@ -486,14 +486,19 @@ def _do_execute_train():
 
 
 def update_begin_train_after_execute(begin_train, train_command, eval_command, my_ip):
-    begin_train.ip = my_ip
-    begin_train.train_command = train_command
-    begin_train.eval_command = eval_command
-    begin_train.state = common.TRAIN_STATE_TRAINING
-    begin_train.save()
+    if train_command is not None:
+        begin_train.ip = my_ip
+        begin_train.train_command = train_command
+        begin_train.eval_command = eval_command
+        begin_train.state = common.TRAIN_STATE_TRAINING
+        begin_train.save()
 
 
 def _do_begin_train(train_action):
+
+    # 防止样本生成时间过长没有完成
+    if train_action.train_path is None or train_action.train_path == '':
+        return None,None
 
     # 训练
     if train_action.action == 'TC':
