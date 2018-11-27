@@ -337,15 +337,16 @@ def do_create_train(action, deviceid, f_model_id):
     # 更新数据
     # 'upcs'
     for upc in names_to_labels:
-        # FIXME hand and bag not in database
-        if upc in ['hand','bag']:
+        try:
+            index = train_image_group_list[0].index(upc)
+            TrainActionUpcs.objects.create(
+                train_action_id=train_action.pk,
+                upc=upc,
+                cnt=train_image_group_list[1][index],
+            )
+        except:
+            logger.warning('can not find upc:{}'.format(upc))
             continue
-        index = train_image_group_list[0].index(upc)
-        TrainActionUpcs.objects.create(
-            train_action_id=train_action.pk,
-            upc=upc,
-            cnt=train_image_group_list[1][index],
-        )
     train_action.train_cnt = len(training_filenames)
     train_action.validation_cnt = len(validation_filenames)
     # 'device'
@@ -407,15 +408,16 @@ def do_create_train_bind(action, deviceid, f_model_id, bind_deviceid_list):
     # 更新数据
     # 'upcs'
     for upc in names_to_labels:
-        # FIXME hand and bag not in database
-        if upc in ['hand','bag']:
+        try:
+            index = train_image_group_list[0].index(upc)
+            TrainActionUpcs.objects.create(
+                train_action_id=train_action.pk,
+                upc=upc,
+                cnt=train_image_group_list[1][index],
+            )
+        except:
+            logger.warning('can not find upc:{}'.format(upc))
             continue
-        index = train_image_group_list[0].index(upc)
-        TrainActionUpcs.objects.create(
-            train_action_id=train_action.pk,
-            upc=upc,
-            cnt=train_image_group_list[1][index],
-        )
     train_action.train_cnt = len(training_filenames)
     train_action.validation_cnt = len(validation_filenames)
     # 'device'
