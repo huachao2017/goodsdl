@@ -62,7 +62,7 @@ class ImageSerializer(serializers.ModelSerializer):
 class TrainImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainImage
-        fields = ('pk', 'deviceid', 'source', 'upc', 'source_from', 'score', 'source_image', 'create_time', 'update_time')
+        fields = ('pk', 'deviceid', 'source', 'upc', 'source_from', 'score', 'source_image', 'create_time', 'update_time', 'special_type')
         read_only_fields = ('source_image', 'create_time', 'update_time')
 
 

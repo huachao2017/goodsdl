@@ -36,3 +36,32 @@ source  file
 filename string
 upc   string
 返回201
+
+
+ai称后台管理接口说明：
+
+1.用户照片deviceid列表：(get) http://ai.fastxbox.cn/api2/userimage/device_list/
+
+2.用户照片列表（有无参数都可查询）：(get) http://ai.fastxbox.cn/api2/userimage/?deviceid=485&upc=11&page=6
+
+3.用户照片upc列表：(get) http://ai.fastxbox.cn/api2/userimage/upc_list/?deviceid=485
+
+4.用户照片添加至训练照片：(put) http://ai.fastxbox.cn/api2/userimage/111/add_to_train/
+
+5.删除用户照片：(delete) http://ai.fastxbox.cn/api2/userimage/111/
+
+
+6.训练照片deviceid列表：(get) http://ai.fastxbox.cn/api2/trainimage/device_list/
+
+7.训练照片列表（有无参数都可查询）：(get) http://ai.fastxbox.cn/api2/trainimage/?deviceid=485&upc=11&page=6
+
+8.训练照片upc列表：(get) http://ai.fastxbox.cn/api2/trainimage/upc_list/?deviceid=485
+
+9.删除训练照片：(delete) http://ai.fastxbox.cn/api2/trainimage/111/
+
+10.训练历史：http://ai.fastxbox.cn/train/?deviceid=xxx
+
+11.开始训练：http://ai.fastxbox.cn/createtrain/?deviceid=xxx
+
+
+12.设定样本类型：(put) http://ai.fastxbox.cn/api2/trainimage/111/set_special_type/?type=0(0:无; 1:手 ;2:袋;)

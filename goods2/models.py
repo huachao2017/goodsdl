@@ -81,6 +81,12 @@ class TrainImage(models.Model):
     score = models.FloatField(default=1.0)  # 可靠度评分，用于筛选样本
     create_time = models.DateTimeField('date created', auto_now_add=True)
     update_time = models.DateTimeField('date updated', auto_now=True)
+    SPECIAL_TYPE_CHOICES = (
+        (0, u'NAN'),
+        (1, u'hand'),
+        (2, u'bag'),
+    )
+    special_type = models.IntegerField(choices=SPECIAL_TYPE_CHOICES, default=0)
 
 
 class TrainAction(models.Model):

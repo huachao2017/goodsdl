@@ -403,6 +403,18 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
             ret.append(upc['upc'])
         return Response(ret)
 
+    @action(methods=['put'], detail=True)
+    def set_special_type(self, request, pk=None):
+        instance = self.get_object()
+        if 'type' not in request.query_params:
+            type = 0
+        else:
+            type = int(request.query_params['type'])
+        instance.special_type = type
+        instance.save()
+        return Response(util.wrap_ret([]), status=status.HTTP_200_OK)
+
+
     def create(self, request, *args, **kwargs):
         if 'source_from' not in request.data:
             request.data['source_from'] = 1
