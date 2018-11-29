@@ -53,9 +53,9 @@ class UserImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModel
     def upc_list(self, request):
         if 'deviceid' in request.query_params:
             deviceid = request.query_params['deviceid']
-            upcs = Image.objects.filter(deviceid=deviceid).values('upc').distinct()
+            upcs = Image.objects.exclude(image_ground_truth_id=None).filter(is_train=False).filter(is_hand=False).filter(deviceid=deviceid).values('upc').distinct()
         else:
-            upcs = Image.objects.values('upc').distinct()
+            upcs = Image.objects.exclude(image_ground_truth_id=None).filter(is_train=False).filter(is_hand=False).values('upc').distinct()
         ret = []
         for upc in upcs:
             ret.append(upc['upc'])
