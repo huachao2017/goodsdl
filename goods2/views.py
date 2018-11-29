@@ -183,7 +183,8 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
             # upcs, scores = sort_upc_to_scores(upc_to_scores)
             # logger.info(scores)
             for i in range(len(upcs)):
-                if scores[i]>=0.3 or (i>0 and scores[0]<=0.85):
+                # TODO 只推荐正确的
+                if scores[i]>=0.85 and upcs[i] not in ['hand', 'bag']:
                     ret.append(
                         {
                             'upc': upcs[i],
@@ -336,7 +337,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
             truth_image_result_qs = image.image_results.filter(upc=serializer.instance.upc).filter(score__gt=0.85)
             if len(truth_image_result_qs)>0:
                 truth_image_result_cnt += 1
-            false_image_result_qs = image.image_results.exclude(upc=serializer.instance.upc).filter(score__gt=0.85)
+            false_image_result_qs = image.image_results.exclude(upc=serializer.instance.upc).exclude(upc='hand').exclude(upc='bag').filter(score__gt=0.85)
             if len(false_image_result_qs)>0:
                 false_image_result_cnt += 1
             image.image_ground_truth=serializer.instance
