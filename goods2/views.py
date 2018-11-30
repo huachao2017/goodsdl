@@ -501,10 +501,18 @@ class TestTrain(APIView):
 
 class ClearData(APIView):
     def get(self, request):
-        deviceid = request.query_params['deviceid']
-        train_image_qs = TrainImage.objects.filter(source_image_id__gt=0).filter(deviceid=deviceid).order_by('id')
-        for train_image in train_image_qs:
-            os.remove(train_image.source.path)
-            train_image.delete()
+        # deviceid = request.query_params['deviceid']
+        # train_image_qs = TrainImage.objects.filter(source_image_id__gt=0).filter(deviceid=deviceid).order_by('id')
+        # for train_image in train_image_qs:
+        #     os.remove(train_image.source.path)
+        #     train_image.delete()
+
+        image_qs = Image.objects.filter(image_ground_truth=None)
+        for image in image_qs:
+          if os.path.isfile(image.source.path):
+            logger.info('delete image: {}'.format(image.source.path))
+            os.remove(image.source.path)
+            image.image_results.delete()
+            image.delete()
 
         return Response([], status=status.HTTP_201_CREATED)
