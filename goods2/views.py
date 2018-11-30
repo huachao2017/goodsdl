@@ -411,6 +411,26 @@ class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
             type = 0
         else:
             type = int(request.query_params['type'])
+
+        if type>0:
+            if type==1:
+                special_type_name = 'hand'
+            elif type==2:
+                special_type_name = 'bag'
+            special_source_dir = '{}/{}'.format(common.get_dataset_dir(True),special_type_name)
+            special_source_path = '{}/{}_{}'.format(special_source_dir, special_type_name, os.path.basename(instance.source.path))
+            shutil.copy(instance.source.path, special_source_path)
+        else:
+            if instance.special_type == 1:
+                special_type_name = 'hand'
+            elif instance.special_type == 2:
+                special_type_name = 'bag'
+            special_source_dir = '{}/{}'.format(common.get_dataset_dir(True), special_type_name)
+            special_source_path = '{}/{}_{}'.format(special_source_dir, special_type_name,
+                                                    os.path.basename(instance.source.path))
+            if os.path.isfile(special_source_path):
+                os.remove(special_source_path)
+
         instance.special_type = type
         instance.save()
         return Response(util.wrap_ret([]), status=status.HTTP_200_OK)

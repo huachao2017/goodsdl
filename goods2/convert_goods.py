@@ -122,10 +122,10 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
         # 使用数据库添加样本
         if bind_deviceid_list is None:
             train_images = TrainImage.objects.filter(deviceid=deviceid)
-            train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+            train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).filter(special_type=0).values_list('upc').annotate(cnt=Count('id'))
         else:
             train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list)
-            train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(cnt=Count('id'))
+            train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).filter(special_type=0).values_list('upc').annotate(cnt=Count('id'))
         for train_upc_group in train_upc_group_qs:
             if train_upc_group[1] >= 10: # 大于等于10个样本才能进入训练
                 upcs.append(train_upc_group[0])
@@ -143,12 +143,12 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
                 training_filenames.append(image_file_path)
         upcs.append('hand')
         # 增加塑料袋样本
-        # bag_train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2', 'bag')
-        # for filename in os.listdir(bag_train_image_dir):
-        #     image_file_path = os.path.join(bag_train_image_dir, filename)
-        #     if os.path.isfile(image_file_path):
-        #         training_filenames.append(image_file_path)
-        # upcs.append('bag')
+        bag_train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2', 'bag')
+        for filename in os.listdir(bag_train_image_dir):
+            image_file_path = os.path.join(bag_train_image_dir, filename)
+            if os.path.isfile(image_file_path):
+                training_filenames.append(image_file_path)
+        upcs.append('bag')
 
     else:
         # 使用目录添加样本
@@ -172,10 +172,10 @@ def prepare_train_TF(train_action, bind_deviceid_list=None):
     f_train = TrainAction.objects.get(id=f_model.train_action.pk)
     if bind_deviceid_list is None:
         train_images = TrainImage.objects.filter(deviceid=deviceid)
-        train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).values_list('upc').annotate(cnt=Count('id'))
+        train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).filter(special_type=0).values_list('upc').annotate(cnt=Count('id'))
     else:
         train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list)
-        train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).values_list('upc').annotate(cnt=Count('id'))
+        train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).filter(special_type=0).values_list('upc').annotate(cnt=Count('id'))
 
     upcs = []
     for train_upc_group in train_upc_group_qs:
