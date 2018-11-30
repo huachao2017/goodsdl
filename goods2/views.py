@@ -512,8 +512,8 @@ class ClearData(APIView):
           if os.path.isfile(image.source.path):
             logger.info('delete image: {}'.format(image.source.path))
             os.remove(image.source.path)
-            for result in image.image_results:
-                result.delete()
-            image.delete()
+          for result in image.image_results.all():
+            result.delete()
+          image.delete()
 
         return Response([], status=status.HTTP_201_CREATED)
