@@ -362,7 +362,7 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
 
 class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     # TODO 为了临时显示，去掉手和袋的显示
-    queryset = TrainImage.objects.filter(special_type=2).order_by('-id')
+    queryset = TrainImage.objects.filter(special_type=0).order_by('-id')
     serializer_class = TrainImageSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('deviceid', 'upc')
