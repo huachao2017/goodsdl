@@ -483,26 +483,17 @@ class CreateTrain(APIView):
         deviceid = request.query_params['deviceid']
         if deviceid in common.good_neighbour_bind_deviceid_list:
             # 好邻居联合计算
-            doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(deviceid__in=common.good_neighbour_bind_deviceid_list).filter(
-                state__lte=common.TRAIN_STATE_TRAINING)
-            if len(doing_ta_tf) == 0:
-                from goods2.cron import do_create_train_bind
+            from goods2.cron import do_create_train_bind
 
-                train_action = do_create_train_bind(action, deviceid, None, common.good_neighbour_bind_deviceid_list)
-                logger.info('[{}]create_train_bind by menu: {}'.format(deviceid, action))
-                return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
-            else:
-                return Response(status=status.HTTP_204_NO_CONTENT)
+            train_action = do_create_train_bind(action, deviceid, None, common.good_neighbour_bind_deviceid_list)
+            logger.info('[{}]create_train_bind by menu: {}'.format(deviceid, action))
+            return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
         else:
-            doing_ta_tf = TrainAction.objects.exclude(action='TC').filter(deviceid=deviceid).filter(state__lte=common.TRAIN_STATE_TRAINING)
-            if len(doing_ta_tf) == 0:
-                from goods2.cron import do_create_train
+            from goods2.cron import do_create_train
 
-                train_action = do_create_train(action, deviceid, None)
-                logger.info('[{}]create_train by menu: {}'.format(deviceid, action))
-                return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
-            else:
-                return Response(status=status.HTTP_204_NO_CONTENT)
+            train_action = do_create_train(action, deviceid, None)
+            logger.info('[{}]create_train by menu: {}'.format(deviceid, action))
+            return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
 
 
 class TestTrain(APIView):
