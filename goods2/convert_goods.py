@@ -320,7 +320,10 @@ def prepare_train(train_action):
     else:
         raise ValueError('error parameter')
 
-    if upcs is None or len(upcs) == 0:
+    if upcs is None or len(upcs) <= 1:
+        return None, None, None
+
+    if len(training_filenames) <= 200:
         return None, None, None
 
     names_to_labels = dict(zip(upcs, range(len(upcs))))
@@ -363,7 +366,10 @@ def prepare_train_bind(train_action,bind_deviceid_list):
     else:
         raise ValueError('error parameter')
 
-    if upcs is None or len(upcs) == 0:
+    if upcs is None or len(upcs) <= 1:
+        return None, None, None
+
+    if len(training_filenames) <= 200:
         return None, None, None
 
     names_to_labels = dict(zip(upcs, range(len(upcs))))
