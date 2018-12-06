@@ -135,7 +135,19 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
                     training_filenames.append(train_image.source.path)
                 else:
                     TrainImage.objects.get(id=train_image.pk).delete()
-    elif deviceid in bind_deviceid_list: # FIXME
+    else:
+        # 使用目录添加样本
+        train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2',deviceid)
+        for upc in os.listdir(train_image_dir):
+            upc_dir = os.path.join(train_image_dir, upc)
+            if os.path.isdir(upc_dir):
+                upcs.append(upc)
+                for filename in os.listdir(upc_dir):
+                    image_file_path = os.path.join(upc_dir, filename)
+                    if os.path.isfile(image_file_path):
+                        training_filenames.append(image_file_path)
+
+    if deviceid in bind_deviceid_list: # FIXME
         # 增加手部样本
         hand_train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2', 'hand')
         for filename in os.listdir(hand_train_image_dir):
@@ -151,17 +163,7 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
                 training_filenames.append(image_file_path)
         upcs.append('bag')
 
-    else:
-        # 使用目录添加样本
-        train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2',deviceid)
-        for upc in os.listdir(train_image_dir):
-            upc_dir = os.path.join(train_image_dir, upc)
-            if os.path.isdir(upc_dir):
-                upcs.append(upc)
-                for filename in os.listdir(upc_dir):
-                    image_file_path = os.path.join(upc_dir, filename)
-                    if os.path.isfile(image_file_path):
-                        training_filenames.append(image_file_path)
+
     upcs = sorted(upcs)
 
     return upcs, training_filenames, None
