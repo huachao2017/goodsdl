@@ -160,7 +160,9 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
         scores, upcs = self.ai_detect(serializer)
 
-
+        if len(upcs)>0 and upcs[0] == 'hand':
+            serializer.instance.is_hand = True
+            serializer.instance.save()
         ret = []
         if True: #device.deviceid in ['485','200'] or device.state >= common.DEVICE_STATE_COMMERCIAL:
             # 没有商用的不返回结果
