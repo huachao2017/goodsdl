@@ -121,11 +121,11 @@ def prepare_train_TA(train_action, bind_deviceid_list=None):
     if deviceid != '100000':
         # 使用数据库添加样本
         if bind_deviceid_list is None:
-            train_images = TrainImage.objects.filter(deviceid=deviceid).exclude(special_type=1)
-            train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).exclude(special_type=1).values_list('upc').annotate(cnt=Count('id'))
+            train_images = TrainImage.objects.filter(deviceid=deviceid).filter(special_type=0)
+            train_upc_group_qs = TrainImage.objects.filter(deviceid=deviceid).filter(special_type=0).values_list('upc').annotate(cnt=Count('id'))
         else:
-            train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).exclude(special_type=1)
-            train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).exclude(special_type=1).values_list('upc').annotate(cnt=Count('id'))
+            train_images = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).filter(special_type=0)
+            train_upc_group_qs = TrainImage.objects.filter(deviceid__in=bind_deviceid_list).filter(special_type=0).values_list('upc').annotate(cnt=Count('id'))
         for train_upc_group in train_upc_group_qs:
             if train_upc_group[1] >= 10: # 大于等于10个样本才能进入训练
                 upcs.append(train_upc_group[0])
