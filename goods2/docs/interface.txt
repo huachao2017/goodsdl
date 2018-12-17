@@ -65,3 +65,6 @@ ai称后台管理接口说明：
 
 
 12.设定样本类型：(put) http://ai.fastxbox.cn/api2/trainimage/111/set_special_type/?type=0(0:无; 1:手 ;2:袋;)
+
+13.绑定类别：(post)http://ai.fastxbox.cn/api2/upcbind/
+deviceid,upc1,upc2
