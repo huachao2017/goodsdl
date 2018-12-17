@@ -66,6 +66,12 @@ def train_image_upload_source(instance, filename):
                                   filename)
     return ret
 
+class UpcBind(models.Model):
+    deviceid = models.CharField(max_length=20, default='', db_index=True)
+    upc1 = models.CharField(max_length=20, db_index=True)
+    upc2 = models.CharField(max_length=20, db_index=True)
+    create_time = models.DateTimeField('date created', auto_now_add=True)
+    update_time = models.DateTimeField('date updated', auto_now=True)
 
 class TrainImage(models.Model):
     deviceid = models.CharField(max_length=20, default='', db_index=True)

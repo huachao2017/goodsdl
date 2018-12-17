@@ -361,6 +361,10 @@ class ImageGroundTruthViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.List
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+class UpcBindViewSet(DefaultMixin, viewsets.ModelViewSet):
+    queryset = UpcBind.objects.order_by('-id')
+    serializer_class = UpcBindSerializer
+
 
 class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
     # TODO 为了临时显示，去掉手和袋的显示

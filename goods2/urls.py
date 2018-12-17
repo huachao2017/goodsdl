@@ -24,6 +24,7 @@ router.register(r'devicetrain', views.DeviceidTrainViewSet)
 router.register(r'userimage', views.UserImageViewSet)
 router.register(r'image', views.ImageViewSet)
 router.register(r'imagegroundtruth', views.ImageGroundTruthViewSet)
+router.register(r'upcbind', views.UpcBindViewSet)
 router.register(r'trainimage', views.TrainImageViewSet)
 
 router.register(r'train', views.TrainActionViewSet)
