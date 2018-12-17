@@ -308,53 +308,53 @@ def prepare_train_TC(train_action, bind_deviceid_list=None):
 
     return upcs, training_filenames, validation_filenames
 
-def prepare_train(train_action):
-    output_dir = train_action.train_path
-    if not tf.gfile.Exists(output_dir):
-        tf.gfile.MakeDirs(output_dir)
+# def prepare_train(train_action, bind_deviceid_list = None):
+#     output_dir = train_action.train_path
+#     if not tf.gfile.Exists(output_dir):
+#         tf.gfile.MakeDirs(output_dir)
+#
+#     if train_action.action == 'TA':
+#         upcs, training_filenames, validation_filenames = prepare_train_TA(train_action)
+#     elif train_action.action == 'TF':
+#         upcs, training_filenames, validation_filenames = prepare_train_TF(train_action)
+#     elif train_action.action == 'TC':
+#         upcs, training_filenames, validation_filenames = prepare_train_TC(train_action)
+#     else:
+#         raise ValueError('error parameter')
+#
+#     if upcs is None or len(upcs) <= 1:
+#         return None, None, None
+#
+#     if len(training_filenames) <= 200:
+#         return None, None, None
+#
+#     names_to_labels = dict(zip(upcs, range(len(upcs))))
+#     # Divide into train and test:
+#     random.seed(_RANDOM_SEED)
+#     random.shuffle(training_filenames)
+#     if validation_filenames is None:
+#         ratio = 1
+#         training_filenames_cnt = len(training_filenames)
+#         if training_filenames_cnt > 1000:
+#             ratio = max(0.1, 1 - (training_filenames_cnt-1000)/10000)
+#         validation_filenames = training_filenames[:int(ratio * training_filenames_cnt)]
+#         # validation_filenames = training_filenames
+#
+#     # First, convert the training and validation sets.
+#     _convert_dataset('train', training_filenames, names_to_labels,
+#                      output_dir)
+#     _convert_dataset('validation', validation_filenames, names_to_labels,
+#                      output_dir)
+#
+#     # Second, write the labels file:
+#     labels_to_names = dict(zip(range(len(upcs)), upcs))
+#     dataset_utils.write_label_file(labels_to_names, output_dir)
+#
+#     logger.info('Finished converting the goods dataset:({},{},{})'.format(len(names_to_labels), len(training_filenames), len(validation_filenames)))
+#     return names_to_labels, training_filenames, validation_filenames
 
-    if train_action.action == 'TA':
-        upcs, training_filenames, validation_filenames = prepare_train_TA(train_action)
-    elif train_action.action == 'TF':
-        upcs, training_filenames, validation_filenames = prepare_train_TF(train_action)
-    elif train_action.action == 'TC':
-        upcs, training_filenames, validation_filenames = prepare_train_TC(train_action)
-    else:
-        raise ValueError('error parameter')
 
-    if upcs is None or len(upcs) <= 1:
-        return None, None, None
-
-    if len(training_filenames) <= 200:
-        return None, None, None
-
-    names_to_labels = dict(zip(upcs, range(len(upcs))))
-    # Divide into train and test:
-    random.seed(_RANDOM_SEED)
-    random.shuffle(training_filenames)
-    if validation_filenames is None:
-        ratio = 1
-        training_filenames_cnt = len(training_filenames)
-        if training_filenames_cnt > 1000:
-            ratio = max(0.1, 1 - (training_filenames_cnt-1000)/10000)
-        validation_filenames = training_filenames[:int(ratio * training_filenames_cnt)]
-        # validation_filenames = training_filenames
-
-    # First, convert the training and validation sets.
-    _convert_dataset('train', training_filenames, names_to_labels,
-                     output_dir)
-    _convert_dataset('validation', validation_filenames, names_to_labels,
-                     output_dir)
-
-    # Second, write the labels file:
-    labels_to_names = dict(zip(range(len(upcs)), upcs))
-    dataset_utils.write_label_file(labels_to_names, output_dir)
-
-    logger.info('Finished converting the goods dataset:({},{},{})'.format(len(names_to_labels), len(training_filenames), len(validation_filenames)))
-    return names_to_labels, training_filenames, validation_filenames
-
-
-def prepare_train_bind(train_action,bind_deviceid_list):
+def prepare_train(train_action,bind_deviceid_list = None):
     output_dir = train_action.train_path
     if not tf.gfile.Exists(output_dir):
         tf.gfile.MakeDirs(output_dir)
