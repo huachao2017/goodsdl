@@ -69,6 +69,6 @@ ai称后台管理接口说明：
 13.绑定类别: (post)http://ai.fastxbox.cn/api2/upcbind/
 deviceid,upc1,upc2
 
-14.绑定列表: (get)http://ai.fastxbox.cn/api2/upcbind/
+14.绑定列表: (get)http://ai.fastxbox.cn/api2/upcbind/?deviceid=485
 
 15.删除绑定: (delete) http://ai.fastxbox.cn/api2/upcbind/111/ (111是id)
