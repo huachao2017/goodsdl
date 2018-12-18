@@ -57,6 +57,53 @@ def _get_tfrecord_filename(output_dir, split_name):
     return os.path.join(output_dir, output_filename)
 
 
+def _convert_dataset_bag(split_name, filenames, names_to_labels, output_dir):
+    """Converts the given filenames to a TFRecord dataset.
+
+    Args:
+      split_name: The name of the dataset, either 'train' or 'validation'.
+      filenames: A list of absolute paths to png or jpg images.
+      names_to_labels: A dictionary from class names (strings) to ids
+        (integers).
+      output_dir: The directory where the converted tfrecord are stored.
+    """
+    assert split_name in ['train', 'validation']
+
+    num_per_shard = int(math.ceil(len(filenames) / float(len(names_to_labels))))
+
+    output_filename = _get_tfrecord_filename(
+        output_dir, split_name)
+    if tf.gfile.Exists(output_filename):
+        tf.gfile.Remove(output_filename)
+    writer = tf.python_io.TFRecordWriter(output_filename)
+    for shard_id in range(len(names_to_labels)):
+        start_ndx = shard_id * num_per_shard
+        end_ndx = min((shard_id + 1) * num_per_shard, len(filenames))
+        for i in range(start_ndx, end_ndx):
+            # logger.info('\r>> Converting image %d/%d shard %d' % (
+            #     i + 1, len(filenames), shard_id))
+
+            # Read the filename:
+            with tf.gfile.GFile(filenames[i], 'rb') as fid:
+                encoded_jpg = fid.read()
+            encoded_jpg_io = io.BytesIO(encoded_jpg)
+            image = im.open(encoded_jpg_io)
+            width, height = image.size
+
+            name = os.path.basename(os.path.dirname(filenames[i]))
+            if name == 'bag': # TODO
+                label = names_to_labels[name]
+            else:
+                label = names_to_labels['nobag']
+            # print('{}:{}'.format(filenames[i],label))
+            example = dataset_utils.image_to_tfexample(
+                encoded_jpg, b'jpg', height, width, label)
+            writer.write(example.SerializeToString())
+    writer.close()
+    # print('generate tfrecord:{}'.format(output_filename))
+    logger.info('generate tfrecord:{}'.format(output_filename))
+
+
 def _convert_dataset(split_name, filenames, names_to_labels, output_dir):
     """Converts the given filenames to a TFRecord dataset.
 
@@ -111,6 +158,28 @@ def _remove_tfrecord_ifexists(output_dir):
             output_dir, split_name)
         if tf.gfile.Exists(output_filename):
             tf.gfile.Remove(output_filename)
+
+
+def prepare_train_TA_bag(train_action):
+    deviceid = train_action.deviceid
+    logger.info('[{}]prepare_train_bag'.format(deviceid))
+    training_filenames = []
+    upcs = []
+    # 增加塑料袋样本
+    bag_train_image_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'goods2', 'bag')
+    for filename in os.listdir(bag_train_image_dir):
+        image_file_path = os.path.join(bag_train_image_dir, filename)
+        if os.path.isfile(image_file_path):
+            training_filenames.append(image_file_path)
+    upcs.append('bag')
+
+    train_images = TrainImage.objects.filter(deviceid='3476').filter(special_type=0)[:500] #TODO 指定一个device和500个
+    for train_image in train_images:
+        if os.path.isfile(train_image.source.path):
+            training_filenames.append(train_image.source.path)
+    upcs.append('nobag')
+
+    return upcs, training_filenames, None
 
 
 def prepare_train_TA(train_action, bind_deviceid_list=None):
@@ -397,6 +466,46 @@ def prepare_train(train_action,bind_deviceid_list = None):
     dataset_utils.write_label_file(labels_to_names, output_dir)
 
     logger.info('Finished converting the goods dataset:({},{},{})'.format(len(names_to_labels), len(training_filenames), len(validation_filenames)))
+    return names_to_labels, training_filenames, validation_filenames
+
+
+def prepare_train_bag(train_action):
+    output_dir = train_action.train_path
+    if not tf.gfile.Exists(output_dir):
+        tf.gfile.MakeDirs(output_dir)
+
+    upcs, training_filenames, validation_filenames = prepare_train_TA_bag(train_action)
+
+    if upcs is None or len(upcs) <= 1:
+        return None, None, None
+
+    if len(training_filenames) <= 200:
+        return None, None, None
+
+    names_to_labels = dict(zip(upcs, range(len(upcs))))
+    # Divide into train and test:
+    random.seed(_RANDOM_SEED)
+    random.shuffle(training_filenames)
+    if validation_filenames is None:
+        ratio = 1
+        training_filenames_cnt = len(training_filenames)
+        if training_filenames_cnt > 1000:
+            ratio = max(0.1, 1 - (training_filenames_cnt - 1000) / 10000)
+        validation_filenames = training_filenames[:int(ratio * training_filenames_cnt)]
+        # validation_filenames = training_filenames
+
+    # First, convert the training and validation sets.
+    _convert_dataset_bag('train', training_filenames, names_to_labels,
+                     output_dir)
+    _convert_dataset_bag('validation', validation_filenames, names_to_labels,
+                     output_dir)
+
+    # Second, write the labels file:
+    labels_to_names = dict(zip(range(len(upcs)), upcs))
+    dataset_utils.write_label_file(labels_to_names, output_dir)
+
+    logger.info('Finished converting the goods dataset:({},{},{})'.format(len(names_to_labels), len(training_filenames),
+                                                                          len(validation_filenames)))
     return names_to_labels, training_filenames, validation_filenames
 
 

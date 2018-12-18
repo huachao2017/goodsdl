@@ -358,6 +358,31 @@ def do_create_train(action, deviceid, f_model_id):
     return train_action
 
 
+def do_create_train_bag(action, deviceid):
+    train_action = TrainAction.objects.create(
+        action=action,
+        deviceid=deviceid,
+        desc=''
+    )
+
+    train_action.train_path = os.path.join(common.get_train_path(), str(train_action.pk))
+    # 数据准备
+    names_to_labels, training_filenames, validation_filenames = convert_goods.prepare_train_bag(train_action)
+
+    if names_to_labels is None:
+        train_action.state = common.TRAIN_STATE_COMPLETE_WITH_ERROR
+        logger.info('update_train_after_error_create')
+        train_action.save()
+        return
+
+    train_action.train_cnt = len(training_filenames)
+    train_action.validation_cnt = len(validation_filenames)
+
+    logger.info('update_train_after_create')
+    train_action.save()
+    return train_action
+
+
 def do_test_train(action):
     deviceid = '3540'
     train_action = TrainAction.objects.create(

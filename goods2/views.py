@@ -487,6 +487,13 @@ class CreateTrain(APIView):
         else:
             action = request.query_params['action']
         deviceid = request.query_params['deviceid']
+        if deviceid == 'bag':
+            from goods2.cron import do_create_train_bag
+
+            train_action = do_create_train_bag(action,deviceid)
+            logger.info('[{}]create_train_bag by menu: {}'.format(deviceid, action))
+            return Response(util.wrap_ret(None), status=status.HTTP_201_CREATED)
+
         if deviceid in common.good_neighbour_bind_deviceid_list:
             # 好邻居联合计算
             waiting_ta_tf = TrainAction.objects.exclude(action='TC').filter(deviceid__in=common.good_neighbour_bind_deviceid_list).filter(
