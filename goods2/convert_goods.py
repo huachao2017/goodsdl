@@ -173,7 +173,7 @@ def prepare_train_TA_bag(train_action):
             training_filenames.append(image_file_path)
     upcs.append('bag')
 
-    train_images = TrainImage.objects.filter(deviceid='3476').filter(special_type=0)[:500] #TODO 指定一个device和500个
+    train_images = TrainImage.objects.filter(deviceid='3476').filter(special_type=0)[:2000] #TODO 指定一个device和2000个
     for train_image in train_images:
         if os.path.isfile(train_image.source.path):
             training_filenames.append(train_image.source.path)
