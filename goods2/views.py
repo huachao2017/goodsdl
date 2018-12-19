@@ -365,7 +365,7 @@ class UpcBindViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = UpcBind.objects.order_by('-id')
     serializer_class = UpcBindSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('deviceid')
+    filter_fields = ('deviceid',)
 
 
 class TrainImageViewSet(DefaultMixin, viewsets.ModelViewSet):
