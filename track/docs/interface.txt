@@ -1,0 +1,32 @@
+1、创建基点接口：http://ai.fastxbox.cn/track/basepoint/
+post入参：
+shopid string
+deviceid  string
+x  int
+y  int
+z  int
+返回201：
+
+2、创建入口区域接口：http://ai.fastxbox.cn/track/entrance/
+post入参：
+shopid string
+deviceid  string
+x  int
+y  int
+w  int
+h  int
+返回201：
+
+3、识别接口：http://ai.fastxbox.cn/track/recognition/
+post入参：
+shopid string
+deviceid  string
+cid int
+sid int
+x  int
+y  int
+z  int
+返回201：
+{
+    "sid": 0                                   -- 0为未识别
+}

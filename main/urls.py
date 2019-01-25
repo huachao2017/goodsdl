@@ -22,8 +22,9 @@ from goods2.urls import urlpatterns as goods2_urlpatterns
 from goodscf.urls import urlpatterns as goodscf_urlpatterns
 from face.urls import urlpatterns as face_urlpatterns
 from arm.urls import urlpatterns as arm_urlpatterns
+from track.urls import urlpatterns as track_urlpatterns
 
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-]+goods_urlpatterns+goods2_urlpatterns+goodscf_urlpatterns+face_urlpatterns+arm_urlpatterns+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]+goods_urlpatterns+goods2_urlpatterns+goodscf_urlpatterns+face_urlpatterns+arm_urlpatterns+track_urlpatterns+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
