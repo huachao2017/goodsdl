@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from track.models import BasePoint, EntranceArea, Recognition
+from track.models import BasePoint, EntranceArea, Recognition, TransferRecognition
 
 class BasePointSerializer(serializers.ModelSerializer):
   class Meta:
