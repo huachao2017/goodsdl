@@ -44,29 +44,45 @@ class RecognitionViewSet(DefaultMixin, viewsets.ModelViewSet):
     if r_sid > 0:
       return Response({'sid': r_sid}, status=status.HTTP_201_CREATED, headers=headers)
 
-    r_sid = 0
-
     # 查询是否分配入门sid
-    entrance_area = EntranceArea.objects.filter(shopid=cur_recognition.shopid).filter(deviceid=cur_recognition.deviceid).order_by('-id')[0]
+    r_sid = self.detect_entrance(cur_recognition)
+
+    if r_sid == 0:
+      # 查询其他有sid设备进行交接
+      r_sid = self.transfer_sid(cur_recognition)
+
+    return Response({'sid':r_sid}, status=status.HTTP_201_CREATED, headers=headers)
+
+  def detect_entrance(self, detect_recognition):
+    r_sid = 0
+    entrance_area = \
+    EntranceArea.objects.filter(shopid=detect_recognition.shopid).filter(deviceid=detect_recognition.deviceid).order_by(
+      '-id')[0]
     if entrance_area is not None:
-      if abs(entrance_area.x-cur_recognition.x)<entrance_area.w/2 and abs(entrance_area.y-cur_recognition.y)<entrance_area.h/2:
+      if abs(entrance_area.x - detect_recognition.x) < entrance_area.w / 2 and abs(
+              entrance_area.y - detect_recognition.y) < entrance_area.h / 2:
         # 分配一个新的id，
         # FIXME 需要考虑重入问题
-        last_recognition = Recognition.objects.filter(shopid=cur_recognition.shopid).filter(deviceid=cur_recognition.deviceid).filter(r_sid__gt=0).order_by('-id')[0]
+        last_recognition = \
+        Recognition.objects.filter(shopid=detect_recognition.shopid).filter(deviceid=detect_recognition.deviceid).filter(
+          r_sid__gt=0).order_by('-id')[0]
         if last_recognition is None:
           r_sid = 1
         else:
           r_sid = last_recognition.r_sid + 1
 
-        cur_recognition.r_sid = r_sid
-        cur_recognition.save()
-        return Response({'sid': r_sid}, status=status.HTTP_201_CREATED, headers=headers)
+        detect_recognition.r_sid = r_sid
+        detect_recognition.save()
+    return r_sid
 
+  def transfer_sid(self, detect_recognition):
+    r_sid = 0
     # 查询其他有sid设备2s内的位置
-    last_recognition_qs = Recognition.objects.filter(shopid=cur_recognition.shopid).exclude(deviceid=cur_recognition.deviceid).filter(sid__gt=0).order_by('-id')[:10]
+    last_recognition_qs = Recognition.objects.filter(shopid=detect_recognition.shopid).exclude(
+      deviceid=detect_recognition.deviceid).filter(sid__gt=0).order_by('-id')[:10]
     deviceid_to_recognition = {}
     for last_recognition in last_recognition_qs:
-      delta = cur_recognition.create_time - last_recognition.create_time
+      delta = detect_recognition.create_time - last_recognition.create_time
       if delta.seconds > 2:
         break
       if last_recognition.deviceid not in deviceid_to_recognition:
@@ -74,19 +90,20 @@ class RecognitionViewSet(DefaultMixin, viewsets.ModelViewSet):
 
     # 获取BasePoint
     deviceid_to_base_point = {}
-    base_point_qs = BasePoint.objects.filter(shopid=cur_recognition.shopid).order_by('-id')[:10]
+    base_point_qs = BasePoint.objects.filter(shopid=detect_recognition.shopid).order_by('-id')[:10]
     for base_point in base_point_qs:
       if base_point.deviceid not in deviceid_to_base_point:
         deviceid_to_base_point[base_point.deviceid] = base_point
 
     # 获取距离
     deviceid_to_distance = {}
-    cur_point_x = cur_recognition.x - deviceid_to_base_point[cur_recognition.deviceid].x
-    cur_point_y = cur_recognition.y - deviceid_to_base_point[cur_recognition.deviceid].y
+    cur_point_x = detect_recognition.x - deviceid_to_base_point[detect_recognition.deviceid].x
+    cur_point_y = detect_recognition.y - deviceid_to_base_point[detect_recognition.deviceid].y
     for deviceid in deviceid_to_recognition:
       point_x = deviceid_to_recognition[deviceid].x - deviceid_to_base_point[deviceid].x
       point_y = deviceid_to_recognition[deviceid].y - deviceid_to_base_point[deviceid].y
-      distance = math.sqrt((point_x-cur_point_x)(point_x-cur_point_x)+(point_y-cur_point_y)(point_y-cur_point_y))
+      distance = math.sqrt(
+        (point_x - cur_point_x)(point_x - cur_point_x) + (point_y - cur_point_y)(point_y - cur_point_y))
       deviceid_to_distance[deviceid] = distance
 
     # 判断最近距离
@@ -96,17 +113,14 @@ class RecognitionViewSet(DefaultMixin, viewsets.ModelViewSet):
       if deviceid_to_distance[deviceid] < min_distance:
         min_distance = deviceid_to_distance[deviceid]
         transfer_deviceid = deviceid
-
     if transfer_deviceid is not None:
       r_sid = deviceid_to_recognition[transfer_deviceid].sid
 
       TransferRecognition.objects.create(
-        recognition_id=cur_recognition.pk,
+        recognition_id=detect_recognition.pk,
         transfer_deviceid=transfer_deviceid,
         distance=min_distance,
       )
-      cur_recognition.r_sid = r_sid
-      cur_recognition.save()
-      return Response({'sid':r_sid}, status=status.HTTP_201_CREATED, headers=headers)
-
-    return Response({'sid':r_sid}, status=status.HTTP_201_CREATED, headers=headers)
+      detect_recognition.r_sid = r_sid
+      detect_recognition.save()
+    return r_sid
