@@ -157,6 +157,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         #     serializer.instance.save()
         #     logger.info('[{}]detect result: {}'.format(serializer.instance.deviceid, 'has hand'))
         #     return Response([], status=status.HTTP_201_CREATED, headers=headers)
+        return Response([],status=status.HTTP_201_CREATED, headers=headers)
 
         scores, upcs = self.ai_detect(serializer)
 
