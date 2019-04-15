@@ -246,16 +246,17 @@ def read_examples_list_and_label_map_and_classnames(path, additional_path=None):
                 if ext == ".jpg" and os.path.isfile(example + '.xml'):
                     examples.append(example)
 
-    additional_dirlist = os.listdir(additional_path)
-    for i in range(0, len(additional_dirlist)):
-        class_dir = os.path.join(additional_path, additional_dirlist[i])
-        if os.path.isdir(class_dir):
-            filelist = os.listdir(class_dir)
-            for j in range(0, len(filelist)):
-                image_path = os.path.join(class_dir, filelist[j])
-                example, ext = os.path.splitext(image_path)
-                if ext == ".jpg" and os.path.isfile(example + '.xml'):
-                    addition_examples.append(example)
+    if additional_path is not None:
+        additional_dirlist = os.listdir(additional_path)
+        for i in range(0, len(additional_dirlist)):
+            class_dir = os.path.join(additional_path, additional_dirlist[i])
+            if os.path.isdir(class_dir):
+                filelist = os.listdir(class_dir)
+                for j in range(0, len(filelist)):
+                    image_path = os.path.join(class_dir, filelist[j])
+                    example, ext = os.path.splitext(image_path)
+                    if ext == ".jpg" and os.path.isfile(example + '.xml'):
+                        addition_examples.append(example)
     return examples, addition_examples, {'1':1},sorted(class_names)
 
 def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, local_fineture, additional_data_dir=None):
@@ -264,8 +265,11 @@ def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, loc
 
     # Test images are not included in the downloaded data set, so we shall perform
     # our own split.
-    # 评估时必然包括addition_examples
-    val_examples = addition_examples
+    if additional_data_dir is not None:
+       # 评估时必然包括addition_examples
+        val_examples = addition_examples
+    else:
+        val_examples = normal_examples_list
 
     normal_examples_list.extend(addition_examples)
     # normal_examples_list.extend(addition_examples)
@@ -292,7 +296,10 @@ def prepare_train(data_dir, train_dir, train_name, fine_tune_checkpoint_dir, loc
     dataset_utils.write_label_file(labels_to_class_names, output_dir)
 
     # 设定每张照片训练100次
-    per_pic_train_counts = 100
+    if additional_data_dir is not None:
+        per_pic_train_counts = 100
+    else:
+        per_pic_train_counts = 1000
     if local_fineture:
         per_pic_train_counts = 20
     update_config_file(train_dir, train_name, len(label_map_dict), num_steps=len(train_examples)*per_pic_train_counts, fine_tune_checkpoint_dir=fine_tune_checkpoint_dir, eval_num=len(val_examples))
