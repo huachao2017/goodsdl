@@ -134,6 +134,10 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
     def create(self, request, *args, **kwargs):
 
+        # TODO 只保留deviceid=485进入存储和检测环节
+        if request.data['deviceid'] != '485':
+            return Response([], status=status.HTTP_201_CREATED)
+
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
