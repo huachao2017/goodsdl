@@ -79,7 +79,7 @@ model {
       }
       score_converter: SOFTMAX
     }
-    second_stage_batch_size: 50
+    second_stage_batch_size: 64
     second_stage_localization_loss_weight: 10.0
     second_stage_classification_loss_weight: 1.0
 
