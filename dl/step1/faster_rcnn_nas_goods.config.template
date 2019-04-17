@@ -43,7 +43,7 @@ model {
     }
     first_stage_nms_score_threshold: 0.0
     first_stage_nms_iou_threshold: 0.7
-    first_stage_max_proposals: 500
+    first_stage_max_proposals: 1000
     first_stage_localization_loss_weight: 10.0
     first_stage_objectness_loss_weight: 1.0
     initial_crop_size: 17
@@ -79,7 +79,7 @@ model {
       }
       score_converter: SOFTMAX
     }
-    second_stage_batch_size: 50
+    second_stage_batch_size: 200
     second_stage_localization_loss_weight: 10.0
     second_stage_classification_loss_weight: 1.0
 
