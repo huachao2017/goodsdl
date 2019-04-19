@@ -69,6 +69,7 @@ class ImageDetector_os1:
             table_contour = TableContour(image_path, debug_type=1)
 
         ret = []
+        logger.info('detect number:{}'.format(len(boxes.shape[0])))
         for i in range(boxes.shape[0]):
             if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
@@ -99,7 +100,8 @@ class ImageDetector_os1:
                 use_normalized_coordinates=True,
                 step1_min_score_thresh=step1_min_score_thresh,
                 line_thickness=2,
-                show_error_boxes=False
+                show_error_boxes=False,
+                max_boxes_to_draw=None,
             )
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
