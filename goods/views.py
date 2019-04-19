@@ -67,7 +67,15 @@ class ImageTestViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMi
         headers = self.get_success_headers(serializer.data)
 
         # 暂时性分解Detect，需要一个处理type编码
-        if serializer.instance.deviceid == 'os1':
+        if serializer.instance.deviceid == 'shelf':
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
+
+            if len(export1s)>0:
+                detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
+                step1_min_score_thresh = .5
+                ret, aiinterval,_ = detector.detect(serializer.instance.source.path, step1_min_score_thresh=step1_min_score_thresh,table_check=False)
+                return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+        elif serializer.instance.deviceid == 'os1':
             export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by('-update_time')[:1]
 
             if len(export1s)>0:
@@ -275,7 +283,7 @@ class ImageClassViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelM
                                           score=goods_class['score'],
                                           upc=goods_class['upc'],
                                           )
-            logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
+                logger.info('end classify:{},{}'.format(serializer.instance.deviceid, str(len(ret))))
 
         # logger.info('end create')
         # return Response({'Test':True})
