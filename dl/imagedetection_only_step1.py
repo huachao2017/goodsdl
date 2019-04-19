@@ -69,7 +69,7 @@ class ImageDetector_os1:
             table_contour = TableContour(image_path, debug_type=1)
 
         ret = []
-        logger.info('detect number:{}'.format(len(boxes.shape[0])))
+        logger.info('detect number:{}'.format(boxes.shape[0]))
         for i in range(boxes.shape[0]):
             if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
