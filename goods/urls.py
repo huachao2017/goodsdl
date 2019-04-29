@@ -18,6 +18,7 @@ from rest_framework.routers import DefaultRouter
 
 from goods import views
 from goods import views_train
+from goods import views_shelf
 
 router = DefaultRouter()
 # router.register(r'image', views.ImageOldViewSet)
@@ -46,5 +47,6 @@ urlpatterns = [
     url(r'^api/getsamplecount', views_train.GetSampleCount.as_view()),
     url(r'^api/removeallsample', views_train.RemoveAllSample.as_view()),
     url(r'^api/verifycnt', views.VerifyCnt.as_view()),
+    url(r'^api/shelfimage', views_shelf.ShelfImage.as_view()),
     url(r'^api/', include(router.urls))
 ]
