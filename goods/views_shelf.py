@@ -44,9 +44,11 @@ class CreateShelfImage(APIView):
         import tensorflow as tf
 
         shopid = request.query_params['shopid']
+        shelfid = request.query_params['shelfid']
         picurl = request.query_params['picurl']
         shelf_image = ShelfImage.objects.create(
             shopid = shopid,
+            shelfid = shelfid,
             picurl = picurl,
         )
 
@@ -60,10 +62,10 @@ class CreateShelfImage(APIView):
             media_dir = settings.MEDIA_ROOT
             # 通过 picurl 获取图片
             now = datetime.datetime.now()
-            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', shopid, now.strftime('%Y%m%d'))
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(shopid,shelfid), now.strftime('%Y%m%d'))
             if not tf.gfile.Exists(image_dir):
                 tf.gfile.MakeDirs(image_dir)
-            image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%H%M%S')))
+            image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S')))
             logger.info(image_path)
             urllib.request.urlretrieve(picurl, image_path)
             detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,table_check=False)
