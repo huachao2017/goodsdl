@@ -21,6 +21,10 @@ from goods import views_train
 from goods import views_shelf
 
 router = DefaultRouter()
+
+router.register(r'shelfimage', views_shelf.ShelfImageViewSet)
+router.register(r'shelfgoods', views_shelf.ShelfGoodsViewSet)
+
 # router.register(r'image', views.ImageOldViewSet)
 router.register(r'imagenew', views.ImageViewSet)
 router.register(r'imagetest', views.ImageTestViewSet)
@@ -47,6 +51,6 @@ urlpatterns = [
     url(r'^api/getsamplecount', views_train.GetSampleCount.as_view()),
     url(r'^api/removeallsample', views_train.RemoveAllSample.as_view()),
     url(r'^api/verifycnt', views.VerifyCnt.as_view()),
-    url(r'^api/shelfimage', views_shelf.ShelfImage.as_view()),
+    url(r'^api/createshelfimage', views_shelf.ShelfImage.as_view()),
     url(r'^api/', include(router.urls))
 ]

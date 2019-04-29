@@ -76,3 +76,15 @@ class ShelfImage(APIView):
                 })
 
         return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)
+
+
+class ShelfImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
+    queryset = ShelfImage.objects.order_by('-id')
+    serializer_class = ShelfImageSerializer
+
+
+class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
+    queryset = ShelfGoods.objects.order_by('-id')
+    serializer_class = ShelfGoodsSerializer
