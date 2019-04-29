@@ -39,7 +39,7 @@ class NumpyEncoder(json.JSONEncoder):
         else:
             return super(NumpyEncoder, self).default(obj)
 
-class ShelfImage(APIView):
+class CreateShelfImage(APIView):
     def get(self, request):
         import tensorflow as tf
 
