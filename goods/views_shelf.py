@@ -62,7 +62,7 @@ class ShelfImage(APIView):
             image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%H%M%S')))
             logger.info(image_path)
             urllib.request.urlretrieve(picurl, image_path)
-            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
+            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,table_check=False)
             for one_box in detect_ret:
                 ret.append({
                     'id': 0, # TODO
