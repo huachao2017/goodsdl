@@ -45,6 +45,10 @@ class CreateShelfImage(APIView):
 
         shopid = request.query_params['shopid']
         picurl = request.query_params['picurl']
+        shelf_image = ShelfImage.objects.create(
+            shopid = shopid,
+            picurl = picurl,
+        )
 
         ret = []
         export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
@@ -64,15 +68,26 @@ class CreateShelfImage(APIView):
             urllib.request.urlretrieve(picurl, image_path)
             detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,table_check=False)
             for one_box in detect_ret:
+                shelf_goods = ShelfGoods.objects.create(
+                    shelf_image_id = shelf_image.pk,
+                    xmin = one_box['xmin'],
+                    ymin = one_box['ymin'],
+                    xmax = one_box['xmax'],
+                    ymax = one_box['ymax'],
+                    level = -1, # TODO
+                    upc = '', # TODO
+                    score1 = one_box['score'],
+                    score2 = 0 # TODO
+                )
                 ret.append({
-                    'id': 0, # TODO
-                    'xmin': one_box['xmin'],
-                    'ymin': one_box['ymin'],
-                    'xmax': one_box['xmax'],
-                    'ymax': one_box['ymax'],
-                    'level': -1, # TODO
-                    'upc': "", # TODO
-                    'score': 0,
+                    'id': shelf_goods.pk,
+                    'xmin': shelf_goods.xmin,
+                    'ymin': shelf_goods.ymin,
+                    'xmax': shelf_goods.xmax,
+                    'ymax': shelf_goods.ymax,
+                    'level': shelf_goods.level,
+                    'upc': shelf_goods.upc,
+                    'score': shelf_goods.score2,
                 })
 
         return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)
