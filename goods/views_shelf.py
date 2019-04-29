@@ -62,7 +62,7 @@ class CreateShelfImage(APIView):
             media_dir = settings.MEDIA_ROOT
             # 通过 picurl 获取图片
             now = datetime.datetime.now()
-            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(shopid,shelfid), now.strftime('%Y%m%d'))
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(shopid,shelfid))
             if not tf.gfile.Exists(image_dir):
                 tf.gfile.MakeDirs(image_dir)
             image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S')))
