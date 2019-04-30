@@ -137,5 +137,5 @@ class ShelfDetector:
             for i in range(len(boxes)):
                 box_label = label_pred[i]
                 boxes[i]['level'] = sorted_label[box_label]
-        except:
-            logger.error('caculate level error')
+        except Exception as e:
+            logger.error('caculate level error:{}'.format(e))
