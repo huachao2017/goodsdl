@@ -47,7 +47,7 @@ class CreateShelfImage(APIView):
         shopid = request.query_params['shopid']
         shelfid = request.query_params['shelfid']
         if 'tlevel' in request.query_params:
-            tlevel = request.query_params['tlevel']
+            tlevel = int(request.query_params['tlevel'])
         else:
             tlevel = 6
         picurl = request.query_params['picurl']
