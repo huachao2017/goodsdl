@@ -118,7 +118,7 @@ class ShelfDetector:
                 data.append((one_box['ymin'],one_box['ymax']))
             X = np.array(data)
             logger.info('calulate level: {},{}'.format(n_clusters,X.shape))
-            estimator = KMeans(n_clusters=n_clusters)
+            estimator = KMeans(n_clusters=int(n_clusters))
             estimator.fit(X)
             label_pred = estimator.labels_  # 获取聚类标签
             label_to_mean = {}
