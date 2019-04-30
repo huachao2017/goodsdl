@@ -46,6 +46,10 @@ class CreateShelfImage(APIView):
 
         shopid = request.query_params['shopid']
         shelfid = request.query_params['shelfid']
+        if 'tlevel' in request.query_params:
+            tlevel = request.query_params['tlevel']
+        else:
+            tlevel = 6
         picurl = request.query_params['picurl']
         shelf_image = ShelfImage.objects.create(
             shopid = shopid,
@@ -69,7 +73,7 @@ class CreateShelfImage(APIView):
             image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S')))
             logger.info(image_path)
             urllib.request.urlretrieve(picurl, image_path)
-            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
+            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
 
             for one_box in detect_ret:
                 shelf_goods = ShelfGoods.objects.create(

@@ -38,7 +38,7 @@ class ShelfDetector:
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
 
-    def detect(self, image_path, step1_min_score_thresh=.5):
+    def detect(self, image_path, step1_min_score_thresh=.5, totol_level = 6):
         if not self.step1_cnn.is_load():
             self.load()
             if not self.step1_cnn.is_load():
@@ -82,7 +82,7 @@ class ShelfDetector:
                             })
 
         if len(ret) > 0:
-            self.caculate_level(ret,6) #TODO
+            self.caculate_level(ret,totol_level)
 
         # visualization
         output_image_path = None

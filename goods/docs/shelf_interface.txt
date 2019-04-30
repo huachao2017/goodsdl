@@ -1,4 +1,4 @@
-1、检测图片接口：http://ai.fastxbox.cn/api/shelfimage?shopid=xx&shelfid=xx&picurl=xx
+1、检测图片接口：http://ai.fastxbox.cn/api/shelfimage?shopid=xx&shelfid=xx&picurl=xx&tlevel=xx
 返回200：
 [
     {
