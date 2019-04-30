@@ -8,6 +8,7 @@ from dl.step1_cnn import Step1CNN
 from dl.util import visualize_boxes_and_labels_on_image_array_for_shelf
 
 from sklearn.cluster import KMeans
+import traceback
 logger = logging.getLogger("django")
 
 
@@ -139,3 +140,4 @@ class ShelfDetector:
                 boxes[i]['level'] = sorted_label[box_label]
         except Exception as e:
             logger.error('caculate level error:{}'.format(e))
+            traceback.print_exc()
