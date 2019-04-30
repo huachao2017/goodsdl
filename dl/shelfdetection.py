@@ -8,7 +8,7 @@ from dl.step1_cnn import Step1CNN
 from dl.util import visualize_boxes_and_labels_on_image_array_for_shelf
 
 from sklearn.cluster import KMeans
-logger = logging.getLogger("detect")
+logger = logging.getLogger("django")
 
 
 class ShelfDetectorFactory:
@@ -111,28 +111,31 @@ class ShelfDetector:
         """
         通过连续聚类计算框所属的层级
         """
+        try:
+            data = []
+            for one_box in boxes:
+                data.append((one_box['ymin'],one_box['ymax']))
+            X = np.array(data)
+            logger.info(X.shape)
+            estimator = KMeans(n_clusters=n_clusters)
+            estimator.fit(X)
+            label_pred = estimator.labels_  # 获取聚类标签
+            label_to_mean = {}
 
-        data = []
-        for one_box in boxes:
-            data.append((one_box['ymin'],one_box['ymax']))
-        X = np.array(data)
-        estimator = KMeans(n_clusters=n_clusters)
-        estimator.fit(X)
-        label_pred = estimator.labels_  # 获取聚类标签
-        label_to_mean = {}
+            for i in range(n_clusters):
+                one_X = X[label_pred == i]
+                label_to_mean[i] = np.sum(one_X)/one_X.shape[0]
 
-        for i in range(n_clusters):
-            one_X = X[label_pred == i]
-            label_to_mean[i] = np.sum(one_X)/one_X.shape[0]
+            # 根据平均值排序
+            sorted_list = sorted(label_to_mean.items(),key=lambda item:item[1])
+            t = np.array(sorted_list, dtype=int)
+            t = t[:,0]
+            sorted_label = {}
+            for i in range(t.shape[0]):
+                sorted_label[t[i]] = i
 
-        # 根据平均值排序
-        sorted_list = sorted(label_to_mean.items(),key=lambda item:item[1])
-        t = np.array(sorted_list, dtype=int)
-        t = t[:,0]
-        sorted_label = {}
-        for i in range(t.shape[0]):
-            sorted_label[t[i]] = i
-
-        for i in range(len(boxes)):
-            box_label = label_pred[i]
-            boxes[i]['level'] = sorted_label[box_label]
+            for i in range(len(boxes)):
+                box_label = label_pred[i]
+                boxes[i]['level'] = sorted_label[box_label]
+        except:
+            logger.error('caculate level error')
