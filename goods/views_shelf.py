@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import goods.util
 
-from dl import imagedetection_only_step1
+from dl import shelfdetection
 # from dl.old import imagedetection
 from .serializers import *
 
@@ -40,6 +40,7 @@ class NumpyEncoder(json.JSONEncoder):
             return super(NumpyEncoder, self).default(obj)
 
 class CreateShelfImage(APIView):
+
     def get(self, request):
         import tensorflow as tf
 
@@ -57,7 +58,7 @@ class CreateShelfImage(APIView):
             '-update_time')[:1]
 
         if len(export1s) > 0:
-            detector = imagedetection_only_step1.ImageDetectorFactory_os1.get_static_detector(export1s[0].pk)
+            detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk)
             step1_min_score_thresh = .5
             media_dir = settings.MEDIA_ROOT
             # 通过 picurl 获取图片
@@ -68,7 +69,8 @@ class CreateShelfImage(APIView):
             image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S')))
             logger.info(image_path)
             urllib.request.urlretrieve(picurl, image_path)
-            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,table_check=False)
+            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh)
+
             for one_box in detect_ret:
                 shelf_goods = ShelfGoods.objects.create(
                     shelf_image_id = shelf_image.pk,
@@ -76,10 +78,10 @@ class CreateShelfImage(APIView):
                     ymin = one_box['ymin'],
                     xmax = one_box['xmax'],
                     ymax = one_box['ymax'],
-                    level = -1, # TODO
-                    upc = '', # TODO
+                    level = one_box['level'],
+                    upc = one_box['upc'],
                     score1 = one_box['score'],
-                    score2 = 0 # TODO
+                    score2 = one_box['score2']
                 )
                 ret.append({
                     'id': shelf_goods.pk,
