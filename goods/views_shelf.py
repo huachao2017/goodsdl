@@ -20,6 +20,7 @@ import goods.util
 from dl import shelfdetection
 # from dl.old import imagedetection
 from .serializers import *
+import tensorflow as tf
 
 logger = logging.getLogger("django")
 
@@ -43,7 +44,6 @@ class NumpyEncoder(json.JSONEncoder):
 class CreateShelfImage(APIView):
 
     def get(self, request):
-        import tensorflow as tf
 
         shopid = request.query_params['shopid']
         shelfid = request.query_params['shelfid']
@@ -120,7 +120,6 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
 
-        old_upc = instance.upc
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -128,11 +127,14 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
         upc = serializer.instance.upc
         if upc != '':
             sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample', '{}'.format(serializer.instance.shelf_image.shopid),'{}'.format(serializer.instance.shelf_image.shelfid))
-            if old_upc != '' and old_upc != upc:
+            if not tf.gfile.Exists(sample_dir):
+                tf.gfile.MakeDirs(sample_dir)
+            old_sample_path = os.path.join(sample_dir,'{}.jpg'.format(serializer.instance.pk))
+            if os.path.isfile(old_sample_path):
                 # 删除原来的样本
-                os.remove(os.path.join(sample_dir,'{}.jpg'.format(serializer.instance.pk)))
+                os.remove(old_sample_path)
                 # TODO 删除原来样本的特征
-                pass
+
             # 添加新样本
             image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(serializer.instance.shelf_image.shopid,serializer.instance.shelf_image.shelfid))
             image_path = os.path.join(image_dir, serializer.instance.shelf_image.image_name)
@@ -151,8 +153,10 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
                                   '{}'.format(instance.shelf_image.shopid),
                                   '{}'.format(instance.shelf_image.shelfid))
         # 删除原来的样本
-        os.remove(os.path.join(sample_dir, '{}.jpg'.format(instance.pk)))
-        # TODO 删除原来样本的特征
+        old_sample_path = os.path.join(sample_dir, '{}.jpg'.format(instance.pk))
+        if os.path.isfile(old_sample_path):
+            os.remove(old_sample_path)
+            # TODO 删除原来样本的特征
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
