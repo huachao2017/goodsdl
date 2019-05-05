@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import time
 import urllib.request
+from PIL import Image
 
 import numpy as np
 from django.conf import settings
@@ -51,10 +52,13 @@ class CreateShelfImage(APIView):
         else:
             tlevel = 6
         picurl = request.query_params['picurl']
+        now = datetime.datetime.now()
+        image_name = '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S'))
         shelf_image = ShelfImage.objects.create(
             shopid = shopid,
             shelfid = shelfid,
             picurl = picurl,
+            image_name = image_name,
         )
 
         ret = []
@@ -66,11 +70,10 @@ class CreateShelfImage(APIView):
             step1_min_score_thresh = .5
             media_dir = settings.MEDIA_ROOT
             # 通过 picurl 获取图片
-            now = datetime.datetime.now()
-            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(shopid,shelfid), now.strftime('%Y%m%d'))
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(shopid,shelfid))
             if not tf.gfile.Exists(image_dir):
                 tf.gfile.MakeDirs(image_dir)
-            image_path = os.path.join(image_dir, '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S')))
+            image_path = os.path.join(image_dir, image_name)
             logger.info(image_path)
             urllib.request.urlretrieve(picurl, image_path)
             detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
@@ -112,3 +115,44 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
                         viewsets.GenericViewSet):
     queryset = ShelfGoods.objects.order_by('-id')
     serializer_class = ShelfGoodsSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        old_upc = instance.upc
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        upc = serializer.instance.upc
+        if upc != '':
+            sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample', '{}'.format(serializer.instance.shelf_image.shopid),'{}'.format(serializer.instance.shelf_image.shelfid))
+            if old_upc != '' and old_upc != upc:
+                # 删除原来的样本
+                os.remove(os.path.join(sample_dir,'{}.jpg'.format(serializer.instance.pk)))
+                # TODO 删除原来样本的特征
+                pass
+            # 添加新样本
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(serializer.instance.shelf_image.shopid,serializer.instance.shelf_image.shelfid))
+            image_path = os.path.join(image_dir, serializer.instance.shelf_image.image_name)
+            image = Image.open(image_path)
+            sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
+            sample_image_path = os.path.join(sample_dir, '{}.jpg'.format(serializer.instance.pk))
+            sample_image.save(sample_image_path, 'JPEG')
+            # TODO 添加新样本的特征
+
+        return Response(serializer.data)
+
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample',
+                                  '{}'.format(instance.shelf_image.shopid),
+                                  '{}'.format(instance.shelf_image.shelfid))
+        # 删除原来的样本
+        os.remove(os.path.join(sample_dir, '{}.jpg'.format(instance.pk)))
+        # TODO 删除原来样本的特征
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)

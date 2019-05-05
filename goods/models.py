@@ -6,6 +6,7 @@ class ShelfImage(models.Model):
     shopid = models.IntegerField(default=0, db_index=True)
     shelfid = models.IntegerField(default=0, db_index=True)
     picurl = models.CharField(max_length=200, default='0')
+    image_name = models.CharField(max_length=200, default='')
     create_time = models.DateTimeField('date created', auto_now_add=True)
 
 class ShelfGoods(models.Model):

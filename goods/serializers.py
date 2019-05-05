@@ -7,7 +7,7 @@ from goods.models import Image, ImageReport, ImageClass, Goods, GoodsClass, Prob
 class ShelfImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShelfImage
-        fields = ('pk', 'shopid', 'shelfid', 'picurl',
+        fields = ('pk', 'shopid', 'shelfid', 'picurl', 'image_name',
                   'create_time')
         read_only_fields = ('create_time',)
 
