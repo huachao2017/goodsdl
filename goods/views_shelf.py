@@ -108,6 +108,7 @@ class ShelfImageViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
 
 
 class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                   viewsets.GenericViewSet):
+                        mixins.UpdateModelMixin,mixins.DestroyModelMixin,
+                        viewsets.GenericViewSet):
     queryset = ShelfGoods.objects.order_by('-id')
     serializer_class = ShelfGoodsSerializer
