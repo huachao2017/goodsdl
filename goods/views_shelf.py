@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import time
 import urllib.request
-from PIL import Image
+from PIL import Image as PILImage
 
 import numpy as np
 from django.conf import settings
@@ -138,7 +138,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             # 添加新样本
             image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(serializer.instance.shelf_image.shopid,serializer.instance.shelf_image.shelfid))
             image_path = os.path.join(image_dir, serializer.instance.shelf_image.image_name)
-            image = Image.open(image_path)
+            image = PILImage.open(image_path)
             sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
             sample_image_path = os.path.join(sample_dir, '{}.jpg'.format(serializer.instance.pk))
             sample_image.save(sample_image_path, 'JPEG')
