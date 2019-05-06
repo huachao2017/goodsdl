@@ -66,7 +66,7 @@ class CreateShelfImage(APIView):
             '-update_time')[:1]
 
         if len(export1s) > 0:
-            detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk)
+            detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,shopid)
             step1_min_score_thresh = .5
             media_dir = settings.MEDIA_ROOT
             # 通过 picurl 获取图片

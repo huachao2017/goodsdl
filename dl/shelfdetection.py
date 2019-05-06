@@ -6,6 +6,7 @@ import logging
 import time
 from dl.step1_cnn import Step1CNN
 from dl.util import visualize_boxes_and_labels_on_image_array_for_shelf
+from dl.shelftradition_match import ShelfTraditionMatch
 
 from sklearn.cluster import KMeans
 import traceback
@@ -16,19 +17,22 @@ class ShelfDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(exportid):
+    def get_static_detector(exportid,shopid):
         if exportid not in ShelfDetectorFactory._detector:
-            ShelfDetectorFactory._detector[exportid] = ShelfDetector(exportid)
+            ShelfDetectorFactory._detector[exportid] = ShelfDetector(exportid,shopid)
         return ShelfDetectorFactory._detector[exportid]
 
 class ShelfDetector:
-    def __init__(self, exportid):
+    def __init__(self, exportid, shopid):
         file_path, _ = os.path.split(os.path.realpath(__file__))
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(exportid)))
 
         self.counter = 0
         self.config = tf.ConfigProto()
         self.config.gpu_options.allow_growth = True
+
+        self.tradition_match = ShelfTraditionMatch(shopid)
+
 
     def load(self):
         if self.counter > 0:
@@ -38,6 +42,9 @@ class ShelfDetector:
         self.counter = self.counter + 1
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
+
+        if not self.tradition_match.is_load():
+            self.tradition_match.load()
 
     def detect(self, image_path, step1_min_score_thresh=.5, totol_level = 6):
         if not self.step1_cnn.is_load():
@@ -75,11 +82,25 @@ class ShelfDetector:
                 ymax = int(ymax * im_height)
                 xmax = int(xmax * im_width)
 
+                newimage = image.crop((xmin, ymin, xmax, ymax))
+
+                # 生成新的图片 TODO 需要处理性能问题
+                newimage_split = os.path.split(image_path)
+                single_image_dir = os.path.join(newimage_split[0], 'single')
+                if not tf.gfile.Exists(single_image_dir):
+                    tf.gfile.MakeDirs(single_image_dir)
+                new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
+                newimage.save(new_image_path, 'JPEG')
+
+                upc_match, score_match = self.tradition_match.detect_one(new_image_path)
+                if score_match < 0.5:
+                    upc_match = ''
+                    score_match = 0
                 ret.append({'score': scores_step1[i],
                             'level': -1,
                             'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax,
-                            'upc': '', # TODO
-                            'score2': 0, # TODO
+                            'upc': upc_match,
+                            'score2': score_match,
                             })
 
         if len(ret) > 0:
