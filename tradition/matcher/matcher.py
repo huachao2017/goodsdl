@@ -163,7 +163,7 @@ class Matcher:
     #     return thread_size
     #
     def _all_match(self, image_path, image=None, within_upcs=None, filter_upcs=None):
-        if image == None:
+        if image is None:
             image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         if self.debug:
