@@ -81,6 +81,8 @@ class CreateShelfImage(APIView):
             for one_box in detect_ret:
                 shelf_goods = ShelfGoods.objects.create(
                     shelf_image_id = shelf_image.pk,
+                    shopid=shopid,
+                    shelfid=shelfid,
                     xmin = one_box['xmin'],
                     ymin = one_box['ymin'],
                     xmax = one_box['xmax'],
@@ -127,7 +129,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
 
         upc = serializer.instance.upc
         if upc != '':
-            sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample', '{}'.format(serializer.instance.shelf_image.shopid),'{}'.format(serializer.instance.shelf_image.shelfid))
+            sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample', '{}'.format(serializer.instance.shopid),'{}'.format(serializer.instance.shelfid))
             if not tf.gfile.Exists(sample_dir):
                 tf.gfile.MakeDirs(sample_dir)
             old_sample_path = os.path.join(sample_dir,'{}.jpg'.format(serializer.instance.pk))
@@ -136,7 +138,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
                 os.remove(old_sample_path)
 
             # 添加新样本
-            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(serializer.instance.shelf_image.shopid,serializer.instance.shelf_image.shelfid))
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(serializer.instance.shopid,serializer.instance.shelfid))
             image_path = os.path.join(image_dir, serializer.instance.shelf_image.image_name)
             image = PILImage.open(image_path)
             sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
@@ -149,8 +151,8 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample',
-                                  '{}'.format(instance.shelf_image.shopid),
-                                  '{}'.format(instance.shelf_image.shelfid))
+                                  '{}'.format(instance.shopid),
+                                  '{}'.format(instance.shelfid))
         # 删除原来的样本
         old_sample_path = os.path.join(sample_dir, '{}.jpg'.format(instance.pk))
         if os.path.isfile(old_sample_path):

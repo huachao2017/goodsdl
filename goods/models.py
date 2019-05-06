@@ -11,6 +11,8 @@ class ShelfImage(models.Model):
 
 class ShelfGoods(models.Model):
     shelf_image = models.ForeignKey(ShelfImage, related_name="shelf_image_goods", on_delete=models.CASCADE)
+    shopid = models.IntegerField(default=0, db_index=True)
+    shelfid = models.IntegerField(default=0, db_index=True)
     score1 = models.FloatField(default=0.0)
     score2 = models.FloatField(default=0.0)
     upc = models.CharField(max_length=20)

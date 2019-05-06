@@ -21,8 +21,8 @@ class ShelfTraditionMatch:
         for sample in base_samples:
             if sample_dir == '':
                 sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample',
-                                          '{}'.format(sample.shelf_image.shopid),
-                                          '{}'.format(sample.shelf_image.shelfid))
+                                          '{}'.format(sample.shopid),
+                                          '{}'.format(sample.shelfid))
             sample_image_path = os.path.join(sample_dir, '{}.jpg'.format(sample.pk))
             if os.path.isfile(sample_image_path):
                 self._matcher.add_baseline_image(sample_image_path, sample.upc) # 基准样本不能被删除，所以直接调用_matcher的方法
