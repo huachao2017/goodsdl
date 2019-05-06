@@ -74,10 +74,10 @@ class CreateShelfImage(APIView):
             if not tf.gfile.Exists(image_dir):
                 tf.gfile.MakeDirs(image_dir)
             image_path = os.path.join(image_dir, image_name)
-            logger.info(image_path)
             urllib.request.urlretrieve(picurl, image_path)
             detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
 
+            logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
             for one_box in detect_ret:
                 shelf_goods = ShelfGoods.objects.create(
                     shelf_image_id = shelf_image.pk,
