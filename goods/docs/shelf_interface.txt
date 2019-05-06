@@ -43,4 +43,4 @@ ymax  int
 返回200
 
 3、删除标定商品(delete)：http://ai.fastxbox.cn/api/shelfgoods/111/ ## 111是指ai框id
-返回200
+返回204
