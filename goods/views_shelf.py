@@ -120,6 +120,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
 
+        request.data['score2'] = 1.0
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -133,7 +134,6 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             if os.path.isfile(old_sample_path):
                 # 删除原来的样本
                 os.remove(old_sample_path)
-                # TODO 删除原来样本的特征
 
             # 添加新样本
             image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(serializer.instance.shelf_image.shopid,serializer.instance.shelf_image.shelfid))
@@ -142,7 +142,6 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
             sample_image_path = os.path.join(sample_dir, '{}.jpg'.format(serializer.instance.pk))
             sample_image.save(sample_image_path, 'JPEG')
-            # TODO 添加新样本的特征
 
         return Response(serializer.data)
 
@@ -156,7 +155,6 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
         old_sample_path = os.path.join(sample_dir, '{}.jpg'.format(instance.pk))
         if os.path.isfile(old_sample_path):
             os.remove(old_sample_path)
-            # TODO 删除原来样本的特征
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
