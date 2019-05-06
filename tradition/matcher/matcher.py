@@ -24,7 +24,7 @@ import math
 from tradition.matcher.thread_pool import ThreadPool
 
 
-def _one_match(thread_name, matcher, task_cnt, key, image_path, image, kp, desc):
+def _one_match(thread_name, matcher, task_cnt, key, visual_image_path, image, kp, desc):
     if matcher.debug:
         print("begin match thread %s" % (thread_name))
     (b_kp, b_desc, b_image) = matcher.path_to_baseline_info[key]
@@ -93,9 +93,9 @@ def _one_match(thread_name, matcher, task_cnt, key, image_path, image, kp, desc)
                                                area_distance)
 
                 if matcher.visual and (score > matcher.min_score_thresh or matcher.debug):
-                    visual_path = os.path.join(os.path.dirname(image_path),
+                    visual_path = os.path.join(os.path.dirname(visual_image_path),
                                                'visual_{}_{}_{}'.format(int(score * 100), key,
-                                                                        os.path.basename(image_path)))
+                                                                        os.path.basename(visual_image_path)))
                     matcher.match_visual(visual_path, image, b_image, kp_pairs, status, H)
                 if score > matcher.min_score_thresh:
                     matcher.match_info[key] = score
@@ -162,8 +162,9 @@ class Matcher:
     #
     #     return thread_size
     #
-    def _all_match(self, image_path, within_upcs=None, filter_upcs=None):
-        image = cv2.imread(image_path)
+    def _all_match(self, image_path, image=None, within_upcs=None, filter_upcs=None):
+        if image == None:
+            image = cv2.imread(image_path)
         kp, desc = self.detector.detectAndCompute(image, None)
         if self.debug:
             print('image kp:{}'.format(len(kp)))
@@ -283,6 +284,20 @@ class Matcher:
         ret = (best_match[0].split('_')[0], best_match[1])
         return ret
 
+    def match_image_best_one_with_cv2array(self, visual_image_path, image, within_upcs=None, filter_upcs=None):
+        self._all_match(visual_image_path,
+                        image=image,
+                        within_upcs=within_upcs,
+                        filter_upcs=filter_upcs)
+        if self.match_info is None or len(self.match_info) == 0:
+            return None,0
+        if self.debug:
+            print('match_info:{}'.format(len(self.match_info)))
+        sorted_match_info = sorted(self.match_info.items(), key=lambda d: d[1], reverse=True)
+        best_match = sorted_match_info[0]
+        ret = (best_match[0].split('_')[0], best_match[1])
+        return ret
+
     def is_find_match(self, image_path, within_upcs=None, filter_upcs=None):
         upc, score = self.match_image_best_one(image_path, within_upcs=within_upcs,filter_upcs=filter_upcs)
         return upc != None and score > 0.6
@@ -355,7 +370,7 @@ def test_1():
 
 def test_2(image1,image2):
     time0 = time.time()
-    matcher = Matcher(debug=False, visual=False)
+    matcher = Matcher(debug=True, visual=True)
     time1 = time.time()
     matcher.add_baseline_image(image1, 'tt')
     time2 = time.time()
@@ -436,11 +451,11 @@ if __name__ == '__main__':
     # fn1 = 'images/test/old/15.jpg'
     # fn2 = 'images/test/old/14.jpg'
     # #
-    fn1 = 'images/test/1.jpg'
-    fn2 = 'images/test/2.jpg'
+    # fn1 = 'images/test/1.jpg'
+    # fn2 = 'images/test/2.jpg'
     #
     # fn1 = 'images/error/1.jpg'
     # fn2 = 'images/error/2.jpg'
-    # test_2(fn1, fn2)
+    test_2(fn1, fn2)
     # test_match_all()
-    test_match_one(fn1)
+    # test_match_one(fn1)

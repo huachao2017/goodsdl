@@ -4,6 +4,8 @@ from goods.models import ShelfGoods
 import os
 import logging
 from dl import common
+import cv2
+import numpy as np
 
 logger = logging.getLogger("django")
 
@@ -61,8 +63,12 @@ class ShelfTraditionMatch:
 
         return upcs, scores
 
-    def detect_one(self,image_path):
+    def detect_one_with_path(self,image_path):
         upc, score = self._matcher.match_image_best_one(image_path)
+        return upc, score
+
+    def detect_one_with_cv2array(self,visual_image_path,image):
+        upc, score = self._matcher.match_image_best_one_with_cv2array(visual_image_path, cv2.cvtColor(np.array(image),cv2.COLOR_RGB2BGR))
         return upc, score
 
     def verify_score(self,image_path,within_upcs):
