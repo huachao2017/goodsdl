@@ -142,7 +142,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             image_path = os.path.join(image_dir, serializer.instance.shelf_image.image_name)
             image = PILImage.open(image_path)
             sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
-            sample_image_path = os.path.join(sample_dir, '{}.jpg'.format(serializer.instance.pk))
+            sample_image_path = os.path.join(sample_dir, '{}_{}.jpg'.format(serializer.instance.upc, serializer.instance.pk))
             sample_image.save(sample_image_path, 'JPEG')
 
         return Response(serializer.data)
