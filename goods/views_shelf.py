@@ -144,6 +144,12 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
             sample_image_path = os.path.join(sample_dir, '{}_{}.jpg'.format(serializer.instance.upc, serializer.instance.pk))
             sample_image.save(sample_image_path, 'JPEG')
+            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+
+            if len(export1s) > 0:
+                detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,serializer.instance.shopid)
+                detector.update_upc_sample()
 
         return Response(serializer.data)
 

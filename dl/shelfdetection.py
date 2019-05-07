@@ -19,6 +19,7 @@ class ShelfDetectorFactory:
     @staticmethod
     def get_static_detector(exportid,shopid):
         if exportid not in ShelfDetectorFactory._detector:
+            # FIXME 缓存对象有问题
             ShelfDetectorFactory._detector[exportid] = ShelfDetector(exportid,shopid)
         return ShelfDetectorFactory._detector[exportid]
 
@@ -45,6 +46,9 @@ class ShelfDetector:
 
         if not self.tradition_match.is_load():
             self.tradition_match.load()
+
+    def update_upc_sample(self):
+        self.tradition_match._isload=False
 
     def detect(self, image_path, step1_min_score_thresh=.5, totol_level = 6):
         if not self.step1_cnn.is_load():
