@@ -44,3 +44,9 @@ ymax  int
 
 3、删除标定商品(delete)：http://ai.fastxbox.cn/api/shelfgoods/111/ ## 111是指ai框id
 返回204
+
+4、矫正图片(get)：http://ai.fastxbox.cn/api/rectifyshelfimage?picurl=xx&x1=xx&y1=xx&x2=xx&y2=xx&x3=xx&y3=xx&x4=xx&y4=xx
+返回200：
+{
+    "returl":"/aaa/aaa/aaa.jpg",   -- 返回矫正图片地址，需自行拼接域名
+}
