@@ -52,5 +52,6 @@ urlpatterns = [
     url(r'^api/removeallsample', views_train.RemoveAllSample.as_view()),
     url(r'^api/verifycnt', views.VerifyCnt.as_view()),
     url(r'^api/createshelfimage', views_shelf.CreateShelfImage.as_view()),
+    url(r'^api/rectifyshelfimage', views_shelf.RectifyShelfImage.as_view()),
     url(r'^api/', include(router.urls))
 ]
