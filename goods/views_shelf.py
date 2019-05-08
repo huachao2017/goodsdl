@@ -120,6 +120,8 @@ class RectifyShelfImage(APIView):
         y3 = int(request.query_params['y3'])
         x4 = int(request.query_params['x4'])
         y4 = int(request.query_params['y4'])
+        width = int(request.query_params['width'])
+        height = int(width * (math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3))) / math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)))
 
         now = datetime.datetime.now()
         source_image_name = '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S'))
@@ -138,8 +140,6 @@ class RectifyShelfImage(APIView):
         # 原图中书本的四个角点
         pts1 = np.float32([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
         # 变换后分别在左上、右上、左下、右下四个点
-        width = 600
-        height = int(width * (math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3))) / math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)))
         pts2 = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
         # 生成透视变换矩阵
         M = cv2.getPerspectiveTransform(pts1, pts2)
