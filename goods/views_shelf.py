@@ -112,14 +112,14 @@ class RectifyShelfImage(APIView):
     def get(self, request):
 
         picurl = request.query_params['picurl']
-        x1 = request.query_params['x1']
-        y1 = request.query_params['y1']
-        x2 = request.query_params['x2']
-        y2 = request.query_params['y2']
-        x3 = request.query_params['x3']
-        y3 = request.query_params['y3']
-        x4 = request.query_params['x4']
-        y4 = request.query_params['y4']
+        x1 = int(request.query_params['x1'])
+        y1 = int(request.query_params['y1'])
+        x2 = int(request.query_params['x2'])
+        y2 = int(request.query_params['y2'])
+        x3 = int(request.query_params['x3'])
+        y3 = int(request.query_params['y3'])
+        x4 = int(request.query_params['x4'])
+        y4 = int(request.query_params['y4'])
 
         now = datetime.datetime.now()
         source_image_name = '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S'))
