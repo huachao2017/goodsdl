@@ -116,10 +116,26 @@ class RectifyShelfImage(APIView):
         y1 = int(request.query_params['y1'])
         x2 = int(request.query_params['x2'])
         y2 = int(request.query_params['y2'])
+        if x1>x2:
+            xt = x1
+            yt = y1
+            x1 = x2
+            y1 = y2
+            x2 = xt
+            y2 = yt
+
         x3 = int(request.query_params['x3'])
         y3 = int(request.query_params['y3'])
         x4 = int(request.query_params['x4'])
         y4 = int(request.query_params['y4'])
+        if x3>x4:
+            xt = x3
+            yt = y3
+            x3 = x4
+            y3 = y4
+            x4 = xt
+            y4 = yt
+
         width = int(request.query_params['width'])
         height = int(width * (math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3))) / math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)))
 
