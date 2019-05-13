@@ -9,6 +9,7 @@ from tensorflow.python.framework import ops
 """
 通过tensor来实现旋转遍历矩阵的算法
 tensor进入递归函数没有问题，但是逻辑分支不能基于tensor在运行时的值，关于type，shape的值是在运行前就决定的。
+tf.squeeze: 张量压缩
 tf.split: 张量分解
 tf.concat: 张量合并
 tf.reverse: 张量反序
