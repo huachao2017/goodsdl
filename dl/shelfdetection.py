@@ -17,14 +17,14 @@ class ShelfDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(exportid,shopid):
+    def get_static_detector(exportid,shopid,shelfid):
         if exportid not in ShelfDetectorFactory._detector:
             # FIXME 缓存对象有问题
-            ShelfDetectorFactory._detector[exportid] = ShelfDetector(exportid,shopid)
+            ShelfDetectorFactory._detector[exportid] = ShelfDetector(exportid,shopid,shelfid)
         return ShelfDetectorFactory._detector[exportid]
 
 class ShelfDetector:
-    def __init__(self, exportid, shopid):
+    def __init__(self, exportid, shopid, shelfid):
         file_path, _ = os.path.split(os.path.realpath(__file__))
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(exportid)))
 
@@ -33,6 +33,7 @@ class ShelfDetector:
         self.config.gpu_options.allow_growth = True
 
         self.shopid = shopid
+        self.shelfid = shelfid
 
     def load(self):
         if self.counter > 0:
@@ -43,9 +44,6 @@ class ShelfDetector:
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
 
-
-    def update_upc_sample(self):
-        self.tradition_match._isload=False
 
     def detect(self, image_path, step1_min_score_thresh=.5, totol_level = 6):
         if not self.step1_cnn.is_load():
@@ -59,8 +57,7 @@ class ShelfDetector:
         time0 = time.time()
 
         # tradition_match 每次请求重新加载
-        self.tradition_match = ShelfTraditionMatch(self.shopid)
-        self.tradition_match.load()
+        tradition_match = ShelfTraditionMatch(self.shopid, self.shelfid)
 
         # image_path = image_instance.source.path
         image = Image.open(image_path)
@@ -100,7 +97,7 @@ class ShelfDetector:
                 #
                 # upc_match, score_match = self.tradition_match.detect_one_with_path(new_image_path)
 
-                upc_match, score_match = self.tradition_match.detect_one_with_cv2array(new_image_path, newimage)
+                upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage)
                 if score_match < 0.5:
                     upc_match = ''
                     score_match = 0

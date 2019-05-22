@@ -68,7 +68,7 @@ class CreateShelfImage(APIView):
             '-update_time')[:1]
 
         if len(export1s) > 0:
-            detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,shopid)
+            detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,shopid,shelfid)
             step1_min_score_thresh = .5
             media_dir = settings.MEDIA_ROOT
             # 通过 picurl 获取图片
@@ -210,8 +210,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
                 '-update_time')[:1]
 
             if len(export1s) > 0:
-                detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,serializer.instance.shopid)
-                detector.update_upc_sample()
+                detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,serializer.instance.shopid, serializer.instance.shelfid)
 
         return Response(serializer.data)
 
