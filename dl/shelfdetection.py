@@ -32,8 +32,7 @@ class ShelfDetector:
         self.config = tf.ConfigProto()
         self.config.gpu_options.allow_growth = True
 
-        self.tradition_match = ShelfTraditionMatch(shopid)
-
+        self.shopid = shopid
 
     def load(self):
         if self.counter > 0:
@@ -44,8 +43,6 @@ class ShelfDetector:
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
 
-        if not self.tradition_match.is_load():
-            self.tradition_match.load()
 
     def update_upc_sample(self):
         self.tradition_match._isload=False
@@ -56,6 +53,10 @@ class ShelfDetector:
             if not self.step1_cnn.is_load():
                 logger.warning('loading model failed')
                 return None
+
+        # tradition_match 每次请求重新加载
+        self.tradition_match = ShelfTraditionMatch(self.shopid)
+        self.tradition_match.load()
 
         import time
         time0 = time.time()
