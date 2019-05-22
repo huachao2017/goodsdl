@@ -18,7 +18,7 @@ class ShelfTraditionMatch:
 
     def load(self):
         logger.info('begin loading TraditionMatch')
-        base_samples = ShelfGoods.objects.filter(shopid=self._shopid).filter(score2__gt=0.99)
+        base_samples = ShelfGoods.objects.filter(shopid=self._shopid).filter(score2=1)
         sample_dir = ''
         for sample in base_samples:
             if sample_dir == '':
