@@ -54,12 +54,13 @@ class ShelfDetector:
                 logger.warning('loading model failed')
                 return None
 
-        # tradition_match 每次请求重新加载
-        self.tradition_match = ShelfTraditionMatch(self.shopid)
-        self.tradition_match.load()
 
         import time
         time0 = time.time()
+
+        # tradition_match 每次请求重新加载
+        self.tradition_match = ShelfTraditionMatch(self.shopid)
+        self.tradition_match.load()
 
         # image_path = image_instance.source.path
         image = Image.open(image_path)
