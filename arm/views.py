@@ -106,6 +106,8 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                 'x': min_rect[0][0],
                 'y': min_rect[0][1],
                 'z': z[index]+z_deviation,
+                'w': min_rect[1][0],
+                'h': min_rect[1][1],
                 'angle': min_rect[2],
                 'box': {
                     'xmin':boxes[index][0],
