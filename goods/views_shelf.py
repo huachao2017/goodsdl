@@ -222,7 +222,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
                                   '{}'.format(instance.shopid),
                                   '{}'.format(instance.shelfid))
         # 删除原来的样本
-        old_sample_path = os.path.join(sample_dir, '{}.jpg'.format(instance.pk))
+        old_sample_path = os.path.join(sample_dir, '{}_{}.jpg'.format(instance.upc, instance.pk))
         if os.path.isfile(old_sample_path):
             os.remove(old_sample_path)
 
