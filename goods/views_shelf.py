@@ -182,6 +182,8 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
 
+        old_upc = instance.upc
+
         instance.score2 = 1.0
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -192,7 +194,7 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample', '{}'.format(serializer.instance.shopid),'{}'.format(serializer.instance.shelfid))
             if not tf.gfile.Exists(sample_dir):
                 tf.gfile.MakeDirs(sample_dir)
-            old_sample_path = os.path.join(sample_dir,'{}.jpg'.format(serializer.instance.pk))
+            old_sample_path = os.path.join(sample_dir, '{}_{}.jpg'.format(old_upc, serializer.instance.pk))
             if os.path.isfile(old_sample_path):
                 # 删除原来的样本
                 os.remove(old_sample_path)
