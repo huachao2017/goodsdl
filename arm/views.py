@@ -69,9 +69,11 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
             # 准备阶段
             detector = {
                 '1':[66,69],
+                '2':[69,160],
                 '3':[62,103],
                 '7':[150,227],
                 '8':[165,167],
+                '10':[94,121]
             }
             # last_normal_train_qs = TrainAction.objects.filter(state=goods2_common.TRAIN_STATE_COMPLETE).filter(
             #     deviceid='100000').exclude(action='TC').order_by('-id')
