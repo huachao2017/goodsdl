@@ -6,7 +6,7 @@ from django.conf import settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
 from arm.models import ArmImage
-from tradition.edge.contour_detect_3d import Contour_3d
+from tradition.edge.contour_detect_3d_V2 import Contour_3d
 
 
 def _inner_find_one(rgb_path, depth_path, table_z, output_dir, debug_type=2):

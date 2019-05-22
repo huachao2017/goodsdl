@@ -87,6 +87,7 @@ class Contour_3d:
         self.table_z = table_z
         self.rgb_img = cv2.imread(rgb_path)
         self.mask_rgb_img = self.rgb_img
+        self.mask_depth_img = None
         self.depth_img = cv2.imread(depth_path)
         self.depth_data = self.depth_img[:, :, 0] + self.depth_img[:, :, 1] * 256 + self.depth_img[:, :, 2] * 256 * 256
 
@@ -103,15 +104,18 @@ class Contour_3d:
         mask_depth_img = self.table_z - mask_depth_img
         mask_depth_img = np.where(mask_depth_img < 20, np.zeros(self.depth_data.shape), mask_depth_img)
         # print(mask_depth_img)
-        mask_depth_img = np.expand_dims(mask_depth_img, 2)
-        mask_depth_img = mask_depth_img.repeat(3, axis=2)
+        self.mask_depth_img = mask_depth_img.astype(np.uint8)
+        mask_depth_img_for_rgb = np.expand_dims(mask_depth_img, 2)
+        mask_depth_img_for_rgb = mask_depth_img_for_rgb.repeat(3, axis=2)
         rgb_mask_code = np.zeros(self.rgb_img.shape, np.uint8)
-        self.mask_rgb_img = np.where(mask_depth_img > 0, self.rgb_img, rgb_mask_code)
+        self.mask_rgb_img = np.where(mask_depth_img_for_rgb > 0, self.rgb_img, rgb_mask_code)
         if self.debug_type > 0:
-            output_path = os.path.join(self.output_dir, '_mask_' + self.image_name)
+            output_path = os.path.join(self.output_dir, '_mask_rgb' + self.image_name)
             cv2.imwrite(output_path, self.mask_rgb_img)
+            output_path = os.path.join(self.output_dir, '_mask_depth' + self.image_name)
+            cv2.imwrite(output_path, self.mask_depth_img)
 
-        return self.mask_rgb_img
+        return self.mask_rgb_img, self.mask_depth_img
 
     def _get_min_z(self,points):
         mask_points_img = np.zeros(self.depth_img.shape)
@@ -202,89 +206,19 @@ class Contour_3d:
             ret_min_rectes.append(min_rectes[index])
         return ret_min_rectes
 
-    def _find_2d_minrect(self, solve = False):
+    def _find_3d_minrect(self, solve = False):
         # param@debug_type:0,not debug; 1,store bbox file; 2,store middle caculate file; 3,show window
-        source = self.mask_rgb_img.copy()
+        source = self.mask_depth_img.copy()
         max_area = source.shape[0] * source.shape[1]
 
-        if solve:
-            # step1: blur image
-            # Apply gaussian blur to the grayscale image
-            source = cv2.pyrMeanShiftFiltering(source, 31, 91)
-            sharpen = source
-            # blur = cv2.pyrMeanShiftFiltering(source, 21, 51)
-            # kernel_sharpen = np.array([[-1,-1,-1,-1,-1],
-            #                            [-1,2,2,2,-1],
-            #                            [-1,2,8,2,-1],
-            #                            [-2,2,2,2,-1],
-            #                            [-1,-1,-1,-1,-1]])/8.0
-            # kernel_sharpen = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
-            # sharpen = cv2.filter2D(sharpen, -1, kernel_sharpen)
-
-            # 双向滤波比较不错
-            # sharpen = cv2.bilateralFilter(sharpen, 3, 30, 30)
-            # sharpen = cv2.split(sharpen)[0]
-            # sharpen = cv2.equalizeHist(sharpen)
-            # sharpen = cv2.GaussianBlur(sharpen, (5, 5), 0)
-            if self.debug_type > 1:
-                sharpen_path = os.path.join(self.output_dir, 'sharpen_' + self.image_name)
-                cv2.imwrite(sharpen_path, sharpen)
-
-            # step2: sobel caculate edges
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-            x = cv2.Sobel(sharpen, cv2.CV_64F, 1, 0, ksize=-1)
-            y = cv2.Sobel(sharpen, cv2.CV_64F, 0, 1, ksize=-1)
-            edges = cv2.subtract(x, y)
-            edges = cv2.convertScaleAbs(edges)
-            absX = cv2.convertScaleAbs(x)  # 转回uint8
-            absY = cv2.convertScaleAbs(y)
-
-            edges = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
-            edges = cv2.bilateralFilter(edges, 5, 75, 75)
-            edges = cv2.GaussianBlur(edges, (5, 5), 0)
-            edges = cv2.dilate(edges, kernel)
-            edges = cv2.dilate(edges, kernel)
-            edges = cv2.dilate(edges, kernel)
-            edges = cv2.erode(edges, kernel)
-            edges = cv2.erode(edges, kernel)
-            edges = cv2.erode(edges, kernel)
-            edges = cv2.GaussianBlur(edges, (5, 5), 0)
-            if self.debug_type > 1:
-                edges_path = os.path.join(self.output_dir, 'edges_' + self.image_name)
-                cv2.imwrite(edges_path, edges)
-        else:
-            edges = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
-
         # step3: binary edges
-        _, thresh1 = cv2.threshold(edges, self.thresh_x, 255, cv2.THRESH_BINARY)
-        thresh2 = thresh1
-        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        # thresh2 = cv2.erode(thresh2, kernel)
-        # if morphology:
-        #     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        #     thresh2 = cv2.morphologyEx(thresh2, cv2.MORPH_CLOSE, kernel)
-        # thresh2 = cv2.dilate(thresh2, kernel)
-        # thresh2 = cv2.dilate(thresh2, kernel)
-        # thresh2 = cv2.dilate(thresh2, kernel)
-        # thresh2 = cv2.dilate(thresh2, kernel)
-        # thresh2 = cv2.dilate(thresh2, kernel)
-        # thresh2 = cv2.erode(thresh2, kernel)
-        # thresh = cv2.GaussianBlur(thresh, (3, 3), 0)
-        # _, thresh = cv2.threshold(gray, x, 255, cv2.THRESH_BINARY_INV)
-        # thresh = cv2.GaussianBlur(thresh, (5, 5), 0)
+        _, thresh1 = cv2.threshold(source, 0, 255, cv2.THRESH_BINARY)
         if self.debug_type > 1:
             thresh1_path = os.path.join(self.output_dir, 'thresh1_' + self.image_name)
             cv2.imwrite(thresh1_path, thresh1)
-            # if morphology:
-            #     thresh2_path = os.path.join(output_dir, channel + '_' + 'thresh2_' + image_name)
-            #     cv2.imwrite(thresh2_path, thresh2)
-
-        # Find the edges
-        # edges = cv2.Canny(gray,x1,x2)
-        # edges = gray
 
         # step4: Detect contours
-        _, contours, _ = cv2.findContours(thresh2, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(thresh1, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         # print('find contours: {}'.format(len(contours)))
         # print('first contour: {}'.format(contours[0]))
 
@@ -293,18 +227,8 @@ class Contour_3d:
         for cnt in contours:
             cnt = cv2.convexHull(cnt, returnPoints=True)
             area = cv2.contourArea(cnt)
-            # leftmost = cnt[cnt[:, :, 0].argmin()][0][0]
-            # rightmost = cnt[cnt[:, :, 0].argmax()][0][0]
-            # topmost = cnt[cnt[:, :, 1].argmin()][0][1]
-            # bottommost = cnt[cnt[:, :, 1].argmax()][0][1]
-
-            # print('%d,%d,%d,%d' %(leftmost,rightmost,topmost,bottommost))
-            # return
-            # area = (bottommost - topmost) * (rightmost - leftmost)
             if area < max_area / 100:  # 去除面积过小的物体
                 continue
-            # if area > max_area * .2:  # 去除面积过大的物体
-            #     continue
             area_to_contour[area] = cnt
             # print(tuple(cnt[cnt[:, :, 0].argmin()][0]))
             # print(tuple(cnt[cnt[:, :, 0].argmax()][0]))
@@ -339,29 +263,22 @@ class Contour_3d:
             cv2.imwrite(minrect_path, minrect)
 
         if self.debug_type > 2:
-            cv2.imshow('input', sharpen)
-            cv2.imshow('edges', edges)
             cv2.imshow('thresh1', thresh1)
-            # if morphology:
-            #     cv2.imshow(channel + '_' + 'thresh2', thresh2)
             cv2.imshow('drawing_contours', drawing_contours)
 
         return min_rectes
 
-    def find_contour(self,is_mask=True):
+    def find_contour(self):
 
         # step0: read image
-        if is_mask:
-            mask_rgb_img = self._solve_mask_image()
-        else:
-            mask_rgb_img = self.rgb_img
+        mask_rgb_img, mask_depth_img = self._solve_mask_image()
 
-        concate_minrectes = self._find_2d_minrect()
+        concate_minrectes = self._find_3d_minrect()
         # if self.debug_type > 1:
         #     print('{}'.format(len(concate_minrectes)))
 
         if self.debug_type > 1 and len(concate_minrectes)>0:
-            drawing_contours = np.zeros(mask_rgb_img.shape, np.uint8)
+            drawing_contours = np.zeros(mask_depth_img.shape, np.uint8)
             for minrect in concate_minrectes:
                 points = cv2.boxPoints(minrect)
                 points = np.int0(points)
