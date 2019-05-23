@@ -68,16 +68,16 @@ class CreateShelfImage(APIView):
             '-update_time')[:1]
 
         if len(export1s) > 0:
-            detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,shopid,shelfid)
+            detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk)
             step1_min_score_thresh = .5
             media_dir = settings.MEDIA_ROOT
             # 通过 picurl 获取图片
-            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(shopid,shelfid))
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf', '{}_{}'.format(shopid, shelfid))
             if not tf.gfile.Exists(image_dir):
                 tf.gfile.MakeDirs(image_dir)
             image_path = os.path.join(image_dir, image_name)
             urllib.request.urlretrieve(picurl, image_path)
-            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
+            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, shopid, shelfid, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
 
             logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
             for one_box in detect_ret:
@@ -206,11 +206,6 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
             sample_image_path = os.path.join(sample_dir, '{}_{}.jpg'.format(serializer.instance.upc, serializer.instance.pk))
             sample_image.save(sample_image_path, 'JPEG')
-            export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
-                '-update_time')[:1]
-
-            if len(export1s) > 0:
-                detector = shelfdetection.ShelfDetectorFactory.get_static_detector(export1s[0].pk,serializer.instance.shopid, serializer.instance.shelfid)
 
         return Response(serializer.data)
 

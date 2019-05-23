@@ -17,23 +17,20 @@ class ShelfDetectorFactory:
     _detector = {}
 
     @staticmethod
-    def get_static_detector(exportid,shopid,shelfid):
+    def get_static_detector(exportid):
         if exportid not in ShelfDetectorFactory._detector:
             # FIXME 缓存对象有问题
-            ShelfDetectorFactory._detector[exportid] = ShelfDetector(exportid,shopid,shelfid)
+            ShelfDetectorFactory._detector[exportid] = ShelfDetector(exportid)
         return ShelfDetectorFactory._detector[exportid]
 
 class ShelfDetector:
-    def __init__(self, exportid, shopid, shelfid):
+    def __init__(self, exportid):
         file_path, _ = os.path.split(os.path.realpath(__file__))
         self.step1_cnn = Step1CNN(os.path.join(file_path, 'model', str(exportid)))
 
         self.counter = 0
         self.config = tf.ConfigProto()
         self.config.gpu_options.allow_growth = True
-
-        self.shopid = shopid
-        self.shelfid = shelfid
 
     def load(self):
         if self.counter > 0:
@@ -45,7 +42,7 @@ class ShelfDetector:
             self.step1_cnn.load(self.config)
 
 
-    def detect(self, image_path, step1_min_score_thresh=.5, totol_level = 6):
+    def detect(self, image_path, shopid, shelfid, step1_min_score_thresh=.5, totol_level = 6):
         if not self.step1_cnn.is_load():
             self.load()
             if not self.step1_cnn.is_load():
@@ -57,7 +54,7 @@ class ShelfDetector:
         time0 = time.time()
 
         # tradition_match 每次请求重新加载
-        tradition_match = ShelfTraditionMatch(self.shopid, self.shelfid)
+        tradition_match = ShelfTraditionMatch(shopid, shelfid)
 
         # image_path = image_instance.source.path
         image = Image.open(image_path)
