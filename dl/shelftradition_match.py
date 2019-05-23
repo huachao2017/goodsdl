@@ -14,7 +14,7 @@ class ShelfTraditionMatch:
         self.added_sample_upcs_to_cnt = {}
         self._matcher = Matcher(visual=True)
 
-        logger.info('begin loading TraditionMatch')
+        logger.info('begin loading TraditionMatch:{},{}'.format(shopid,shelfid))
         base_samples = ShelfGoods.objects.filter(shopid=shopid).filter(shelfid=shelfid).filter(score2=1)
         sample_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'shelf_sample',
                                   '{}'.format(shopid),
