@@ -136,11 +136,11 @@ class RectifyShelfImage(APIView):
             x4 = xt
             y4 = yt
 
-        width = int(request.query_params['width'])
-        height = int(width * (math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3))) / math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)))
-
-        # height = 800
-        # width = int(height * math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)) / math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3)))
+        # width = int(request.query_params['width'])
+        # height = int(width * (math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3))) / math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)))
+        #
+        height = 800
+        width = int(height * math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)) / math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3)))
 
 
         now = datetime.datetime.now()
