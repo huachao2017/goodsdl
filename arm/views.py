@@ -73,7 +73,7 @@ class ArmImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMix
                 '3':[62,103],
                 '7':[150,227],
                 '8':[165,167],
-                '10':[94,121]
+                '10':[100,180]
             }
             # last_normal_train_qs = TrainAction.objects.filter(state=goods2_common.TRAIN_STATE_COMPLETE).filter(
             #     deviceid='100000').exclude(action='TC').order_by('-id')
