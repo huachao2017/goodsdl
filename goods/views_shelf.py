@@ -64,7 +64,7 @@ class CreateShelfImage(APIView):
         )
 
         ret = []
-        export1s = ExportAction.objects.filter(train_action__action='T1').filter(checkpoint_prefix__gt=0).order_by(
+        export1s = ExportAction.objects.filter(train_action__action='T1').filter(train_action__traintype=2).filter(checkpoint_prefix__gt=0).order_by(
             '-update_time')[:1]
 
         if len(export1s) > 0:
