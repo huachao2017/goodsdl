@@ -24,7 +24,7 @@ from dl import shelfdetection
 from .serializers import *
 import tensorflow as tf
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("detect")
 
 class DefaultMixin:
     paginate_by = 25
@@ -54,6 +54,7 @@ class CreateShelfImage(APIView):
         else:
             tlevel = 6
         picurl = request.query_params['picurl']
+        logger.info('begin detect:{},{}'.format(shopid, shelfid))
         now = datetime.datetime.now()
         image_name = '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S'))
         shelf_image = ShelfImage.objects.create(
@@ -105,6 +106,7 @@ class CreateShelfImage(APIView):
                     'score': shelf_goods.score2,
                 })
 
+        logger.info('end detect:{},{}'.format(shopid, shelfid))
         return Response(goods.util.wrap_ret(ret), status=status.HTTP_200_OK)
 
 

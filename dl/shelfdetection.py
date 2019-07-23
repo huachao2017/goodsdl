@@ -10,7 +10,7 @@ from dl.shelftradition_match import ShelfTraditionMatch
 
 from sklearn.cluster import KMeans
 import traceback
-logger = logging.getLogger("django")
+logger = logging.getLogger("detect")
 
 
 class ShelfDetectorFactory:
