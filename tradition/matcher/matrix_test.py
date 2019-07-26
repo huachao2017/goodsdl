@@ -14,7 +14,8 @@ class MatrixTest:
         for i in range(0, len(filelist)):
             sample_image_path = os.path.join(sample_dir, filelist[i])
             if os.path.isfile(sample_image_path):
-                self._matcher.add_baseline_image(sample_image_path, sample_image_path) # 基准样本不能被删除，所以直接调用_matcher的方法
+                upc, ext = os.path.splitext(os.path.basename(sample_image_path))
+                self._matcher.add_baseline_image(sample_image_path, upc) # 基准样本不能被删除，所以直接调用_matcher的方法
 
     def detect_one_with_path(self,image_path):
         name, score = self._matcher.match_image_best_one(image_path)
@@ -32,10 +33,12 @@ if __name__ == '__main__':
     for i in range(0, len(filelist)):
         sample_image_path = os.path.join(sample_dir, filelist[i])
         if os.path.isfile(sample_image_path):
-            path, score = mt.detect_one_with_path(sample_image_path)
-            print('one:{},{}--{}'.format(path,score,sample_image_path))
+            upc, ext = os.path.splitext(os.path.basename(sample_image_path))
+            test_upc, score = mt.detect_one_with_path(sample_image_path)
             count += 1
-            if path == sample_image_path:
+            if upc == test_upc:
                 true_count += 1
+            else:
+                print('one:{},{}--{}'.format(test_upc, score, upc))
 
     print('matrix: {},{}--{}%'.format(count,true_count,true_count/count * 100))
