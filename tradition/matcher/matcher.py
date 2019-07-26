@@ -27,7 +27,12 @@ from tradition.matcher.thread_pool import ThreadPool
 def _one_match(thread_name, matcher, task_cnt, key, visual_image_path, image, kp, desc):
     if matcher.debug:
         print("begin match thread %s" % (thread_name))
-    (b_kp, b_desc, b_image) = matcher.path_to_baseline_info[key]
+    if matcher.debug:
+        (b_kp, b_desc, b_image) = matcher.path_to_baseline_info[key]
+        b_width = b_image.shape[1]
+        b_height = b_image.shape[0]
+    else:
+        (b_kp, b_desc, b_width, b_height) = matcher.path_to_baseline_info[key]
     raw_matches = matcher.matcher.knnMatch(desc, trainDescriptors=b_desc, k=2)  # 2
     if matcher.debug:
         print('raw_matches:{}'.format(len(raw_matches)))
@@ -50,10 +55,10 @@ def _one_match(thread_name, matcher, task_cnt, key, visual_image_path, image, kp
             x = corners[:, 0]
             y = corners[:, 1]
             corner_distance = max(
-                abs(numpy.min(x)) / b_image.shape[1],
-                abs(numpy.min(y)) / b_image.shape[0],
-                abs(numpy.max(x) - b_image.shape[1]) / b_image.shape[1],
-                abs(numpy.max(y) - b_image.shape[0]) / b_image.shape[0]
+                abs(numpy.min(x)) / b_width,
+                abs(numpy.min(y)) / b_height,
+                abs(numpy.max(x) - b_width) / b_width,
+                abs(numpy.max(y) - b_height) / b_height
             )
             if matcher.debug:
                 print('corner_distance:{}'.format(corner_distance))
@@ -92,7 +97,7 @@ def _one_match(thread_name, matcher, task_cnt, key, visual_image_path, image, kp
                                             parallel_distance,
                                                area_distance)
 
-                if matcher.visual and (score > matcher.min_score_thresh or matcher.debug):
+                if matcher.visual and matcher.debug:
                     visual_path = os.path.join(os.path.dirname(visual_image_path),
                                                'visual_{}_{}_{}'.format(int(score * 100), key,
                                                                         os.path.basename(visual_image_path)))
@@ -141,7 +146,10 @@ class Matcher:
         else:
             self.upc_to_cnt[upc] = 1
         key = upc + '_'+ str(self.upc_to_cnt[upc])
-        self.path_to_baseline_info[key] = (kp, desc,image)
+        if self.debug:
+            self.path_to_baseline_info[key] = (kp, desc, image)
+        else:
+            self.path_to_baseline_info[key] = (kp, desc, image.shape[1],image.shape[0])
         return True
 
     def removeall_baseline_image(self,upc):
