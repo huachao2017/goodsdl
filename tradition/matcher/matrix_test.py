@@ -37,8 +37,9 @@ if __name__ == '__main__':
             test_upc, score = mt.detect_one_with_path(sample_image_path)
             count += 1
             if upc == test_upc:
+                print('true:{},{}--{}'.format(test_upc, score, upc))
                 true_count += 1
             else:
-                print('one:{},{}--{}'.format(test_upc, score, upc))
+                print('false:{},{}--{}'.format(test_upc, score, upc))
 
     print('matrix: {},{}--{}%'.format(count,true_count,true_count/count * 100))
