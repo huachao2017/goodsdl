@@ -202,14 +202,16 @@ class Matcher:
                 i += 1
                 if self.task_info[task_cnt] == need_task_cnt:
                     time1 = time.time()
-                    print("\033[32;0m任务正常完成%s(%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
-                          % (self.task_info[task_cnt], time1-time0, len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
+                    if self.debug:
+                        print("\033[32;0m任务正常完成%s(%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
+                              % (self.task_info[task_cnt], time1-time0, len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
                     break
                 time.sleep(0.1)
             else:
                 time1 = time.time()
-                print("\033[31;0m任务没有完成%s(共%s,%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
-                      % (self.task_info[task_cnt], need_task_cnt, time1-time0, len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
+                if self.debug:
+                    print("\033[31;0m任务没有完成%s(共%s,%.2f秒)：目前线程池中有%s个线程，空闲的线程有%s个！\033[0m"
+                            % (self.task_info[task_cnt], need_task_cnt, time1-time0, len(self.thread_pool.generate_list), len(self.thread_pool.free_list)))
 
     def filter_matches(self, kp1, kp2, matches, ratio=0.75):
         mkp1, mkp2 = [], []
