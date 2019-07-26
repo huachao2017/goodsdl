@@ -8,7 +8,7 @@ parser.add_argument('image_dir', help='path', default='images/matrix')
 
 class MatrixTest:
     def __init__(self, sample_dir):
-        self._matcher = Matcher(visual=True)
+        self._matcher = Matcher(max_thread=1)
 
         filelist = os.listdir(sample_dir)  # 列出文件夹下所有的目录与文件
         for i in range(0, len(filelist)):
