@@ -140,8 +140,8 @@ class RectifyShelfImage(APIView):
 
         # width = int(request.query_params['width'])
         # height = int(width * (math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3))) / math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)))
-        #
-        height = 800
+        # TODO test for big pic
+        height = abs(y1-y3) # 800
         width = int(height * math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)) / math.sqrt((x1-x3)*(x1-x3)+(y1-y3)*(y1-y3)))
 
 
