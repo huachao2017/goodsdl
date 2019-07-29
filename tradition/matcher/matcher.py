@@ -138,7 +138,7 @@ class Matcher:
             print('error: no key point to base image:{}'.format(image_path))
             return False
 
-        if len(kp)< 30:
+        if len(kp)< 10:
             print('error: too less keypoint count to base image:{}/{}'.format(len(kp),image_path))
             return False
         if upc in self.upc_to_cnt:
@@ -177,7 +177,7 @@ class Matcher:
         if self.debug:
             print('image kp:{}'.format(len(kp)))
         self.match_info = {}
-        if len(kp) < 30:
+        if len(kp) < 10:
             print('warn: too less keypoint count to match image:{}/{}'.format(len(kp),image_path))
 
         if self.debug:
