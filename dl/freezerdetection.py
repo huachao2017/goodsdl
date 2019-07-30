@@ -5,7 +5,7 @@ import numpy as np
 import logging
 import time
 from dl.step1_cnn import Step1CNN
-from dl.util import visualize_boxes_and_labels_on_image_array_for_shelf
+from dl.util import visualize_boxes_and_labels_on_image_array_V1
 
 logger = logging.getLogger("detect")
 
@@ -86,10 +86,9 @@ class ShelfDetector:
         if len(ret) > 0:
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
-            visualize_boxes_and_labels_on_image_array_for_shelf(
+            visualize_boxes_and_labels_on_image_array_V1(
                 image_np,
                 boxes,
-                ret,
                 scores_step1,
                 use_normalized_coordinates=True,
                 step1_min_score_thresh=step1_min_score_thresh,
