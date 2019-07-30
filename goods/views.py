@@ -251,7 +251,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
 
 class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
-    queryset = Image.objects.order_by('-id')
+    queryset = FreezerImage.objects.order_by('-id')
     serializer_class = FreezerImageSerializer
 
     def create(self, request, *args, **kwargs):
