@@ -249,7 +249,7 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class FreezerViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
     queryset = Image.objects.order_by('-id')
     serializer_class = FreezerImageSerializer
