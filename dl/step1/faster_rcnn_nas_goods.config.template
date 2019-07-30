@@ -131,18 +131,18 @@ train_config: {
     }
     random_vertical_flip{
     }
-    # random_rotation90{
-    # }
+    random_rotation90{
+    }
     random_pixel_value_scale{
     }
-    random_image_scale{
-    }
+    # random_image_scale{
+    # }
     random_distort_color{
     }
-    random_black_patches{
-    }
-    random_crop_image{
-    }
+    # random_black_patches{
+    # }
+    # random_crop_image{
+    # }
   }
 }
 
