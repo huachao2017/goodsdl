@@ -77,9 +77,7 @@ class ShelfDetector:
                 xmax = int(xmax * im_width)
 
                 ret.append({'score': scores_step1[i],
-                            'level': -1,
                             'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax,
-                            'score2': 0,
                             })
 
 
