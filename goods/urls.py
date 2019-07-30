@@ -27,6 +27,7 @@ router.register(r'shelfgoods', views_shelf.ShelfGoodsViewSet)
 
 # router.register(r'image', views.ImageOldViewSet)
 router.register(r'imagenew', views.ImageViewSet)
+router.register(r'Freezerimage', views.FreezerImageViewSet)
 router.register(r'imagetest', views.ImageTestViewSet)
 router.register(r'imagereport', views.ImageReportViewSet)
 router.register(r'imageclass', views.ImageClassViewSet)

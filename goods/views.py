@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 import goods.util
 
 from dl import imagedetectionV3, imagedetectionV3_S, imagedetectionV3_S_demo, imageclassifyV1, imagedetection_only_step1, \
-    imagedetection_only_step2, imagedetection_only_step3, imagedetection
+    imagedetection_only_step2, imagedetection_only_step3, imagedetection, freezerdetection
 # from dl.old import imagedetection
 from .serializers import *
 
@@ -247,6 +247,35 @@ class ImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin,
         # logger.info('end create')
         # return Response({'Test':True})
         return Response(ret_reborn, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class FreezerViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
+    queryset = Image.objects.order_by('-id')
+    serializer_class = FreezerImageSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
+        ret = []
+        export1s = ExportAction.objects.filter(train_action__action='T1').filter(train_action__traintype=3).filter(checkpoint_prefix__gt=0).order_by(
+            '-update_time')[:1]
+
+        if len(export1s) > 0:
+            detector = freezerdetection.FreezerDetectorFactory.get_static_detector(export1s[0].pk)
+            detect_ret, aiinterval, visual_image_path = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.5)
+
+            serializer.instance.ret = json.dumps(detect_ret, cls=NumpyEncoder)
+            serializer.instance.save()
+
+
+        logger.info('end detect:{}'.format(serializer.instance.deviceid))
+        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class ImageReportViewSet(DefaultMixin, viewsets.ModelViewSet):
     queryset = ImageReport.objects.order_by('-id')

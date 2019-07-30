@@ -41,6 +41,14 @@ class Image(models.Model):
     lastinterval = models.FloatField(default=0.0)
     create_time = models.DateTimeField('date created', auto_now_add=True,db_index=True)
 
+
+class FreezerImage(models.Model):
+    deviceid = models.CharField(max_length=20, default='0', db_index=True)
+    ret = models.TextField(default='')
+    source = models.ImageField(max_length=200, upload_to=image_upload_source)
+    create_time = models.DateTimeField('date created', auto_now_add=True, db_index=True)
+
+
 class ImageReport(models.Model):
     deviceid = models.CharField(max_length=20, default='0',db_index=True)
     source = models.ImageField(max_length=200, upload_to=image_report_upload_source)
