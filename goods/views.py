@@ -15,6 +15,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import goods.util
+import tensorflow as tf
 
 from dl import imagedetectionV3, imagedetectionV3_S, imagedetectionV3_S_demo, imageclassifyV1, imagedetection_only_step1, \
     imagedetection_only_step2, imagedetection_only_step3, imagedetection, freezerdetection
@@ -275,6 +276,40 @@ class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
 
         logger.info('end detect:{}'.format(serializer.instance.deviceid))
         return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class CreateFreezerImage(APIView):
+    def get(self, request):
+
+        picurl = request.query_params['picurl']
+        logger.info('begin detect:{}'.format(picurl))
+        now = datetime.datetime.now()
+        image_name = '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S'))
+
+        ret = []
+        export1s = ExportAction.objects.filter(train_action__action='T1').filter(train_action__traintype=3).filter(
+            checkpoint_prefix__gt=0).order_by(
+            '-update_time')[:1]
+
+        if len(export1s) > 0:
+            detector = freezerdetection.FreezerDetectorFactory.get_static_detector(export1s[0].pk)
+            step1_min_score_thresh = .5
+            media_dir = settings.MEDIA_ROOT
+            # 通过 picurl 获取图片
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'freezer',
+                                     '{}'.format(now.strftime('%Y%m%d')))
+            if not tf.gfile.Exists(image_dir):
+                tf.gfile.MakeDirs(image_dir)
+            image_path = os.path.join(image_dir, image_name)
+            urllib.request.urlretrieve(picurl, image_path)
+            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=0.5)
+
+            # logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
+        else:
+            return Response(-1, status=status.HTTP_200_OK)
+
+        logger.info('end detect freezer')
+        return Response(len(detect_ret), status=status.HTTP_200_OK)
 
 
 class ImageReportViewSet(DefaultMixin, viewsets.ModelViewSet):
