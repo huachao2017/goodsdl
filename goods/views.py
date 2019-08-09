@@ -304,7 +304,7 @@ class CreateFreezerImage(APIView):
             urllib.request.urlretrieve(picurl, image_path)
             detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=0.5)
 
-            # logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
+            logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
         else:
             return Response(-1, status=status.HTTP_200_OK)
 
