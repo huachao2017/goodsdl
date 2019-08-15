@@ -161,6 +161,7 @@ MODEL_CHOICES = (
 
 class TrainAction(models.Model):
     ACTION_CHOICES = (
+        (u'TR', u'Train RAW'),
         (u'T1', u'Train Step 1'),
         (u'T20', u'Train Step 2_0'),
         (u'T21', u'Train Step 2_1'),
