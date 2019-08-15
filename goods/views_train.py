@@ -23,6 +23,7 @@ from dl import imagedetectionV3_S, imagedetection_only_step1
 # from dl.old import imagedetection
 from dl.only_step2 import create_goods_tf_record
 from dl.stepall import create_goods_tf_record as stepall_create_goods_tf_record
+from dl.raw import create_onegoods_tf_record as raw_create_goods_tf_record
 from dl.step1 import create_onegoods_tf_record, export_inference_graph as e1
 from dl.step2 import convert_goods
 from dl.step2S import convert_goods_step2S
@@ -359,6 +360,8 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             )
             logger.info(command)
             subprocess.call(command, shell=True)
+        elif serializer.instance.action == 'TR':
+            self.train_raw(serializer.instance)
         elif serializer.instance.action == 'TA':
             self.train_stepall(serializer.instance)
         elif serializer.instance.action == 'T2S':
@@ -377,6 +380,47 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             self.train_only_step2(serializer.instance)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def train_raw(self, actionlog):
+        # 训练准备
+        data_dir = os.path.join(settings.MEDIA_ROOT, settings.DATASET_DIR_NAME, 'raw', str(actionlog.traintype))
+
+        fine_tune_checkpoint_dir = settings.TRAIN_ROOT
+        if actionlog.is_fineture:
+            export1s = ExportAction.objects.filter(train_action__action='TR').filter(train_action__traintype=actionlog.traintype).filter(
+                checkpoint_prefix__gt=0).order_by(
+                '-update_time')[:1]
+            if len(export1s) > 0:
+                fine_tune_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(export1s[0].pk))
+
+        raw_create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
+                                                                 str(actionlog.pk),
+                                                                 fine_tune_checkpoint_dir,
+                                                                 actionlog.is_fineture,
+                                                 12 #FIXME
+                                                 )
+
+        train_logs_dir = os.path.join(settings.TRAIN_ROOT, str(actionlog.pk))
+
+        # 训练
+        # --num_clones=2 同步修改config中的batch_size=2
+        command = 'nohup python3 {}/raw/train.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --train_dir={} --local_fineture={}  > /root/train1.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            actionlog.is_fineture,
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
+        # 评估
+        command = 'nohup python3 {}/raw/eval.py --pipeline_config_path={}/faster_rcnn_nas_goods.config --checkpoint_dir={} --eval_dir={}  > /root/eval1.out 2>&1 &'.format(
+            os.path.join(settings.BASE_DIR, 'dl'),
+            train_logs_dir,
+            train_logs_dir,
+            os.path.join(train_logs_dir, 'eval_log'),
+        )
+        logger.info(command)
+        subprocess.call(command, shell=True)
 
     def train_stepall(self, actionlog):
         # 杀死原来的train
@@ -893,7 +937,7 @@ class ExportActionViewSet(DefaultMixin, viewsets.ModelViewSet):
             serializer.instance.save()
 
         prefix = None
-        if serializer.instance.train_action.action in ['T1','TA']:
+        if serializer.instance.train_action.action in ['T1','TA','TR']:
             prefix = self.export_detection_graph(serializer.instance.train_action, serializer)
 
         elif serializer.instance.train_action.action in ['T2','T3','T2S','T20','T30']:
