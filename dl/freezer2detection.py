@@ -122,10 +122,8 @@ class ImageDetector:
             xmin = int(xmin*im_width)
             ymax = int(ymax*im_height)
             xmax = int(xmax*im_width)
-            ret.append({'class':common.MATCH_TYPE_DEEPLEARNING,
+            ret.append({'class':classes[i],
                         'score':scores[i],
-                        'action':action,
-                        'upc':self.category_index[classes[i]]['name'],
                         'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
                         })
         time1 = time.time()
