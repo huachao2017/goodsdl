@@ -105,7 +105,7 @@ class ImageDetector:
                 np.squeeze(scores),
                 self.category_index,
                 use_normalized_coordinates=True,
-                max_boxes_to_draw=50,
+                max_boxes_to_draw=None,
                 min_score_thresh=step1_min_score_thresh,
                 line_thickness=4)
             output_image = Image.fromarray(image_np)
@@ -115,7 +115,6 @@ class ImageDetector:
         ret = []
         # have_classes = {}
         for i in range(boxes.shape[0]):
-            action = 0
             if scores is not None and scores[i] < step1_min_score_thresh:
                 continue
             ymin, xmin, ymax, xmax = boxes[i]
