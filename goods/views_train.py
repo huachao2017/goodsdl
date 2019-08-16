@@ -391,7 +391,7 @@ class TrainActionViewSet(DefaultMixin, viewsets.ModelViewSet):
                 checkpoint_prefix__gt=0).order_by(
                 '-update_time')[:1]
             if len(export1s) > 0:
-                fine_tune_checkpoint_dir = os.path.join(settings.TRAIN_ROOT, str(export1s[0].pk))
+                fine_tune_checkpoint_dir = os.path.join(settings.MODEL_ROOT, str(export1s[0].pk))
 
         raw_create_goods_tf_record.prepare_train(data_dir, settings.TRAIN_ROOT,
                                                                  str(actionlog.pk),
