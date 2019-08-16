@@ -18,7 +18,7 @@ import goods.util
 import tensorflow as tf
 
 from dl import imagedetectionV3, imagedetectionV3_S, imagedetectionV3_S_demo, imageclassifyV1, imagedetection_only_step1, \
-    imagedetection_only_step2, imagedetection_only_step3, imagedetection, freezerdetection
+    imagedetection_only_step2, imagedetection_only_step3, imagedetection, freezerdetection, freezer2detection
 # from dl.old import imagedetection
 from .serializers import *
 
@@ -263,12 +263,12 @@ class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
 
         logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = []
-        export1s = ExportAction.objects.filter(train_action__action='T1').filter(train_action__traintype=3).filter(checkpoint_prefix__gt=0).order_by(
+        export1s = ExportAction.objects.filter(train_action__action='TR').filter(train_action__traintype=1).filter(checkpoint_prefix__gt=0).order_by(
             '-update_time')[:1]
 
         if len(export1s) > 0:
-            detector = freezerdetection.FreezerDetectorFactory.get_static_detector(export1s[0].pk)
-            detect_ret, aiinterval, visual_image_path = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.5)
+            detector = freezer2detection.ImageDetectorFactory.get_static_detector(export1s[0].pk)
+            detect_ret, aiinterval = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.5)
 
             serializer.instance.ret = json.dumps(detect_ret, cls=NumpyEncoder)
             serializer.instance.save()
