@@ -27,7 +27,7 @@ class ShelfGoods(models.Model):
 
 def image_upload_source(instance,filename):
     now = datetime.datetime.now()
-    return '{}/{}/{}/{}_{}_{}'.format(settings.DETECT_DIR_NAME, instance.deviceid, now.strftime('%Y%m%d'), now.strftime('%H%M%S'), str(now.time()), filename)
+    return '{}/{}/{}/{}/{}_{}_{}'.format(settings.DETECT_DIR_NAME, instance.deviceid, now.strftime('%Y%m'), now.strftime('%d%H'), now.strftime('%M%S'), str(now.time()), filename)
 
 def image_report_upload_source(instance,filename):
     now = datetime.datetime.now()
