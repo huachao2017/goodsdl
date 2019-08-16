@@ -1,0 +1,24 @@
+检测图片接口：http://ai.fastxbox.cn/api/freezerimage
+post入参：
+source  file
+filename string
+deviceid  string
+返回201：
+[
+    {
+        "class": 2,                           -- 检测类型 1至12
+        "score": 0.5095015168190002,          -- 检测可能性评分
+        "xmin": 37,                           -- 左上角横坐标
+        "ymin": 116,                          -- 左上角纵坐标
+        "xmax": 855,                          -- 右下角横坐标
+        "ymax": 940                           -- 右下角纵坐标
+    }
+    {
+        "class": 3,                           -- 检测类型 1至12
+        "score": 0.5095015168190002,          -- 检测可能性评分
+        "xmin": 37,                           -- 左上角横坐标
+        "ymin": 116,                          -- 左上角纵坐标
+        "xmax": 855,                          -- 右下角横坐标
+        "ymax": 940                           -- 右下角纵坐标
+    }
+]
