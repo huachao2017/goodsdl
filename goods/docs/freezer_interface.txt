@@ -1,4 +1,4 @@
-检测图片接口：http://ai.fastxbox.cn/api/freezerimage
+检测图片接口：http://ai.fastxbox.cn/api/freezerimage/
 post入参：
 source  file
 deviceid  string，可以根据客户端需要传参，便于区分设备
