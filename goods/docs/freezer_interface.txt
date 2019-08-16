@@ -22,7 +22,7 @@ deviceid  string，可以根据客户端需要传参，便于区分设备
     }
 ]
 
-<form action="/api/Freezerimage/" method="POST" enctype="multipart/form-data" class="form-horizontal" novalidate="">
+<form action="/api/freezerimage/" method="POST" enctype="multipart/form-data" class="form-horizontal" novalidate="">
     <fieldset>
     <input type="hidden" name="csrfmiddlewaretoken" value="KwAZ3RooVKwz6Mu1csyiGyzz2XFes4JLabof4rGM4CU4q7P2Ync66Znwpc0euVge">
 <div class="form-group ">
