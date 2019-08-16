@@ -270,12 +270,13 @@ class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
             detector = freezer2detection.ImageDetectorFactory.get_static_detector(export1s[0].pk)
             detect_ret, aiinterval = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.5)
 
-            serializer.instance.ret = json.dumps(detect_ret, cls=NumpyEncoder)
+            ret = json.dumps(detect_ret, cls=NumpyEncoder)
+            serializer.instance.ret = ret
             serializer.instance.save()
 
 
         logger.info('end detect:{}'.format(serializer.instance.deviceid))
-        return Response(ret, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.instance.ret, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class CreateFreezerImage(APIView):
