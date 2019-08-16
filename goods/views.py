@@ -268,7 +268,7 @@ class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
 
         if len(export1s) > 0:
             detector = freezer2detection.ImageDetectorFactory.get_static_detector(export1s[0].pk)
-            detect_ret, aiinterval = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.5)
+            detect_ret, aiinterval = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.3)
 
             ret = json.dumps(detect_ret, cls=NumpyEncoder)
             serializer.instance.ret = ret

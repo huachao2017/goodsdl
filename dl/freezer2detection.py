@@ -67,7 +67,7 @@ class ImageDetector:
                 logger.info('end loading freezer model')
          # semaphore.release()
 
-    def detect(self,image_path,step1_min_score_thresh=.5,step2_min_score_thresh=.5):
+    def detect(self,image_path,step1_min_score_thresh=.5):
         if self.category_index is None:
             self.load()
             if self.category_index is None:
