@@ -105,6 +105,7 @@ class ImageDetector:
                 np.squeeze(scores),
                 self.category_index,
                 use_normalized_coordinates=True,
+                max_boxes_to_draw=50,
                 min_score_thresh=step1_min_score_thresh,
                 line_thickness=4)
             output_image = Image.fromarray(image_np)
