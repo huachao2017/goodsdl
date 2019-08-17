@@ -272,7 +272,7 @@ class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
 
             ret = json.dumps(detect_ret, cls=NumpyEncoder)
             serializer.instance.ret = ret
-            serializer.instance.visual = visual_image_path
+            serializer.instance.visual = settings.MEDIA_URL + visual_image_path.replace(settings.MEDIA_ROOT,'')
             serializer.instance.save()
 
 
