@@ -39,12 +39,20 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class FreezerImageSerializer(serializers.ModelSerializer):
-    visual = serializers.URLField(use_url=True, allow_null=True, required=False)
+    visual_url = serializers.SerializerMethodField()
     class Meta:
         model = FreezerImage
-        fields = ('pk', 'deviceid', 'ret', 'source','visual',
+        fields = ('pk', 'deviceid', 'ret', 'source','visual_url',
                   'create_time')
-        read_only_fields = ('ret', 'visual','create_time',)
+        read_only_fields = ('ret', 'visual','create_time')
+
+    def get_visual_url(self, freezerImage):
+        request = self.context.get('request')
+        if freezerImage.visual and hasattr(freezerImage.visual, 'url'):
+            visual_url = freezerImage.visual.url
+            return request.build_absolute_uri(visual_url)
+        else:
+            return None
 
 
 class ImageReportSerializer(serializers.ModelSerializer):
