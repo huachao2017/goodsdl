@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from goods.models import Image, ImageReport, ImageClass, Goods, GoodsClass, ProblemGoods, TrainImage, TrainImageOnly, TrainImageClass, SampleImageClass, TrainAction, ExportAction, StopTrainAction, \
     RfidImageCompareAction, RfidTransaction, TransactionMetrix, RfidGoods, DatasetAction, TrainTask, ClusterStructure, ClusterEvalData, ClusterSampleScore, ClusterUpcScore, ShelfImage, ShelfGoods,FreezerImage
+from django.conf import settings
 
 
 
@@ -48,9 +49,12 @@ class FreezerImageSerializer(serializers.ModelSerializer):
 
     def get_visual_url(self, freezerImage):
         request = self.context.get('request')
-        if freezerImage.visual and hasattr(freezerImage.visual, 'url'):
-            visual_url = freezerImage.visual.url
-            return request.build_absolute_uri(visual_url)
+        if freezerImage.visual:
+            current_uri = '{scheme}://{host}{path}'.format(scheme=request.scheme,
+                                                           host=request.get_host(),
+                                                           path=settings.MEDIA_URL)
+
+            return current_uri
         else:
             return None
 
