@@ -50,11 +50,11 @@ class FreezerImageSerializer(serializers.ModelSerializer):
     def get_visual_url(self, freezerImage):
         request = self.context.get('request')
         if freezerImage.visual:
-            current_uri = '{scheme}://{host}{path}'.format(scheme=request.scheme,
+            current_uri = '{scheme}://{host}{path}{visual}'.format(scheme=request.scheme,
                                                            host=request.get_host(),
-                                                           path=settings.MEDIA_URL)
+                                                           path=settings.MEDIA_URL,
+                                                           visual=freezerImage.visual)
 
-            return current_uri
         else:
             return None
 
