@@ -54,6 +54,7 @@ class FreezerImageSerializer(serializers.ModelSerializer):
                                                            host=request.get_host(),
                                                            path=settings.MEDIA_URL,
                                                            visual=freezerImage.visual)
+            return current_uri
 
         else:
             return None
