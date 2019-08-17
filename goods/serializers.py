@@ -39,7 +39,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class FreezerImageSerializer(serializers.ModelSerializer):
-
+    visual = serializers.URLField(use_url=True, allow_null=True, required=False)
     class Meta:
         model = FreezerImage
         fields = ('pk', 'deviceid', 'ret', 'source','visual',
