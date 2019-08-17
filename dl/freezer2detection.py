@@ -95,6 +95,7 @@ class ImageDetector:
         classes = np.squeeze(classes).astype(np.int32)
         scores = np.squeeze(scores)
 
+        output_image_path = ''
         if boxes.shape[0] > 0:
             image_dir = os.path.dirname(image_path)
             output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
@@ -128,4 +129,4 @@ class ImageDetector:
                         })
         time1 = time.time()
         logger.info('detect_freezer: %d, %.2f' %(len(ret), time1-time0))
-        return ret, time1-time0
+        return ret, time1-time0,output_image_path
