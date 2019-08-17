@@ -42,9 +42,9 @@ class FreezerImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FreezerImage
-        fields = ('pk', 'deviceid', 'ret', 'source',
+        fields = ('pk', 'deviceid', 'ret', 'source','visual',
                   'create_time')
-        read_only_fields = ('ret', 'create_time',)
+        read_only_fields = ('ret', 'visual','create_time',)
 
 
 class ImageReportSerializer(serializers.ModelSerializer):
