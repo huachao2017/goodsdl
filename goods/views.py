@@ -285,30 +285,21 @@ class CreateFreezerImage(APIView):
         now = datetime.datetime.now()
         image_name = '{}.jpg'.format(now.strftime('%Y%m%d_%H%M%S'))
 
-        ret = []
-        export1s = ExportAction.objects.filter(train_action__action='T1').filter(train_action__traintype=3).filter(
-            checkpoint_prefix__gt=0).order_by(
-            '-update_time')[:1]
+        try:
+            detector = freezer2detection.ImageDetectorFactory.get_static_detector('freezer2')
+            media_dir = settings.MEDIA_ROOT
+            # 通过 picurl 获取图片
+            image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'freezer',
+                                     '{}'.format(now.strftime('%Y%m%d')))
+            if not tf.gfile.Exists(image_dir):
+                tf.gfile.MakeDirs(image_dir)
+            image_path = os.path.join(image_dir, image_name)
+            urllib.request.urlretrieve(picurl, image_path)
+            detect_ret, aiinterval, visual_image_path = detector.detect(image_path,step1_min_score_thresh=0.5)
 
-        if len(export1s) > 0:
-            try:
-                detector = freezerdetection.FreezerDetectorFactory.get_static_detector(export1s[0].pk)
-                step1_min_score_thresh = .5
-                media_dir = settings.MEDIA_ROOT
-                # 通过 picurl 获取图片
-                image_dir = os.path.join(settings.MEDIA_ROOT, settings.DETECT_DIR_NAME, 'freezer',
-                                         '{}'.format(now.strftime('%Y%m%d')))
-                if not tf.gfile.Exists(image_dir):
-                    tf.gfile.MakeDirs(image_dir)
-                image_path = os.path.join(image_dir, image_name)
-                urllib.request.urlretrieve(picurl, image_path)
-                detect_ret, aiinterval, visual_image_path = detector.detect(image_path, step1_min_score_thresh=0.5)
-
-                logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
-            except Exception as e:
-                logger.error('detect freezer error:{}'.format(e))
-                return Response(-1, status=status.HTTP_200_OK)
-        else:
+            logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
+        except Exception as e:
+            logger.error('detect freezer error:{}'.format(e))
             return Response(-1, status=status.HTTP_200_OK)
 
         logger.info('end detect freezer')
