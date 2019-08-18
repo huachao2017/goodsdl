@@ -82,7 +82,7 @@ class ImageDetector:
         # result image with boxes and labels on it.
         (im_width, im_height) = image.size
         time1 = time.time()
-        image_np = np.array(image.getdata()).reshape(
+        image_np = np.array(image).reshape(
             (im_height, im_width, 3)).astype(np.uint8)
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
