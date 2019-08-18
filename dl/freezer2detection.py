@@ -81,11 +81,12 @@ class ImageDetector:
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
         (im_width, im_height) = image.size
+        time1 = time.time()
         image_np = np.array(image.getdata()).reshape(
             (im_height, im_width, 3)).astype(np.uint8)
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
-        time1 = time.time()
+        time2 = time.time()
         # Actual detection.
         (boxes, scores, classes) = self.session.run(
             [self.detection_boxes, self.detection_scores, self.detection_classes],
@@ -96,7 +97,7 @@ class ImageDetector:
         classes = np.squeeze(classes).astype(np.int32)
         scores = np.squeeze(scores)
 
-        time2 = time.time()
+        time3 = time.time()
         output_image_path = ''
         if boxes.shape[0] > 0:
             image_dir = os.path.dirname(image_path)
@@ -129,6 +130,6 @@ class ImageDetector:
                         'score':scores[i],
                         'xmin':xmin,'ymin':ymin,'xmax':xmax,'ymax':ymax
                         })
-        time3 = time.time()
-        logger.info('detect_freezer: %d, %.2f, %.2f, %.2f, %.2f' %(len(ret), time3-time0,time1-time0,time2-time1,time3-time2))
+        time4 = time.time()
+        logger.info('detect_freezer: %d, %.2f, %.2f, %.2f, %.2f, %.2f' %(len(ret), time4-time0,time1-time0,time2-time1,time3-time2,time4-time3))
         return ret, time1-time0,output_image_path
