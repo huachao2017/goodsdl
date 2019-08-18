@@ -263,17 +263,14 @@ class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
 
         logger.info('begin detect:{},{}'.format(serializer.instance.deviceid, serializer.instance.source.path))
         ret = []
-        export1s = ExportAction.objects.filter(train_action__action='TR').filter(train_action__traintype=1).filter(checkpoint_prefix__gt=0).order_by(
-            '-update_time')[:1]
 
-        if len(export1s) > 0:
-            detector = freezer2detection.ImageDetectorFactory.get_static_detector(export1s[0].pk)
-            detect_ret, aiinterval, visual_image_path = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.3)
+        detector = freezer2detection.ImageDetectorFactory.get_static_detector('freezer2')
+        detect_ret, aiinterval, visual_image_path = detector.detect(serializer.instance.source.path,  step1_min_score_thresh=0.3)
 
-            ret = json.dumps(detect_ret, cls=NumpyEncoder)
-            serializer.instance.ret = ret
-            serializer.instance.visual = visual_image_path.replace(settings.MEDIA_ROOT,'')
-            serializer.instance.save()
+        ret = json.dumps(detect_ret, cls=NumpyEncoder)
+        serializer.instance.ret = ret
+        serializer.instance.visual = visual_image_path.replace(settings.MEDIA_ROOT,'')
+        serializer.instance.save()
 
 
         logger.info('end detect:{}'.format(serializer.instance.deviceid))
