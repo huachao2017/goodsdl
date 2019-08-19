@@ -23,6 +23,7 @@ import logging
 logger = logging.getLogger("yolov3_freezer")
 gpu_num = config.yolov3_params['gpu_num']
 label_path = config.yolov3_params['label_path']
+min_score=config.yolov3_params['score']
 class YOLO(object):
     _defaults = {
         "model_path": config.yolov3_params['good_model_path'],
@@ -47,7 +48,7 @@ class YOLO(object):
         self.anchors = self._get_anchors()
         self.sess = K.get_session()
         self.boxes, self.scores, self.classes = self.generate()
-        label_map = label_map_util.load_labelmap(self.label_path)
+        label_map = label_map_util.load_labelmap(label_path)
         categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=1000,
                                                                     use_display_name=True)
         self.category_index = label_map_util.create_category_index(categories)
@@ -127,7 +128,7 @@ class YOLO(object):
             feed_dict={
                 self.yolo_model.input: image_data,
                 self.input_image_shape: [image.size[1], image.size[0]],
-                K.learning_phase(): 0
+                # K.learning_phase(): 0
             })
         logger.info('Found {} boxes for {}'.format(len(out_boxes), 'img'))
         p_class = []
@@ -169,7 +170,7 @@ def detect(yolov3,image_path):
 
     time1 = time.time()
     # Actual detection.
-    (classes,scores,boxes) = YOLO.predict_img(image)
+    (classes,scores,boxes) = yolo_v3.predict_img(image)
 
 
     # data solving
@@ -190,7 +191,7 @@ def detect(yolov3,image_path):
             yolo_v3.category_index,
             use_normalized_coordinates=True,
             max_boxes_to_draw=None,
-            min_score_thresh=yolo_v3.scores,
+            min_score_thresh=min_score,
             line_thickness=4)
         output_image = Image.fromarray(image_np)
         output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)

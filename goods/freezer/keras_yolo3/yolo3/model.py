@@ -11,7 +11,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.regularizers import l2
 
-from freezer.keras_yolo3.yolo3.utils import compose
+from goods.freezer.keras_yolo3.yolo3.utils import compose
 
 
 @wraps(Conv2D)

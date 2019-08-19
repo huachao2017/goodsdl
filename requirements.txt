@@ -9,3 +9,4 @@ gputil
 opencv-contrib-python
 scipy>=1.0.0
 scikit-surprise
+keras=2.2.4
