@@ -189,7 +189,7 @@ def detect(yolov3,image_path):
             np.squeeze(classes).astype(np.int32),
             np.squeeze(scores),
             yolo_v3.category_index,
-            use_normalized_coordinates=True,
+            use_normalized_coordinates=False,
             max_boxes_to_draw=None,
             min_score_thresh=min_score,
             line_thickness=4)
