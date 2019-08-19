@@ -12,5 +12,5 @@ yolov3_params={
 
 ######################################common#####################################################################
 common_params={
-    'freezer_check_yolov3_switch':True
+    'freezer_check_yolov3_switch':False
 }
