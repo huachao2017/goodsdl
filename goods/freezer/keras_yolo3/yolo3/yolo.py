@@ -11,8 +11,8 @@ from keras import backend as K
 from keras.models import load_model
 from keras.layers import Input
 from PIL import Image
-from freezer.keras_yolo3.yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
-from freezer.keras_yolo3.yolo3.utils import letterbox_image
+from goods.freezer.keras_yolo3.yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
+from goods.freezer.keras_yolo3.yolo3.utils import letterbox_image
 import os
 from keras.utils import multi_gpu_model
 from set_config import config
@@ -128,7 +128,7 @@ class YOLO(object):
             feed_dict={
                 self.yolo_model.input: image_data,
                 self.input_image_shape: [image.size[1], image.size[0]],
-                # K.learning_phase(): 0
+                #K.learning_phase(): 0
             })
         logger.info('Found {} boxes for {}'.format(len(out_boxes), 'img'))
         p_class = []
@@ -189,7 +189,7 @@ def detect(yolov3,image_path):
             np.squeeze(classes).astype(np.int32),
             np.squeeze(scores),
             yolo_v3.category_index,
-            use_normalized_coordinates=False,
+            use_normalized_coordinates=True,
             max_boxes_to_draw=None,
             min_score_thresh=min_score,
             line_thickness=4)
