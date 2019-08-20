@@ -20,7 +20,7 @@ from goods.freezer.keras_yolo3.yolo3 import yolo
 from object_detection.utils import visualization_utils as vis_util
 from object_detection.utils import label_map_util
 import logging
-logger = logging.getLogger("yolov3_freezer")
+logger = logging.getLogger("detect")
 gpu_num = config.yolov3_params['gpu_num']
 label_path = config.yolov3_params['label_path']
 min_score=config.yolov3_params['score']
