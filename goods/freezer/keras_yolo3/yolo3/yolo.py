@@ -180,16 +180,21 @@ def detect(yolov3,image_path):
 
     time2 = time.time()
     output_image_path = ''
+    draw_boxes = []
+    for i in range(boxes.shape[0]):
+        xmin, ymin, xmax, ymax = boxes[i]
+        draw_boxes.append(
+            [float(ymin) / im_height, float(xmin) / im_width, float(ymax) / im_height, float(xmax) / im_width])
     if boxes.shape[0] > 0:
         image_dir = os.path.dirname(image_path)
         output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
         vis_util.visualize_boxes_and_labels_on_image_array(
             image_np,
-            np.squeeze(boxes),
+            np.squeeze(draw_boxes),
             np.squeeze(classes).astype(np.int32),
             np.squeeze(scores),
             yolo_v3.category_index,
-            use_normalized_coordinates=False,
+            use_normalized_coordinates=True,
             max_boxes_to_draw=None,
             min_score_thresh=min_score,
             line_thickness=4)
