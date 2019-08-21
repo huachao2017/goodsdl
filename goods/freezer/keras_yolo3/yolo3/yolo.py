@@ -25,8 +25,8 @@ logger = logging.getLogger("detect")
 gpu_num = config.yolov3_params['gpu_num']
 label_path = config.yolov3_params['label_path']
 min_score=config.yolov3_params['score']
-(diff_switch,diff_iou) = config.yolov3_predict['diff_switch_iou']
-(single_switch,single_iou,single_min_score) = config.yolov3_predict['single_switch_iou_minscore']
+(diff_switch,diff_iou) = config.yolov3_params['diff_switch_iou']
+(single_switch,single_iou,single_min_score) = config.yolov3_params['single_switch_iou_minscore']
 class YOLO(object):
     _defaults = {
         "model_path": config.yolov3_params['good_model_path'],
