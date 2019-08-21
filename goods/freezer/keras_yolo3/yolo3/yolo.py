@@ -178,7 +178,7 @@ def detect(yolov3,image_path):
         classes, scores, boxes = proxy.diff_fiter(diff_iou, classes,scores,boxes)
 
     if single_switch:
-        classes, scores, boxes = proxy.single_filter(diff_iou, single_min_score, classes,scores,boxes)
+        classes, scores, boxes = proxy.single_filter(single_iou, single_min_score, classes,scores,boxes)
 
     # data solving
     boxes = np.squeeze(boxes)
