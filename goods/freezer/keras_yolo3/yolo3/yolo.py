@@ -19,11 +19,14 @@ from set_config import config
 from goods.freezer.keras_yolo3.yolo3 import yolo
 from object_detection.utils import visualization_utils as vis_util
 from object_detection.utils import label_map_util
+from goods.freezer.keras_yolo3.good_proxy import proxy
 import logging
 logger = logging.getLogger("detect")
 gpu_num = config.yolov3_params['gpu_num']
 label_path = config.yolov3_params['label_path']
 min_score=config.yolov3_params['score']
+(diff_switch,diff_iou) = config.yolov3_predict['diff_switch_iou']
+(single_switch,single_iou,single_min_score) = config.yolov3_predict['single_switch_iou_minscore']
 class YOLO(object):
     _defaults = {
         "model_path": config.yolov3_params['good_model_path'],
@@ -171,7 +174,11 @@ def detect(yolov3,image_path):
     time1 = time.time()
     # Actual detection.
     (classes,scores,boxes) = yolo_v3.predict_img(image)
+    if diff_switch:
+        classes, scores, boxes = proxy.diff_fiter(diff_iou, classes,scores,boxes)
 
+    if single_switch:
+        classes, scores, boxes = proxy.single_filter(diff_iou, single_min_score, classes,scores,boxes)
 
     # data solving
     boxes = np.squeeze(boxes)

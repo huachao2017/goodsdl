@@ -8,6 +8,8 @@ yolov3_params={
     'iou' :0.45,
     'model_image_size' : (416, 416),
     'gpu_num' : 1,
+    "diff_switch_iou":(True,0.6),
+    "single_switch_iou_minscore":(True,0.0,0.3)
 }
 
 ######################################common#####################################################################
