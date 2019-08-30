@@ -1,10 +1,10 @@
 #########################################YOLOV3##################################################################
 yolov3_params={
-    'good_model_path' :'/home/ai/model/freezer/ep1749-loss44.198-val_loss48.719.h5',
+    'good_model_path' :'/home/ai/model/freezer/ep3356-loss42.196-val_loss45.709.h5',
     'anchors_path' :'./goods/freezer/keras_yolo3/model_data/yolo_anchors.txt',
     'classes_path' : './goods/freezer/keras_yolo3/model_data/voc_classes.txt',
     'label_path':'./goods/freezer/keras_yolo3/model_data/goods_label_map.pbtxt',
-    'score' :0.1,
+    'score' :0.25,
     'iou' :0.45,
     'model_image_size' : (416, 416),
     'gpu_num' : 1,
