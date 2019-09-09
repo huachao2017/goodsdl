@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ProjectModuleManager">
-    <modules />
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../ai/App_logical/.idea/App_logical.iml" filepath="$PROJECT_DIR$/../../ai/App_logical/.idea/App_logical.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../GoodsServer/.idea/GoodsServer.iml" filepath="$PROJECT_DIR$/../GoodsServer/.idea/GoodsServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/goodsdl.iml" filepath="$PROJECT_DIR$/.idea/goodsdl.iml" />
+    </modules>
   </component>
 </project>

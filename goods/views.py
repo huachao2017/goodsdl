@@ -279,15 +279,12 @@ class FreezerImageViewSet(DefaultMixin, mixins.CreateModelMixin, mixins.ListMode
         serializer.instance.ret = ret
         serializer.instance.visual = visual_image_path.replace(settings.MEDIA_ROOT,'')
         serializer.instance.save()
-
-
         logger.info('end detect:{}'.format(serializer.instance.deviceid))
         return Response(serializer.instance.ret, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class CreateFreezerImage(APIView):
     def get(self, request):
-
         picurl = request.query_params['picurl']
         logger.info('begin detect:{}'.format(picurl))
         now = datetime.datetime.now()
