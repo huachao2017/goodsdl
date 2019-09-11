@@ -243,7 +243,8 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
         code = shelfgoods_http.post_deletegood(instance.upc, old_sample_path)
         if code == None:
             logger.error("api: delete_good failed")
-        logger.info("api: delete_good success")
+        else :
+            logger.info("api: delete_good success")
         if os.path.isfile(old_sample_path):
             os.remove(old_sample_path)
         self.perform_destroy(instance)

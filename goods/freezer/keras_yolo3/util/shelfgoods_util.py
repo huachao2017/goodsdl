@@ -19,7 +19,7 @@ def get_post_data_addgood(upc,image_path):
     trace_id = str(time.time())
     post_data = {
         "trace_id": trace_id,
-        "img_local_files":image_path,
+        "img_local_file":image_path,
         "good_upc":upc
     }
     api = config.http_apis['shelf_good_add_good']
@@ -29,7 +29,7 @@ def get_post_data_deletegood(upc,image_path):
     trace_id = str(time.time())
     post_data = {
         "trace_id": trace_id,
-        "img_local_files": image_path,
+        "img_local_file": image_path,
         "good_upc": upc
     }
     api = config.http_apis['shelf_good_delete_good']
