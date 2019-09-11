@@ -29,12 +29,12 @@ min_score=config.yolov3_params['score']
 (single_switch,single_iou,single_min_score) = config.yolov3_params['single_switch_iou_minscore']
 class YOLO(object):
     _defaults = {
-        "model_path": config.yolov3_params['good_model_path'],
-        "anchors_path": config.yolov3_params['anchors_path'],
-        "classes_path": config.yolov3_params['classes_path'],
-        "score" : config.yolov3_params['score'],
-        "iou" : config.yolov3_params['iou'],
-        "model_image_size" : config.yolov3_params['model_image_size'],
+        "model_path": config.yolov3_shelf_good_params['good_model_path'],
+        "anchors_path": config.yolov3_shelf_good_params['anchors_path'],
+        "classes_path": config.yolov3_shelf_good_params['classes_path'],
+        "score" : config.yolov3_shelf_good_params['score'],
+        "iou" : config.yolov3_shelf_good_params['iou'],
+        "model_image_size" : config.yolov3_shelf_good_params['model_image_size'],
     }
 
     @classmethod
