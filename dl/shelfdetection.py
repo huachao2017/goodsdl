@@ -103,7 +103,7 @@ class ShelfDetector:
                 upc_match, score_match = None,None
                 within_upcs=[]
                 if reponse_data != None :
-                    within_upcs = list(demjson.decode(reponse_data)[new_image_path])
+                    within_upcs = list(reponse_data[new_image_path])
                 if len(within_upcs) > 0:
                     upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage,within_upcs=within_upcs)
                 else:

@@ -11,6 +11,8 @@ def post_goodgetn(new_image_paths):
         logging.error("good_cluster_topn , new_image_paths is null , check!!!" + str(new_image_paths))
         return None
     else:
+        print (api)
+        print (post_data)
         result = http_util.http_post(api, post_data)
         if result == None or result == '':
             logging.error("good_cluster_topn , http failed , check!!!")
@@ -57,3 +59,9 @@ def post_deletegood(upc,image_path):
         logging.error("deletegood , http parse failed , check!!!")
         return None
     return reponse_data
+
+
+if __name__=='__main__':
+    new_image_paths = ['/home/src/goodsdl/media/images/shelf/4044_22/single/18_20190911_150059.jpg','/home/src/goodsdl/media/images/shelf/4044_22/single/19_20190911_150059.jpg']
+    reponse_data = post_goodgetn(new_image_paths)
+    print (list(reponse_data['/home/src/goodsdl/media/images/shelf/4044_22/single/18_20190911_150059.jpg']))
