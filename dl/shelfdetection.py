@@ -132,7 +132,7 @@ class ShelfDetector:
                 ret,
                 scores_step1,
                 use_normalized_coordinates=True,
-                step1_min_score_thresh=step1_min_score_thresh,
+                step1_min_score_thresh=0.0,
                 line_thickness=2,
                 show_error_boxes=False,
                 max_boxes_to_draw=None,
