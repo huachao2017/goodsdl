@@ -4,7 +4,7 @@ import logging
 import demjson
 logger = logging.getLogger("detect")
 def http_post(url_api, post_data):
-    logger.info("http request_params:" + str(post_data['traceId']))
+    logger.info("http request_params:" + str(post_data['trace_id']))
     try:
         if post_data is not None:
                 data = urllib.parse.urlencode(post_data).encode('utf-8')
