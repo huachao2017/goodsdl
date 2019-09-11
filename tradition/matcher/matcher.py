@@ -187,7 +187,7 @@ class Matcher:
         self.task_cnt += 1
         self.task_info[task_cnt] = 0
         need_task_cnt = 0
-        print (self.path_to_baseline_info)
+        # print (self.path_to_baseline_info)
         for key in self.path_to_baseline_info:
             if within_upcs is not None:
                 upc = key.split('_')[0]
