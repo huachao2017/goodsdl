@@ -16,7 +16,7 @@ yolov3_params={
 yolov3_shelf_good_params={
     'good_model_path' :'/home/ai/model/shelfgood/ep34645-loss81.243-val_loss111.489.h5',
     'anchors_path' :'./goods/freezer/keras_yolo3/model_data/shelfgoods_yolo_anchors.txt',
-    'classes_path' : './goods/freezer/keras_yolo3/model_data/shelfgood_voc_classes.txt',
+    'classes_path' : './goods/freezer/keras_yolo3/model_data/shelfgoods_voc_classes.txt',
     'label_path':'./goods/freezer/keras_yolo3/model_data/shelfgoods_label_map.pbtxt',
     'score' :0.3,
     'iou' :0.45,
