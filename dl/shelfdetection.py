@@ -7,9 +7,11 @@ import time
 from dl.step1_cnn import Step1CNN
 from dl.util import visualize_boxes_and_labels_on_image_array_for_shelf
 from dl.shelftradition_match import ShelfTraditionMatch
-
+from goods.freezer.keras_yolo3.yolo3 import yolo_shelfgoods
 from sklearn.cluster import KMeans
+from goods.freezer.keras_yolo3.util import shelfgoods_http
 import traceback
+import demjson
 logger = logging.getLogger("detect")
 
 
@@ -40,6 +42,106 @@ class ShelfDetector:
         self.counter = self.counter + 1
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
+    def detect1(self, image_path, shopid, shelfid,yolo, step1_min_score_thresh=.5, totol_level = 6):
+        import time
+        time0 = time.time()
+        # tradition_match 每次请求重新加载
+        tradition_match = ShelfTraditionMatch(shopid, shelfid)
+        # image_path = image_instance.source.path
+        image = Image.open(image_path)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        # the array based representation of the image will be used later in order to prepare the
+        # result image with boxes and labels on it.
+        (im_width, im_height) = image.size
+        image_np = np.array(image)
+        # Actual detection.
+        # (boxes, scores) = self.step1_cnn.detect(image_np)
+        scores, boxes = yolo_shelfgoods.detect(yolo,image)
+        # data solving
+        boxes = np.squeeze(boxes)
+        # classes = np.squeeze(classes).astype(np.int32)
+        scores_step1 = np.squeeze(scores)
+        ret = []
+        logger.info('detect number:{}'.format(boxes.shape[0]))
+        # 获取生成图片集合
+        new_image_paths = []
+        for i in range(boxes.shape[0]):
+            if scores_step1[i] > step1_min_score_thresh:
+                ymin, xmin, ymax, xmax = boxes[i]
+                ymin = int(ymin * im_height)
+                xmin = int(xmin * im_width)
+                ymax = int(ymax * im_height)
+                xmax = int(xmax * im_width)
+                newimage = image.crop((xmin, ymin, xmax, ymax))
+                # 生成新的图片 TODO 需要处理性能问题
+                newimage_split = os.path.split(image_path)
+                single_image_dir = os.path.join(newimage_split[0], 'single')
+                if not tf.gfile.Exists(single_image_dir):
+                    tf.gfile.MakeDirs(single_image_dir)
+                new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
+                new_image_paths.append(new_image_path)
+        reponse_data=shelfgoods_http.post_goodgetn(new_image_paths)
+        for i in range(boxes.shape[0]):
+            if scores_step1[i] > step1_min_score_thresh:
+                ymin, xmin, ymax, xmax = boxes[i]
+                ymin = int(ymin * im_height)
+                xmin = int(xmin * im_width)
+                ymax = int(ymax * im_height)
+                xmax = int(xmax * im_width)
+                newimage = image.crop((xmin, ymin, xmax, ymax))
+                # 生成新的图片 TODO 需要处理性能问题
+                newimage_split = os.path.split(image_path)
+                single_image_dir = os.path.join(newimage_split[0], 'single')
+                if not tf.gfile.Exists(single_image_dir):
+                    tf.gfile.MakeDirs(single_image_dir)
+                new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
+                # newimage.save(new_image_path, 'JPEG')
+                #
+                # upc_match, score_match = self.tradition_match.detect_one_with_path(new_image_path)
+                upc_match, score_match = None,None
+                within_upcs=[]
+                if reponse_data != None :
+                    within_upcs = list(demjson.decode(reponse_data)[new_image_path])
+                if len(within_upcs) > 0:
+                    upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage,within_upcs=within_upcs)
+                else:
+                    upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage)
+                if score_match < 0.5:
+                    upc_match = ''
+                    score_match = 0
+                ret.append({'score': scores_step1[i],
+                            'level': -1,
+                            'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax,
+                            'upc': upc_match,
+                            'score2': score_match,
+                            })
+
+        if len(ret) > 0:
+            self.caculate_level(ret,totol_level)
+
+        # visualization
+        output_image_path = None
+        if len(ret) > 0:
+            image_dir = os.path.dirname(image_path)
+            output_image_path = os.path.join(image_dir, 'visual_' + os.path.split(image_path)[-1])
+            visualize_boxes_and_labels_on_image_array_for_shelf(
+                image_np,
+                boxes,
+                ret,
+                scores_step1,
+                use_normalized_coordinates=True,
+                step1_min_score_thresh=step1_min_score_thresh,
+                line_thickness=2,
+                show_error_boxes=False,
+                max_boxes_to_draw=None,
+            )
+            output_image = Image.fromarray(image_np)
+            output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
+            output_image.save(output_image_path)
+
+        time1 = time.time()
+        return ret, time1-time0,output_image_path
 
 
     def detect(self, image_path, shopid, shelfid, step1_min_score_thresh=.5, totol_level = 6):

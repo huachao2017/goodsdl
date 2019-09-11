@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../../ai/App_logical/.idea/App_logical.iml" filepath="$PROJECT_DIR$/../../ai/App_logical/.idea/App_logical.iml" />
       <module fileurl="file://$PROJECT_DIR$/../GoodsServer/.idea/GoodsServer.iml" filepath="$PROJECT_DIR$/../GoodsServer/.idea/GoodsServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../ai/ImgVision/.idea/ImgVision.iml" filepath="$PROJECT_DIR$/../../ai/ImgVision/.idea/ImgVision.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ModelServer/.idea/ModelServer.iml" filepath="$PROJECT_DIR$/../ModelServer/.idea/ModelServer.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/goodsdl.iml" filepath="$PROJECT_DIR$/.idea/goodsdl.iml" />
     </modules>
   </component>

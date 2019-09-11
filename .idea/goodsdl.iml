@@ -6,6 +6,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="GoodsServer" />
     <orderEntry type="module" module-name="App_logical" />
+    <orderEntry type="module" module-name="ImgVision" />
+    <orderEntry type="module" module-name="ModelServer" />
   </component>
   <component name="TestRunnerService">
     <option name="projectConfiguration" value="py.test" />

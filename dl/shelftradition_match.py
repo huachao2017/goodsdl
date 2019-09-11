@@ -32,8 +32,8 @@ class ShelfTraditionMatch:
         upc, score = self._matcher.match_image_best_one(image_path)
         return upc, score
 
-    def detect_one_with_cv2array(self,visual_image_path,image):
-        upc, score = self._matcher.match_image_best_one_with_cv2array(visual_image_path, cv2.cvtColor(np.array(image),cv2.COLOR_RGB2BGR))
+    def detect_one_with_cv2array(self,visual_image_path,image,within_upcs=None):
+        upc, score = self._matcher.match_image_best_one_with_cv2array(visual_image_path, cv2.cvtColor(np.array(image),cv2.COLOR_RGB2BGR),within_upcs=within_upcs)
         return upc, score
 
     def verify_score(self,image_path,within_upcs):

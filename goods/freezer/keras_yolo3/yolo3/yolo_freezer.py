@@ -16,7 +16,7 @@ from goods.freezer.keras_yolo3.yolo3.utils import letterbox_image
 import os
 from keras.utils import multi_gpu_model
 from set_config import config
-from goods.freezer.keras_yolo3.yolo3 import yolo
+from goods.freezer.keras_yolo3.yolo3 import yolo_freezer
 from object_detection.utils import visualization_utils as vis_util
 from object_detection.utils import label_map_util
 from goods.freezer.keras_yolo3.good_proxy import proxy
@@ -156,7 +156,7 @@ class YOLO(object):
 def detect(yolov3,image_path):
     yolo_v3 = None
     if yolov3 is None:
-        yolo_v3 = yolo.YOLO()
+        yolo_v3 = yolo_freezer.YOLO()
         logger.info("yolov3 freezer model reload")
     else:
         yolo_v3 = yolov3

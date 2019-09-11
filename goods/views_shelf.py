@@ -18,12 +18,16 @@ from rest_framework.views import APIView
 import goods.util
 import cv2
 import math
-
+from goods.freezer.keras_yolo3.util import shelfgoods_http
 from dl import shelfdetection
 # from dl.old import imagedetection
 from .serializers import *
 import tensorflow as tf
+from goods.freezer.keras_yolo3.yolo3 import yolo_shelfgoods
 
+from set_config import config
+shelfgoods_check_yolov3_switch = config.common_params['shelfgoods_check_yolov3_switch']
+yolov3 = yolo_shelfgoods.YOLO()
 logger = logging.getLogger("detect")
 
 class DefaultMixin:
@@ -78,7 +82,13 @@ class CreateShelfImage(APIView):
                 tf.gfile.MakeDirs(image_dir)
             image_path = os.path.join(image_dir, image_name)
             urllib.request.urlretrieve(picurl, image_path)
-            detect_ret, aiinterval, visual_image_path = detector.detect(image_path, shopid, shelfid, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
+            if shelfgoods_check_yolov3_switch:
+                detect_ret, aiinterval, visual_image_path = detector.detect1(image_path, shopid, shelfid,
+                                                                            yolo=yolov3,
+                                                                            step1_min_score_thresh=step1_min_score_thresh,
+                                                                            totol_level=tlevel)
+            else :
+                detect_ret, aiinterval, visual_image_path = detector.detect(image_path, shopid, shelfid, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
 
             logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
             for one_box in detect_ret:
@@ -201,8 +211,13 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             if not tf.gfile.Exists(sample_dir):
                 tf.gfile.MakeDirs(sample_dir)
             old_sample_path = os.path.join(sample_dir, '{}_{}.jpg'.format(old_upc, serializer.instance.pk))
+
             if os.path.isfile(old_sample_path):
                 # 删除原来的样本
+                code = shelfgoods_http.post_deletegood(upc,old_sample_path)
+                if code ==None:
+                    logger.error("api: delete_good failed")
+                logger.info("api: delete_good success")
                 os.remove(old_sample_path)
 
             # 添加新样本
@@ -212,6 +227,11 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             sample_image = image.crop((serializer.instance.xmin, serializer.instance.ymin, serializer.instance.xmax, serializer.instance.ymax))
             sample_image_path = os.path.join(sample_dir, '{}_{}.jpg'.format(serializer.instance.upc, serializer.instance.pk))
             sample_image.save(sample_image_path, 'JPEG')
+
+            code = shelfgoods_http.post_addgood(upc, sample_image_path)
+            if code == None:
+                logger.error("api: add_new_good failed")
+            logger.info("api: add_new_good success")
 
         return Response(serializer.data)
 
@@ -223,8 +243,11 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
                                   '{}'.format(instance.shelfid))
         # 删除原来的样本
         old_sample_path = os.path.join(sample_dir, '{}_{}.jpg'.format(instance.upc, instance.pk))
+        code = shelfgoods_http.post_deletegood(instance.upc, old_sample_path)
+        if code == None:
+            logger.error("api: delete_good failed")
+        logger.info("api: delete_good success")
         if os.path.isfile(old_sample_path):
             os.remove(old_sample_path)
-
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
