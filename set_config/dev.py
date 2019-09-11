@@ -18,7 +18,7 @@ yolov3_shelf_good_params={
     'anchors_path' :'./goods/freezer/keras_yolo3/model_data/shelfgoods_yolo_anchors.txt',
     'classes_path' : './goods/freezer/keras_yolo3/model_data/shelfgoods_voc_classes.txt',
     'label_path':'./goods/freezer/keras_yolo3/model_data/shelfgoods_label_map.pbtxt',
-    'score' :0.3,
+    'score' :0.05,
     'iou' :0.45,
     'model_image_size' : (416, 416),
     'gpu_num' : 1,

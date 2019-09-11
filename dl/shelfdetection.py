@@ -67,7 +67,7 @@ class ShelfDetector:
         # 获取生成图片集合
         new_image_paths = []
         for i in range(boxes.shape[0]):
-            if scores_step1[i] > step1_min_score_thresh:
+            # if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
                 xmin = int(xmin * im_width)
@@ -84,7 +84,7 @@ class ShelfDetector:
                 new_image_paths.append(new_image_path)
         reponse_data=shelfgoods_http.post_goodgetn(new_image_paths)
         for i in range(boxes.shape[0]):
-            if scores_step1[i] > step1_min_score_thresh:
+            # if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
                 xmin = int(xmin * im_width)
@@ -139,6 +139,7 @@ class ShelfDetector:
             )
             output_image = Image.fromarray(image_np)
             output_image.thumbnail((int(im_width), int(im_height)), Image.ANTIALIAS)
+            logger.info("shelfdetection output_image_path="+str(output_image_path))
             output_image.save(output_image_path)
 
         time1 = time.time()
