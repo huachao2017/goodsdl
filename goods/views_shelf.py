@@ -25,8 +25,7 @@ from .serializers import *
 import tensorflow as tf
 from goods.freezer.keras_yolo3.yolo3 import yolo_shelfgoods
 
-from set_config import config
-shelfgoods_check_yolov3_switch = config.common_params['shelfgoods_check_yolov3_switch']
+
 yolov3 = yolo_shelfgoods.YOLO()
 logger = logging.getLogger("detect")
 
@@ -82,13 +81,11 @@ class CreateShelfImage(APIView):
                 tf.gfile.MakeDirs(image_dir)
             image_path = os.path.join(image_dir, image_name)
             urllib.request.urlretrieve(picurl, image_path)
-            if shelfgoods_check_yolov3_switch:
-                detect_ret, aiinterval, visual_image_path = detector.detect1(image_path, shopid, shelfid,
+            detect_ret, aiinterval, visual_image_path = detector.detect1(image_path, shopid, shelfid,
                                                                             yolo=yolov3,
                                                                             step1_min_score_thresh=step1_min_score_thresh,
                                                                             totol_level=tlevel)
-            else :
-                detect_ret, aiinterval, visual_image_path = detector.detect(image_path, shopid, shelfid, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
+                # detect_ret, aiinterval, visual_image_path = detector.detect(image_path, shopid, shelfid, step1_min_score_thresh=step1_min_score_thresh,totol_level = tlevel)
 
             logger.info('create shelf image: {},{}'.format(len(detect_ret), aiinterval))
             for one_box in detect_ret:

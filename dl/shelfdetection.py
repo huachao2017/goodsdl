@@ -13,8 +13,9 @@ from goods.freezer.keras_yolo3.util import shelfgoods_http
 import traceback
 import demjson
 logger = logging.getLogger("detect")
-
-
+from set_config import config
+shelfgoods_check_yolov3_switch = config.common_params['shelfgoods_check_yolov3_switch']
+shelfgoods_check_cluster_switch = config.common_params['shelfgoods_check_cluster_switch']
 class ShelfDetectorFactory:
     _detector = {}
 
@@ -42,7 +43,11 @@ class ShelfDetector:
         self.counter = self.counter + 1
         if not self.step1_cnn.is_load():
             self.step1_cnn.load(self.config)
+
+
+
     def detect1(self, image_path, shopid, shelfid,yolo, step1_min_score_thresh=.5, totol_level = 6):
+
         import time
         time0 = time.time()
         # tradition_match 每次请求重新加载
@@ -56,8 +61,18 @@ class ShelfDetector:
         (im_width, im_height) = image.size
         image_np = np.array(image)
         # Actual detection.
-        # (boxes, scores) = self.step1_cnn.detect(image_np)
-        scores, boxes = yolo_shelfgoods.detect(yolo,image)
+        scores, boxes = None,None
+        if shelfgoods_check_yolov3_switch:
+            scores, boxes = yolo_shelfgoods.detect(yolo, image)
+            step1_min_score_thresh = 0.0
+        else :
+            if not self.step1_cnn.is_load():
+                self.load()
+                if not self.step1_cnn.is_load():
+                    logger.warning('loading model failed')
+                    return None
+            (boxes, scores) = self.step1_cnn.detect(image_np)
+
         # data solving
         boxes = np.squeeze(boxes)
         # classes = np.squeeze(classes).astype(np.int32)
@@ -65,26 +80,28 @@ class ShelfDetector:
         ret = []
         logger.info('detect number:{}'.format(boxes.shape[0]))
         # 获取生成图片集合
-        new_image_paths = []
+        reponse_data = None
+        if shelfgoods_check_cluster_switch:
+            new_image_paths = []
+            for i in range(boxes.shape[0]):
+                if scores_step1[i] > step1_min_score_thresh:
+                    ymin, xmin, ymax, xmax = boxes[i]
+                    ymin = int(ymin * im_height)
+                    xmin = int(xmin * im_width)
+                    ymax = int(ymax * im_height)
+                    xmax = int(xmax * im_width)
+                    newimage = image.crop((xmin, ymin, xmax, ymax))
+                    # 生成新的图片 TODO 需要处理性能问题
+                    newimage_split = os.path.split(image_path)
+                    single_image_dir = os.path.join(newimage_split[0], 'single')
+                    if not tf.gfile.Exists(single_image_dir):
+                        tf.gfile.MakeDirs(single_image_dir)
+                    new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
+                    newimage.save(new_image_path, 'JPEG')
+                    new_image_paths.append(new_image_path)
+            reponse_data=shelfgoods_http.post_goodgetn(new_image_paths)
         for i in range(boxes.shape[0]):
-            # if scores_step1[i] > step1_min_score_thresh:
-                ymin, xmin, ymax, xmax = boxes[i]
-                ymin = int(ymin * im_height)
-                xmin = int(xmin * im_width)
-                ymax = int(ymax * im_height)
-                xmax = int(xmax * im_width)
-                newimage = image.crop((xmin, ymin, xmax, ymax))
-                # 生成新的图片 TODO 需要处理性能问题
-                newimage_split = os.path.split(image_path)
-                single_image_dir = os.path.join(newimage_split[0], 'single')
-                if not tf.gfile.Exists(single_image_dir):
-                    tf.gfile.MakeDirs(single_image_dir)
-                new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
-                newimage.save(new_image_path, 'JPEG')
-                new_image_paths.append(new_image_path)
-        reponse_data=shelfgoods_http.post_goodgetn(new_image_paths)
-        for i in range(boxes.shape[0]):
-            # if scores_step1[i] > step1_min_score_thresh:
+            if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
                 ymin = int(ymin * im_height)
                 xmin = int(xmin * im_width)
@@ -132,7 +149,7 @@ class ShelfDetector:
                 ret,
                 scores_step1,
                 use_normalized_coordinates=True,
-                step1_min_score_thresh=0.0,
+                step1_min_score_thresh=step1_min_score_thresh,
                 line_thickness=2,
                 show_error_boxes=False,
                 max_boxes_to_draw=None,

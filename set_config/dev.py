@@ -33,5 +33,6 @@ http_apis={
 ######################################common#####################################################################
 common_params={
     'freezer_check_yolov3_switch':True,
-    'shelfgoods_check_yolov3_switch': True
+    'shelfgoods_check_yolov3_switch': False,
+    'shelfgoods_check_cluster_switch':True,
 }
