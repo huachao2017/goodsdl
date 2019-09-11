@@ -80,6 +80,7 @@ class ShelfDetector:
                 if not tf.gfile.Exists(single_image_dir):
                     tf.gfile.MakeDirs(single_image_dir)
                 new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
+                newimage.save(new_image_path, 'JPEG')
                 new_image_paths.append(new_image_path)
         reponse_data=shelfgoods_http.post_goodgetn(new_image_paths)
         for i in range(boxes.shape[0]):
@@ -96,7 +97,7 @@ class ShelfDetector:
                 if not tf.gfile.Exists(single_image_dir):
                     tf.gfile.MakeDirs(single_image_dir)
                 new_image_path = os.path.join(single_image_dir, "{}_{}".format(i, newimage_split[1]))
-                newimage.save(new_image_path, 'JPEG')
+                # newimage.save(new_image_path, 'JPEG')
                 #
                 # upc_match, score_match = self.tradition_match.detect_one_with_path(new_image_path)
                 upc_match, score_match = None,None
