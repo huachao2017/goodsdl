@@ -15,22 +15,22 @@ def get_post_data_goodstopn(new_image_paths):
     }
     return api,post_data
 
-def get_post_data_addgood(upc,image_path):
+def get_post_data_addgood(upc,image_path,goods_shelfgoods_id):
     trace_id = str(time.time())
     post_data = {
         "trace_id": trace_id,
         "img_local_file":image_path,
-        "good_upc":upc
+        "good_upc":upc,
+        "goods_shelfgoods_id":goods_shelfgoods_id
     }
     api = config.http_apis['shelf_good_add_good']
     return api,post_data
 
-def get_post_data_deletegood(upc,image_path):
+def get_post_data_deletegood(goods_shelfgoods_id):
     trace_id = str(time.time())
     post_data = {
         "trace_id": trace_id,
-        "img_local_file": image_path,
-        "good_upc": upc
+        "goods_shelfgoods_id": goods_shelfgoods_id,
     }
     api = config.http_apis['shelf_good_delete_good']
     return api, post_data

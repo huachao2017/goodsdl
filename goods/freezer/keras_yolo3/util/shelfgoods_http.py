@@ -24,12 +24,12 @@ def post_goodgetn(new_image_paths):
         return None
     return reponse_data
 
-def post_addgood(upc,image_path):
+def post_addgood(upc,image_path,goods_shelfgoods_id):
     # 调用批量获取图片的相似topn_upc的接口， 获取within_upc
-    api, post_data = shelfgoods_util.get_post_data_addgood(upc,image_path)
+    api, post_data = shelfgoods_util.get_post_data_addgood(upc,image_path,goods_shelfgoods_id)
     reponse_data = None
     if api == None:
-        logging.error("addgood , check!!!upc=%s , image_path=%s" %( str(upc),str(image_path)))
+        logging.error("addgood , check!!!upc=%s , image_path=%s , goods_shelfgoods_id=%s" %( str(upc),str(image_path),str(goods_shelfgoods_id)))
         return None
     else:
         result = http_util.http_post(api, post_data)
@@ -42,12 +42,12 @@ def post_addgood(upc,image_path):
         return None
     return reponse_data
 
-def post_deletegood(upc,image_path):
+def post_deletegood(goods_shelfgoods_id):
     # 调用批量获取图片的相似topn_upc的接口， 获取within_upc
-    api, post_data = shelfgoods_util.get_post_data_deletegood(upc,image_path)
+    api, post_data = shelfgoods_util.get_post_data_deletegood(goods_shelfgoods_id)
     reponse_data = None
     if api == None:
-        logging.error("deletegood , check!!!upc=%s , image_path=%s" %( str(upc),str(image_path)))
+        logging.error("deletegood , check!!! goods_shelfgoods_id=%s" %( str(goods_shelfgoods_id)))
         return None
     else:
         result = http_util.http_post(api, post_data)

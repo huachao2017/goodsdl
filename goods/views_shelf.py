@@ -100,7 +100,7 @@ class CreateShelfImage(APIView):
                     level = one_box['level'],
                     upc = one_box['upc'],
                     score1 = one_box['score'],
-                    score2 = one_box['score2']
+                    score2 = one_box['score2'],
                 )
                 ret.append({
                     'id': shelf_goods.pk,
@@ -211,10 +211,11 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
 
             if os.path.isfile(old_sample_path):
                 # 删除原来的样本
-                code = shelfgoods_http.post_deletegood(upc,old_sample_path)
-                if code ==None:
+                code = shelfgoods_http.post_deletegood(instance.id)
+                if code ==0:
+                    logger.info("api: delete_good success")
+                else :
                     logger.error("api: delete_good failed")
-                logger.info("api: delete_good success")
                 os.remove(old_sample_path)
 
             # 添加新样本
@@ -225,10 +226,11 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
             sample_image_path = os.path.join(sample_dir, '{}_{}.jpg'.format(serializer.instance.upc, serializer.instance.pk))
             sample_image.save(sample_image_path, 'JPEG')
 
-            code = shelfgoods_http.post_addgood(upc, sample_image_path)
-            if code == None:
+            code = shelfgoods_http.post_addgood(upc, sample_image_path,instance.id)
+            if code == 0:
+                logger.info("api: add_new_good success")
+            else :
                 logger.error("api: add_new_good failed")
-            logger.info("api: add_new_good success")
 
         return Response(serializer.data)
 
@@ -240,11 +242,11 @@ class ShelfGoodsViewSet(DefaultMixin, mixins.ListModelMixin, mixins.RetrieveMode
                                   '{}'.format(instance.shelfid))
         # 删除原来的样本
         old_sample_path = os.path.join(sample_dir, '{}_{}.jpg'.format(instance.upc, instance.pk))
-        code = shelfgoods_http.post_deletegood(instance.upc, old_sample_path)
-        if code == None:
-            logger.error("api: delete_good failed")
-        else :
+        code = shelfgoods_http.post_deletegood(instance.id)
+        if code == 0:
             logger.info("api: delete_good success")
+        else :
+            logger.error("api: delete_good failed")
         if os.path.isfile(old_sample_path):
             os.remove(old_sample_path)
         self.perform_destroy(instance)

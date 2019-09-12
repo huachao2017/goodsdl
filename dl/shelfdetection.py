@@ -81,8 +81,8 @@ class ShelfDetector:
         logger.info('detect number:{}'.format(boxes.shape[0]))
         # 获取生成图片集合
         reponse_data = None
+        new_image_paths = []
         if shelfgoods_check_cluster_switch:
-            new_image_paths = []
             for i in range(boxes.shape[0]):
                 if scores_step1[i] > step1_min_score_thresh:
                     ymin, xmin, ymax, xmax = boxes[i]
@@ -100,6 +100,11 @@ class ShelfDetector:
                     newimage.save(new_image_path, 'JPEG')
                     new_image_paths.append(new_image_path)
             reponse_data=shelfgoods_http.post_goodgetn(new_image_paths)
+
+        for new_img_path in new_image_paths:
+            if os.path.isfile(new_img_path):
+                os.remove(new_img_path)
+
         for i in range(boxes.shape[0]):
             if scores_step1[i] > step1_min_score_thresh:
                 ymin, xmin, ymax, xmax = boxes[i]
