@@ -23,10 +23,11 @@ from dl import shelfdetection
 # from dl.old import imagedetection
 from .serializers import *
 import tensorflow as tf
-from goods.freezer.keras_yolo3.yolo3 import yolo_shelfgoods
+# from goods.freezer.keras_yolo3.yolo3 import yolo_shelfgoods
 
 
-yolov3 = yolo_shelfgoods.YOLO()
+# yolov3 = yolo_shelfgoods.YOLO()
+yolov3 = None
 logger = logging.getLogger("detect")
 
 class DefaultMixin:
