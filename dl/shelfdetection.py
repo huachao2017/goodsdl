@@ -16,6 +16,7 @@ logger = logging.getLogger("detect")
 from set_config import config
 shelfgoods_check_yolov3_switch = config.common_params['shelfgoods_check_yolov3_switch']
 shelfgoods_check_cluster_switch = config.common_params['shelfgoods_check_cluster_switch']
+shelfgoods_check_match_switch = config.common_params['shelfgoods_check_match_switch']
 class ShelfDetectorFactory:
     _detector = {}
 
@@ -126,10 +127,17 @@ class ShelfDetector:
                 within_upcs=[]
                 if reponse_data != None :
                     within_upcs = list(reponse_data[new_image_path])
-                if len(within_upcs) > 0:
-                    upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage,within_upcs=within_upcs)
+                if shelfgoods_check_match_switch:
+                    if len(within_upcs) > 0:
+                        upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage,within_upcs=within_upcs)
+                    else:
+                        upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage)
                 else:
-                    upc_match, score_match = tradition_match.detect_one_with_cv2array(new_image_path, newimage)
+                    if len(within_upcs) > 0:
+                        upc_match, score_match = within_upcs[0],0.7
+                    else:
+                        upc_match, score_match = '', 0
+
                 if score_match < 0.5:
                     upc_match = ''
                     score_match = 0

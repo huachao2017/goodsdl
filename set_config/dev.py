@@ -32,7 +32,8 @@ http_apis={
 }
 ######################################common#####################################################################
 common_params={
-    'freezer_check_yolov3_switch':True,
-    'shelfgoods_check_yolov3_switch': False,
-    'shelfgoods_check_cluster_switch':True,
+    'freezer_check_yolov3_switch':True, # 冰柜yolo检测
+    'shelfgoods_check_yolov3_switch': False,# 陈列yolo检测
+    'shelfgoods_check_cluster_switch':True,#陈列聚类检测
+    'shelfgoods_check_match_switch': True,  # 陈列匹配检测
 }
