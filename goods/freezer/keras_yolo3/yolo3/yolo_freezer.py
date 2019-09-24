@@ -26,7 +26,7 @@ from keras.backend.tensorflow_backend import set_session
 # import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.4
+config.gpu_options.per_process_gpu_memory_fraction = 0.8
 set_session(tf.Session(config=config))
 
 logger = logging.getLogger("detect")
