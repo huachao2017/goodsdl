@@ -21,6 +21,16 @@ from object_detection.utils import visualization_utils as vis_util
 from object_detection.utils import label_map_util
 from goods.freezer.keras_yolo3.good_proxy import proxy
 import logging
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+config = tf.ConfigProto()
+config.gpu_options.allocator_type = 'BFC' #A "Best-fit with coalescing" algorithm, simplified from a version of dlmalloc.
+config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.allow_growth = True
+set_session(tf.Session(config=config))
+
 logger = logging.getLogger("detect")
 gpu_num = config.yolov3_params['gpu_num']
 label_path = config.yolov3_params['label_path']

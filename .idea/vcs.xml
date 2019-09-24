@@ -5,5 +5,6 @@
     <mapping directory="$PROJECT_DIR$/../../ai/App_logical" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../../ai/ImgVision" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../ModelServer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../goodsdl2" vcs="Git" />
   </component>
 </project>

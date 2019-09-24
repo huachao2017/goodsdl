@@ -8,6 +8,7 @@
     <orderEntry type="module" module-name="App_logical" />
     <orderEntry type="module" module-name="ImgVision" />
     <orderEntry type="module" module-name="ModelServer" />
+    <orderEntry type="module" module-name="goodsdl2" />
   </component>
   <component name="TestRunnerService">
     <option name="projectConfiguration" value="py.test" />

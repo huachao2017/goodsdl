@@ -7,6 +7,7 @@
       <module fileurl="file://$PROJECT_DIR$/../../ai/ImgVision/.idea/ImgVision.iml" filepath="$PROJECT_DIR$/../../ai/ImgVision/.idea/ImgVision.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ModelServer/.idea/ModelServer.iml" filepath="$PROJECT_DIR$/../ModelServer/.idea/ModelServer.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/goodsdl.iml" filepath="$PROJECT_DIR$/.idea/goodsdl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../goodsdl2/.idea/goodsdl2.iml" filepath="$PROJECT_DIR$/../goodsdl2/.idea/goodsdl2.iml" />
     </modules>
   </component>
 </project>
