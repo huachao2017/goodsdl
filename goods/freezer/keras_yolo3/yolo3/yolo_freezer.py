@@ -23,11 +23,11 @@ from goods.freezer.keras_yolo3.good_proxy import proxy
 import logging
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 config = tf.ConfigProto()
 config.gpu_options.allocator_type = 'BFC' #A "Best-fit with coalescing" algorithm, simplified from a version of dlmalloc.
-config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
 config.gpu_options.allow_growth = True
 set_session(tf.Session(config=config))
 
