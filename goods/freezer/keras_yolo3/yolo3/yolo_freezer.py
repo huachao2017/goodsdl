@@ -23,8 +23,8 @@ from goods.freezer.keras_yolo3.good_proxy import proxy
 import logging
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.4
 set_session(tf.Session(config=config))
